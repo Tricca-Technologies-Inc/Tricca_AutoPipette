@@ -40,7 +40,7 @@ def main():
                 coordinate = movement.Coordinate(x, y, z, speed)
                 
                 # Move to the coordinate
-                movement.move_to(coordinate)
+                movement.moveX_to(coordinate)
             
         except ValueError:
             print("Invalid input. Please enter numeric values for X, Y, Z coordinates and speed, separated by spaces.")

@@ -1,7 +1,10 @@
 import requests
-
+#F4850 is max when xyz move
+#F980 is max when only z moves
+#F6600 is max when only x/y moves
 # Moonraker API endpoint
-MOONRAKER_URL = "http://192.168.13.14:7125/printer/gcode/script"
+
+MOONRAKER_URL = "http://192.168.39.14:7125/printer/gcode/script"
 
 def send_gcode(command):
     response = requests.post(MOONRAKER_URL, json={"script": command})
@@ -10,18 +13,12 @@ def send_gcode(command):
     else:
         print(f"Failed to send command: {response.status_code}, {response.text}")
 
-class Coordinate:
-    def __init__(self, x=0, y=0, z=0, speed=1500):
-        self.x = x
-        self.y = y
-        self.z = z
-        self.speed = speed
-
-    def __repr__(self):
-        return f"Coordinate(x={self.x}, y={self.y}, z={self.z}, speed={self.speed})"
-
 def move_to(coordinate):
     gcode_command = f"G1 X{coordinate.x} Y{coordinate.y} Z{coordinate.z} F{coordinate.speed}"
+    send_gcode(gcode_command)
+
+def moveX_to(coordinate):
+    gcode_command = f"G1 X{coordinate.x} F{coordinate.speed}"
     send_gcode(gcode_command)
 
 def homeX():
