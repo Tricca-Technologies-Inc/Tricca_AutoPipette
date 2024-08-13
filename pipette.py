@@ -81,7 +81,7 @@ def sampleTest(source, dest):
 
         # Dip down
         source.speed = 800
-        source.z += 25
+        source.z += 28
         move_to(source)
 
         aspirate(v100)
@@ -89,7 +89,7 @@ def sampleTest(source, dest):
         time.sleep(1)
 
         # Go up
-        source.z -= 25
+        source.z -= 28
         move_to(source)
 
         # Move to well
@@ -97,7 +97,7 @@ def sampleTest(source, dest):
         
         wellCoords[i].speed = 800
         # Dip down
-        wellCoords[i].z += 10
+        wellCoords[i].z += 28
         move_to(wellCoords[i])
 
         dispense(v100)
@@ -105,7 +105,7 @@ def sampleTest(source, dest):
         time.sleep(1.5)
         
         # Raise back up
-        wellCoords[i].z -= 10
+        wellCoords[i].z -= 28
         move_to(wellCoords[i])
 
         aspirate(v100)

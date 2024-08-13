@@ -102,6 +102,7 @@ app_ui = ui.page_fluid(
                 ui.input_action_button("move", ui.tags.span(ui.tags.i(class_="fas fa-arrows-alt"), " Move to Coordinates"), class_="btn"),
                 ui.input_action_button("homeX", ui.tags.span(ui.tags.i(class_="fas fa-home"), " Home X"), class_="btn"),
                 ui.input_action_button("home", ui.tags.span(ui.tags.i(class_="fas fa-home"), " Move to Home"), class_="btn"),
+                ui.input_action_button("initPipette", ui.tags.span(ui.tags.i(class_="fas fa-home"), "Home Pipette Motors"), class_="btn"),
                 ui.input_action_button("kit", ui.tags.span(ui.tags.i(class_="fas fa-cogs"), " Kit Manufacturing"), class_="btn"),
                 ui.input_action_button("sample", ui.tags.span(ui.tags.i(class_="fas fa-flask"), " Sample Prep"), class_="btn"),
                 ui.input_action_button("stop", ui.tags.span(ui.tags.i(class_="fas fa-stop"), " Stop"), class_="btn"),
@@ -201,7 +202,13 @@ def server(input, output, session):
     @reactive.Effect
     @reactive.event(input.traverse_wells)
     def traverse_wells_handler():
-        sample_test(vial2, dest_plate, pipette)
+        # sample_test(vial2, dest_plate, pipette)
+        tip_test(dest_tips, source_plate, pipette)
+
+    @reactive.Effect
+    @reactive.event(input.initPipette)
+    def initPipette():
+        pipette.homeAll()
 
 app = App(app_ui, server)
 
