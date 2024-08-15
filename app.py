@@ -184,9 +184,7 @@ def server(input, output, session):
     @reactive.Effect
     @reactive.event(input.stop)
     def stop_handler():
-        movement.stop_operations()
-        command = "Stopping all operations..."
-        status_text.set(command)
+        speedTest()
 
     @reactive.Effect
     @reactive.event(input.move_to_location)
@@ -203,7 +201,7 @@ def server(input, output, session):
     @reactive.event(input.traverse_wells)
     def traverse_wells_handler():
         # sample_test(vial2, dest_plate, pipette)
-        tip_test(dest_tips, source_plate, pipette)
+        tip_test(source_plate, dest_tips, pipette)
 
     @reactive.Effect
     @reactive.event(input.initPipette)

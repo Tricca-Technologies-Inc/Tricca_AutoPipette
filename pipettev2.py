@@ -7,10 +7,10 @@ from volumes import *
 SERVO_ANGLE_RETRACT = 140
 SERVO_ANGLE_READY = 85
 
-EJECT_WAIT_TIME = 3
-MOVEMENT_WAIT_TIME = 3
+EJECT_WAIT_TIME = 2
+MOVEMENT_WAIT_TIME = 2
 
-TIP_DIP_DISTANCE = 73
+TIP_DIP_DISTANCE = 78
 WELL_DIP_DISTANCE = 35
 
 # Classes for modularization
@@ -184,23 +184,24 @@ def tip_test(source, dest, pipette):
     
     for i in range(len(well_coords)):
         if tip_loc[i].z == well_coords[i].z:
-            tip_loc[i].speed = 6500
+            tip_loc[i].speed = 7200
         else:
             tip_loc[i].speed = 2000
 
         move_to(tip_loc[i])
 
-        tip_loc[i].speed = 700
+        tip_loc[i].speed = 1100
         tip_loc[i].z += TIP_DIP_DISTANCE
         move_to(tip_loc[i])
 
         tip_loc[i].z -= TIP_DIP_DISTANCE
         move_to(tip_loc[i])
 
+        well_coords[i].speed = 7200
         time.sleep(1)
         move_to(well_coords[i])
 
-        well_coords[i].speed = 700
+        well_coords[i].speed = 1100
         well_coords[i].z += WELL_DIP_DISTANCE
         move_to(well_coords[i])
 
@@ -208,6 +209,25 @@ def tip_test(source, dest, pipette):
 
         well_coords[i].z -= WELL_DIP_DISTANCE
         move_to(well_coords[i])
+
+def speedTest():
+    gcode_command = f"G1 X{10} Y{10} Z{0} F{6500}"
+    send_gcode(gcode_command)
+    gcode_command = f"G1 X{300} Y{300} Z{0} F{6500}"
+    send_gcode(gcode_command)
+    gcode_command = f"G1 X{10} Y{300} Z{0} F{6500}"
+    send_gcode(gcode_command)
+    gcode_command = f"G1 X{300} Y{10} Z{0} F{6500}"
+    send_gcode(gcode_command)
+
+    gcode_command = f"G1 X{10} Y{10} Z{0} F{6500}"
+    send_gcode(gcode_command)
+    gcode_command = f"G1 X{150} Y{150} Z{0} F{6500}"
+    send_gcode(gcode_command)
+    gcode_command = f"G1 X{10} Y{150} Z{0} F{6500}"
+    send_gcode(gcode_command)
+    gcode_command = f"G1 X{300} Y{300} Z{0} F{6500}"
+    send_gcode(gcode_command)
 
 # Usage
 pipette = PipetteController("my_servo", "lock_stepper")

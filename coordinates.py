@@ -10,7 +10,7 @@ class Coordinate:
 
 # 100uL Tips Origin points
 tip_s3 = Coordinate(x=263, y=345, z=40.0)
-tip_s4 = Coordinate(x=312.87, y=150.50, z=40.0)
+tip_s4 = Coordinate(x=290, y=170.50, z=40.0)
 tip_s6 = Coordinate(x=89.6, y=150.50, z=40.0)
 testv = Coordinate(x=260.24, y=56.15, z=40)
 well_end = Coordinate(x=300, y=294, z=40)
