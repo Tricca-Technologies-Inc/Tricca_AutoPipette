@@ -4,7 +4,7 @@ import requests
 #F6600 is max when only x/y moves
 # Moonraker API endpoint
 
-MOONRAKER_URL = "http://192.168.249.14:7125/printer/gcode/script"
+MOONRAKER_URL = "http://192.168.73.14:7125/printer/gcode/script"
 
 def send_gcode(command):
     response = requests.post(MOONRAKER_URL, json={"script": command})

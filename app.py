@@ -3,6 +3,7 @@ import movement
 import coordinates
 from coordinates import *
 from pipettev2 import *
+from protocols import *
 import asyncio
 
 # Create a Coordinate object named 'home' with coordinates (0, 0, 0)
@@ -200,8 +201,8 @@ def server(input, output, session):
     @reactive.Effect
     @reactive.event(input.traverse_wells)
     def traverse_wells_handler():
-        # sample_test(vial2, dest_plate, pipette)
-        tip_test(source_plate, dest_tips, pipette)
+        kitTest(source_vial, dest_vial, pipette, tip_box, well_s5)
+        # tip_test(source_plate, dest_tips, pipette)
 
     @reactive.Effect
     @reactive.event(input.initPipette)

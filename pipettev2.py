@@ -7,11 +7,13 @@ from volumes import *
 SERVO_ANGLE_RETRACT = 140
 SERVO_ANGLE_READY = 85
 
-EJECT_WAIT_TIME = 2
-MOVEMENT_WAIT_TIME = 2
+EJECT_WAIT_TIME = 1.5
+MOVEMENT_WAIT_TIME = 1.5
 
-TIP_DIP_DISTANCE = 78
+TIP_DIP_DISTANCE = 78.5
 WELL_DIP_DISTANCE = 35
+
+DEFAULT_SPEED = 10300
 
 # Classes for modularization
 class PipetteController:
@@ -31,12 +33,12 @@ class PipetteController:
         send_gcode(gcode_command)
     
     def home_stepper(self):
-        gcode_command = f"MANUAL_STEPPER STEPPER={self.stepper_name} SPEED=5 MOVE=-30 STOP_ON_ENDSTOP=1"
+        gcode_command = f"MANUAL_STEPPER STEPPER={self.stepper_name} SPEED=15 MOVE=-30 STOP_ON_ENDSTOP=1"
         send_gcode(gcode_command)
         gcode_command = f"MANUAL_STEPPER STEPPER={self.stepper_name} SET_POSITION=0"
         send_gcode(gcode_command)
 
-    def move_stepper(self, distance, speed=20):
+    def move_stepper(self, distance, speed=15):
         gcode_command = f"MANUAL_STEPPER STEPPER={self.stepper_name} SPEED={speed} MOVE={distance}"
         send_gcode(gcode_command)
 
@@ -62,15 +64,49 @@ class WellPlate:
                 z = z_start
                 
                 # Add the well coordinates
-                coordinates_list.append(Coordinate(x, y, z, 4800))
+                coordinates_list.append(Coordinate(x, y, z, 6300))
                 
         return coordinates_list
 
     def get_coordinates(self):
         return self.coordinates
     
+class TipBox:
+    def __init__(self, start_coordinate, row_count=12, col_count=8, row_spacing=9, col_spacing=9):
+        self.coordinates = self._generate_tip_coordinates(start_coordinate, row_count, col_count, row_spacing, col_spacing)
+        self.current_tip = 0
+    
+    def _generate_tip_coordinates(self, start_coordinate, row_count, col_count, row_spacing, col_spacing):
+        coordinates_list = []
+        x_start = start_coordinate.x
+        y_start = start_coordinate.y
+        z_start = start_coordinate.z
+
+        for row in range(row_count):
+            for col in range(col_count):
+                x = x_start - (col * col_spacing)
+                y = y_start + (row * row_spacing)
+                z = z_start
+                
+                # Add the tip coordinates
+                coordinates_list.append(Coordinate(x, y, z, start_coordinate.speed))
+                
+        return coordinates_list
+
+    def next_tip(self):
+        if self.current_tip < len(self.coordinates):
+            tip_coordinate = self.coordinates[self.current_tip]
+            self.current_tip += 1
+            return tip_coordinate
+        else:
+            raise ValueError("No more tips available")
+
+    def reset(self):
+        """Reset the tip box to start picking tips from the beginning."""
+        self.current_tip = 0
+    
 class VialHolder:
-    def __init__(self, start_coordinate, row_count=7, column_count=5, row_spacing=15, column_spacing=15):
+    def __init__(self, start_coordinate, row_count=7, column_count=5, row_spacing=18, column_spacing=18):
         self.coordinates = self._generate_vial_coordinates(start_coordinate, row_count, column_count, row_spacing, column_spacing)
     
     def _generate_vial_coordinates(self, start_coordinate, row_count, column_count, row_spacing, column_spacing):
@@ -93,148 +129,41 @@ class VialHolder:
     def get_coordinates(self):
         return self.coordinates
 
-# Refactored sampleTest (Program for Sample Prep.)
-def sample_test(source, dest, pipette):
-    well_coords = dest.get_coordinates()
-
-    srcVial = source
-    srcVial.speed = 3700
-    move_to(srcVial)
-    
-    for coord in well_coords:
-        if srcVial.z == coord.z:
-            srcVial.speed = 6500
-        else:
-            srcVial.speed = 2000
-
-        move_to(srcVial)
-        pipette.move_stepper(v100.prep)
-
-        srcVial.speed = 700
-        srcVial.z += 25
-        move_to(srcVial)
-        pipette.move_stepper(v100.aspirate)
-
+def PickupTip(tip_box):
+    try:
+        # Get the next available tip's position
+        tip_position = tip_box.next_tip()
+        
+        tip_position.speed = 10300
+        # Move to the tip's position
+        move_to(tip_position)
         time.sleep(1)
-
-        srcVial.z -= 25
-        move_to(srcVial)
-
-        coord.speed = 6500
-        move_to(coord)
-
-        coord.speed = 700
-        coord.z += 28
-        move_to(coord)
-        pipette.move_stepper(v100.dispense)
-
-        time.sleep(1.5)
-        coord.z -= 28
-        move_to(coord)
-
-        pipette.move_stepper(v100.aspirate)
-
-# (Program for Kit Manufacturing)
-def kitTest(source, dest, pipette):
-    vial_coords = source.get_coordinates()
-
-    destVial = dest
-    destVial.speed = 3700
-    move_to(destVial)
-    
-    for coord in vial_coords:
-        if destVial.z == coord.z:
-            destVial.speed = 6500
-        else:
-            destVial.speed = 2000
-
-        move_to(coord)
-        pipette.move_stepper(v100.prep)
-
-        coord.speed = 800
-        coord.z += 25
-        move_to(coord)
-        pipette.move_stepper(v100.aspirate)
-
+        
+        # Set the speed and dip down to pick up the tip
+        tip_position.speed = 1100
+        tip_position.z += TIP_DIP_DISTANCE
+        move_to(tip_position)
         time.sleep(1)
-
-        coord.z -= 25
-        move_to(coord)
-
-        destVial.speed = 6300
-        move_to(destVial)
-
-        destVial.speed = 800
-        destVial.z += 10
-        move_to(destVial)
-        pipette.move_stepper(v100.dispense)
-
-        time.sleep(1.5)
-        destVial.z -= 10
-        move_to(destVial)
-
-        pipette.move_stepper(v100.aspirate)
-
-
-def tip_test(source, dest, pipette):
-    well_coords = dest.get_coordinates()
-    tip_loc = source.get_coordinates()
-    tip_s6.speed = 3700
-    move_to(tip_s6)
+        
+        # Retract the pipette back up
+        tip_position.z -= TIP_DIP_DISTANCE
+        move_to(tip_position)
+        
+        print(f"Picked up tip from position: {tip_position}")
     
-    for i in range(len(well_coords)):
-        if tip_loc[i].z == well_coords[i].z:
-            tip_loc[i].speed = 7200
-        else:
-            tip_loc[i].speed = 2000
-
-        move_to(tip_loc[i])
-
-        tip_loc[i].speed = 1100
-        tip_loc[i].z += TIP_DIP_DISTANCE
-        move_to(tip_loc[i])
-
-        tip_loc[i].z -= TIP_DIP_DISTANCE
-        move_to(tip_loc[i])
-
-        well_coords[i].speed = 7200
-        time.sleep(1)
-        move_to(well_coords[i])
-
-        well_coords[i].speed = 1100
-        well_coords[i].z += WELL_DIP_DISTANCE
-        move_to(well_coords[i])
-
-        pipette.eject_tip()
-
-        well_coords[i].z -= WELL_DIP_DISTANCE
-        move_to(well_coords[i])
-
-def speedTest():
-    gcode_command = f"G1 X{10} Y{10} Z{0} F{6500}"
-    send_gcode(gcode_command)
-    gcode_command = f"G1 X{300} Y{300} Z{0} F{6500}"
-    send_gcode(gcode_command)
-    gcode_command = f"G1 X{10} Y{300} Z{0} F{6500}"
-    send_gcode(gcode_command)
-    gcode_command = f"G1 X{300} Y{10} Z{0} F{6500}"
-    send_gcode(gcode_command)
-
-    gcode_command = f"G1 X{10} Y{10} Z{0} F{6500}"
-    send_gcode(gcode_command)
-    gcode_command = f"G1 X{150} Y{150} Z{0} F{6500}"
-    send_gcode(gcode_command)
-    gcode_command = f"G1 X{10} Y{150} Z{0} F{6500}"
-    send_gcode(gcode_command)
-    gcode_command = f"G1 X{300} Y{300} Z{0} F{6500}"
-    send_gcode(gcode_command)
+    except ValueError as e:
+        print(e)
 
 # Usage
 pipette = PipetteController("my_servo", "lock_stepper")
 source_plate = WellPlate(tip_s6)
 dest_tips = WellPlate(tip_s4)
 dest_plate = WellPlate(well_s5)
-source_vial = VialHolder(vial2)
+
+tip_box = TipBox(tip_s4, row_count=12, col_count=8)
+
+source_vial = [VialHolder(vial2), VialHolder(vial3, row_count=6, column_count=5), VialHolder(vial1)]
+dest_vial = Coordinate(70, 107, 40, speed=DEFAULT_SPEED)
 
 #sample_test(vial2, dest_plate, pipette)
 #tip_test(source_plate, dest_plate, pipette)

@@ -4,4 +4,4 @@ class volume:
         self.dispense = dispense
         self.aspirate = aspirate
 
-v100 = volume(27, 35, 0)
+v100 = volume(38, 46, 0)
