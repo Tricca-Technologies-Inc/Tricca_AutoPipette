@@ -1,10 +1,10 @@
-from shiny import App, render, ui, reactive
 import movement
 import coordinates
+import asyncio
+from shiny import App, render, ui, reactive
 from coordinates import *
 from pipettev2 import *
 from protocols import *
-import asyncio
 
 # Create a Coordinate object named 'home' with coordinates (0, 0, 0)
 home = coordinates.Coordinate(0, 0, 0)
@@ -42,15 +42,18 @@ app_ui = ui.page_fluid(
                 background-color: #e0f7fa;
                 font-family: Arial, sans-serif;
                 color: #333;
+                margin: 0;  /* Remove default margin */
+                padding: 0;  /* Remove default padding */
             }
             .header {
                 background-color: #0288d1;
                 color: white;
-                padding: 60px;
+                padding: 20px;  /* Reduce padding for a smaller header */
                 text-align: center;
                 border-radius: 8px;
-                margin-bottom: 20px;
-                font-size: 40px;
+                margin-bottom: 10px;  /* Space below the header */
+                font-size: 24px;  /* Decrease font size */
+                width: 100%;  /* Make sure header spans full width */
             }
             .header i {
                 margin-right: 10px;
@@ -78,6 +81,7 @@ app_ui = ui.page_fluid(
                 background-color: #b3e5fc;
                 padding: 15px;
                 border-radius: 8px;
+                min-width: 250px;  /* Set a minimum width for the sidebar */
             }
             .card {
                 background-color: #fff;
@@ -85,6 +89,38 @@ app_ui = ui.page_fluid(
                 margin-bottom: 20px;
                 border-radius: 8px;
                 box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            }
+            .d-flex {
+                display: flex;
+                flex-wrap: wrap;  /* Allow wrapping to fit content */
+            }
+            .flex-column {
+                flex-direction: column;
+            }
+            .justify-content-start {
+                justify-content: flex-start;
+            }
+            .ml-3 {
+                margin-left: 1rem;
+            }
+            .right-section {
+                background-color: #e1f5fe;
+                padding: 15px;
+                border-radius: 8px;
+                min-width: 200px;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                flex-grow: 1;  /* Allow right section to grow */
+                margin-left: 20px;  /* Add some space between the content and right section */
+            }
+            .main-content {
+                flex: 1;  /* Let the main content take available space */
+            }
+            .protocol-title {
+                font-size: 20px;
+                font-weight: bold;
+                margin-bottom: 10px;
+                text-align: center;
+                color: #0288d1;
             }
         """)
     ),
@@ -94,6 +130,9 @@ app_ui = ui.page_fluid(
             "AutoPipette Machine Control Panel",
             class_="header"
         ),
+        class_="d-flex flex-column"  # Ensure header is separate
+    ),
+    ui.tags.div(
         ui.tags.div(
             ui.tags.div(
                 ui.input_numeric("x", "X Coordinate:", value=0),
@@ -101,29 +140,34 @@ app_ui = ui.page_fluid(
                 ui.input_numeric("z", "Z Coordinate:", value=0),
                 ui.input_numeric("speed", "Speed (mm/min):", value=1500),
                 ui.input_action_button("move", ui.tags.span(ui.tags.i(class_="fas fa-arrows-alt"), " Move to Coordinates"), class_="btn"),
-                ui.input_action_button("homeX", ui.tags.span(ui.tags.i(class_="fas fa-home"), " Home X"), class_="btn"),
                 ui.input_action_button("home", ui.tags.span(ui.tags.i(class_="fas fa-home"), " Move to Home"), class_="btn"),
-                ui.input_action_button("initPipette", ui.tags.span(ui.tags.i(class_="fas fa-home"), "Home Pipette Motors"), class_="btn"),
-                ui.input_action_button("kit", ui.tags.span(ui.tags.i(class_="fas fa-cogs"), " Kit Manufacturing"), class_="btn"),
-                ui.input_action_button("sample", ui.tags.span(ui.tags.i(class_="fas fa-flask"), " Sample Prep"), class_="btn"),
                 ui.input_action_button("stop", ui.tags.span(ui.tags.i(class_="fas fa-stop"), " Stop"), class_="btn"),
-                ui.input_text("location_name", "Location Name:", value="Home"),
-                ui.input_action_button("traverse_wells", ui.tags.span(ui.tags.i(class_="fas fa-th"), " Traverse Wells"), class_="btn"),
+                ui.input_text("location_name", "Location Name:", value=""),
                 ui.input_action_button("move_to_location", ui.tags.span(ui.tags.i(class_="fas fa-map-marker-alt"), " Move to Location"), class_="btn"),
                 class_="sidebar"
             ),
             ui.tags.div(
-                ui.card(
-                    ui.tags.h2("Output"),
-                    ui.output_text_verbatim("output"),
-                    class_="card"
-                ),
-                class_="ml-3"  # Add margin to separate from sidebar
+                ui.tags.h2("Protocols", class_="protocol-title"),
+                ui.input_action_button("initPipette", ui.tags.span(ui.tags.i(class_="fas fa-home"), "Initialize Pipette"), class_="btn"),
+                ui.input_action_button("kit", ui.tags.span(ui.tags.i(class_="fas fa-cogs"), " Kit Manufacturing"), class_="btn"),
+                ui.input_action_button("sample", ui.tags.span(ui.tags.i(class_="fas fa-flask"), " Sample Prep"), class_="btn"),
+                class_="right-section"
             ),
-            class_="d-flex flex-column justify-content-start"  # Align items in a column
-        )
+            class_="d-flex"
+        ),
+
+        ui.tags.div(
+            ui.card(
+                ui.tags.h2("Output"),
+                ui.output_text_verbatim("output"),
+                class_="card"
+            ),
+            class_="ml-3 main-content"
+        ),
+        class_="d-flex justify-content-start"
     )
 )
+
 
 def server(input, output, session):
     status_text = reactive.Value("Ready for commands")
@@ -146,34 +190,38 @@ def server(input, output, session):
 
     @render.ui
     @reactive.Effect
-    @reactive.event(input.homeX)
-    async def homeX_handler():
+    @reactive.event(input.home)
+    async def home_handler():
         with ui.Progress(min=1, max=15) as p:
             p.set(message="Calculation in progress", detail="This may take a while...")
 
             for i in range(1, 15):
                 p.set(i, message="Computing")
                 if (i == 12):
-                    movement.homeX()
-                    command = "Homed X axis..."
+                    movement.move_to(home)
+                    command = "Moved to home coordinates..."
                     status_text.set(command)
                 await asyncio.sleep(0.1)
 
         return "Done computing!"
 
-    @reactive.Effect
-    @reactive.event(input.home)
-    def home_handler():
-        movement.move_to(home)
-        command = "Moving to home coordinates..."
-        status_text.set(command)
-
+    @render.ui
     @reactive.Effect
     @reactive.event(input.kit)
-    def kit_handler():
-        movement.kit_manufacturing()
-        command = "Kit Manufacturing initiated..."
-        status_text.set(command)
+    async def kit_handler():
+        with ui.Progress(min=1, max=15) as p:
+            p.set(message="Executing Protocol", detail="This may take a while...")
+            command = "Kit Manufacturing Initiated"
+            status_text.set(command)
+            for i in range(1, 15):
+                p.set(i, message="Executing Protocol")
+                if (i == 12):
+                    kitTest(source_vial, dest_vial, pipette, tip_box, well_s5)
+                    command = "Kit Manufacturing Finished"
+                    status_text.set(command)
+                await asyncio.sleep(0.1)
+
+        return "Done!"
 
     @reactive.Effect
     @reactive.event(input.sample)
@@ -185,7 +233,7 @@ def server(input, output, session):
     @reactive.Effect
     @reactive.event(input.stop)
     def stop_handler():
-        speedTest()
+        exit()
 
     @reactive.Effect
     @reactive.event(input.move_to_location)
@@ -207,7 +255,9 @@ def server(input, output, session):
     @reactive.Effect
     @reactive.event(input.initPipette)
     def initPipette():
-        pipette.homeAll()
+        pipette.initAll()
+        command = "Machine ready to start!"
+        status_text.set(command)
 
 app = App(app_ui, server)
 

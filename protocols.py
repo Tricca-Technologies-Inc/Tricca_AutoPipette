@@ -53,14 +53,14 @@ def kitTest(vial_holders, dest, pipette, tip_box, garbage_position):
 
         for coord in vial_coords:
             try:
-                # Pick up a tip
+                # Attempt to pick up a tip
                 PickupTip(tip_box)
-            except:
-                # If no more tips are available, reset the tip box and pick up from the start
+            except ValueError:
+                # If no more tips are available, reset the tip box and start from the beginning
                 print("No more tips available, resetting tip box.")
                 tip_box.reset()
-                PickupTip(tip_box)
-            
+                PickupTip(tip_box)  # Pick up the first tip after resetting
+
             # Move to source vial
             move_to(coord)
 
@@ -73,7 +73,7 @@ def kitTest(vial_holders, dest, pipette, tip_box, garbage_position):
 
             # Return to original z position
             coord.z -= 35
-            time.sleep(2)
+            time.sleep(1.5)
             move_to(coord)
 
             # Move to destination vial
@@ -85,13 +85,14 @@ def kitTest(vial_holders, dest, pipette, tip_box, garbage_position):
             dest.z += 20
             move_to(dest)
             pipette.move_stepper(v100.dispense)
+            time.sleep(2)
 
             # Return to original z position
             dest.z -= 20
             move_to(dest)
 
             # Home the pipette motor
-            pipette.home_stepper()
+            pipette.home_stepper(speed=30)
 
             # Eject the tip to the garbage position
             garbage_position.speed = DEFAULT_SPEED

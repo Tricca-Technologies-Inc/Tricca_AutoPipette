@@ -7,13 +7,14 @@ from volumes import *
 SERVO_ANGLE_RETRACT = 140
 SERVO_ANGLE_READY = 85
 
-EJECT_WAIT_TIME = 1.5
-MOVEMENT_WAIT_TIME = 1.5
+EJECT_WAIT_TIME = 1
+MOVEMENT_WAIT_TIME = 1
 
 TIP_DIP_DISTANCE = 78.5
 WELL_DIP_DISTANCE = 35
 
 DEFAULT_SPEED = 10300
+PIPETTE_SPEED = 15
 
 # Classes for modularization
 class PipetteController:
@@ -32,8 +33,8 @@ class PipetteController:
         gcode_command = f"SET_SERVO SERVO={self.servo_name} ANGLE={angle}"
         send_gcode(gcode_command)
     
-    def home_stepper(self):
-        gcode_command = f"MANUAL_STEPPER STEPPER={self.stepper_name} SPEED=15 MOVE=-30 STOP_ON_ENDSTOP=1"
+    def home_stepper(self, speed=PIPETTE_SPEED):
+        gcode_command = f"MANUAL_STEPPER STEPPER={self.stepper_name} SPEED={speed} MOVE=-30 STOP_ON_ENDSTOP=1"
         send_gcode(gcode_command)
         gcode_command = f"MANUAL_STEPPER STEPPER={self.stepper_name} SET_POSITION=0"
         send_gcode(gcode_command)
@@ -42,10 +43,15 @@ class PipetteController:
         gcode_command = f"MANUAL_STEPPER STEPPER={self.stepper_name} SPEED={speed} MOVE={distance}"
         send_gcode(gcode_command)
 
-    def homeAll(self):
+    def homeMotors(self):
         self.set_servo_angle(SERVO_ANGLE_RETRACT)
         time.sleep(1)
         self.home_stepper()
+
+    def initAll(self):
+        homeAxes()
+        self.homeMotors()
+        initSpeed()
 
 class WellPlate:
     def __init__(self, start_coordinate, row_count=12, column_count=8, row_spacing=9, column_spacing=9):
@@ -134,16 +140,16 @@ def PickupTip(tip_box):
         # Get the next available tip's position
         tip_position = tip_box.next_tip()
         
-        tip_position.speed = 10300
+        tip_position.speed = DEFAULT_SPEED
         # Move to the tip's position
         move_to(tip_position)
-        time.sleep(1)
+        time.sleep(0.5)
         
         # Set the speed and dip down to pick up the tip
         tip_position.speed = 1100
         tip_position.z += TIP_DIP_DISTANCE
         move_to(tip_position)
-        time.sleep(1)
+        time.sleep(0.5)
         
         # Retract the pipette back up
         tip_position.z -= TIP_DIP_DISTANCE
