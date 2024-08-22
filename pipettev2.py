@@ -104,7 +104,12 @@ class TipBox:
             tip_coordinate = self.coordinates[self.current_tip]
             self.current_tip += 1
             return tip_coordinate
+        
+        elif self.current_tip == len(self.coordinates):
+            self.reset()
+
         else:
+            self.reset()
             raise ValueError("No more tips available")
 
     def reset(self):
@@ -169,7 +174,7 @@ dest_plate = WellPlate(well_s5)
 tip_box = TipBox(tip_s4, row_count=12, col_count=8)
 
 source_vial = [VialHolder(vial2), VialHolder(vial3, row_count=6, column_count=5), VialHolder(vial1)]
-dest_vial = Coordinate(70, 107, 40, speed=DEFAULT_SPEED)
+dest_vial = Coordinate(65, 109, 30, speed=DEFAULT_SPEED)
 
 #sample_test(vial2, dest_plate, pipette)
 #tip_test(source_plate, dest_plate, pipette)

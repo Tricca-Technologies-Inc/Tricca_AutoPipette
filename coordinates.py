@@ -10,7 +10,7 @@ class Coordinate:
 
 # 100uL Tips Origin points
 tip_s3 = Coordinate(x=263, y=345, z=40.0)
-tip_s4 = Coordinate(x=312, y=151, z=40.0)
+tip_s4 = Coordinate(x=314, y=151, z=40.0)
 tip_s6 = Coordinate(x=89.6, y=150.50, z=40.0)
 testv = Coordinate(x=260.24, y=56.15, z=40)
 well_end = Coordinate(x=300, y=294, z=40)
@@ -22,9 +22,9 @@ well_s5 = Coordinate(x=202, y=148.50, z=40)
 scale_vial = Coordinate(x=141.9, y=229.4, z=60) # need to update
 
 # Vial Origin points
-vial1 = Coordinate(x=93.60, y=147.50, z=40)
-vial2 = Coordinate(x=206, y=1, z=40)
-vial3 = Coordinate(x=93, y=1, z=40)
+vial1 = Coordinate(x=91.60, y=145.50, z=40)
+vial2 = Coordinate(x=206, y=2, z=40)
+vial3 = Coordinate(x=94, y=1, z=40)
 
 mvial = Coordinate(x=33.5, y=243.03, z=60)
 

@@ -130,7 +130,7 @@ app_ui = ui.page_fluid(
             "AutoPipette Machine Control Panel",
             class_="header"
         ),
-        class_="d-flex flex-column"  # Ensure header is separate
+        class_="d-flex flex-column mb-3"  # Ensure header is separate and add margin-bottom
     ),
     ui.tags.div(
         ui.tags.div(
@@ -151,11 +151,22 @@ app_ui = ui.page_fluid(
                 ui.input_action_button("initPipette", ui.tags.span(ui.tags.i(class_="fas fa-home"), "Initialize Pipette"), class_="btn"),
                 ui.input_action_button("kit", ui.tags.span(ui.tags.i(class_="fas fa-cogs"), " Kit Manufacturing"), class_="btn"),
                 ui.input_action_button("sample", ui.tags.span(ui.tags.i(class_="fas fa-flask"), " Sample Prep"), class_="btn"),
+
+                # Live video stream section
+                ui.tags.div(
+                    ui.tags.h4("Live Video Stream"),
+                    ui.tags.video(
+                        controls=True,
+                        autoplay=True,
+                        src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",  # Replace with the URL of a camera
+                        style="width: 50%; max-width: 50%; border-radius: 8px;"
+                    ),
+                    class_="card"  # Styling for the video container
+                ),
                 class_="right-section"
             ),
-            class_="d-flex"
+            class_="d-flex flex-column flex-grow-1"  # Ensure content grows to fill available space
         ),
-
         ui.tags.div(
             ui.card(
                 ui.tags.h2("Output"),
@@ -164,10 +175,9 @@ app_ui = ui.page_fluid(
             ),
             class_="ml-3 main-content"
         ),
-        class_="d-flex justify-content-start"
+        class_="d-flex flex-row"
     )
 )
-
 
 def server(input, output, session):
     status_text = reactive.Value("Ready for commands")
@@ -226,7 +236,7 @@ def server(input, output, session):
     @reactive.Effect
     @reactive.event(input.sample)
     def sample_handler():
-        movement.sample_prep()
+        volumeTest(vial1, dest_vial)
         command = "Sample Prep initiated..."
         status_text.set(command)
 
