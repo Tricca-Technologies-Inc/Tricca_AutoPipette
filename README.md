@@ -1,12 +1,11 @@
 # Automated Pipetting System
 
-This repository contains the codebase for an automated pipetting system designed to manage liquid handling tasks such as aspirating, dispensing, and ejecting tips using a robotic arm controlled by a pipette. The system is programmed using Python and interfaces with hardware through G-code commands and configuration files.
+This repository contains the codebase for an automated pipetting system designed to manage protocols for kit manufacturing and sample preparation using a gantry system controlled by a pipette. The system is programmed using Python and interfaces with hardware through G-code commands and configuration files.
 
 ## Table of Contents
 
 - [Overview](#overview)
 - [Files and Structure](#files-and-structure)
-- [Usage](#usage)
 - [Configuration](#configuration)
 - [Dependencies](#dependencies)
 - [Contributing](#contributing)
@@ -42,12 +41,9 @@ The automated pipetting system is designed for solution handling tasks, utilizin
 - **volumes.py**  
   Contains definitions for solution volumes used in pipetting protocols.
 
-Configuration
+## Configuration
 printer.cfg
 This file contains the configuration for the Klipper firmware, including stepper motors, endstops, and other hardware parameters. Modify this file according to  specific hardware configuration.
 
-volumes.py
-The volumes.py file contains predefined liquid volumes used for various pipetting tasks. You can customize these volumes to suit  particular requirements.
-
-Dependencies
+## Dependencies
 Ensure that Python 3.x is installed on your system. You will also need to install the necessary Python packages. You can do this by running:
