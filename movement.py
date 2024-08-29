@@ -6,7 +6,7 @@ import requests
 
 # Always make sure to change when web app IP is not working
 # Use Angry IP checker to find correct IP address
-MOONRAKER_URL = "http://192.168.73.14:7125/printer/gcode/script"
+MOONRAKER_URL = "http://192.168.149.14:7125/printer/gcode/script"
 
 SPEED_FACTOR = 700
 VELOCITY = 1500

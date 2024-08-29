@@ -4,16 +4,19 @@ import time
 from volumes import *
 
 # Constants
-SERVO_ANGLE_RETRACT = 140
-SERVO_ANGLE_READY = 85
+SERVO_ANGLE_RETRACT = 150
+SERVO_ANGLE_READY = 80
 
 EJECT_WAIT_TIME = 1
 MOVEMENT_WAIT_TIME = 1
 
 TIP_DIP_DISTANCE = 78.5
 WELL_DIP_DISTANCE = 35
+VIAL_DIP_DISTANCE = 55
+TILTV_DIP = 30
 
 DEFAULT_SPEED = 10300
+DEFAULT_Z_SPEED = 1000
 PIPETTE_SPEED = 15
 
 # Classes for modularization
@@ -165,6 +168,18 @@ def PickupTip(tip_box):
     except ValueError as e:
         print(e)
 
+def dipZ(coordinate, dip_dist):
+    coordinate.speed = DEFAULT_Z_SPEED
+    coordinate.z += dip_dist
+    time.sleep(0.5)
+    move_to(coordinate)
+
+def returnZ(coordinate, dip_dist):
+    coordinate.speed = DEFAULT_Z_SPEED
+    coordinate.z -= dip_dist
+    time.sleep(0.5)
+    move_to(coordinate)
+
 # Usage
 pipette = PipetteController("my_servo", "lock_stepper")
 source_plate = WellPlate(tip_s6)
@@ -173,7 +188,14 @@ dest_plate = WellPlate(well_s5)
 
 tip_box = TipBox(tip_s4, row_count=12, col_count=8)
 
-source_vial = [VialHolder(vial2), VialHolder(vial3, row_count=6, column_count=5), VialHolder(vial1)]
+# Initialize the vial holders
+vial_holder_1 = VialHolder(vial2)
+vial_holder_2 = VialHolder(vial3, row_count=6, column_count=5)
+vial_holder_3 = VialHolder(vial1)
+
+# Combine all coordinates into a single list
+source_vial = vial_holder_1.get_coordinates() + vial_holder_2.get_coordinates() + vial_holder_3.get_coordinates()
+
 dest_vial = Coordinate(65, 109, 30, speed=DEFAULT_SPEED)
 
 #sample_test(vial2, dest_plate, pipette)

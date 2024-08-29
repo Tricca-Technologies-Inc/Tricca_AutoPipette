@@ -226,7 +226,7 @@ def server(input, output, session):
             for i in range(1, 15):
                 p.set(i, message="Executing Protocol")
                 if (i == 12):
-                    kitTest(source_vial, dest_vial, pipette, tip_box, well_s5)
+                    kitTest(source_vial, dest_vial, pipette, tip_box, well_s5, volumes_PRIME)
                     command = "Kit Manufacturing Finished"
                     status_text.set(command)
                 await asyncio.sleep(0.1)

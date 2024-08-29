@@ -47,58 +47,42 @@ def sample_test(source, dest, pipette):
 
 # (Program for Kit Manufacturing)
 # Function to perform kit test with multiple vial holders
-def kitTest(vial_holders, dest, pipette, tip_box, garbage_position):
-    for holder in vial_holders:
-        vial_coords = holder.get_coordinates()
+def kitTest(vial_coords, dest, pipette, tip_box, garbage_position, volumes):
+    vial_coords = vial_coords[:50] ## PRIME KIT
+    for coord, volumes in zip(vial_coords, volumes):
+        try:
+            # Attempt to pick up a tip
+            PickupTip(tip_box)
+        except:
+            # If no more tips are available, reset the tip box and start from the beginning
+            print("No more tips available, resetting tip box.")
+            tip_box.reset()
+            PickupTip(tip_box)  # Pick up the first tip after resetting
 
-        for coord in vial_coords:
-            try:
-                # Attempt to pick up a tip
-                PickupTip(tip_box)
-            except:
-                # If no more tips are available, reset the tip box and start from the beginning
-                print("No more tips available, resetting tip box.")
-                tip_box.reset()
-                PickupTip(tip_box)  # Pick up the first tip after resetting
+        transferLiq(coord, dest, volumes)
 
-            # Move to source vial
-            move_to(coord)
+        # Eject the tip to the garbage position
+        garbage_position.speed = DEFAULT_SPEED
+        move_to(garbage_position)
+        pipette.eject_tip()
 
-            # Prep and aspirate
-            pipette.move_stepper(v100.prep)
-            coord.speed = 1000
-            coord.z += 35
-            move_to(coord)
-            pipette.move_stepper(v100.aspirate)
+def transferLiq(source, dest, volume):
+    for _ in range(volume.multiplier):
+        # Grab solution
+        source.speed = DEFAULT_SPEED
+        move_to(source)
+        pipette.move_stepper(volume.prep)
+        dipZ(source, VIAL_DIP_DISTANCE)
+        pipette.home_stepper(speed=30)
+        returnZ(source, VIAL_DIP_DISTANCE)
 
-            # Return to original z position
-            coord.z -= 35
-            time.sleep(2)
-            move_to(coord)
-
-            # Move to destination vial
-            dest.speed = DEFAULT_SPEED
-            move_to(dest)
-
-            # Dispense
-            dest.speed = 1000
-            dest.z += 30
-            move_to(dest)
-            pipette.move_stepper(v100.dispense)
-            time.sleep(2)
-
-            # Return to original z position
-            dest.z -= 30
-            move_to(dest)
-
-            # Home the pipette motor
-            pipette.home_stepper(speed=30)
-
-            # Eject the tip to the garbage position
-            garbage_position.speed = DEFAULT_SPEED
-            move_to(garbage_position)
-            pipette.eject_tip()
-
+        # Dispense
+        dest.speed = DEFAULT_SPEED
+        move_to(dest)
+        dipZ(dest, TILTV_DIP)
+        pipette.move_stepper(volume.dispense)
+        returnZ(dest,TILTV_DIP)
+        pipette.home_stepper(speed=30)
 
 def tip_test(source, dest, pipette):
     well_coords = dest.get_coordinates()
@@ -139,11 +123,11 @@ def volumeTest(source, dest):
     move_to(source)
 
     # Prep and aspirate
-    pipette.move_stepper(v40.prep)
+    pipette.move_stepper(v100.prep)
     source.speed = 1000
     source.z += 40
     move_to(source)
-    pipette.move_stepper(v40.aspirate)
+    pipette.move_stepper(v100.aspirate)
 
     # Return to original z position
     source.z -= 40
@@ -158,7 +142,7 @@ def volumeTest(source, dest):
     dest.speed = 1000
     dest.z += 30
     move_to(dest)
-    pipette.move_stepper(v40.dispense)
+    pipette.move_stepper(v100.dispense)
     time.sleep(2)
 
     # Return to original z position
@@ -188,3 +172,10 @@ def speedTest():
     send_gcode(gcode_command)
     gcode_command = f"G1 X{300} Y{300} Z{0} F{6500}"
     send_gcode(gcode_command)
+
+
+volumes_PRIME = [
+    v50, v50, v50, v50, v50, v50, v50, v50, v50, v50, v50, v50, v50, v50, v50, v50, v25, v50, v50, v100,
+    v50, v100, v400, v50, v250, v200, v50, v50, v50, v50, v50, v50, v50, v50, v50, v50, v50, v200, v50,
+    v50, v100, v50, v100, v25, v160, v400, v400, v50, v50, v160
+]
