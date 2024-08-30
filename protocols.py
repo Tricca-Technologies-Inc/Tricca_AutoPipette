@@ -48,7 +48,7 @@ def sample_test(source, dest, pipette):
 # (Program for Kit Manufacturing)
 # Function to perform kit test with multiple vial holders
 def kitTest(vial_coords, dest, pipette, tip_box, garbage_position, volumes):
-    vial_coords = vial_coords[:50] ## PRIME KIT
+    vial_coords = vial_coords[:50] ## PRIME KIT change length based on how many vials to use
     for coord, volumes in zip(vial_coords, volumes):
         try:
             # Attempt to pick up a tip
