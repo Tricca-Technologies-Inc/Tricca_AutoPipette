@@ -41,3 +41,21 @@ This file contains the configuration for the Klipper firmware, including stepper
 
 ## Dependencies
 Ensure that Python 3.x is installed on your system. You will also need to install the necessary Python packages. You can do this by running:
+
+## How to run the machine
+- **1.) Connecting to the board.**  
+  On Code FAQ#9
+  
+- **2.) Setting up the software**  
+  Git pull the repo to a folder. Use VS code
+
+- **3.) Getting Started**  
+  Change the IP addresses (from step 1) on the current code set. Run app.py and open the web app to run protocols
+
+- **4.) Operation**  
+  First, click 'initialize pipette' on the web app to home all motors and set the right speeds.
+  Then, set the speed to 100% first before executing any protocols. Click 'kit manufacturing' to run the test. Once the protocol is ran, you can set the speed up to 800%. Finally, wait for the protocol to finish. Have Mainsail open for emergency stop, just in case the machine/program fails.
+
+- **5.) Notes**  
+  Calibrate the coordinates manually using mainsail before executing protocols to prevent any collisions/problems.
+  
