@@ -23,14 +23,8 @@ The automated pipetting system is designed for solution handling tasks, utilizin
 - **coordinates.py**  
   Defines the coordinate system and functions for generating well plate coordinates.
 
-- **main.py**  
-  A script that initializes and runs the pipetting routines. (Currently not in use. Run app.py)
-
 - **movement.py**  
   Contains functions for moving the machine to specific coordinates.
-
-- **pipette.py**  
-  Defines the pipette control functions and protocols, including aspirate, dispense, and tip ejection operations.
 
 - **pipettev2.py**  
   An alternative or updated version of the `pipette.py` module with additional or modified functionality.
