@@ -1,0 +1,85 @@
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
+body {
+    background-color: #e0f7fa;
+    font-family: Arial, sans-serif;
+    color: #333;
+    margin: 0;  /* Remove default margin */
+    padding: 0;  /* Remove default padding */
+}
+.header {
+    background-color: #0288d1;
+    color: white;
+    padding: 20px;  /* Reduce padding for a smaller header */
+    text-align: center;
+    border-radius: 8px;
+    margin-bottom: 10px;  /* Space below the header */
+    font-size: 24px;  /* Decrease font size */
+    width: 100%;  /* Make sure header spans full width */
+}
+.header i {
+    margin-right: 10px;
+}
+.btn {
+    background-color: #0288d1;
+    border: none;
+    color: white;
+    padding: 10px 24px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 8px;
+}
+.btn:hover {
+    background-color: #0277bd;
+}
+.btn i {
+    margin-right: 8px;
+}
+.sidebar {
+    background-color: #b3e5fc;
+    padding: 15px;
+    border-radius: 8px;
+    min-width: 250px;  /* Set a minimum width for the sidebar */
+}
+.card {
+    background-color: #fff;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+.d-flex {
+    display: flex;
+    flex-wrap: wrap;  /* Allow wrapping to fit content */
+}
+.flex-column {
+    flex-direction: column;
+}
+.justify-content-start {
+    justify-content: flex-start;
+}
+.ml-3 {
+    margin-left: 1rem;
+}
+.right-section {
+    background-color: #e1f5fe;
+    padding: 15px;
+    border-radius: 8px;
+    min-width: 200px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    flex-grow: 1;  /* Allow right section to grow */
+    margin-left: 20px;  /* Add some space between the content and right section */
+}
+.main-content {
+    flex: 1;  /* Let the main content take available space */
+}
+.protocol-title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-align: center;
+    color: #0288d1;
+}
