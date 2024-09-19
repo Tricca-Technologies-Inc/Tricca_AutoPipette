@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AutoPipette module &mdash; AutoPipette  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="PipetteApp module" href="PipetteApp.html" />
+    <link rel="prev" title="AutoPipette documentation" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            AutoPipette
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">AutoPipette module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#AutoPipette.AutoPipette"><code class="docutils literal notranslate"><span class="pre">AutoPipette</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.ACCEL"><code class="docutils literal notranslate"><span class="pre">AutoPipette.ACCEL</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.DEFAULT_SPEED"><code class="docutils literal notranslate"><span class="pre">AutoPipette.DEFAULT_SPEED</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.DEFAULT_Z_SPEED"><code class="docutils literal notranslate"><span class="pre">AutoPipette.DEFAULT_Z_SPEED</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.EJECT_WAIT_TIME"><code class="docutils literal notranslate"><span class="pre">AutoPipette.EJECT_WAIT_TIME</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.MAX_SPEED"><code class="docutils literal notranslate"><span class="pre">AutoPipette.MAX_SPEED</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.MOVEMENT_WAIT_TIME"><code class="docutils literal notranslate"><span class="pre">AutoPipette.MOVEMENT_WAIT_TIME</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.PIPETTE_SPEED"><code class="docutils literal notranslate"><span class="pre">AutoPipette.PIPETTE_SPEED</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.SERVO_ANGLE_READY"><code class="docutils literal notranslate"><span class="pre">AutoPipette.SERVO_ANGLE_READY</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.SERVO_ANGLE_RETRACT"><code class="docutils literal notranslate"><span class="pre">AutoPipette.SERVO_ANGLE_RETRACT</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.SPEED_FACTOR"><code class="docutils literal notranslate"><span class="pre">AutoPipette.SPEED_FACTOR</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.TILTV_DIP"><code class="docutils literal notranslate"><span class="pre">AutoPipette.TILTV_DIP</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.TIP_DIP_DISTANCE"><code class="docutils literal notranslate"><span class="pre">AutoPipette.TIP_DIP_DISTANCE</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.VELOCITY"><code class="docutils literal notranslate"><span class="pre">AutoPipette.VELOCITY</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.VIAL_DIP_DISTANCE"><code class="docutils literal notranslate"><span class="pre">AutoPipette.VIAL_DIP_DISTANCE</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.WELL_DIP_DISTANCE"><code class="docutils literal notranslate"><span class="pre">AutoPipette.WELL_DIP_DISTANCE</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.dipZ"><code class="docutils literal notranslate"><span class="pre">AutoPipette.dipZ()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.eject_tip"><code class="docutils literal notranslate"><span class="pre">AutoPipette.eject_tip()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.homeAxes"><code class="docutils literal notranslate"><span class="pre">AutoPipette.homeAxes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.homeMotors"><code class="docutils literal notranslate"><span class="pre">AutoPipette.homeMotors()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.homeX"><code class="docutils literal notranslate"><span class="pre">AutoPipette.homeX()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.homeY"><code class="docutils literal notranslate"><span class="pre">AutoPipette.homeY()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.homeZ"><code class="docutils literal notranslate"><span class="pre">AutoPipette.homeZ()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.home_servo"><code class="docutils literal notranslate"><span class="pre">AutoPipette.home_servo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.home_stepper"><code class="docutils literal notranslate"><span class="pre">AutoPipette.home_stepper()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.initAll"><code class="docutils literal notranslate"><span class="pre">AutoPipette.initAll()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.initSpeed"><code class="docutils literal notranslate"><span class="pre">AutoPipette.initSpeed()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.moveX_to"><code class="docutils literal notranslate"><span class="pre">AutoPipette.moveX_to()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.move_stepper"><code class="docutils literal notranslate"><span class="pre">AutoPipette.move_stepper()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.move_to"><code class="docutils literal notranslate"><span class="pre">AutoPipette.move_to()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.pickupTip"><code class="docutils literal notranslate"><span class="pre">AutoPipette.pickupTip()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.returnZ"><code class="docutils literal notranslate"><span class="pre">AutoPipette.returnZ()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.send_gcode"><code class="docutils literal notranslate"><span class="pre">AutoPipette.send_gcode()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.set_servo_angle"><code class="docutils literal notranslate"><span class="pre">AutoPipette.set_servo_angle()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#AutoPipette.AutoPipette.waitSec"><code class="docutils literal notranslate"><span class="pre">AutoPipette.waitSec()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="PipetteApp.html">PipetteApp module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="VialHolder.html">VialHolder module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="WellPlate.html">WellPlate module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="volumes.html">volumes module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TipBox.html">TipBox module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="protocols.html">protocols module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Coordinate.html">Coordinate module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">AutoPipette_MANTA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">AutoPipette</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">AutoPipette module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/AutoPipette.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-AutoPipette">
+<span id="autopipette-module"></span><h1>AutoPipette module<a class="headerlink" href="#module-AutoPipette" title="Link to this heading"></a></h1>
+<p>Holds the AutoPipette class.</p>
+<p>The AutoPipette class is responsible for functions relating to the AutoPipette.
+This includes sending and receiving commands, managing different parameters
+and managing the different states of the pipette.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AutoPipette.</span></span><span class="sig-name descname"><span class="pre">AutoPipette</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">moonraker_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_speed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">servo_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'my_servo'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stepper_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lock_stepper'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoPipette.AutoPipette" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This class is responsible for functions relating to the auto pipette.</p>
+<p>Responsibilities include sending and receiving commands, managing different
+variables and managing the different sates of the auto pipette.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.ACCEL">
+<span class="sig-name descname"><span class="pre">ACCEL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5500</span></em><a class="headerlink" href="#AutoPipette.AutoPipette.ACCEL" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.DEFAULT_SPEED">
+<span class="sig-name descname"><span class="pre">DEFAULT_SPEED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">500</span></em><a class="headerlink" href="#AutoPipette.AutoPipette.DEFAULT_SPEED" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.DEFAULT_Z_SPEED">
+<span class="sig-name descname"><span class="pre">DEFAULT_Z_SPEED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">500</span></em><a class="headerlink" href="#AutoPipette.AutoPipette.DEFAULT_Z_SPEED" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.EJECT_WAIT_TIME">
+<span class="sig-name descname"><span class="pre">EJECT_WAIT_TIME</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#AutoPipette.AutoPipette.EJECT_WAIT_TIME" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.MAX_SPEED">
+<span class="sig-name descname"><span class="pre">MAX_SPEED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1000</span></em><a class="headerlink" href="#AutoPipette.AutoPipette.MAX_SPEED" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.MOVEMENT_WAIT_TIME">
+<span class="sig-name descname"><span class="pre">MOVEMENT_WAIT_TIME</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#AutoPipette.AutoPipette.MOVEMENT_WAIT_TIME" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.PIPETTE_SPEED">
+<span class="sig-name descname"><span class="pre">PIPETTE_SPEED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">15</span></em><a class="headerlink" href="#AutoPipette.AutoPipette.PIPETTE_SPEED" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.SERVO_ANGLE_READY">
+<span class="sig-name descname"><span class="pre">SERVO_ANGLE_READY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">80</span></em><a class="headerlink" href="#AutoPipette.AutoPipette.SERVO_ANGLE_READY" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.SERVO_ANGLE_RETRACT">
+<span class="sig-name descname"><span class="pre">SERVO_ANGLE_RETRACT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">150</span></em><a class="headerlink" href="#AutoPipette.AutoPipette.SERVO_ANGLE_RETRACT" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.SPEED_FACTOR">
+<span class="sig-name descname"><span class="pre">SPEED_FACTOR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">700</span></em><a class="headerlink" href="#AutoPipette.AutoPipette.SPEED_FACTOR" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.TILTV_DIP">
+<span class="sig-name descname"><span class="pre">TILTV_DIP</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">30</span></em><a class="headerlink" href="#AutoPipette.AutoPipette.TILTV_DIP" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.TIP_DIP_DISTANCE">
+<span class="sig-name descname"><span class="pre">TIP_DIP_DISTANCE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">78.5</span></em><a class="headerlink" href="#AutoPipette.AutoPipette.TIP_DIP_DISTANCE" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.VELOCITY">
+<span class="sig-name descname"><span class="pre">VELOCITY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1500</span></em><a class="headerlink" href="#AutoPipette.AutoPipette.VELOCITY" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.VIAL_DIP_DISTANCE">
+<span class="sig-name descname"><span class="pre">VIAL_DIP_DISTANCE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">55</span></em><a class="headerlink" href="#AutoPipette.AutoPipette.VIAL_DIP_DISTANCE" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.WELL_DIP_DISTANCE">
+<span class="sig-name descname"><span class="pre">WELL_DIP_DISTANCE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">35</span></em><a class="headerlink" href="#AutoPipette.AutoPipette.WELL_DIP_DISTANCE" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.dipZ">
+<span class="sig-name descname"><span class="pre">dipZ</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coordinate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dip_dist</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoPipette.AutoPipette.dipZ" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.eject_tip">
+<span class="sig-name descname"><span class="pre">eject_tip</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AutoPipette.AutoPipette.eject_tip" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.homeAxes">
+<span class="sig-name descname"><span class="pre">homeAxes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AutoPipette.AutoPipette.homeAxes" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.homeMotors">
+<span class="sig-name descname"><span class="pre">homeMotors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AutoPipette.AutoPipette.homeMotors" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.homeX">
+<span class="sig-name descname"><span class="pre">homeX</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AutoPipette.AutoPipette.homeX" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.homeY">
+<span class="sig-name descname"><span class="pre">homeY</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AutoPipette.AutoPipette.homeY" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.homeZ">
+<span class="sig-name descname"><span class="pre">homeZ</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AutoPipette.AutoPipette.homeZ" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.home_servo">
+<span class="sig-name descname"><span class="pre">home_servo</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AutoPipette.AutoPipette.home_servo" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.home_stepper">
+<span class="sig-name descname"><span class="pre">home_stepper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">speed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">15</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoPipette.AutoPipette.home_stepper" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.initAll">
+<span class="sig-name descname"><span class="pre">initAll</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AutoPipette.AutoPipette.initAll" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.initSpeed">
+<span class="sig-name descname"><span class="pre">initSpeed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AutoPipette.AutoPipette.initSpeed" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.moveX_to">
+<span class="sig-name descname"><span class="pre">moveX_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coordinate</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoPipette.AutoPipette.moveX_to" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.move_stepper">
+<span class="sig-name descname"><span class="pre">move_stepper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">speed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">15</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoPipette.AutoPipette.move_stepper" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.move_to">
+<span class="sig-name descname"><span class="pre">move_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coordinate</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoPipette.AutoPipette.move_to" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.pickupTip">
+<span class="sig-name descname"><span class="pre">pickupTip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tip_box</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoPipette.AutoPipette.pickupTip" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.returnZ">
+<span class="sig-name descname"><span class="pre">returnZ</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coordinate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dip_dist</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoPipette.AutoPipette.returnZ" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.send_gcode">
+<span class="sig-name descname"><span class="pre">send_gcode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">command</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoPipette.AutoPipette.send_gcode" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.set_servo_angle">
+<span class="sig-name descname"><span class="pre">set_servo_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">angle</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoPipette.AutoPipette.set_servo_angle" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="AutoPipette.AutoPipette.waitSec">
+<span class="sig-name descname"><span class="pre">waitSec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#AutoPipette.AutoPipette.waitSec" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="AutoPipette documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="PipetteApp.html" class="btn btn-neutral float-right" title="PipetteApp module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, James Cook.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

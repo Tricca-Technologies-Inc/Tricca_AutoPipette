@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coordinate module &mdash; AutoPipette  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="AutoPipette_MANTA" href="modules.html" />
+    <link rel="prev" title="protocols module" href="protocols.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            AutoPipette
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="AutoPipette.html">AutoPipette module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="PipetteApp.html">PipetteApp module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="VialHolder.html">VialHolder module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="WellPlate.html">WellPlate module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="volumes.html">volumes module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TipBox.html">TipBox module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="protocols.html">protocols module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Coordinate module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Coordinate.Coordinate"><code class="docutils literal notranslate"><span class="pre">Coordinate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Coordinate.Location"><code class="docutils literal notranslate"><span class="pre">Location</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Coordinate.Location.garb_s5"><code class="docutils literal notranslate"><span class="pre">Location.garb_s5</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Coordinate.Location.home"><code class="docutils literal notranslate"><span class="pre">Location.home</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Coordinate.Location.locations"><code class="docutils literal notranslate"><span class="pre">Location.locations</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Coordinate.Location.mvial"><code class="docutils literal notranslate"><span class="pre">Location.mvial</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Coordinate.Location.scale_vial"><code class="docutils literal notranslate"><span class="pre">Location.scale_vial</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Coordinate.Location.testv"><code class="docutils literal notranslate"><span class="pre">Location.testv</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Coordinate.Location.tiltV"><code class="docutils literal notranslate"><span class="pre">Location.tiltV</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Coordinate.Location.tip_s3"><code class="docutils literal notranslate"><span class="pre">Location.tip_s3</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Coordinate.Location.tip_s4"><code class="docutils literal notranslate"><span class="pre">Location.tip_s4</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Coordinate.Location.tip_s6"><code class="docutils literal notranslate"><span class="pre">Location.tip_s6</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Coordinate.Location.vial1"><code class="docutils literal notranslate"><span class="pre">Location.vial1</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Coordinate.Location.vial2"><code class="docutils literal notranslate"><span class="pre">Location.vial2</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Coordinate.Location.vial3"><code class="docutils literal notranslate"><span class="pre">Location.vial3</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Coordinate.Location.well_end"><code class="docutils literal notranslate"><span class="pre">Location.well_end</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Coordinate.Location.well_s5"><code class="docutils literal notranslate"><span class="pre">Location.well_s5</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">AutoPipette_MANTA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">AutoPipette</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Coordinate module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/Coordinate.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-Coordinate">
+<span id="coordinate-module"></span><h1>Coordinate module<a class="headerlink" href="#module-Coordinate" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="Coordinate.Coordinate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Coordinate.</span></span><span class="sig-name descname"><span class="pre">Coordinate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">speed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1500</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Coordinate.Coordinate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Coordinate.Location">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Coordinate.</span></span><span class="sig-name descname"><span class="pre">Location</span></span><a class="headerlink" href="#Coordinate.Location" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Coordinate.Location.garb_s5">
+<span class="sig-name descname"><span class="pre">garb_s5</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Coordinate(x=179.82,</span> <span class="pre">y=136.21,</span> <span class="pre">z=60.0,</span> <span class="pre">speed=1500)</span></em><a class="headerlink" href="#Coordinate.Location.garb_s5" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Coordinate.Location.home">
+<span class="sig-name descname"><span class="pre">home</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Coordinate(x=0,</span> <span class="pre">y=0,</span> <span class="pre">z=0,</span> <span class="pre">speed=1500)</span></em><a class="headerlink" href="#Coordinate.Location.home" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Coordinate.Location.locations">
+<span class="sig-name descname"><span class="pre">locations</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'Garbage</span> <span class="pre">S5':</span> <span class="pre">Coordinate(x=179.82,</span> <span class="pre">y=136.21,</span> <span class="pre">z=60.0,</span> <span class="pre">speed=1500),</span> <span class="pre">'Home':</span> <span class="pre">Coordinate(x=0,</span> <span class="pre">y=0,</span> <span class="pre">z=0,</span> <span class="pre">speed=1500),</span> <span class="pre">'MVial':</span> <span class="pre">Coordinate(x=33.5,</span> <span class="pre">y=243.03,</span> <span class="pre">z=60,</span> <span class="pre">speed=1500),</span> <span class="pre">'Scale</span> <span class="pre">Vial':</span> <span class="pre">Coordinate(x=141.9,</span> <span class="pre">y=229.4,</span> <span class="pre">z=60,</span> <span class="pre">speed=1500),</span> <span class="pre">'Test</span> <span class="pre">V':</span> <span class="pre">Coordinate(x=260.24,</span> <span class="pre">y=56.15,</span> <span class="pre">z=40,</span> <span class="pre">speed=1500),</span> <span class="pre">'Tilt</span> <span class="pre">V':</span> <span class="pre">Coordinate(x=170,</span> <span class="pre">y=246.61,</span> <span class="pre">z=60,</span> <span class="pre">speed=1500),</span> <span class="pre">'Tip</span> <span class="pre">S3':</span> <span class="pre">Coordinate(x=263,</span> <span class="pre">y=345,</span> <span class="pre">z=40.0,</span> <span class="pre">speed=1500),</span> <span class="pre">'Tip</span> <span class="pre">S6':</span> <span class="pre">Coordinate(x=89.6,</span> <span class="pre">y=150.5,</span> <span class="pre">z=40.0,</span> <span class="pre">speed=1500),</span> <span class="pre">'Vial</span> <span class="pre">1':</span> <span class="pre">Coordinate(x=94,</span> <span class="pre">y=147.5,</span> <span class="pre">z=40,</span> <span class="pre">speed=1500),</span> <span class="pre">'Vial</span> <span class="pre">2':</span> <span class="pre">Coordinate(x=205,</span> <span class="pre">y=4,</span> <span class="pre">z=40,</span> <span class="pre">speed=1500),</span> <span class="pre">'Vial</span> <span class="pre">3':</span> <span class="pre">Coordinate(x=94,</span> <span class="pre">y=0,</span> <span class="pre">z=40,</span> <span class="pre">speed=1500),</span> <span class="pre">'Well</span> <span class="pre">End':</span> <span class="pre">Coordinate(x=300,</span> <span class="pre">y=294,</span> <span class="pre">z=40,</span> <span class="pre">speed=1500),</span> <span class="pre">'Well</span> <span class="pre">S5':</span> <span class="pre">Coordinate(x=202,</span> <span class="pre">y=148.5,</span> <span class="pre">z=40,</span> <span class="pre">speed=1500)}</span></em><a class="headerlink" href="#Coordinate.Location.locations" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Coordinate.Location.mvial">
+<span class="sig-name descname"><span class="pre">mvial</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Coordinate(x=33.5,</span> <span class="pre">y=243.03,</span> <span class="pre">z=60,</span> <span class="pre">speed=1500)</span></em><a class="headerlink" href="#Coordinate.Location.mvial" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Coordinate.Location.scale_vial">
+<span class="sig-name descname"><span class="pre">scale_vial</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Coordinate(x=141.9,</span> <span class="pre">y=229.4,</span> <span class="pre">z=60,</span> <span class="pre">speed=1500)</span></em><a class="headerlink" href="#Coordinate.Location.scale_vial" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Coordinate.Location.testv">
+<span class="sig-name descname"><span class="pre">testv</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Coordinate(x=260.24,</span> <span class="pre">y=56.15,</span> <span class="pre">z=40,</span> <span class="pre">speed=1500)</span></em><a class="headerlink" href="#Coordinate.Location.testv" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Coordinate.Location.tiltV">
+<span class="sig-name descname"><span class="pre">tiltV</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Coordinate(x=170,</span> <span class="pre">y=246.61,</span> <span class="pre">z=60,</span> <span class="pre">speed=1500)</span></em><a class="headerlink" href="#Coordinate.Location.tiltV" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Coordinate.Location.tip_s3">
+<span class="sig-name descname"><span class="pre">tip_s3</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Coordinate(x=263,</span> <span class="pre">y=345,</span> <span class="pre">z=40.0,</span> <span class="pre">speed=1500)</span></em><a class="headerlink" href="#Coordinate.Location.tip_s3" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Coordinate.Location.tip_s4">
+<span class="sig-name descname"><span class="pre">tip_s4</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Coordinate(x=313.5,</span> <span class="pre">y=151,</span> <span class="pre">z=40.0,</span> <span class="pre">speed=1500)</span></em><a class="headerlink" href="#Coordinate.Location.tip_s4" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Coordinate.Location.tip_s6">
+<span class="sig-name descname"><span class="pre">tip_s6</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Coordinate(x=89.6,</span> <span class="pre">y=150.5,</span> <span class="pre">z=40.0,</span> <span class="pre">speed=1500)</span></em><a class="headerlink" href="#Coordinate.Location.tip_s6" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Coordinate.Location.vial1">
+<span class="sig-name descname"><span class="pre">vial1</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Coordinate(x=94,</span> <span class="pre">y=147.5,</span> <span class="pre">z=40,</span> <span class="pre">speed=1500)</span></em><a class="headerlink" href="#Coordinate.Location.vial1" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Coordinate.Location.vial2">
+<span class="sig-name descname"><span class="pre">vial2</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Coordinate(x=205,</span> <span class="pre">y=4,</span> <span class="pre">z=40,</span> <span class="pre">speed=1500)</span></em><a class="headerlink" href="#Coordinate.Location.vial2" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Coordinate.Location.vial3">
+<span class="sig-name descname"><span class="pre">vial3</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Coordinate(x=94,</span> <span class="pre">y=0,</span> <span class="pre">z=40,</span> <span class="pre">speed=1500)</span></em><a class="headerlink" href="#Coordinate.Location.vial3" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Coordinate.Location.well_end">
+<span class="sig-name descname"><span class="pre">well_end</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Coordinate(x=300,</span> <span class="pre">y=294,</span> <span class="pre">z=40,</span> <span class="pre">speed=1500)</span></em><a class="headerlink" href="#Coordinate.Location.well_end" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Coordinate.Location.well_s5">
+<span class="sig-name descname"><span class="pre">well_s5</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Coordinate(x=202,</span> <span class="pre">y=148.5,</span> <span class="pre">z=40,</span> <span class="pre">speed=1500)</span></em><a class="headerlink" href="#Coordinate.Location.well_s5" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="protocols.html" class="btn btn-neutral float-left" title="protocols module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="modules.html" class="btn btn-neutral float-right" title="AutoPipette_MANTA" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, James Cook.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
