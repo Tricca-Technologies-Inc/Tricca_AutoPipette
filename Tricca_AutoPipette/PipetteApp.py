@@ -1,8 +1,7 @@
 """
 Pipette App script.
 
-Holds the pipette app class, methods and variables relating to launching and
-managing the application.
+Launch and manage the application.
 
 Run from command line by running
 >>> python3 PipetteApp.py ip default_speed
@@ -17,129 +16,145 @@ from protocols import volumes_PRIME
 from protocols import volumeTest
 from pathlib import Path
 import argparse
+import requests
 
 
-class PipetteApp:
-    """Launches and manages an instance of the autopipette application."""
+GCODE_PATH = Path(__file__).parent.parent / 'gcode/'
+pipette = AutoPipette(AutoPipette.DEFAULT_SPEED_XY)
+moonraker_url = "http://0.0.0.0:7125/printer/gcode/script"
 
-    pipette = AutoPipette("0.0.0.0", AutoPipette.DEFAULT_SPEED)
 
-    def server(input, output, session):
-        """Define what the website looks like."""
-        status_text = reactive.Value("Ready for commands")
+def run_gcode(filename: str):
+    """Open a gcode file and execute it."""
+    file = GCODE_PATH / filename
+    if (not file.exists()):
+        print(f"File {filename} does not exist.")
+    with file.open() as fileobj:
+        for line in fileobj:
+            print(line)
+            send_gcode(line)
 
-        @output
-        @render.text
-        def output():
-            return status_text()
+def send_gcode(command):
+    """Send gcode to the pipette."""
+    response = requests.post(moonraker_url, json={"script": command})
+    if response.status_code == 200:
+        print("Command sent successfully")
+    else:
+        print(f"Failed to send command: \
+           {response.status_code}, {response.text}")
 
-        @reactive.Effect
-        @reactive.event(input.move)
-        def move_handler():
-            x = input.x()
-            y = input.y()
-            z = input.z()
-            speed = input.speed()
-            coordinate = Coordinate(x, y, z, speed)
-            pipette.move_to(coordinate)
-            command = f"Move to coordinates: X={x}, Y={y}, Z={z}, Speed={speed}"
-            status_text.set(command)
+def server(input, output, session):
+    """Define what the website looks like."""
+    status_text = reactive.Value("Ready for commands")
+    @output
+    @render.text
+    def output():
+        return status_text()
 
-        @render.ui
-        @reactive.Effect
-        @reactive.event(input.home)
-        async def home_handler():
-            with ui.Progress(min=1, max=15) as p:
-                p.set(message="Calculation in progress",
-                      detail="This may take a while...")
+    @reactive.Effect
+    @reactive.event(input.move)
+    def move_handler():
+        x = input.x()
+        y = input.y()
+        z = input.z()
+        speed = input.speed()
+        coordinate = Coordinate(x, y, z, speed)
+        pipette.move_to(coordinate)
+        command = f"Move to coordinates: X={x}, Y={y}, Z={z}, Speed={speed}"
+        status_text.set(command)
 
-                for i in range(1, 15):
-                    p.set(i, message="Computing")
-                    if (i == 12):
-                        coordinate = Coordinate(0, 0, 0, pipette.DEFAULT_SPEED)
-                        pipette.move_to(coordinate)
-                        command = "Moved to home coordinates..."
-                        status_text.set(command)
-                    await asyncio.sleep(0.1)
-
+    @render.ui
+    @reactive.Effect
+    @reactive.event(input.home)
+    async def home_handler():
+        with ui.Progress(min=1, max=15) as p:
+            p.set(message="Calculation in progress",
+                    detail="This may take a while...")
+            for i in range(1, 15):
+                p.set(i, message="Computing")
+                if (i == 12):
+                    run_gcode("home.gcode")
+                    command = "Moved to home coordinates..."
+                    status_text.set(command)
+                await asyncio.sleep(0.1)
             return "Done computing!"
 
-        @render.ui
-        @reactive.Effect
-        @reactive.event(input.kit)
-        async def kit_handler():
-            with ui.Progress(min=1, max=15) as p:
-                p.set(message="Executing Protocol",
-                      detail="This may take a while...")
-                command = "Kit Manufacturing Initiated"
-                status_text.set(command)
-                for i in range(1, 15):
-                    p.set(i, message="Executing Protocol")
-                    if (i == 12):
-                        kitTest(
-                            pipette.source_vial,
-                            pipette.dest_vial,
-                            pipette,
-                            pipette.tip_box,
-                            Location.well_s5,
-                            volumes_PRIME)
-                        command = "Kit Manufacturing Finished"
-                        status_text.set(command)
-                    await asyncio.sleep(0.1)
-            return "Done!"
-
-        @reactive.Effect
-        @reactive.event(input.sample)
-        def sample_handler():
-            volumeTest(Location.vial1, pipette.dest_vial, pipette)
-            command = "Sample Prep initiated..."
+    @render.ui
+    @reactive.Effect
+    @reactive.event(input.kit)
+    async def kit_handler():
+        with ui.Progress(min=1, max=15) as p:
+            p.set(message="Executing Protocol",
+                    detail="This may take a while...")
+            command = "Kit Manufacturing Initiated"
             status_text.set(command)
+            for i in range(1, 15):
+                p.set(i, message="Executing Protocol")
+                if (i == 12):
+                    kitTest(
+                        pipette.source_vial,
+                        pipette.dest_vial,
+                        pipette,
+                        pipette.tip_box,
+                        Location.garb_s5,
+                        volumes_PRIME)
+                    command = "Kit Manufacturing Finished"
+                    status_text.set(command)
+                await asyncio.sleep(0.1)
+        return "Done!"
 
-        @reactive.Effect
-        @reactive.event(input.stop)
-        def stop_handler():
-            exit()
+    @reactive.Effect
+    @reactive.event(input.sample)
+    def sample_handler():
+        volumeTest(Location.vial1, pipette.dest_vial, pipette)
+        command = "Sample Prep initiated..."
+        status_text.set(command)
 
-        @reactive.Effect
-        @reactive.event(input.move_to_location)
-        def move_to_location_handler():
-            location_name = input.location_name()
-            # Grab the named location and default to home if nothing comes up.
-            coordinate = Location.locations.get(location_name, Location.home)
-            speed = input.speed()  # Use the speed specified in the input
-            coordinate.speed = speed
-            pipette.move_to(coordinate)
-            command = \
-                f"Moving to location: {location_name} with Speed: {speed}"
-            status_text.set(command)
+    @reactive.Effect
+    @reactive.event(input.stop)
+    def stop_handler():
+        exit()
 
-        @reactive.Effect
-        @reactive.event(input.traverse_wells)
-        def traverse_wells_handler():
-            kitTest(pipette.source_vial,
-                    pipette.dest_vial,
-                    pipette,
-                    Location.tip_box,
-                    Location.well_s5)
+    @reactive.Effect
+    @reactive.event(input.move_to_location)
+    def move_to_location_handler():
+        location_name = input.location_name()
+        # Grab the named location and default to home if nothing comes up.
+        coordinate = Location.locations.get(location_name, Location.home)
+        speed = input.speed()  # Use the speed specified in the input
+        coordinate.speed = speed
+        pipette.move_to(coordinate)
+        command = \
+            f"Moving to location: {location_name} with Speed: {speed}"
+        status_text.set(command)
 
-        @reactive.Effect
-        @reactive.event(input.initPipette)
-        def initPipette():
-            pipette.init_all()
-            command = "Machine ready to start!"
-            status_text.set(command)
+    @reactive.Effect
+    @reactive.event(input.traverse_wells)
+    def traverse_wells_handler():
+        kitTest(pipette.source_vial,
+                pipette.dest_vial,
+                pipette,
+                Location.tip_box,
+                Location.well_s5)
 
-    def run_pipette_app():
-        """Generate and execute the AutoPipette app."""
-        app_ui = ui.page_fluid(
-            ui.tags.head(
-                ui.include_css(
-                    Path(__file__).parent / "my-styles.css"
-                   )
-               ),
+    @reactive.Effect
+    @reactive.event(input.initPipette)
+    def initPipette():
+        pipette.init_all()
+        command = "Machine ready to start!"
+        status_text.set(command)
+
+def run_pipette_app():
+    """Generate and execute the AutoPipette app."""
+    app_ui = ui.page_fluid(
+        ui.tags.head(
+            ui.include_css(
+                Path(__file__).parent / "my-styles.css"
+                )
+            ),
+        ui.tags.div(
             ui.tags.div(
-                ui.tags.div(
-                    ui.tags.i(class_="fas fa-vial"),
+                ui.tags.i(class_="fas fa-vial"),
                     "AutoPipette Machine Control Panel",
                     class_="header"
                    ),
@@ -193,8 +208,8 @@ class PipetteApp:
                 class_="d-flex flex-row"
                )
            )
-        app = App(app_ui, PipetteApp.server)
-        app.run(host="0.0.0.0", port=8000)
+    app = App(app_ui, server)
+    app.run(host="0.0.0.0", port=8000)
 
 
 if __name__ == "__main__":
@@ -203,8 +218,8 @@ if __name__ == "__main__":
         description="Start a webpage for controlling the auto-pipette.")
     parser.add_argument("ip", help="the ip address of the auto-pipette")
     parser.add_argument("default_speed", type=int,
-                        help="the default speed of the toolhead when moving \
-                        (must be [1,1000])")
+                        help=f"the default speed of the toolhead when moving \
+                        (must be [1,{AutoPipette.MAX_SPEED}])")
     args = parser.parse_args()
 
     # Ensure speed is appropriate
@@ -215,6 +230,7 @@ if __name__ == "__main__":
         print("Speed cannot be 0 or negative.")
 
     # Launch program
-    pipette = AutoPipette(args.ip, args.default_speed)
-    PipetteApp.pipette = pipette
-    PipetteApp.run_pipette_app()
+    pipette = AutoPipette(default_speed=args.default_speed)
+    moonraker_url = \
+        "http://" + args.ip + ":7125/printer/gcode/script"
+    run_pipette_app()

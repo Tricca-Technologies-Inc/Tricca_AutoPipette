@@ -27,7 +27,7 @@ def sample_test(source, dest, pipette):
         pipette.move_to(srcVial)
         pipette.move_pipette_stepper(v100.aspirate)
 
-        time.sleep(1)
+        pipette.gcode_wait(1000)
 
         srcVial.z -= 25
         pipette.move_to(srcVial)
@@ -49,7 +49,7 @@ def sample_test(source, dest, pipette):
 # (Program for Kit Manufacturing)
 # Function to perform kit test with multiple vial holders
 def kitTest(vial_coords, dest, pipette, tip_box, garbage_position, volumes):
-    vial_coords = vial_coords[:50] ## PRIME KIT change length based on how many vials to use
+    vial_coords = vial_coords[:50]  # PRIME KIT change length based on how many vials to use
     for coord, volumes in zip(vial_coords, volumes):
         try:
             # Attempt to pick up a tip
@@ -63,28 +63,28 @@ def kitTest(vial_coords, dest, pipette, tip_box, garbage_position, volumes):
         transferLiq(coord, dest, volumes, pipette)
 
         # Eject the tip to the garbage position
-        garbage_position.speed = AutoPipette.DEFAULT_SPEED
+        garbage_position.speed = pipette.DEFAULT_SPEED
         pipette.move_to(garbage_position)
         pipette.eject_tip()
 
 def transferLiq(source, dest, volume, pipette):
     for _ in range(volume.multiplier):
         # Move to source
-        source.speed = AutoPipette.DEFAULT_SPEED
+        source.speed = pipette.DEFAULT_SPEED
         pipette.move_to(source)
         pipette.move_pipette_stepper(volume.prep)
 
         # Dip, pick-up liquid, and return
-        pipette.dip_z_down(source, AutoPipette.VIAL_DIP_DISTANCE)
+        pipette.dip_z_down(source, pipette.VIAL_DIP_DISTANCE)
         pipette.home_pipette_stepper(speed=30)
-        pipette.dip_z_return(source, AutoPipette.VIAL_DIP_DISTANCE)
+        pipette.dip_z_return(source, pipette.VIAL_DIP_DISTANCE)
 
         # Dispense
-        dest.speed = AutoPipette.DEFAULT_SPEED
+        dest.speed = pipette.DEFAULT_SPEED
         pipette.move_to(dest)
-        pipette.dip_z_down(dest, AutoPipette.TILTV_DIP)
+        pipette.dip_z_down(dest, pipette.TILTV_DIP)
         pipette.move_pipette_stepper(volume.dispense)
-        pipette.dip_z_return(dest, AutoPipette.TILTV_DIP)
+        pipette.dip_z_return(dest, pipette.TILTV_DIP)
         pipette.home_pipette_stepper(speed=30)
 
 def tip_test(source, dest, pipette):
@@ -153,7 +153,7 @@ def volumeTest(source, dest, pipette):
     pipette.move_to(dest)
 
     # Home the pipette motor
-    pipette.home_pipette_stepper(speed=30)
+    pipette.home_pipette_stepper(speed=60)
 
     pipette.move_to(vial2)
 
