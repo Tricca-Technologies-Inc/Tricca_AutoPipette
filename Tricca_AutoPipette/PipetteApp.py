@@ -7,13 +7,9 @@ Run from command line by running
 >>> python3 PipetteApp.py ip default_speed
 """
 from Coordinate import Coordinate
-from Coordinate import Location
 import asyncio
 from shiny import App, render, ui, reactive
 from AutoPipette import AutoPipette
-from protocols import kitTest
-from protocols import volumes_PRIME
-from protocols import volumeTest
 from pathlib import Path
 import argparse
 import requests
@@ -217,20 +213,22 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Start a webpage for controlling the auto-pipette.")
     parser.add_argument("ip", help="the ip address of the auto-pipette")
-    parser.add_argument("default_speed", type=int,
-                        help=f"the default speed of the toolhead when moving \
-                        (must be [1,{AutoPipette.MAX_SPEED}])")
+    # parser.add_argument("default_speed_xy", type=int,
+    #                     help=f"""the default speed of the toolhead when moving
+    #                     in the x or y axis
+    #                     (must be [1,{AutoPipette.MAX_SPEED}])""")
     args = parser.parse_args()
 
     # Ensure speed is appropriate
-    if args.default_speed > AutoPipette.MAX_SPEED:
-        print(f"Speed cannot be greater than {AutoPipette.MAX_SPEED}")
-        exit
-    elif args.default_speed <= 0:
-        print("Speed cannot be 0 or negative.")
+    # if args.default_speed_xy > AutoPipette.MAX_SPEED:
+    #     print(f"Speed cannot be greater than {AutoPipette.MAX_SPEED}")
+    #     exit
+    # elif args.default_speed_xy <= 0:
+    #     print("Speed cannot be 0 or negative.")
 
     # Launch program
-    pipette = AutoPipette(default_speed=args.default_speed)
+    # pipette = AutoPipette(default_speed_xy=args.default_speed_xy)
+    pipette = AutoPipette()
     moonraker_url = \
         "http://" + args.ip + ":7125/printer/gcode/script"
     run_pipette_app()

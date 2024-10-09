@@ -2,7 +2,7 @@
 """This file defines the how the .pipette protocol files work."""
 # TODO Throw proper errors and log them
 from AutoPipette import AutoPipette
-from decimal import Decimal
+from Plates import PlateTypes
 
 
 class ProtocolCommands:
@@ -25,36 +25,38 @@ class ProtocolCommands:
             return "; " + err_msg
         # Variable should exist in autopipette
         if (_args[0] not in self._autopipette.vars):
-            err_msg = f"Variable {_args[0]} not recognized, it could not be set.\n"
+            err_msg = \
+                f"Variable {_args[0]} not recognized, it could not be set.\n"
             print(err_msg)
             return "; " + err_msg
         # 2nd arg speed should be a decimal.
         if (not (_args[1].isdecimal())):
-            err_msg = f"Second arg:{_args[1]} passed into set function is not a decimal.\n"
+            err_msg = \
+                f"Second arg:{_args[1]} passed into set is not a decimal.\n"
             print(err_msg)
             return "; " + err_msg
         pip_var = _args[0]
         # TODO put limits on pip_val
-        pip_val = Decimal(_args[1])
+        pip_val = int(_args[1])
         if (pip_var == "SPEED_FACTOR"):
             temp = self._autopipette.SPEED_FACTOR
-            msg = f"; Autopipette SPEED_FACTOR changed from {temp} to {pip_val}\n"
+            msg = f"; SPEED_FACTOR changed from {temp} to {pip_val}\n"
             self._autopipette.set_speed_factor(pip_val)
             return msg + self._autopipette.return_gcode()
         elif (pip_var == "MAX_VELOCITY"):
             temp = self._autopipette.MAX_VELOCITY
-            msg = f"; Autopipette MAX_VELOCITY changed from {temp} to {pip_val}\n"
+            msg = f"; MAX_VELOCITY changed from {temp} to {pip_val}\n"
             self._autopipette.set_max_velocity(pip_val)
             return msg + self._autopipette.return_gcode()
         elif (pip_var == "MAX_ACCEL"):
             temp = self._autopipette.MAX_ACCEL
-            msg = f"; Autopipette MAX_ACCEL changed from {temp} to {pip_val}\n"
+            msg = f"; MAX_ACCEL changed from {temp} to {pip_val}\n"
             self._autopipette.set_max_accel(pip_val)
             return msg + self._autopipette.return_gcode()
         else:
             temp = self._autopipette.vars[pip_var]
             self._autopipette.vars[pip_val] = pip_val
-            return f"; AutoPipette {pip_var} changed from {temp} to {pip_val}\n"
+            return f"; {pip_var} changed from {temp} to {pip_val}\n"
 
     def pipette(self, args: str):
         """Move vol amount of liquid from src to dest."""
@@ -62,20 +64,107 @@ class ProtocolCommands:
         # Should be 3 arguments
         arg_len = len(_args)
         if (not (arg_len == 3)):
-            err_msg = f"Wrong number of arguments:{arg_len} passed to pipette function.\n"
+            err_msg = \
+                f"Wrong number of args:{arg_len} passed to pipette function.\n"
             print(err_msg)
             return "; " + err_msg
         # First arg should be a decimal
         if (not (_args[0].isdecimal())):
-            err_msg = f"First arg:{_args[0]} passed into pipette is not a decimal.\n"
+            err_msg = \
+                f"First arg:{_args[0]} passed into pipette is not a decimal.\n"
             print(err_msg)
             return "; " + err_msg
         # 2nd and 3rd arg are coordinates vars or plate[0-7]
+        volume = _args[0]
+        source = _args[1]
+        dest = _args[2]
+        if (not self._autopipette.is_location(source)):
+            err_msg = \
+                f"Source location:{source} does not exist.\n"
+            print(err_msg)
+            return "; " + err_msg
+        if (not self._autopipette.is_location(dest)):
+            err_msg = \
+                f"Destination location:{dest} does not exist.\n"
+            print(err_msg)
+            return "; " + err_msg
+        # Make sure there is a garbage for tips
+        if (self._autopipette.garbage is None):
+            err_msg = \
+                "No coordinate set as Garbage.\n"
+            print(err_msg)
+            return "; " + err_msg
+        # Make sure there is a tip box
+        if (self._autopipette.tipboxes is None):
+            err_msg = \
+                "No coordinate set as TipBox.\n"
+            print(err_msg)
+            return "; " + err_msg
+        # Do the pipetting
+        # move to tipbox
+        # pick up tip
+        # move to source
+        # dip down
+        # pickup liquid
+        # dip back
+        # move to dest
+        # dip down
+        # leave liquid
+        # repeat if necessary
+        # move to tipbox
+        # eject tip
         return "pipette\n"
 
     def gen_coordinate(self, args: str):
         """Generate a coordinate obj to refer to later."""
-        return "coor\n"
+        _args = args.split()
+        name_loc = _args[0]
+        # If it is an existing location and the following arg isn't a number,
+        # set a plate
+        # Otherwise, set a coordinate.
+        if (self._autopipette.is_location(name_loc) and
+                (not _args[1].isdecimal())):
+            plate_type = _args[1]
+            # If plate type should exist
+            if (plate_type not in PlateTypes.TYPES.keys()):
+                err_msg = \
+                    f"Plate type:{plate_type} does not exist.\n"
+                print(err_msg)
+                return "; " + err_msg
+            # Check if num_row and num_col are passed in and call accordingly
+            if (len(_args) == 2):
+                self._autopipette.set_plate(name_loc, plate_type)
+                return f"; Location:{name_loc} set to Plate:{plate_type}\n"
+            elif (len(_args) == 4):
+                # Next two args must be decimals
+                if (not (_args[2].isdecimal() and _args[3].isdecimal())):
+                    err_msg = f"""Arg 2:{_args[2]} and Arg 3:{_args[3]} are not decimals.\n"""
+                    print(err_msg)
+                    return "; " + err_msg
+                num_row = int(_args[2])
+                num_col = int(_args[3])
+                self._autopipette.set_plate(name_loc, plate_type,
+                                            num_row, num_col)
+                return f"; Location:{name_loc} with rows:{num_row} cols:{num_col} set to Plate:{plate_type}\n"
+            else:
+                num_args = len(_args)
+                err_msg = f"""Too many or too few args:{num_args} passed to gen_coordinate.\n"""
+                print(err_msg)
+                return "; " + err_msg
+        else:
+            # If the following 3 are decimals, set a location
+            if (_args[1].isdecimal() and
+                    _args[2].isdecimal() and
+                    _args[3].isdecimal()):
+                x = int(_args[1])
+                y = int(_args[2])
+                z = int(_args[3])
+                self._autopipette.set_location(name_loc, x, y, z)
+                return f"; Location:{name_loc} set to x:{x} y:{y} z:{z}\n"
+            else:
+                err_msg = f"""Arg 1:{_args[1]}, Arg 2:{_args[2]}, and Arg 3:{_args[3]} must be decimals\n"""
+                print(err_msg)
+                return "; " + err_msg
 
     def home(self, args: str):
         """Home a part of the pipette."""
@@ -86,7 +175,8 @@ class ProtocolCommands:
             print(err_msg)
             return "; " + err_msg
         if (_args[0] not in ["x", "y", "z", "axis", "all", "pipette"]):
-            err_msg = f"Arg:{_args[0]} passed into home function not recognized.\n"
+            err_msg = \
+                f"Arg:{_args[0]} passed into home function not recognized.\n"
         home_axis = _args[0]
         if (home_axis == "x"):
             self._autopipette.home_x()
@@ -102,7 +192,8 @@ class ProtocolCommands:
         elif (home_axis == "pipette"):
             self._autopipette.home_pipette_motors()
         else:
-            err_msg = f"Arg:{_args[0]} passed into home function not recognized.\n"
+            err_msg = \
+                f"Arg:{_args[0]} passed into home function not recognized.\n"
             print(err_msg)
             return "; " + err_msg
 

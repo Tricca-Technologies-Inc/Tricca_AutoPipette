@@ -6,25 +6,22 @@ set DEFAULT_SPEED_XY 500
 set DEFAULT_SPEED_Z 500
 
 ; Setup the plates below the pipette
-coor plate0 0 0 0
-coor plate1 92 142 40
-coor plate2 0 0 0
-coor plate3 310 147 40
-coor plate4 180 136 60
-coor plate5 0 0 0
-coor plate6 0 0 0
-coor plate7 0 0 0
-coor plate0 tipbox
-coor plate1 vialplate 5 7
-coor plate2 vialplate 5 6
+coor plate0 309 0 40
+coor plate1 202 0 40
+coor plate2 90 0 40
+coor plate3 310 144 40
+coor plate4 170 196 40
+coor plate5 91 141 40
+coor plate0 wellplate
+coor plate1 vialholder 5 7
+coor plate2 vialholder 5 6
 coor plate3 tipbox
 coor plate4 garbage
-coor plate5 vialplate
-coor plate6 vialplate
-coor plate7 vialplate
+coor plate5 vialholder
 
 ; Define destination coordinate
-coor dest_vial 65 104 30
+coor dest_vial 65 104 40
+coor dest_vial tiltv
 
 ; Home the pipette
 home all
