@@ -4,7 +4,9 @@ Pipette App script.
 Launch and manage the application.
 
 Run from command line by running
->>> python3 PipetteApp.py ip default_speed
+>>> python3 PipetteApp.py ip
+Or:
+>>> python3 PipetteApp.py ip --gcode GCODE_FILE_PATH
 """
 from Coordinate import Coordinate
 import asyncio
@@ -30,6 +32,7 @@ def run_gcode(filename: str):
             print(line)
             send_gcode(line)
 
+
 def send_gcode(command):
     """Send gcode to the pipette."""
     response = requests.post(moonraker_url, json={"script": command})
@@ -39,9 +42,11 @@ def send_gcode(command):
         print(f"Failed to send command: \
            {response.status_code}, {response.text}")
 
+
 def server(input, output, session):
     """Define what the website looks like."""
     status_text = reactive.Value("Ready for commands")
+
     @output
     @render.text
     def output():
@@ -65,7 +70,7 @@ def server(input, output, session):
     async def home_handler():
         with ui.Progress(min=1, max=15) as p:
             p.set(message="Calculation in progress",
-                    detail="This may take a while...")
+                  detail="This may take a while...")
             for i in range(1, 15):
                 p.set(i, message="Computing")
                 if (i == 12):
@@ -81,19 +86,13 @@ def server(input, output, session):
     async def kit_handler():
         with ui.Progress(min=1, max=15) as p:
             p.set(message="Executing Protocol",
-                    detail="This may take a while...")
+                  detail="This may take a while...")
             command = "Kit Manufacturing Initiated"
             status_text.set(command)
             for i in range(1, 15):
                 p.set(i, message="Executing Protocol")
                 if (i == 12):
-                    kitTest(
-                        pipette.source_vial,
-                        pipette.dest_vial,
-                        pipette,
-                        pipette.tip_box,
-                        Location.garb_s5,
-                        volumes_PRIME)
+                    run_gcode("kit_prep.gcode")
                     command = "Kit Manufacturing Finished"
                     status_text.set(command)
                 await asyncio.sleep(0.1)
@@ -102,7 +101,6 @@ def server(input, output, session):
     @reactive.Effect
     @reactive.event(input.sample)
     def sample_handler():
-        volumeTest(Location.vial1, pipette.dest_vial, pipette)
         command = "Sample Prep initiated..."
         status_text.set(command)
 
@@ -116,10 +114,9 @@ def server(input, output, session):
     def move_to_location_handler():
         location_name = input.location_name()
         # Grab the named location and default to home if nothing comes up.
-        coordinate = Location.locations.get(location_name, Location.home)
+        coordinate = pipette.get_location_coor(location_name)
         speed = input.speed()  # Use the speed specified in the input
-        coordinate.speed = speed
-        pipette.move_to(coordinate)
+        pipette.move_to(coordinate, speed)
         command = \
             f"Moving to location: {location_name} with Speed: {speed}"
         status_text.set(command)
@@ -127,11 +124,7 @@ def server(input, output, session):
     @reactive.Effect
     @reactive.event(input.traverse_wells)
     def traverse_wells_handler():
-        kitTest(pipette.source_vial,
-                pipette.dest_vial,
-                pipette,
-                Location.tip_box,
-                Location.well_s5)
+        pass
 
     @reactive.Effect
     @reactive.event(input.initPipette)
@@ -139,6 +132,7 @@ def server(input, output, session):
         pipette.init_all()
         command = "Machine ready to start!"
         status_text.set(command)
+
 
 def run_pipette_app():
     """Generate and execute the AutoPipette app."""
@@ -151,30 +145,50 @@ def run_pipette_app():
         ui.tags.div(
             ui.tags.div(
                 ui.tags.i(class_="fas fa-vial"),
-                    "AutoPipette Machine Control Panel",
-                    class_="header"
-                   ),
-                class_="d-flex flex-column mb-3"  # Ensure header is separate and add margin-bottom
-               ),
-            ui.tags.div(
+                "AutoPipette Machine Control Panel",
+                class_="header"),
+            class_="d-flex flex-column mb-3"),
+        ui.tags.div(
                 ui.tags.div(
                     ui.tags.div(
                         ui.input_numeric("x", "X Coordinate:", value=0),
                         ui.input_numeric("y", "Y Coordinate:", value=0),
                         ui.input_numeric("z", "Z Coordinate:", value=0),
-                        ui.input_numeric("speed", "Speed (mm/min):", value=1500),
-                        ui.input_action_button("move", ui.tags.span(ui.tags.i(class_="fas fa-arrows-alt"), " Move to Coordinates"), class_="btn"),
-                        ui.input_action_button("home", ui.tags.span(ui.tags.i(class_="fas fa-home"), " Move to Home"), class_="btn"),
-                        ui.input_action_button("stop", ui.tags.span(ui.tags.i(class_="fas fa-stop"), " Stop"), class_="btn"),
-                        ui.input_text("location_name", "Location Name:", value=""),
-                        ui.input_action_button("move_to_location", ui.tags.span(ui.tags.i(class_="fas fa-map-marker-alt"), " Move to Location"), class_="btn"),
+                        ui.input_numeric(
+                            "speed", "Speed (mm/min):", value=1500),
+                        ui.input_action_button("move", ui.tags.span(
+                            ui.tags.i(
+                                class_="fas fa-arrows-alt"),
+                            "Move to Coordinate"), class_="btn"),
+                        ui.input_action_button(
+                            "home", ui.tags.span(
+                                ui.tags.i(class_="fas fa-home"), "Move Home"),
+                            class_="btn"),
+                        ui.input_action_button("stop", ui.tags.span(ui.tags.i(
+                            class_="fas fa-stop"), " Stop"), class_="btn"),
+                        ui.input_text("location_name", "Location Name:",
+                                      value=""),
+                        ui.input_action_button("move_to_location", ui.tags.span(
+                            ui.tags.i(class_="fas fa-map-marker-alt"),
+                            " Move to Location"), class_="btn"),
                         class_="sidebar"
                        ),
                     ui.tags.div(
                         ui.tags.h2("Protocols", class_="protocol-title"),
-                        ui.input_action_button("initPipette", ui.tags.span(ui.tags.i(class_="fas fa-home"), "Initialize Pipette"), class_="btn"),
-                        ui.input_action_button("kit", ui.tags.span(ui.tags.i(class_="fas fa-cogs"), " Kit Manufacturing"), class_="btn"),
-                        ui.input_action_button("sample", ui.tags.span(ui.tags.i(class_="fas fa-flask"), " Sample Prep"), class_="btn"),
+                        ui.input_action_button(
+                            "initPipette",
+                            ui.tags.span(ui.tags.i(class_="fas fa-home"),
+                                         "Initialize Pipette"), class_="btn"),
+                        ui.input_action_button(
+                            "kit",
+                            ui.tags.span(ui.tags.i(class_="fas fa-cogs"),
+                                         "Kit Manufacturing"), class_="btn"),
+                        ui.input_action_button("sample",
+                                               ui.tags.span(
+                                                   ui.tags.i(
+                                                       class_="fas fa-flask"),
+                                                   " Sample Prep"),
+                                               class_="btn"),
 
                         # Live video stream section
                         ui.tags.div(
@@ -212,23 +226,15 @@ if __name__ == "__main__":
     # Setup parser and get arguments
     parser = argparse.ArgumentParser(
         description="Start a webpage for controlling the auto-pipette.")
-    parser.add_argument("ip", help="the ip address of the auto-pipette")
-    # parser.add_argument("default_speed_xy", type=int,
-    #                     help=f"""the default speed of the toolhead when moving
-    #                     in the x or y axis
-    #                     (must be [1,{AutoPipette.MAX_SPEED}])""")
+    parser.add_argument("ip", help="The ip address of the auto-pipette.")
+    parser.add_argument('gcode', type=str, nargs='?',
+                        help="The gcode file to run on startup.")
     args = parser.parse_args()
-
-    # Ensure speed is appropriate
-    # if args.default_speed_xy > AutoPipette.MAX_SPEED:
-    #     print(f"Speed cannot be greater than {AutoPipette.MAX_SPEED}")
-    #     exit
-    # elif args.default_speed_xy <= 0:
-    #     print("Speed cannot be 0 or negative.")
-
     # Launch program
-    # pipette = AutoPipette(default_speed_xy=args.default_speed_xy)
     pipette = AutoPipette()
     moonraker_url = \
         "http://" + args.ip + ":7125/printer/gcode/script"
-    run_pipette_app()
+    if args.gcode is not None:
+        run_gcode(args.gcode)
+    else:
+        run_pipette_app()

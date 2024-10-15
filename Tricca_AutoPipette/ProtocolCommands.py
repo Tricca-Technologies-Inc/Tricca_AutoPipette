@@ -3,6 +3,7 @@
 # TODO Throw proper errors and log them
 from AutoPipette import AutoPipette
 from Plates import PlateTypes
+from Coordinate import Coordinate
 
 
 class ProtocolCommands:
@@ -55,7 +56,7 @@ class ProtocolCommands:
             return msg + self._autopipette.return_gcode()
         else:
             temp = self._autopipette.vars[pip_var]
-            self._autopipette.vars[pip_val] = pip_val
+            self._autopipette.vars[pip_var] = pip_val
             return f"; {pip_var} changed from {temp} to {pip_val}\n"
 
     def pipette(self, args: str):
@@ -75,7 +76,7 @@ class ProtocolCommands:
             print(err_msg)
             return "; " + err_msg
         # 2nd and 3rd arg are coordinates vars or plate[0-7]
-        volume = _args[0]
+        vol_ul = float(_args[0])
         source = _args[1]
         dest = _args[2]
         if (not self._autopipette.is_location(source)):
@@ -100,20 +101,9 @@ class ProtocolCommands:
                 "No coordinate set as TipBox.\n"
             print(err_msg)
             return "; " + err_msg
-        # Do the pipetting
-        # move to tipbox
-        # pick up tip
-        # move to source
-        # dip down
-        # pickup liquid
-        # dip back
-        # move to dest
-        # dip down
-        # leave liquid
-        # repeat if necessary
-        # move to tipbox
-        # eject tip
-        return "pipette\n"
+        self._autopipette.pipette(vol_ul, source, dest)
+        return f"\n; Pipette {vol_ul} from {source} to {dest}\n" + \
+            self._autopipette.return_gcode() + "\n"
 
     def gen_coordinate(self, args: str):
         """Generate a coordinate obj to refer to later."""
@@ -199,11 +189,47 @@ class ProtocolCommands:
 
         return self._autopipette.return_gcode()
 
+    def move(self, args: str):
+        """Move to a location or coordinate."""
+        _args = args.split()
+        # There should either be one arg (location) or 3 (coordinate)
+        if (len(_args) == 1):
+            # Check if passed location exists
+            if (not self._autopipette.islocation(_args[0])):
+                err_msg = \
+                    f"Arg:{_args[0]} passed into move is not a location."
+                print(err_msg)
+                return "; " + err_msg
+            coor = self._autopipette.get_location_coor(_args[0])
+            self._autopipette.move_to(coor)
+            return self._autopipette.return_gcode()
+        elif (len(_args) == 3):
+            # Check if args numbers
+            if not (_args[0].isdecimal() and
+                    _args[1].isdecimal() and
+                    _args[2].isdecimal()):
+                err_msg = \
+                    f"Args:{_args} must all be numbers to be a coordinate."
+                print(err_msg)
+                return "; " + err_msg
+            coor_x = int(_args[0])
+            coor_y = int(_args[1])
+            coor_z = int(_args[2])
+            coor = Coordinate(coor_x, coor_y, coor_z)
+            self._autopipette.move_to(coor)
+            return self._autopipette.return_gcode()
+        else:
+            err_msg = \
+                "Too many or too few args passed to move.\n"
+            print(err_msg)
+            return "; " + err_msg
+
     _cmds = {
         "set": set,
         "coor": gen_coordinate,
         "home": home,
         "pipette": pipette,
+        "move": move,
     }
 
     def cmd_to_gcode(self, cmdline: str) -> str:

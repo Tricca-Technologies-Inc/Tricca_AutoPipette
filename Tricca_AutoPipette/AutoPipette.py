@@ -12,32 +12,19 @@ from Plates import PlateTypes
 from Plates import Plate
 from Plates import Garbage
 from Plates import TipBox
+from volume_converter import VolumeConverter
 
 
 class AutoPipette:
+    """This class is responsible for functions relating to the auto pipette.
+
+    Responsibilities include sending and receiving commands, managing different variables
+    and managing the different sates of the auto pipette.
     """
-    This class is responsible for functions relating to the auto pipette.
-
-    Responsibilities include sending and receiving commands, managing different
-    variables and managing the different sates of the auto pipette.
-    """
-
-    class Volume:
-        """Convert motor steps into a volume in ul."""
-
-        _consts = [0, 0.3935]
-
-        def __init_(self):
-            """Initialize the variables to estimate volume."""
-            pass
-
-        def vol_to_steps(self, vol_ul):
-            """Take a volume in microliter, return a number of steps."""
-            return self._consts[1]*vol_ul + self._consts[0]
 
     DEFAULT_SPEED_XY = 500  # For X Y Axis. Can be set when object created.
     DEFAULT_SPEED_Z = 500  # For Z Axis. Can be set when object created.
-    DEFAULT_SPEED_PIPETTE = 15  # Speed the pipette plunger moves
+    DEFAULT_SPEED_PIPETTE = 45  # Speed the pipette plunger moves
 
     SERVO_ANGLE_RETRACT = 150
     SERVO_ANGLE_READY = 80
@@ -50,7 +37,7 @@ class AutoPipette:
     MAX_VELOCITY = 4000  # Maximum possible velocity of toolhead.
     MAX_ACCEL = 4000  # Maximum possible acceleration of toolhead.
 
-    volume = Volume()
+    volconv = VolumeConverter()
     garbage = None
     tipboxes = None
     _locations = {}
@@ -82,10 +69,12 @@ class AutoPipette:
         self.SPEED_FACTOR = speed_factor
         self.MAX_VELOCITY = max_velocity
         self.MAX_ACCEL = max_accel
+
         self.servo_name = servo_name
         self.stepper_name = stepper_name
 
         # A dict of the possible variables that can be changed.
+        # Use this internally instead of the constants.
         # Used by set() in ProtocolCommands
         self.vars = {"DEFAULT_SPEED_XY": self.DEFAULT_SPEED_XY,
                      "DEFAULT_SPEED_Z": self.DEFAULT_SPEED_Z,
@@ -94,10 +83,6 @@ class AutoPipette:
                      "SERVO_ANGLE_READY": self.SERVO_ANGLE_READY,
                      "WAIT_TIME_EJECT": self.WAIT_TIME_EJECT,
                      "WAIT_TIME_MOVEMENT": self.WAIT_TIME_MOVEMENT,
-                     "DIP_DISTANCE_TIP": self.DIP_DISTANCE_TIP,
-                     "DIP_DISTANCE_WELL": self.DIP_DISTANCE_WELL,
-                     "DIP_DISTANCE_VIAL": self.DIP_DISTANCE_VIAL,
-                     "DIP_DISTANCE_TILTV": self.DIP_DISTANCE_TILTV,
                      "MAX_SPEED": self.MAX_SPEED,
                      "SPEED_FACTOR": self.SPEED_FACTOR,
                      "MAX_VELOCITY": self.MAX_VELOCITY,
@@ -128,18 +113,18 @@ class AutoPipette:
 
     def set_speed_factor(self, factor):
         """Set the speed factor using gcode."""
-        self.SPEED_FACTOR = factor
-        self.append_gcode(f"M220 S{self.SPEED_FACTOR}")
+        self.vars["SPEED_FACTOR"] = factor
+        self.append_gcode(f"M220 S{factor}")
 
     def set_max_velocity(self, velocity):
         """Set the max velocity using gcode."""
-        self.MAX_VELOCITY = velocity
-        self.append_gcode(f"SET_VELOCITY_LIMIT VELOCITY={self.MAX_VELOCITY}")
+        self.vars["MAX_VELOCITY"] = velocity
+        self.append_gcode(f"""SET_VELOCITY_LIMIT VELOCITY={velocity}""")
 
     def set_max_accel(self, accel):
         """Set the max acceleration using gcode."""
-        self.MAX_ACCEL = accel
-        self.append_gcode(f"SET_VELOCITY_LIMIT ACCEL={self.MAX_ACCEL}")
+        self.vars["MAX_ACCEL"] = accel
+        self.append_gcode(f"SET_VELOCITY_LIMIT ACCEL={accel}")
 
     def home_axis(self):
         """Home x, y, and z axis.
@@ -175,8 +160,8 @@ class AutoPipette:
 
     def home_servo(self):
         """Retract the servo that dispenses pipette tips."""
-        self.set_servo_angle(self.SERVO_ANGLE_RETRACT)
-        self.gcode_wait(self.WAIT_TIME_MOVEMENT)
+        self.set_servo_angle(self.vars["SERVO_ANGLE_RETRACT"])
+        self.gcode_wait(self.vars["WAIT_TIME_MOVEMENT"])
 
     def home_pipette_stepper(self, speed=DEFAULT_SPEED_PIPETTE):
         """Home the pipette stepper."""
@@ -195,16 +180,17 @@ class AutoPipette:
         self._gcode_buf = ""
         return temp
 
-    def move_to(self, coordinate):
+    def move_to(self, coordinate: Coordinate):
         """Move the pipette toolhead to the coordinate.
 
         Args:
             coordinate
         """
-        gcode_command = f"G1 X{coordinate.x} Y{coordinate.y} Z{coordinate.z} F{coordinate.speed}"
+        speed = self.vars["DEFAULT_SPEED_XY"]
+        gcode_command = f"G1 X{coordinate.x} Y{coordinate.y} Z{coordinate.z} F{speed}"
         self.append_gcode(gcode_command)
 
-    def move_to_x(self, coordinate):
+    def move_to_x(self, coordinate: Coordinate):
         """Move the pipette toolhead to the coordinate x position.
 
         Use the Coordinate object to get the position and speed.
@@ -212,10 +198,11 @@ class AutoPipette:
         Args:
             coordinate
         """
-        gcode_command = f"G1 X{coordinate.x} F{coordinate.speed}"
+        speed = self.vars["DEFAULT_SPEED_XY"]
+        gcode_command = f"G1 X{coordinate.x} F{speed}"
         self.append_gcode(gcode_command)
 
-    def move_to_y(self, coordinate):
+    def move_to_y(self, coordinate: Coordinate):
         """Move the pipette toolhead to the coordinate y position.
 
         Use the Coordinate object to get the position and speed.
@@ -223,10 +210,11 @@ class AutoPipette:
         Args:
             coordinate
         """
-        gcode_command = f"G1 Y{coordinate.y} F{coordinate.speed}"
+        speed = self.vars["DEFAULT_SPEED_XY"]
+        gcode_command = f"G1 Y{coordinate.y} F{speed}"
         self.append_gcode(gcode_command)
 
-    def move_to_z(self, coordinate):
+    def move_to_z(self, coordinate: Coordinate):
         """Move the pipette toolhead to the coordinate z position.
 
         Use the Coordinate object to get the position and speed.
@@ -234,16 +222,22 @@ class AutoPipette:
         Args:
             coordinate
         """
-        gcode_command = f"G1 Z{coordinate.z} F{coordinate.speed}"
+        speed = self.vars["DEFAULT_SPEED_Z"]
+        gcode_command = f"G1 Z{coordinate.z} F{speed}"
         self.append_gcode(gcode_command)
 
     def eject_tip(self):
         """Eject the pipette tip."""
-        self.set_servo_angle(self.SERVO_ANGLE_RETRACT)
-        self.gcode_wait(self.WAIT_TIME_EJECT)
-        self.set_servo_angle(self.SERVO_ANGLE_READY)
-        self.gcode_wait(self.WAIT_TIME_MOVEMENT)
-        self.set_servo_angle(self.SERVO_ANGLE_RETRACT)
+        angle_retract = self.vars["SERVO_ANGLE_RETRACT"]
+        angle_ready = self.vars["SERVO_ANGLE_READY"]
+        wait_eject = self.vars["WAIT_TIME_EJECT"]
+        wait_movement = self.vars["WAIT_TIME_MOVEMENT"]
+        self.set_servo_angle(angle_retract)
+        self.gcode_wait(wait_eject)
+        self.set_servo_angle(angle_ready)
+        self.gcode_wait(wait_eject)
+        self.set_servo_angle(angle_retract)
+        self.gcode_wait(wait_movement)
 
     def set_servo_angle(self, angle):
         """Set the servo angle.
@@ -254,13 +248,15 @@ class AutoPipette:
         gcode_command = f"SET_SERVO SERVO={self.servo_name} ANGLE={angle}"
         self.append_gcode(gcode_command)
 
-    def move_pipette_stepper(self, distance, speed=30):
+    def move_pipette_stepper(self, distance, speed=None):
         """Move the stepper associated with the pipette toolhead.
 
         Args:
             distance
             speed
         """
+        if speed is None:
+            speed = self.vars["DEFAULT_SPEED_PIPETTE"]
         gcode_command = f"MANUAL_STEPPER STEPPER={self.stepper_name} SPEED={speed} MOVE={distance}"
         self.append_gcode(gcode_command)
 
@@ -280,10 +276,9 @@ class AutoPipette:
             coordinate
             dip_dist
         """
-        coordinate.speed = self.DEFAULT_SPEED_Z
         coordinate.z += dip_dist
         self.move_to_z(coordinate)
-        self.gcode_wait(self.WAIT_TIME_MOVEMENT)
+        self.gcode_wait(self.vars["WAIT_TIME_MOVEMENT"])
 
     def dip_z_return(self, coordinate, dip_dist):
         """Bring up the pipette toolhead a set distance.
@@ -292,10 +287,9 @@ class AutoPipette:
             coordinate
             dip_dist
         """
-        coordinate.speed = self.DEFAULT_SPEED_Z
         coordinate.z -= dip_dist
         self.move_to_z(coordinate)
-        self.gcode_wait(self.WAIT_TIME_MOVEMENT)
+        self.gcode_wait(self.vars["WAIT_TIME_MOVEMENT"])
 
     def set_location(self, name_loc: str, x: float, y: float, z: float):
         """Create a Coordinate and associate with a name."""
@@ -335,7 +329,7 @@ class AutoPipette:
                 tipbox = self._locations[name_loc]
                 self.tipboxes.append_box(tipbox)
 
-    def get_location(self, name_loc: str):
+    def get_location_coor(self, name_loc: str):
         """Return a Coordinate from a location name."""
         # If name_loc doesn't exist as a location, do nothing
         if (name_loc not in self._locations.keys()):
@@ -359,18 +353,48 @@ class AutoPipette:
         self.dip_z_down(loc_tip, self.tipboxes.DIP_DISTANCE)
         self.dip_z_return(loc_tip, self.tipboxes.DIP_DISTANCE)
 
-    def aspirate(self, vol_ul, speed=30):
-        """Use the pipette to take in some microliters of liquid."""
-        self.move_pipette_stepper(self.volume.vol_to_steps(vol_ul, speed))
+    def plunge_down(self, vol_ul, speed=None):
+        """Move pipette plunger down to take in some microliters of liquid."""
+        if speed is None:
+            speed = self.vars["DEFAULT_SPEED_PIPETTE"]
+        self.move_pipette_stepper(self.volconv.vol_to_steps(vol_ul), speed)
 
-    def dispense(self, vol_ul, speed=30):
-        """Use the pipette to expell some microliters of liquid."""
-        self.move_pipette_stepper(-1 * self.volume.vol_to_steps(vol_ul, speed))
+    def clear_pipette(self, speed=None):
+        """Expell any liquid in tip."""
+        if speed is None:
+            speed = self.vars["DEFAULT_SPEED_PIPETTE"]
+        self.move_pipette_stepper(self.volconv.dist_disp, speed)
 
-    def pipette(self, vol_ul, source: Plate, dest: Plate):
+    def pipette(self, vol_ul, source: str, dest: str):
         """Pipette a volume amount of liquid from source to dest."""
+        coor_source = self.get_location_coor(source)
+        coor_dest = self.get_location_coor(dest)
+        loc_source = self._locations[source]
+        loc_dest = self._locations[dest]
+        # Pickup a tip
         self.next_tip()
-        self.move_to(source)
-        self.dip_z_down(source, source.DIP_DISTANCE)
-        self.aspirate(vol_ul)
-        self.dip_z_return(source, source.DIP_DISTANCE)
+
+        remaining_vol = vol_ul
+        while remaining_vol > 0:
+            if remaining_vol >= 100:
+                pip_vol = 100
+                remaining_vol -= pip_vol
+            else:
+                pip_vol = remaining_vol
+                remaining_vol -= pip_vol
+            # Pickup liquid
+            self.move_to(coor_source)
+            self.plunge_down(pip_vol)
+            self.dip_z_down(coor_source, loc_source.DIP_DISTANCE)
+            self.home_pipette_stepper()
+            self.dip_z_return(coor_source, loc_source.DIP_DISTANCE)
+            # Dropoff liquid
+            self.move_to(coor_dest)
+            self.dip_z_down(coor_dest, loc_dest.DIP_DISTANCE)
+            self.clear_pipette()
+            self.dip_z_return(coor_dest, loc_dest.DIP_DISTANCE)
+            self.home_pipette_stepper()
+            self.append_gcode(f"; Moved {pip_vol} uL from {source} to {dest}")
+        # Eject tip
+        self.move_to(self.garbage.next())
+        self.eject_tip()

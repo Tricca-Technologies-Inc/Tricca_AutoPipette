@@ -2,8 +2,8 @@
 set SPEED_FACTOR 100
 set MAX_VELOCITY 99999
 set MAX_ACCEL 99999
-set DEFAULT_SPEED_XY 500
-set DEFAULT_SPEED_Z 500
+set DEFAULT_SPEED_XY 5000
+set DEFAULT_SPEED_Z 12000
 
 ; Setup the plates below the pipette
 coor plate0 309 0 40
