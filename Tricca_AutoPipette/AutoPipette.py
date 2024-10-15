@@ -8,10 +8,12 @@ and managing the different states of the pipette.
 TODO Add Logger obj
 """
 from Coordinate import Coordinate
-from Coordinate import Location
+from Plates import PlateTypes
+from Plates import Plate
+from Plates import Garbage
+from Plates import TipBox
 
 
-# Classes for modularization
 class AutoPipette:
     """
     This class is responsible for functions relating to the auto pipette.
@@ -19,6 +21,19 @@ class AutoPipette:
     Responsibilities include sending and receiving commands, managing different
     variables and managing the different sates of the auto pipette.
     """
+
+    class Volume:
+        """Convert motor steps into a volume in ul."""
+
+        _consts = [0, 0.3935]
+
+        def __init_(self):
+            """Initialize the variables to estimate volume."""
+            pass
+
+        def vol_to_steps(self, vol_ul):
+            """Take a volume in microliter, return a number of steps."""
+            return self._consts[1]*vol_ul + self._consts[0]
 
     DEFAULT_SPEED_XY = 500  # For X Y Axis. Can be set when object created.
     DEFAULT_SPEED_Z = 500  # For Z Axis. Can be set when object created.
@@ -30,16 +45,15 @@ class AutoPipette:
     WAIT_TIME_EJECT = 1000
     WAIT_TIME_MOVEMENT = 250
 
-    DIP_DISTANCE_TIP = 78.5
-    DIP_DISTANCE_WELL = 35
-    DIP_DISTANCE_VIAL = 55
-    DIP_DISTANCE_TILTV = 30
-
     MAX_SPEED = 99999  # Maximum possible speed the toolhead can move
     SPEED_FACTOR = 100  # Speed multiplier in percentage.
     MAX_VELOCITY = 4000  # Maximum possible velocity of toolhead.
     MAX_ACCEL = 4000  # Maximum possible acceleration of toolhead.
 
+    volume = Volume()
+    garbage = None
+    tipboxes = None
+    _locations = {}
     _gcode_buf = ""
 
     def __init__(self,
@@ -50,10 +64,6 @@ class AutoPipette:
                  servo_angle_ready=SERVO_ANGLE_READY,
                  wait_time_eject=WAIT_TIME_EJECT,
                  wait_time_movement=WAIT_TIME_MOVEMENT,
-                 dip_distance_tip=DIP_DISTANCE_TIP,
-                 dip_distance_well=DIP_DISTANCE_WELL,
-                 dip_distance_vial=DIP_DISTANCE_VIAL,
-                 dip_distance_tiltv=DIP_DISTANCE_TILTV,
                  max_speed=MAX_SPEED,
                  speed_factor=SPEED_FACTOR,
                  max_velocity=MAX_VELOCITY,
@@ -68,17 +78,13 @@ class AutoPipette:
         self.SERVO_ANGLE_READY = servo_angle_ready
         self.WAIT_TIME_EJECT = wait_time_eject
         self.WAIT_TIME_MOVEMENT = wait_time_movement
-        self.DIP_DISTANCE_TIP = dip_distance_tip
-        self.DIP_DISTANCE_WELL = dip_distance_well
-        self.DIP_DISTANCE_VIAL = dip_distance_vial
-        self.DIP_DISTANCE_TILTV = dip_distance_tiltv
         self.MAX_SPEED = max_speed
         self.SPEED_FACTOR = speed_factor
         self.MAX_VELOCITY = max_velocity
         self.MAX_ACCEL = max_accel
         self.servo_name = servo_name
         self.stepper_name = stepper_name
-       
+
         # A dict of the possible variables that can be changed.
         # Used by set() in ProtocolCommands
         self.vars = {"DEFAULT_SPEED_XY": self.DEFAULT_SPEED_XY,
@@ -195,10 +201,6 @@ class AutoPipette:
         Args:
             coordinate
         """
-        # F4850 is max when xyz move
-        # F980 is max when only z moves
-        # F6600 is max when only x/y moves
-        # G1 X30 Y5 Z9 F27
         gcode_command = f"G1 X{coordinate.x} Y{coordinate.y} Z{coordinate.z} F{coordinate.speed}"
         self.append_gcode(gcode_command)
 
@@ -221,7 +223,7 @@ class AutoPipette:
         Args:
             coordinate
         """
-        gcode_command = f"G1 Y{coordinate.x} F{coordinate.speed}"
+        gcode_command = f"G1 Y{coordinate.y} F{coordinate.speed}"
         self.append_gcode(gcode_command)
 
     def move_to_z(self, coordinate):
@@ -232,7 +234,7 @@ class AutoPipette:
         Args:
             coordinate
         """
-        gcode_command = f"G1 Z{coordinate.x} F{coordinate.speed}"
+        gcode_command = f"G1 Z{coordinate.z} F{coordinate.speed}"
         self.append_gcode(gcode_command)
 
     def eject_tip(self):
@@ -280,7 +282,7 @@ class AutoPipette:
         """
         coordinate.speed = self.DEFAULT_SPEED_Z
         coordinate.z += dip_dist
-        self.move_to(coordinate)
+        self.move_to_z(coordinate)
         self.gcode_wait(self.WAIT_TIME_MOVEMENT)
 
     def dip_z_return(self, coordinate, dip_dist):
@@ -292,5 +294,83 @@ class AutoPipette:
         """
         coordinate.speed = self.DEFAULT_SPEED_Z
         coordinate.z -= dip_dist
-        self.move_to(coordinate)
+        self.move_to_z(coordinate)
         self.gcode_wait(self.WAIT_TIME_MOVEMENT)
+
+    def set_location(self, name_loc: str, x: float, y: float, z: float):
+        """Create a Coordinate and associate with a name."""
+        self._locations[name_loc] = Coordinate(x, y, z)
+
+    def is_location(self, name_loc: str):
+        """Return True if name_loc is a location, false otherwise."""
+        return name_loc in self._locations.keys()
+
+    def set_plate(self, name_loc: str, plate_type: str,
+                  num_row=None, num_col=None):
+        """Create a plate from an existing location name."""
+        # TODO Throw errors
+        # If name_loc doesn't exist as a location, do nothing
+        if (name_loc not in self._locations.keys()):
+            return
+        # If plate_type doesn't match a type of plate, do nothing
+        if (plate_type not in PlateTypes.TYPES.keys()):
+            return
+        coor = self._locations[name_loc]
+        # If num_row and num_col are passed in,
+        # instantiate with them otherwise use neither
+        if ((num_row is not None) and (num_col is not None)):
+            self._locations[name_loc] = \
+                PlateTypes.TYPES[plate_type](coor, num_row, num_col)
+        else:
+            self._locations[name_loc] = \
+                PlateTypes.TYPES[plate_type](coor)
+        # Set garbage location if plate type is garbage.
+        if (plate_type == Garbage.__repr__()):
+            self.garbage = self._locations[name_loc]
+        # Set tip box location if plate type is TipBox
+        elif (plate_type == TipBox.__repr__()):
+            if (self.tipboxes is None):
+                self.tipboxes = self._locations[name_loc]
+            else:
+                tipbox = self._locations[name_loc]
+                self.tipboxes.append_box(tipbox)
+
+    def get_location(self, name_loc: str):
+        """Return a Coordinate from a location name."""
+        # If name_loc doesn't exist as a location, do nothing
+        if (name_loc not in self._locations.keys()):
+            return
+        # If the returned location is a coordinate, return it.
+        # Otherwise, if it is a plate, next() is called and returned
+        loc = self._locations[name_loc]
+        if (isinstance(loc, Plate)):
+            return loc.next()
+        elif (isinstance(loc, Coordinate)):
+            return loc
+        else:
+            return
+
+    def next_tip(self):
+        """Grab the next tip in the tip box."""
+        if (self.tipboxes is None):
+            return
+        loc_tip = self.tipboxes.next()
+        self.move_to(loc_tip)
+        self.dip_z_down(loc_tip, self.tipboxes.DIP_DISTANCE)
+        self.dip_z_return(loc_tip, self.tipboxes.DIP_DISTANCE)
+
+    def aspirate(self, vol_ul, speed=30):
+        """Use the pipette to take in some microliters of liquid."""
+        self.move_pipette_stepper(self.volume.vol_to_steps(vol_ul, speed))
+
+    def dispense(self, vol_ul, speed=30):
+        """Use the pipette to expell some microliters of liquid."""
+        self.move_pipette_stepper(-1 * self.volume.vol_to_steps(vol_ul, speed))
+
+    def pipette(self, vol_ul, source: Plate, dest: Plate):
+        """Pipette a volume amount of liquid from source to dest."""
+        self.next_tip()
+        self.move_to(source)
+        self.dip_z_down(source, source.DIP_DISTANCE)
+        self.aspirate(vol_ul)
+        self.dip_z_return(source, source.DIP_DISTANCE)
