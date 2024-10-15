@@ -7,9 +7,13 @@ Run from command line by running
 >>> python3 PipetteApp.py ip default_speed
 """
 from Coordinate import Coordinate
+from Coordinate import Location
 import asyncio
 from shiny import App, render, ui, reactive
 from AutoPipette import AutoPipette
+from protocols import kitTest
+from protocols import volumes_PRIME
+from protocols import volumeTest
 from pathlib import Path
 import argparse
 import requests
@@ -159,17 +163,30 @@ def run_pipette_app():
             ui.tags.div(
                 ui.tags.div(
                     ui.tags.div(
-                        ui.input_numeric("x", "X Coordinate:", value=0),
-                        ui.input_numeric("y", "Y Coordinate:", value=0),
-                        ui.input_numeric("z", "Z Coordinate:", value=0),
-                        ui.input_numeric("speed", "Speed (mm/min):", value=1500),
-                        ui.input_action_button("move", ui.tags.span(ui.tags.i(class_="fas fa-arrows-alt"), " Move to Coordinates"), class_="btn"),
-                        ui.input_action_button("home", ui.tags.span(ui.tags.i(class_="fas fa-home"), " Move to Home"), class_="btn"),
-                        ui.input_action_button("stop", ui.tags.span(ui.tags.i(class_="fas fa-stop"), " Stop"), class_="btn"),
-                        ui.input_text("location_name", "Location Name:", value=""),
-                        ui.input_action_button("move_to_location", ui.tags.span(ui.tags.i(class_="fas fa-map-marker-alt"), " Move to Location"), class_="btn"),
+                        ui.tags.div(
+                            ui.tags.span("Toolhead", class_="header-title"),  # Title of the header
+                            ui.input_action_button("toggle_sidebar", ui.tags.i(class_="fas fa-chevron-down"), class_="collapse-btn"),
+                            class_="sidebar-header"
+                            ),
+                        # Sidebar Content that will be collapsible
+                        ui.tags.div(
+                            ui.tags.div(
+                                ui.input_numeric("x", "X Coordinate:", value=0),
+                                ui.input_numeric("y", "Y Coordinate:", value=0),
+                                ui.input_numeric("z", "Z Coordinate:", value=0),
+                                class_= "cordinate-div" 
+                            ),
+                            ui.input_numeric("speed", "Speed (mm/min):", value=1500),
+                            ui.input_action_button("move", ui.tags.span(ui.tags.i(class_="fas fa-arrows-alt"), " Move to Coordinates"), class_="btn"),
+                            ui.input_action_button("home", ui.tags.span(ui.tags.i(class_="fas fa-home"), " Move to Home"), class_="btn"),
+                            ui.input_action_button("stop", ui.tags.span(ui.tags.i(class_="fas fa-stop"), " Stop"), class_="btn"),
+                            ui.input_text("location_name", "Location Name:", value=""),
+                            ui.input_action_button("move_to_location", ui.tags.span(ui.tags.i(class_="fas fa-map-marker-alt"), " Move to Location"), class_="btn"),
+                            class_="sidebar-content"
+                        ),
                         class_="sidebar"
-                       ),
+                    ),
+                    
                     ui.tags.div(
                         ui.tags.h2("Protocols", class_="protocol-title"),
                         ui.input_action_button("initPipette", ui.tags.span(ui.tags.i(class_="fas fa-home"), "Initialize Pipette"), class_="btn"),
@@ -213,22 +230,20 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Start a webpage for controlling the auto-pipette.")
     parser.add_argument("ip", help="the ip address of the auto-pipette")
-    # parser.add_argument("default_speed_xy", type=int,
-    #                     help=f"""the default speed of the toolhead when moving
-    #                     in the x or y axis
-    #                     (must be [1,{AutoPipette.MAX_SPEED}])""")
+    parser.add_argument("default_speed", type=int,
+                        help=f"the default speed of the toolhead when moving \
+                        (must be [1,{AutoPipette.MAX_SPEED}])")
     args = parser.parse_args()
 
     # Ensure speed is appropriate
-    # if args.default_speed_xy > AutoPipette.MAX_SPEED:
-    #     print(f"Speed cannot be greater than {AutoPipette.MAX_SPEED}")
-    #     exit
-    # elif args.default_speed_xy <= 0:
-    #     print("Speed cannot be 0 or negative.")
+    if args.default_speed > AutoPipette.MAX_SPEED:
+        print(f"Speed cannot be greater than {AutoPipette.MAX_SPEED}")
+        exit
+    elif args.default_speed <= 0:
+        print("Speed cannot be 0 or negative.")
 
     # Launch program
-    # pipette = AutoPipette(default_speed_xy=args.default_speed_xy)
-    pipette = AutoPipette()
+    pipette = AutoPipette(default_speed_xy=args.default_speed)
     moonraker_url = \
         "http://" + args.ip + ":7125/printer/gcode/script"
     run_pipette_app()
