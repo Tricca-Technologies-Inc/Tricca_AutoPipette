@@ -16,6 +16,16 @@ class ProtocolCommands:
         """Initialize internal pipette object."""
         self._autopipette = autopipette
 
+    def is_float(self, element: any) -> bool:
+        """Return True element converts to a float and Flase otherwise."""
+        if element is None:
+            return False
+        try:
+            float(element)
+            return True
+        except ValueError:
+            return False
+
     def init_file(self):
         """Initialize the gcode file with a header of pre-existing settings.
 
@@ -162,9 +172,9 @@ class ProtocolCommands:
                 return "; " + err_msg
         else:
             # If the following 3 are decimals, set a location
-            if (_args[1].isdecimal() and
-                    _args[2].isdecimal() and
-                    _args[3].isdecimal()):
+            if (self.is_float(_args[1])
+                    and self.is_float(_args[2])
+                    and self.is_float(_args[3])):
                 x = int(_args[1])
                 y = int(_args[2])
                 z = int(_args[3])
@@ -224,16 +234,16 @@ class ProtocolCommands:
             return self._autopipette.return_gcode()
         elif (len(_args) == 3):
             # Check if args numbers
-            if not (_args[0].isdecimal() and
-                    _args[1].isdecimal() and
-                    _args[2].isdecimal()):
+            if not (self.is_float(_args[0]) and
+                    self.is_float(_args[1]) and
+                    self.is_float(_args[2])):
                 err_msg = \
                     f"Args:{_args} must all be numbers to be a coordinate."
                 print(err_msg)
                 return "; " + err_msg
-            coor_x = int(_args[0])
-            coor_y = int(_args[1])
-            coor_z = int(_args[2])
+            coor_x = float(_args[0])
+            coor_y = float(_args[1])
+            coor_z = float(_args[2])
             coor = Coordinate(coor_x, coor_y, coor_z)
             self._autopipette.move_to(coor)
             return self._autopipette.return_gcode()

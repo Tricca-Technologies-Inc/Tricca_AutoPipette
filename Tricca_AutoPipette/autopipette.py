@@ -73,7 +73,7 @@ class AutoPipette:
             if "type" in options:
                 type = self.conf[coor_section]["type"]
                 self.set_plate(name_loc, type, row, col)
-       
+
         # Append all AutoPipette conf settings to gcode buf
         self._gcode_buf += f"; AutoPipette Settings loaded from {conf_file}\n"
         for section in all_sections:

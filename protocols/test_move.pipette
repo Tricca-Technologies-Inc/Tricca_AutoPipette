@@ -1,6 +1,6 @@
 ; Test X
 set SPEED_XY 5000
-move 0 150 40
+move 0 150.34 40
 move 300 150 40
 move 0 150 40
 set SPEED_XY 10000

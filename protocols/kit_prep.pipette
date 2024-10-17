@@ -1,31 +1,3 @@
-; Set the speed of the pipette toolhead
-set SPEED_FACTOR 100
-set MAX_VELOCITY 99999
-set MAX_ACCEL 99999
-set DEFAULT_SPEED_XY 5000
-set DEFAULT_SPEED_Z 12000
-
-; Setup the plates below the pipette
-coor plate0 309 0 40
-coor plate1 202 0 40
-coor plate2 90 0 40
-coor plate3 310 144 40
-coor plate4 170 196 40
-coor plate5 91 141 40
-coor plate0 wellplate
-coor plate1 vialholder 5 7
-coor plate2 vialholder 5 6
-coor plate3 tipbox
-coor plate4 garbage
-coor plate5 vialholder
-
-; Define destination coordinate
-coor dest_vial 65 104 40
-coor dest_vial tiltv
-
-; Home the pipette
-home all
-
 ; Execute kit prep protocol
 pipette 50 plate1 dest_vial
 pipette 50 plate1 dest_vial
