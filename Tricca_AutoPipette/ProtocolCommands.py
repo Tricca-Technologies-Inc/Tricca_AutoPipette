@@ -7,7 +7,7 @@ from Coordinate import Coordinate
 
 
 class ProtocolCommands:
-    """Holds all possible commands and conversions in the .pipette file."""
+    """Holds all command to gcode translations for the .pipette file format."""
 
     _autopipette = AutoPipette()
     _gcode_buf = ""
@@ -15,6 +15,13 @@ class ProtocolCommands:
     def __init__(self, autopipette=AutoPipette()):
         """Initialize internal pipette object."""
         self._autopipette = autopipette
+
+    def init_file(self):
+        """Initialize the gcode file with a header of pre-existing settings.
+
+        Needs to be called before writing anything else to the file.
+        """
+        return self._autopipette.return_gcode()
 
     def set(self, args: str):
         """Set a variable on the pipette to a value."""
@@ -25,7 +32,15 @@ class ProtocolCommands:
             print(err_msg)
             return "; " + err_msg
         # Variable should exist in autopipette
-        if (_args[0] not in self._autopipette.vars):
+        sections = self._autopipette.conf.keys()
+        options = []
+        pip_var = _args[0].upper()
+        # TODO put limits on pip_val
+        pip_val = int(_args[1])
+        for section in sections:
+            options += list(self._autopipette.conf[section].keys())
+        options = list(map(str.upper, options))
+        if (pip_var not in options):
             err_msg = \
                 f"Variable {_args[0]} not recognized, it could not be set.\n"
             print(err_msg)
@@ -36,28 +51,32 @@ class ProtocolCommands:
                 f"Second arg:{_args[1]} passed into set is not a decimal.\n"
             print(err_msg)
             return "; " + err_msg
-        pip_var = _args[0]
-        # TODO put limits on pip_val
-        pip_val = int(_args[1])
         if (pip_var == "SPEED_FACTOR"):
-            temp = self._autopipette.SPEED_FACTOR
+            temp = self._autopipette.conf["SPEED"]["SPEED_FACTOR"]
             msg = f"; SPEED_FACTOR changed from {temp} to {pip_val}\n"
             self._autopipette.set_speed_factor(pip_val)
             return msg + self._autopipette.return_gcode()
-        elif (pip_var == "MAX_VELOCITY"):
-            temp = self._autopipette.MAX_VELOCITY
+        elif (pip_var == "VELOCITY_MAX"):
+            temp = self._autopipette.conf["SPEED"]["VELOCITY_MAX"]
             msg = f"; MAX_VELOCITY changed from {temp} to {pip_val}\n"
             self._autopipette.set_max_velocity(pip_val)
             return msg + self._autopipette.return_gcode()
-        elif (pip_var == "MAX_ACCEL"):
-            temp = self._autopipette.MAX_ACCEL
+        elif (pip_var == "ACCEL_MAX"):
+            temp = self._autopipette.conf["SPEED"]["ACCEL_MAX"]
             msg = f"; MAX_ACCEL changed from {temp} to {pip_val}\n"
             self._autopipette.set_max_accel(pip_val)
             return msg + self._autopipette.return_gcode()
         else:
-            temp = self._autopipette.vars[pip_var]
-            self._autopipette.vars[pip_var] = pip_val
-            return f"; {pip_var} changed from {temp} to {pip_val}\n"
+            for section in sections:
+                # If the variable we want to set is in that section,
+                # set it and return
+                if pip_var in self._autopipette.conf[section].keys():
+                    temp = self._autopipette.conf[section][pip_var]
+                    self._autopipette.conf[section][pip_var] = str(pip_val)
+                    return f"; {pip_var} changed from {temp} to {pip_val}\n"
+        err_msg = f"Unknown error setting {pip_var} to {pip_val}\n"
+        print(err_msg)
+        return "; " + err_msg
 
     def pipette(self, args: str):
         """Move vol amount of liquid from src to dest."""
@@ -195,7 +214,7 @@ class ProtocolCommands:
         # There should either be one arg (location) or 3 (coordinate)
         if (len(_args) == 1):
             # Check if passed location exists
-            if (not self._autopipette.islocation(_args[0])):
+            if (not self._autopipette.is_location(_args[0])):
                 err_msg = \
                     f"Arg:{_args[0]} passed into move is not a location."
                 print(err_msg)
@@ -224,12 +243,40 @@ class ProtocolCommands:
             print(err_msg)
             return "; " + err_msg
 
+    def next_tip(self, args: str):
+        """Pickup the next tip in the tip box."""
+        _args = args.split()
+        # There should be no arguments passed in
+        if len(_args) != 0:
+            err_msg = "Function next_tip takes no args."
+            print(err_msg)
+            return "; " + err_msg
+        # Check if there is a TipBox assigned to pipette
+        if self._autopipette.tipboxes is None:
+            err_msg = "No TipBox assigned to pipette."
+            print(err_msg)
+            return "; " + err_msg
+        self._autopipette.next_tip()
+        return self._autopipette.return_gcode()
+
+    def eject_tip(self, args: str):
+        """Eject the tip on the pipette."""
+        _args = args.split()
+        if len(_args) != 0:
+            err_msg = "Function eject_tip takes no args."
+            print(err_msg)
+            return "; " + err_msg
+        self._autopipette.eject_tip()
+        return self._autopipette.return_gcode()
+
     _cmds = {
         "set": set,
         "coor": gen_coordinate,
         "home": home,
         "pipette": pipette,
         "move": move,
+        "next_tip": next_tip,
+        "eject_tip": eject_tip
     }
 
     def cmd_to_gcode(self, cmdline: str) -> str:
@@ -237,7 +284,14 @@ class ProtocolCommands:
         # print(cmdline)
         if (cmdline == "\n"):  # Copy newline lines to gcode file
             return "\n"
-        (cmd, args) = cmdline.split(maxsplit=1)
+        # Split line into argumnts, 1st arg is a command
+        line = cmdline.split(maxsplit=1)
+        cmd = line[0]
+        # Set args ot empty string if there's only a command
+        if len(line) != 1:
+            args = line[1]
+        else:
+            args = ""
         # If the first character is a semi-colon, the line is a comment.
         if (cmd[0] == ";"):
             return cmdline

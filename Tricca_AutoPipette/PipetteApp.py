@@ -18,7 +18,7 @@ import requests
 
 
 GCODE_PATH = Path(__file__).parent.parent / 'gcode/'
-pipette = AutoPipette(AutoPipette.DEFAULT_SPEED_XY)
+# pipette = AutoPipette()
 moonraker_url = "http://0.0.0.0:7125/printer/gcode/script"
 
 
@@ -231,7 +231,7 @@ if __name__ == "__main__":
                         help="The gcode file to run on startup.")
     args = parser.parse_args()
     # Launch program
-    pipette = AutoPipette()
+    # pipette = AutoPipette()
     moonraker_url = \
         "http://" + args.ip + ":7125/printer/gcode/script"
     if args.gcode is not None:

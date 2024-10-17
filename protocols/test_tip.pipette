@@ -1,0 +1,412 @@
+; Set the speed of the pipette toolhead
+set SPEED_FACTOR 100
+set VELOCITY_MAX 99999
+set ACCEL_MAX 99999
+set SPEED_XY 15000
+set SPEED_Z 5000
+
+; Setup the plates below the pipette
+coor plate0 311 3 40
+coor plate1 202 0 40
+coor plate2 90 0 40
+coor plate3 311 148 40
+coor plate4 170 196 40
+coor plate5 91 141 40
+coor plate1 vialholder 5 7
+coor plate2 vialholder 5 6
+coor plate3 tipbox
+coor plate0 tipbox
+coor plate4 garbage
+coor plate5 vialholder
+
+; Define destination coordinate
+coor dest_vial 65 104 40
+coor dest_vial tiltv
+
+; Home the pipette
+home all
+
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip
+next_tip
+move garbage
+eject_tip

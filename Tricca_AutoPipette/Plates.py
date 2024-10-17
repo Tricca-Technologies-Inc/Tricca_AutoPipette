@@ -5,7 +5,7 @@ from Coordinate import Coordinate
 
 class Plate:
     """Generate and manage coordinates to pipette into."""
-   
+
     DIP_DISTANCE = 30
 
     def __init__(self, start_coor,
@@ -58,9 +58,17 @@ class WellPlate(Plate):
     DIP_DISTANCE = 35
 
     def __init__(self, start_coor,
-                 num_row=12, num_col=8,
-                 spacing_row=9, spacing_col=9):
+                 num_row=None, num_col=None,
+                 spacing_row=None, spacing_col=None):
         """Initialize by creating all coordinates on the plate."""
+        if num_row is None:
+            num_row = 12
+        if num_col is None:
+            num_col = 8
+        if spacing_row is None:
+            spacing_row = 9
+        if spacing_col is None:
+            spacing_col = 9
         super().__init__(start_coor,
                          num_row, num_col,
                          spacing_row, spacing_col)
@@ -76,9 +84,17 @@ class TipBox(Plate):
     DIP_DISTANCE = 78.5
 
     def __init__(self, start_coor,
-                 num_row=12, num_col=8,
-                 spacing_row=9, spacing_col=9):
+                 num_row=None, num_col=None,
+                 spacing_row=None, spacing_col=None):
         """Initialize by creating all coordinates on the plate."""
+        if num_row is None:
+            num_row = 12
+        if num_col is None:
+            num_col = 8
+        if spacing_row is None:
+            spacing_row = 9
+        if spacing_col is None:
+            spacing_col = 9
         super().__init__(start_coor,
                          num_row, num_col,
                          spacing_row, spacing_col)
@@ -98,9 +114,17 @@ class VialHolder(Plate):
     DIP_DISTANCE = 55
 
     def __init__(self, start_coor,
-                 num_row=7, num_col=5,
-                 spacing_row=18, spacing_col=18):
+                 num_row=None, num_col=None,
+                 spacing_row=None, spacing_col=None):
         """Initialize by creating all coordinates on the plate."""
+        if num_row is None:
+            num_row = 7
+        if num_col is None:
+            num_col = 5
+        if spacing_row is None:
+            spacing_row = 18
+        if spacing_col is None:
+            spacing_col = 18
         super().__init__(start_coor,
                          num_row, num_col,
                          spacing_row, spacing_col)
@@ -115,7 +139,9 @@ class Garbage(Plate):
 
     DIP_DISTANCE = 30
 
-    def __init__(self, start_coor):
+    def __init__(self, start_coor,
+                 num_row=None, num_col=None,
+                 spacing_row=None, spacing_col=None):
         """Initialize by creating by calling super method."""
         super().__init__(start_coor,
                          num_row=1, num_col=1,
@@ -131,7 +157,9 @@ class TiltVial(Plate):
 
     DIP_DISTANCE = 30
 
-    def __init__(self, start_coor):
+    def __init__(self, start_coor,
+                 num_row=None, num_col=None,
+                 spacing_row=None, spacing_col=None):
         """Initialize by creating by calling super method."""
         super().__init__(start_coor,
                          num_row=1, num_col=1,
