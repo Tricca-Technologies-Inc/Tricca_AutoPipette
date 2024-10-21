@@ -1,0 +1,50 @@
+; Test X
+set SPEED_XY 5000
+move 0 150 40
+move 300 150 40
+move 0 150 40
+set SPEED_XY 10000
+move 0 150 40
+move 300 150 40
+move 0 150 40
+set SPEED_XY 15000
+move 0 150 40
+move 300 150 40
+move 0 150 40
+set SPEED_XY 20000
+move 0 150 40
+move 300 150 40
+move 0 150 40
+set SPEED_XY 25000
+move 0 150 40
+move 300 150 40
+move 0 150 40
+set SPEED_XY 30000
+move 0 150 40
+move 300 150 40
+move 0 150 40
+; Test Y
+set SPEED_XY 5000
+move 150 0 40
+move 150 300 40
+move 150 0 40
+set SPEED_XY 10000
+move 150 0 40
+move 150 300 40
+move 150 0 40
+set SPEED_XY 15000
+move 150 0 40
+move 150 300 40
+move 150 0 40
+set SPEED_XY 20000
+move 150 0 40
+move 150 300 40
+move 150 0 40
+set SPEED_XY 25000
+move 150 0 40
+move 150 300 40
+move 150 0 40
+set SPEED_XY 30000
+move 150 0 40
+move 150 300 40
+move 150 0 40

@@ -26,6 +26,7 @@ def gen_gcode(protocol: str):
     # Each line in .pipette file is a command that is converted into gcode
     with gcode_file.open('w') as gcode_fobj:
         with prot_file.open() as prot_fobj:
+            gcode_fobj.write(protcmds.init_file())
             for cmd in prot_fobj:
                 gcode_fobj.write(protcmds.cmd_to_gcode(cmd))
 

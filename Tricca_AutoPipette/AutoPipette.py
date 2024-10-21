@@ -12,97 +12,78 @@ from Plates import PlateTypes
 from Plates import Plate
 from Plates import Garbage
 from Plates import TipBox
+from volume_converter import VolumeConverter
+from configparser import ConfigParser
+from configparser import ExtendedInterpolation
+from pathlib import Path
+
+CONF_PATH = Path(__file__).parent.parent / 'conf/'
 
 
 class AutoPipette:
-    """
-    This class is responsible for functions relating to the auto pipette.
+    """This class is responsible for functions relating to the auto pipette.
 
     Responsibilities include sending and receiving commands, managing different
-    variables and managing the different sates of the auto pipette.
+    variables and managing the different states of the autopipette.
     """
 
-    class Volume:
-        """Convert motor steps into a volume in ul."""
-
-        _consts = [0, 0.3935]
-
-        def __init_(self):
-            """Initialize the variables to estimate volume."""
-            pass
-
-        def vol_to_steps(self, vol_ul):
-            """Take a volume in microliter, return a number of steps."""
-            return self._consts[1]*vol_ul + self._consts[0]
-
-    DEFAULT_SPEED_XY = 500  # For X Y Axis. Can be set when object created.
-    DEFAULT_SPEED_Z = 500  # For Z Axis. Can be set when object created.
-    DEFAULT_SPEED_PIPETTE = 15  # Speed the pipette plunger moves
-
-    SERVO_ANGLE_RETRACT = 150
-    SERVO_ANGLE_READY = 80
-
-    WAIT_TIME_EJECT = 1000
-    WAIT_TIME_MOVEMENT = 250
-
-    MAX_SPEED = 99999  # Maximum possible speed the toolhead can move
-    SPEED_FACTOR = 100  # Speed multiplier in percentage.
-    MAX_VELOCITY = 4000  # Maximum possible velocity of toolhead.
-    MAX_ACCEL = 4000  # Maximum possible acceleration of toolhead.
-
-    volume = Volume()
+    conf = ConfigParser(interpolation=ExtendedInterpolation())
+    has_tip = False
+    volconv = VolumeConverter()
     garbage = None
     tipboxes = None
     _locations = {}
     _gcode_buf = ""
 
-    def __init__(self,
-                 default_speed_xy=DEFAULT_SPEED_XY,
-                 default_speed_z=DEFAULT_SPEED_Z,
-                 default_speed_pipette=DEFAULT_SPEED_PIPETTE,
-                 servo_angle_retract=SERVO_ANGLE_RETRACT,
-                 servo_angle_ready=SERVO_ANGLE_READY,
-                 wait_time_eject=WAIT_TIME_EJECT,
-                 wait_time_movement=WAIT_TIME_MOVEMENT,
-                 max_speed=MAX_SPEED,
-                 speed_factor=SPEED_FACTOR,
-                 max_velocity=MAX_VELOCITY,
-                 max_accel=MAX_ACCEL,
-                 servo_name="my_servo",
-                 stepper_name="lock_stepper"):
+    def __init__(self, conf_file=None):
         """Set autopipette variables to defaults or passed in value."""
-        self.DEFAULT_SPEED_XY = default_speed_xy
-        self.DEFAULT_SPEED_Z = default_speed_z
-        self.DEFAULT_SPEED_PIPETTE = default_speed_pipette
-        self.SERVO_ANGLE_RETRACT = servo_angle_retract
-        self.SERVO_ANGLE_READY = servo_angle_ready
-        self.WAIT_TIME_EJECT = wait_time_eject
-        self.WAIT_TIME_MOVEMENT = wait_time_movement
-        self.MAX_SPEED = max_speed
-        self.SPEED_FACTOR = speed_factor
-        self.MAX_VELOCITY = max_velocity
-        self.MAX_ACCEL = max_accel
-        self.servo_name = servo_name
-        self.stepper_name = stepper_name
+        if conf_file is None:
+            conf_file = "autopipette.conf"
+        conf_path = CONF_PATH / conf_file
+        file = open(conf_path, mode='r')
+        self.conf.read_file(file)
+        # Ensure default sections exist
+        def_sections = ["NAME", "BOUNDARY", "SPEED", "SERVO", "WAIT"]
+        for section in def_sections:
+            if section not in self.conf.sections():
+                err_msg = f"{section} not in config file {conf_path}.\n"
+                print(err_msg)
+        all_sections = self.conf.sections()
+        coor_sections = \
+            [item for item in all_sections if item not in def_sections]
+        # Go through coordinate sections, turn locations into plates if needed
+        for coor_section in coor_sections:
+            # coordinate section should look like [COORDINATE name_loc]
+            coor = coor_section.split()
+            if coor[0] != "COORDINATE":
+                pass
+            name_loc = coor[1]
+            options = self.conf[coor_section].keys()
+            self.set_location(name_loc,
+                              self.conf[coor_section].getfloat("x"),
+                              self.conf[coor_section].getfloat("y"),
+                              self.conf[coor_section].getfloat("z"))
+            # Check for plate type, rows and columns
+            row = None
+            col = None
+            if "row" in options:
+                row = self.conf[coor_section].getint("row")
+            if "col" in options:
+                col = self.conf[coor_section].getint("col")
+            if "type" in options:
+                type = self.conf[coor_section]["type"]
+                self.set_plate(name_loc, type, row, col)
+       
+        # Append all AutoPipette conf settings to gcode buf
+        self._gcode_buf += f"; AutoPipette Settings loaded from {conf_file}\n"
+        for section in all_sections:
+            self._gcode_buf += f"; {section}\n"
+            for option in self.conf[section].keys():
+                val = self.conf[section][option]
+                self._gcode_buf += f";\t {option}: {val}\n"
 
-        # A dict of the possible variables that can be changed.
-        # Used by set() in ProtocolCommands
-        self.vars = {"DEFAULT_SPEED_XY": self.DEFAULT_SPEED_XY,
-                     "DEFAULT_SPEED_Z": self.DEFAULT_SPEED_Z,
-                     "DEFAULT_SPEED_PIPETTE": self.DEFAULT_SPEED_PIPETTE,
-                     "SERVO_ANGLE_RETRACT": self.SERVO_ANGLE_RETRACT,
-                     "SERVO_ANGLE_READY": self.SERVO_ANGLE_READY,
-                     "WAIT_TIME_EJECT": self.WAIT_TIME_EJECT,
-                     "WAIT_TIME_MOVEMENT": self.WAIT_TIME_MOVEMENT,
-                     "DIP_DISTANCE_TIP": self.DIP_DISTANCE_TIP,
-                     "DIP_DISTANCE_WELL": self.DIP_DISTANCE_WELL,
-                     "DIP_DISTANCE_VIAL": self.DIP_DISTANCE_VIAL,
-                     "DIP_DISTANCE_TILTV": self.DIP_DISTANCE_TILTV,
-                     "MAX_SPEED": self.MAX_SPEED,
-                     "SPEED_FACTOR": self.SPEED_FACTOR,
-                     "MAX_VELOCITY": self.MAX_VELOCITY,
-                     "MAX_ACCEL": self.MAX_ACCEL,
-                     }
+        # Set all var on the pipette using gcode and place in known position
+        self.init_all()
 
     def init_all(self):
         """Initialize all relevant aspects of the pipette.
@@ -122,24 +103,27 @@ class AutoPipette:
 
         MAX_ACCEL: the maximum possible acceleration (mm/sec^2).
         """
-        self.set_speed_factor()
-        self.set_max_velocity()
-        self.set_max_accel()
+        factor = float(self.conf["SPEED"]["SPEED_FACTOR"])
+        velocity = float(self.conf["SPEED"]["VELOCITY_MAX"])
+        accel = float(self.conf["SPEED"]["ACCEL_MAX"])
+        self.set_speed_factor(factor)
+        self.set_max_velocity(velocity)
+        self.set_max_accel(accel)
 
     def set_speed_factor(self, factor):
         """Set the speed factor using gcode."""
-        self.SPEED_FACTOR = factor
-        self.append_gcode(f"M220 S{self.SPEED_FACTOR}")
+        self.conf["SPEED"]["SPEED_FACTOR"] = str(factor)
+        self.append_gcode(f"M220 S{factor}")
 
     def set_max_velocity(self, velocity):
         """Set the max velocity using gcode."""
-        self.MAX_VELOCITY = velocity
-        self.append_gcode(f"SET_VELOCITY_LIMIT VELOCITY={self.MAX_VELOCITY}")
+        self.conf["SPEED"]["VELOCITY_MAX"] = str(velocity)
+        self.append_gcode(f"""SET_VELOCITY_LIMIT VELOCITY={velocity}""")
 
     def set_max_accel(self, accel):
         """Set the max acceleration using gcode."""
-        self.MAX_ACCEL = accel
-        self.append_gcode(f"SET_VELOCITY_LIMIT ACCEL={self.MAX_ACCEL}")
+        self.conf["SPEED"]["ACCEL_MAX"] = str(accel)
+        self.append_gcode(f"SET_VELOCITY_LIMIT ACCEL={accel}")
 
     def home_axis(self):
         """Home x, y, and z axis.
@@ -175,14 +159,19 @@ class AutoPipette:
 
     def home_servo(self):
         """Retract the servo that dispenses pipette tips."""
-        self.set_servo_angle(self.SERVO_ANGLE_RETRACT)
-        self.gcode_wait(self.WAIT_TIME_MOVEMENT)
+        self.set_servo_angle(self.conf["SERVO"]["SERVO_ANGLE_RETRACT"])
+        self.gcode_wait(self.conf["WAIT"]["WAIT_TIME_MOVEMENT"])
 
-    def home_pipette_stepper(self, speed=DEFAULT_SPEED_PIPETTE):
+    def home_pipette_stepper(self, speed=None):
         """Home the pipette stepper."""
-        gcode_command = f"MANUAL_STEPPER STEPPER={self.stepper_name} SPEED={speed} MOVE=-30 STOP_ON_ENDSTOP=1"
+        if speed is None:
+            speed = self.conf["SPEED"]["SPEED_PIPETTE"]
+        stepper = self.conf["NAME"]["NAME_PIPETTE_STEPPER"]
+        gcode_command = \
+            f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} MOVE=-30 STOP_ON_ENDSTOP=1"
         self.append_gcode(gcode_command)
-        gcode_command = f"MANUAL_STEPPER STEPPER={self.stepper_name} SET_POSITION=0"
+        gcode_command = \
+            f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0"
         self.append_gcode(gcode_command)
 
     def append_gcode(self, command):
@@ -195,16 +184,17 @@ class AutoPipette:
         self._gcode_buf = ""
         return temp
 
-    def move_to(self, coordinate):
+    def move_to(self, coordinate: Coordinate):
         """Move the pipette toolhead to the coordinate.
 
         Args:
             coordinate
         """
-        gcode_command = f"G1 X{coordinate.x} Y{coordinate.y} Z{coordinate.z} F{coordinate.speed}"
+        speed = self.conf["SPEED"]["SPEED_XY"]
+        gcode_command = f"G1 X{coordinate.x} Y{coordinate.y} Z{coordinate.z} F{speed}"
         self.append_gcode(gcode_command)
 
-    def move_to_x(self, coordinate):
+    def move_to_x(self, coordinate: Coordinate):
         """Move the pipette toolhead to the coordinate x position.
 
         Use the Coordinate object to get the position and speed.
@@ -212,10 +202,11 @@ class AutoPipette:
         Args:
             coordinate
         """
-        gcode_command = f"G1 X{coordinate.x} F{coordinate.speed}"
+        speed = self.conf["SPEED"]["SPEED_XY"]
+        gcode_command = f"G1 X{coordinate.x} F{speed}"
         self.append_gcode(gcode_command)
 
-    def move_to_y(self, coordinate):
+    def move_to_y(self, coordinate: Coordinate):
         """Move the pipette toolhead to the coordinate y position.
 
         Use the Coordinate object to get the position and speed.
@@ -223,10 +214,11 @@ class AutoPipette:
         Args:
             coordinate
         """
-        gcode_command = f"G1 Y{coordinate.y} F{coordinate.speed}"
+        speed = self.conf["SPEED"]["SPEED_XY"]
+        gcode_command = f"G1 Y{coordinate.y} F{speed}"
         self.append_gcode(gcode_command)
 
-    def move_to_z(self, coordinate):
+    def move_to_z(self, coordinate: Coordinate):
         """Move the pipette toolhead to the coordinate z position.
 
         Use the Coordinate object to get the position and speed.
@@ -234,16 +226,22 @@ class AutoPipette:
         Args:
             coordinate
         """
-        gcode_command = f"G1 Z{coordinate.z} F{coordinate.speed}"
+        speed = self.conf["SPEED"]["SPEED_Z"]
+        gcode_command = f"G1 Z{coordinate.z} F{speed}"
         self.append_gcode(gcode_command)
 
     def eject_tip(self):
         """Eject the pipette tip."""
-        self.set_servo_angle(self.SERVO_ANGLE_RETRACT)
-        self.gcode_wait(self.WAIT_TIME_EJECT)
-        self.set_servo_angle(self.SERVO_ANGLE_READY)
-        self.gcode_wait(self.WAIT_TIME_MOVEMENT)
-        self.set_servo_angle(self.SERVO_ANGLE_RETRACT)
+        angle_retract = self.conf["SERVO"]["SERVO_ANGLE_RETRACT"]
+        angle_ready = self.conf["SERVO"]["SERVO_ANGLE_READY"]
+        wait_eject = self.conf["WAIT"]["WAIT_TIME_EJECT"]
+        wait_movement = self.conf["WAIT"]["WAIT_TIME_MOVEMENT"]
+        self.set_servo_angle(angle_retract)
+        self.set_servo_angle(angle_ready)
+        self.gcode_wait(wait_eject)
+        self.set_servo_angle(angle_retract)
+        self.gcode_wait(wait_movement)
+        self.has_tip = False
 
     def set_servo_angle(self, angle):
         """Set the servo angle.
@@ -251,17 +249,21 @@ class AutoPipette:
         Args:
             angle
         """
-        gcode_command = f"SET_SERVO SERVO={self.servo_name} ANGLE={angle}"
+        servo = self.conf["NAME"]["NAME_PIPETTE_SERVO"]
+        gcode_command = f"SET_SERVO SERVO={servo} ANGLE={angle}"
         self.append_gcode(gcode_command)
 
-    def move_pipette_stepper(self, distance, speed=30):
+    def move_pipette_stepper(self, distance, speed=None):
         """Move the stepper associated with the pipette toolhead.
 
         Args:
             distance
             speed
         """
-        gcode_command = f"MANUAL_STEPPER STEPPER={self.stepper_name} SPEED={speed} MOVE={distance}"
+        if speed is None:
+            speed = self.conf["SPEED"]["SPEED_PIPETTE"]
+        stepper = self.conf["NAME"]["NAME_PIPETTE_STEPPER"]
+        gcode_command = f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} MOVE={distance}"
         self.append_gcode(gcode_command)
 
     def gcode_wait(self, mil):
@@ -280,10 +282,9 @@ class AutoPipette:
             coordinate
             dip_dist
         """
-        coordinate.speed = self.DEFAULT_SPEED_Z
         coordinate.z += dip_dist
         self.move_to_z(coordinate)
-        self.gcode_wait(self.WAIT_TIME_MOVEMENT)
+        self.gcode_wait(self.conf["WAIT"]["WAIT_TIME_MOVEMENT"])
 
     def dip_z_return(self, coordinate, dip_dist):
         """Bring up the pipette toolhead a set distance.
@@ -292,10 +293,9 @@ class AutoPipette:
             coordinate
             dip_dist
         """
-        coordinate.speed = self.DEFAULT_SPEED_Z
         coordinate.z -= dip_dist
         self.move_to_z(coordinate)
-        self.gcode_wait(self.WAIT_TIME_MOVEMENT)
+        self.gcode_wait(self.conf["WAIT"]["WAIT_TIME_MOVEMENT"])
 
     def set_location(self, name_loc: str, x: float, y: float, z: float):
         """Create a Coordinate and associate with a name."""
@@ -316,17 +316,12 @@ class AutoPipette:
         if (plate_type not in PlateTypes.TYPES.keys()):
             return
         coor = self._locations[name_loc]
-        # If num_row and num_col are passed in,
-        # instantiate with them otherwise use neither
-        if ((num_row is not None) and (num_col is not None)):
-            self._locations[name_loc] = \
-                PlateTypes.TYPES[plate_type](coor, num_row, num_col)
-        else:
-            self._locations[name_loc] = \
-                PlateTypes.TYPES[plate_type](coor)
+        self._locations[name_loc] = \
+            PlateTypes.TYPES[plate_type](coor, num_row, num_col)
         # Set garbage location if plate type is garbage.
         if (plate_type == Garbage.__repr__()):
             self.garbage = self._locations[name_loc]
+            self._locations["garbage"] = self.garbage
         # Set tip box location if plate type is TipBox
         elif (plate_type == TipBox.__repr__()):
             if (self.tipboxes is None):
@@ -335,7 +330,7 @@ class AutoPipette:
                 tipbox = self._locations[name_loc]
                 self.tipboxes.append_box(tipbox)
 
-    def get_location(self, name_loc: str):
+    def get_location_coor(self, name_loc: str):
         """Return a Coordinate from a location name."""
         # If name_loc doesn't exist as a location, do nothing
         if (name_loc not in self._locations.keys()):
@@ -352,25 +347,58 @@ class AutoPipette:
 
     def next_tip(self):
         """Grab the next tip in the tip box."""
-        if (self.tipboxes is None):
+        if self.tipboxes is None:
+            return
+        if self.has_tip:
             return
         loc_tip = self.tipboxes.next()
         self.move_to(loc_tip)
         self.dip_z_down(loc_tip, self.tipboxes.DIP_DISTANCE)
         self.dip_z_return(loc_tip, self.tipboxes.DIP_DISTANCE)
+        self.has_tip = True
 
-    def aspirate(self, vol_ul, speed=30):
-        """Use the pipette to take in some microliters of liquid."""
-        self.move_pipette_stepper(self.volume.vol_to_steps(vol_ul, speed))
+    def plunge_down(self, vol_ul, speed=None):
+        """Move pipette plunger down to take in some microliters of liquid."""
+        if speed is None:
+            speed = self.conf["SPEED"]["SPEED_PIPETTE"]
+        self.move_pipette_stepper(self.volconv.vol_to_steps(vol_ul), speed)
 
-    def dispense(self, vol_ul, speed=30):
-        """Use the pipette to expell some microliters of liquid."""
-        self.move_pipette_stepper(-1 * self.volume.vol_to_steps(vol_ul, speed))
+    def clear_pipette(self, speed=None):
+        """Expell any liquid in tip."""
+        if speed is None:
+            speed = self.conf["SPEED"]["SPEED_PIPETTE"]
+        self.move_pipette_stepper(self.volconv.dist_disp, speed)
 
-    def pipette(self, vol_ul, source: Plate, dest: Plate):
+    def pipette(self, vol_ul, source: str, dest: str):
         """Pipette a volume amount of liquid from source to dest."""
+        coor_source = self.get_location_coor(source)
+        coor_dest = self.get_location_coor(dest)
+        loc_source = self._locations[source]
+        loc_dest = self._locations[dest]
+        # Pickup a tip
         self.next_tip()
-        self.move_to(source)
-        self.dip_z_down(source, source.DIP_DISTANCE)
-        self.aspirate(vol_ul)
-        self.dip_z_return(source, source.DIP_DISTANCE)
+
+        remaining_vol = vol_ul
+        while remaining_vol > 0:
+            if remaining_vol >= 100:
+                pip_vol = 100
+                remaining_vol -= pip_vol
+            else:
+                pip_vol = remaining_vol
+                remaining_vol -= pip_vol
+            # Pickup liquid
+            self.move_to(coor_source)
+            self.plunge_down(pip_vol)
+            self.dip_z_down(coor_source, loc_source.DIP_DISTANCE)
+            self.home_pipette_stepper()
+            self.dip_z_return(coor_source, loc_source.DIP_DISTANCE)
+            # Dropoff liquid
+            self.move_to(coor_dest)
+            self.dip_z_down(coor_dest, loc_dest.DIP_DISTANCE)
+            self.clear_pipette()
+            self.dip_z_return(coor_dest, loc_dest.DIP_DISTANCE)
+            self.home_pipette_stepper()
+            self.append_gcode(f"; Moved {pip_vol} uL from {source} to {dest}")
+        # Eject tip
+        self.move_to(self.garbage.next())
+        self.eject_tip()
