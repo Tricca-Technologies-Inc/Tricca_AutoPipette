@@ -15,6 +15,7 @@ from AutoPipette import AutoPipette
 from pathlib import Path
 import argparse
 import requests
+import random
 
 
 GCODE_PATH = Path(__file__).parent.parent / 'gcode/'
@@ -46,6 +47,44 @@ def send_gcode(command):
 def server(input, output, session):
     """Define what the website looks like."""
     status_text = reactive.Value("Ready for commands")
+
+    curr_x = reactive.Value(-1)
+    curr_y = reactive.Value(-1)
+    curr_z = reactive.Value(-1)
+    curr_e = reactive.Value(-1)
+
+    # @output
+    @render.ui
+    def coordinate_display():
+        return ui.tags.div(
+            ui.input_numeric("curr_x", "X Coordinate:", value=curr_x()),
+            ui.input_numeric("curr_y", "Y Coordinate:", value=curr_y()),
+            ui.input_numeric("curr_z", "Z Coordinate:", value=curr_z()),
+            ui.input_numeric("curr_e", "E Coordinate:", value=curr_e()),
+            class_="current_coordinates_row"
+        )
+
+    @reactive.effect
+    def _():
+        reactive.invalidate_later(1)
+        coortinates = {
+            'X': random.randint(1, 100),
+            'Y': random.randint(1, 100),
+            'Z': random.randint(1, 100),
+            'E': random.randint(1, 100),
+        }
+
+        print(coortinates['X'], coortinates['Y'], coortinates['Z'], coortinates['E'])
+
+        # Simulate fetching new coordinates (replace this with your actual update logic)
+        curr_x.set(coortinates['X'])  # Update X coordinate
+        curr_y.set(coortinates['Y'])  # Update Y coordinate
+        curr_z.set(coortinates['Z'])  # Update Z coordinate
+        curr_e.set(coortinates['E'])  # Update E coordinate
+
+            # await asyncio.sleep(2)  # Wait for 1 second
+
+    # asyncio.create_task(update_coordinates())
 
     @output
     @render.text
@@ -140,84 +179,105 @@ def run_pipette_app():
         ui.tags.head(
             ui.include_css(
                 Path(__file__).parent / "my-styles.css"
-                )
-            ),
+            )
+        ),
+
         ui.tags.div(
             ui.tags.div(
                 ui.tags.i(class_="fas fa-vial"),
                 "AutoPipette Machine Control Panel",
                 class_="header"),
-            class_="d-flex flex-column mb-3"),
+            class_="d-flex flex-column mb-3"
+        ),
+        
         ui.tags.div(
-                ui.tags.div(
-                    ui.tags.div(
-                        ui.input_numeric("x", "X Coordinate:", value=0),
-                        ui.input_numeric("y", "Y Coordinate:", value=0),
-                        ui.input_numeric("z", "Z Coordinate:", value=0),
-                        ui.input_numeric(
-                            "speed", "Speed (mm/min):", value=1500),
-                        ui.input_action_button("move", ui.tags.span(
-                            ui.tags.i(
-                                class_="fas fa-arrows-alt"),
-                            "Move to Coordinate"), class_="btn"),
-                        ui.input_action_button(
-                            "home", ui.tags.span(
-                                ui.tags.i(class_="fas fa-home"), "Move Home"),
-                            class_="btn"),
-                        ui.input_action_button("stop", ui.tags.span(ui.tags.i(
-                            class_="fas fa-stop"), " Stop"), class_="btn"),
-                        ui.input_text("location_name", "Location Name:",
-                                      value=""),
-                        ui.input_action_button("move_to_location", ui.tags.span(
-                            ui.tags.i(class_="fas fa-map-marker-alt"),
-                            " Move to Location"), class_="btn"),
-                        class_="sidebar"
-                       ),
-                    ui.tags.div(
-                        ui.tags.h2("Protocols", class_="protocol-title"),
-                        ui.input_action_button(
-                            "initPipette",
-                            ui.tags.span(ui.tags.i(class_="fas fa-home"),
-                                         "Initialize Pipette"), class_="btn"),
-                        ui.input_action_button(
-                            "kit",
-                            ui.tags.span(ui.tags.i(class_="fas fa-cogs"),
-                                         "Kit Manufacturing"), class_="btn"),
-                        ui.input_action_button("sample",
-                                               ui.tags.span(
-                                                   ui.tags.i(
-                                                       class_="fas fa-flask"),
-                                                   " Sample Prep"),
-                                               class_="btn"),
+            ui.tags.div(
+                # CURRENT COORDINATES
+                ui.output_ui("coordinate_display"),  # This will render the coordinates
+                # ui.tags.div(
+                #     ui.input_numeric("curr_x", "X Coordinate:", value=curr_x()),
+                #     ui.input_numeric("curr_x", "Y Coordinate:", value=curr_y()),
+                #     ui.input_numeric("curr_x", "Z Coordinate:", value=curr_x()),
+                #     ui.input_numeric("curr_x", "E Coordinate:", value=curr_e()),
+                #     class_="current_coordinates_row"
+                # ),
 
-                        # Live video stream section
-                        ui.tags.div(
-                            ui.tags.h4("Live Video Stream"),
-                            ui.tags.video(
-                                controls=True,
-                                autoplay=True,
-                                # Replace with the URL of a camera
-                                src="https://commondatastorage.googleaample/BigBuckBunny.mp4",
-                                style="width: 50%; max-width: 50%; border-radius: 8px;"
-                               ),
-                            class_="card"  # Styling for the video container
-                           ),
-                        class_="right-section"
-                       ),
-                    # Ensure content grows to fill available space
-                    class_="d-flex flex-column flex-grow-1"
-                   ),
+                # COORDINATES INPUTS
                 ui.tags.div(
-                    ui.card(
-                        ui.tags.h2("Output"),
-                        ui.output_text_verbatim("output"),
-                        class_="card"
-                       ),
-                    class_="ml-3 main-content"
-                   ),
-                class_="d-flex flex-row"
-               )
-           )
+                    ui.input_numeric("x", "X Coordinate:", value=0),
+                    ui.input_numeric("y", "Y Coordinate:", value=0),
+                    ui.input_numeric("z", "Z Coordinate:", value=0),
+                    ui.input_numeric(
+                        "speed", "Speed (mm/min):", value=1500),
+                    ui.input_action_button("move", ui.tags.span(
+                        ui.tags.i(
+                            class_="fas fa-arrows-alt"),
+                        "Move to Coordinate"), class_="btn"),
+                    ui.input_action_button(
+                        "home", ui.tags.span(
+                            ui.tags.i(class_="fas fa-home"), "Move Home"),
+                        class_="btn"),
+                    ui.input_action_button("stop", ui.tags.span(ui.tags.i(
+                        class_="fas fa-stop"), " Stop"), class_="btn"),
+                    ui.input_text("location_name", "Location Name:",
+                                    value=""),
+                    ui.input_action_button("move_to_location", ui.tags.span(
+                        ui.tags.i(class_="fas fa-map-marker-alt"),
+                        " Move to Location"), class_="btn"),
+                    class_="sidebar"
+                ),
+                
+                # PROTOCOLS
+                ui.tags.div(
+                    ui.tags.h2("Protocols", class_="protocol-title"),
+                    ui.input_action_button(
+                        "initPipette",
+                        ui.tags.span(ui.tags.i(class_="fas fa-home"),
+                                        "Initialize Pipette"), class_="btn"),
+                    
+                    ui.input_action_button(
+                        "kit",
+                        ui.tags.span(ui.tags.i(class_="fas fa-cogs"),
+                                        "Kit Manufacturing"), class_="btn"),
+                    
+                    ui.input_action_button("sample",
+                                            ui.tags.span(
+                                                ui.tags.i(
+                                                    class_="fas fa-flask"),
+                                                " Sample Prep"),
+                                            class_="btn"),
+
+                    # Live video stream section
+                    ui.tags.div(
+                        ui.tags.h4("Live Video Stream"),
+                        ui.tags.video(
+                            controls=True,
+                            autoplay=True,
+                            # Replace with the URL of a camera
+                            src="https://commondatastorage.googleaample/BigBuckBunny.mp4",
+                            style="width: 50%; max-width: 50%; border-radius: 8px;"
+                            ),
+                        class_="card"  # Styling for the video container
+                        ),
+                    class_="right-section"
+                ),
+
+                # Ensure content grows to fill available space
+                class_="d-flex flex-column flex-grow-1"
+            ),
+
+            ui.tags.div(
+                ui.card(
+                    ui.tags.h2("Output"),
+                    ui.output_text_verbatim("output"),
+                    class_="card"
+                    ),
+                class_="ml-3 main-content"
+            ),
+            class_="d-flex flex-row"
+        )
+    )
+
     app = App(app_ui, server)
     app.run(host="0.0.0.0", port=8000)
 
