@@ -1,5 +1,6 @@
 import requests
 import json
+import random
 
 class QueryMoonraker:
     def __init__(self, moonraker_url):
@@ -15,7 +16,9 @@ class QueryMoonraker:
                         'axis_minimum': [0.0, 0.0, -5.0, 0.0], 
                         'axis_maximum': [340.0, 358.0, 130.0, 0.0], 
                         'print_time': 1258.4628876274999, 'stalls': 0, 'estimated_print_time': 1551.4001792875, 
-                        'extruder': '', 'position': [150.0, 0.0, 40.0, 0.0], 'max_velocity': 4000.0, 
+                        'extruder': '', 
+                        'position': [random.randint(1, 100), random.randint(1, 100), random.randint(1, 100), random.randint(1, 100)], 
+                        'max_velocity': 4000.0, 
                         'max_accel': 4000.0, 'minimum_cruise_ratio': 0.5, 'square_corner_velocity': 5.0
                     }
                 }
@@ -46,10 +49,7 @@ class QueryMoonraker:
                 print(data)
                 print(response.status_code)
                 print(response)
-                # Example Data
-                # data = {
-                #     result: 'X:100.0 Y:200.0 Z:150.0'
-                # }
+               
                 # Extract position from the response
                 position = data.get('result', {}).get('status', {}).get('toolhead', {}).get('position', [])
                 

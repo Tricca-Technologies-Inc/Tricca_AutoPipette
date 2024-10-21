@@ -15,13 +15,15 @@ from AutoPipette import AutoPipette
 from pathlib import Path
 import argparse
 import requests
-import random
+
+from QueryMoonraker import QueryMoonraker
 
 
 GCODE_PATH = Path(__file__).parent.parent / 'gcode/'
 # pipette = AutoPipette()
 moonraker_url = "http://0.0.0.0:7125/printer/gcode/script"
 
+query_object = QueryMoonraker("http://192.168.247.14:7125/printer/objects/query?toolhead")
 
 def run_gcode(filename: str):
     """Open a gcode file and execute it."""
@@ -64,27 +66,22 @@ def server(input, output, session):
             class_="current_coordinates_row"
         )
 
+    # GETS CURRENT COORDINATE EVERY TWO SECOND
     @reactive.effect
     def _():
-        reactive.invalidate_later(1)
-        coortinates = {
-            'X': random.randint(1, 100),
-            'Y': random.randint(1, 100),
-            'Z': random.randint(1, 100),
-            'E': random.randint(1, 100),
-        }
+        reactive.invalidate_later(1) # https://shiny.posit.co/py/api/core/reactive.event.html
+        
+        # coordinates = query_object.get_printer_coordinates()
+        coordinates = query_object.get_dummy_printer_coordinates()
 
-        print(coortinates['X'], coortinates['Y'], coortinates['Z'], coortinates['E'])
+        # print(coordinates['X'], coordinates['Y'], coordinates['Z'], coordinates['E'])
 
         # Simulate fetching new coordinates (replace this with your actual update logic)
-        curr_x.set(coortinates['X'])  # Update X coordinate
-        curr_y.set(coortinates['Y'])  # Update Y coordinate
-        curr_z.set(coortinates['Z'])  # Update Z coordinate
-        curr_e.set(coortinates['E'])  # Update E coordinate
+        curr_x.set(coordinates['X'])  # Update X coordinate
+        curr_y.set(coordinates['Y'])  # Update Y coordinate
+        curr_z.set(coordinates['Z'])  # Update Z coordinate
+        curr_e.set(coordinates['E'])  # Update E coordinate
 
-            # await asyncio.sleep(2)  # Wait for 1 second
-
-    # asyncio.create_task(update_coordinates())
 
     @output
     @render.text
@@ -194,13 +191,7 @@ def run_pipette_app():
             ui.tags.div(
                 # CURRENT COORDINATES
                 ui.output_ui("coordinate_display"),  # This will render the coordinates
-                # ui.tags.div(
-                #     ui.input_numeric("curr_x", "X Coordinate:", value=curr_x()),
-                #     ui.input_numeric("curr_x", "Y Coordinate:", value=curr_y()),
-                #     ui.input_numeric("curr_x", "Z Coordinate:", value=curr_x()),
-                #     ui.input_numeric("curr_x", "E Coordinate:", value=curr_e()),
-                #     class_="current_coordinates_row"
-                # ),
+
 
                 # COORDINATES INPUTS
                 ui.tags.div(
