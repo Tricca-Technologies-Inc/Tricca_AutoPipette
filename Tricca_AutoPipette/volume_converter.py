@@ -10,27 +10,25 @@ class VolumeConverter:
     """Convert motor steps into a volume in ul."""
 
     # Mapping between uL and uSteps
-    _consts = {0: 0,
-               25: 14.35,
-               50: 22.45,
-               100: 39.25,
-               200: 78.50,
-               300: 117.75,
-               400: 157.00}
+    _consts = {0.0: 0,
+               25.0: 14.35,
+               50.0: 22.45,
+               100.0: 39.25,
+               200.0: 78.50,
+               300.0: 117.75,
+               400.0: 157.00}
     # Polynomial to get proper uL
     _poly = Polynomial.fit(list(_consts.keys()), list(_consts.values()), 2)
     _poly = _poly.convert()
     # Number of steps to dispense
     dist_disp = 46
 
-    def __init_(self, x=None, y=None):
+    def __init__(self, x: list[float] = None, y: list[float] = None):
         """Initialize the variables to estimate volume."""
         if (x is None):
             x = list(self._consts.keys())
-            print(x)
         if (y is None):
             y = list(self._consts.values())
-            print(y)
         self._poly = Polynomial.fit(x, y, 2)
         self._poly = self._poly.convert()
 

@@ -3,62 +3,66 @@
 ;	 name_pipette_servo: my_servo
 ;	 name_pipette_stepper: lock_stepper
 ; BOUNDARY
-;	 safe_altitude: 40
+;	 safe_altitude: 35
 ; SPEED
-;	 speed_xy: 5000
+;	 speed_xy: 30000
 ;	 speed_z: 5000
 ;	 speed_pipette: 45
 ;	 speed_max: 99999
 ;	 speed_factor: 100
-;	 velocity_max: 4000
-;	 accel_max: 4000
+;	 velocity_max: 40000
+;	 accel_max: 40000
 ; SERVO
 ;	 servo_angle_retract: 150
 ;	 servo_angle_ready: 80
 ; WAIT
 ;	 wait_time_eject: 1000
 ;	 wait_time_movement: 250
+; VOLUME_CONV
+;	 volumes: 51, 105, 155, 210
+;	 steps: 22.5, 40.678, 63.179, 81.357
 ; COORDINATE plate0
 ;	 x: 309
 ;	 y: 0
-;	 z: 40
+;	 z: 35
 ;	 type: wellplate
 ; COORDINATE plate1
 ;	 x: 202
 ;	 y: 0
-;	 z: 40
+;	 z: 35
 ;	 type: vialholder
 ;	 col: 5
 ;	 row: 7
 ; COORDINATE plate2
 ;	 x: 90
 ;	 y: 0
-;	 z: 40
+;	 z: 35
 ;	 type: vialholder
 ;	 col: 5
 ;	 row: 6
 ; COORDINATE plate3
 ;	 x: 311
 ;	 y: 148
-;	 z: 40
+;	 z: 35
 ;	 type: tipbox
 ; COORDINATE plate4
 ;	 x: 170
 ;	 y: 196
-;	 z: 40
+;	 z: 35
 ;	 type: garbage
 ; COORDINATE plate5
 ;	 x: 91
 ;	 y: 141
-;	 z: 40
+;	 z: 35
 ;	 type: vialholder
 ; COORDINATE dest_vial
 ;	 x: 65
 ;	 y: 104
-;	 z: 40
+;	 z: 35
+;	 type: tiltv
 M220 S100.0
-SET_VELOCITY_LIMIT VELOCITY=4000.0
-SET_VELOCITY_LIMIT ACCEL=4000.0
+SET_VELOCITY_LIMIT VELOCITY=40000.0
+SET_VELOCITY_LIMIT ACCEL=40000.0
 G28 Z
 G28 X Y
 SET_SERVO SERVO=my_servo ANGLE=150
@@ -66,8 +70,8 @@ G4 P250
 MANUAL_STEPPER STEPPER=lock_stepper SPEED=45 MOVE=-30 STOP_ON_ENDSTOP=1
 MANUAL_STEPPER STEPPER=lock_stepper SET_POSITION=0
 ; Test X
-; SPEED_XY changed from 5000 to 5000
-G1 X0.0 Y150.34 Z40.0 F5000
+; SPEED_XY changed from 30000 to 5000
+G1 X0.0 Y150.0 Z40.0 F5000
 G1 X300.0 Y150.0 Z40.0 F5000
 G1 X0.0 Y150.0 Z40.0 F5000
 ; SPEED_XY changed from 5000 to 10000
@@ -115,3 +119,53 @@ G1 X150.0 Y0.0 Z40.0 F25000
 G1 X150.0 Y0.0 Z40.0 F30000
 G1 X150.0 Y300.0 Z40.0 F30000
 G1 X150.0 Y0.0 Z40.0 F30000
+; Test XY diagonal
+; SPEED_XY changed from 30000 to 5000
+G1 X0.0 Y0.0 Z40.0 F5000
+G1 X300.0 Y300.0 Z40.0 F5000
+G1 X0.0 Y0.0 Z40.0 F5000
+; SPEED_XY changed from 5000 to 10000
+G1 X0.0 Y0.0 Z40.0 F10000
+G1 X300.0 Y300.0 Z40.0 F10000
+G1 X0.0 Y0.0 Z40.0 F10000
+; SPEED_XY changed from 10000 to 15000
+G1 X0.0 Y0.0 Z40.0 F15000
+G1 X300.0 Y300.0 Z40.0 F15000
+G1 X0.0 Y0.0 Z40.0 F15000
+; SPEED_XY changed from 15000 to 20000
+G1 X0.0 Y0.0 Z40.0 F20000
+G1 X300.0 Y300.0 Z40.0 F20000
+G1 X0.0 Y0.0 Z40.0 F20000
+; SPEED_XY changed from 20000 to 25000
+G1 X0.0 Y0.0 Z40.0 F25000
+G1 X300.0 Y300.0 Z40.0 F25000
+G1 X0.0 Y0.0 Z40.0 F25000
+; SPEED_XY changed from 25000 to 30000
+G1 X0.0 Y0.0 Z40.0 F30000
+G1 X300.0 Y300.0 Z40.0 F30000
+G1 X0.0 Y0.0 Z40.0 F30000
+; Test other XY diagonal
+; SPEED_XY changed from 30000 to 5000
+G1 X300.0 Y0.0 Z40.0 F5000
+G1 X0.0 Y300.0 Z40.0 F5000
+G1 X300.0 Y0.0 Z40.0 F5000
+; SPEED_XY changed from 5000 to 10000
+G1 X300.0 Y0.0 Z40.0 F10000
+G1 X0.0 Y300.0 Z40.0 F10000
+G1 X300.0 Y0.0 Z40.0 F10000
+; SPEED_XY changed from 10000 to 15000
+G1 X300.0 Y0.0 Z40.0 F15000
+G1 X0.0 Y300.0 Z40.0 F15000
+G1 X300.0 Y0.0 Z40.0 F15000
+; SPEED_XY changed from 15000 to 20000
+G1 X300.0 Y0.0 Z40.0 F20000
+G1 X0.0 Y300.0 Z40.0 F20000
+G1 X300.0 Y0.0 Z40.0 F20000
+; SPEED_XY changed from 20000 to 25000
+G1 X300.0 Y0.0 Z40.0 F25000
+G1 X0.0 Y300.0 Z40.0 F25000
+G1 X300.0 Y0.0 Z40.0 F25000
+; SPEED_XY changed from 25000 to 30000
+G1 X300.0 Y0.0 Z40.0 F30000
+G1 X0.0 Y300.0 Z40.0 F30000
+G1 X300.0 Y0.0 Z40.0 F30000

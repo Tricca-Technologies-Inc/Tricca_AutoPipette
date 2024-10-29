@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Holds the various plate classes."""
-from Coordinate import Coordinate
+from coordinate import Coordinate
 
 
 class Plate:
     """Generate and manage coordinates to pipette into."""
 
-    DIP_DISTANCE = 30
+    DIP_DISTANCE = 35
 
     def __init__(self, start_coor,
                  num_row, num_col,
@@ -55,7 +55,7 @@ class Plate:
 class WellPlate(Plate):
     """A plate with various wells to pipette into."""
 
-    DIP_DISTANCE = 35
+    DIP_DISTANCE = 40
 
     def __init__(self, start_coor,
                  num_row=None, num_col=None,
@@ -81,7 +81,7 @@ class WellPlate(Plate):
 class TipBox(Plate):
     """A plate that contains the tips used in pipetting."""
 
-    DIP_DISTANCE = 78.5
+    DIP_DISTANCE = 83.5
 
     def __init__(self, start_coor,
                  num_row=None, num_col=None,
@@ -137,7 +137,7 @@ class VialHolder(Plate):
 class Garbage(Plate):
     """A garbage to hold used pipette tips."""
 
-    DIP_DISTANCE = 30
+    DIP_DISTANCE = 35
 
     def __init__(self, start_coor,
                  num_row=None, num_col=None,
@@ -155,7 +155,7 @@ class Garbage(Plate):
 class TiltVial(Plate):
     """A tilted vial to hold the end product."""
 
-    DIP_DISTANCE = 30
+    DIP_DISTANCE = 35
 
     def __init__(self, start_coor,
                  num_row=None, num_col=None,
@@ -173,7 +173,6 @@ class TiltVial(Plate):
 class PlateTypes:
     """A data class that holds meta-data on all the plate types."""
 
-    # TODO Decouple this variable and set it programmatically
     # A full list of every Plate type
     TYPES = {WellPlate.__repr__(): WellPlate,
              TipBox.__repr__(): TipBox,

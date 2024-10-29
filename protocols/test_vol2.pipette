@@ -1,0 +1,13 @@
+coor test_75 88.0 144.5 40
+coor test_75 vialholder 1 1
+; Test 75uL
+pipette --keep_tip --aspirate 75 plate1 test_75
+pipette --keep_tip --aspirate 75 plate1 test_75
+pipette --keep_tip --aspirate 75 plate1 test_75
+pipette --keep_tip --aspirate 75 plate1 test_75
+pipette --keep_tip --aspirate 75 plate1 test_75
+pipette --keep_tip --aspirate 75 plate1 test_75
+pipette --keep_tip --aspirate 75 plate1 test_75
+pipette --keep_tip --aspirate 75 plate1 test_75
+pipette --keep_tip --aspirate 75 plate1 test_75
+pipette --aspirate 75 plate1 test_75

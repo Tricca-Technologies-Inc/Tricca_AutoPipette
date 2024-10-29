@@ -6,12 +6,13 @@ This includes sending and receiving commands, managing different parameters
 and managing the different states of the pipette.
 
 TODO Add Logger obj
+TODO Decorator refactor to remove header bool to append to file header
 """
-from Coordinate import Coordinate
-from Plates import PlateTypes
-from Plates import Plate
-from Plates import Garbage
-from Plates import TipBox
+from coordinate import Coordinate
+from plates import PlateTypes
+from plates import Plate
+from plates import Garbage
+from plates import TipBox
 from volume_converter import VolumeConverter
 from configparser import ConfigParser
 from configparser import ExtendedInterpolation
@@ -20,20 +21,34 @@ from pathlib import Path
 CONF_PATH = Path(__file__).parent.parent / 'conf/'
 
 
-class AutoPipette:
+class AutoPipetteMeta(type):
+    """Provides Singleton Pattern when inherited from."""
+
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        """Maintain one instance of our class."""
+        if cls not in cls._instances:
+            instance = super().__call__(*args, **kwargs)
+            cls._instances[cls] = instance
+        return cls._instances[cls]
+
+
+class AutoPipette(metaclass=AutoPipetteMeta):
     """This class is responsible for functions relating to the auto pipette.
 
     Responsibilities include sending and receiving commands, managing different
     variables and managing the different states of the autopipette.
     """
 
-    conf = ConfigParser(interpolation=ExtendedInterpolation())
-    has_tip = False
-    volconv = VolumeConverter()
-    garbage = None
-    tipboxes = None
-    _locations = {}
-    _gcode_buf = ""
+    conf: ConfigParser = ConfigParser(interpolation=ExtendedInterpolation())
+    has_tip: bool = False
+    volconv: VolumeConverter = None
+    garbage: Garbage = None
+    tipboxes: TipBox = None
+    file_header: str = ""
+    _locations: dict = {}
+    _gcode_buf: str = ""
 
     def __init__(self, conf_file=None):
         """Set autopipette variables to defaults or passed in value."""
@@ -43,7 +58,8 @@ class AutoPipette:
         file = open(conf_path, mode='r')
         self.conf.read_file(file)
         # Ensure default sections exist
-        def_sections = ["NAME", "BOUNDARY", "SPEED", "SERVO", "WAIT"]
+        def_sections = ["NAME", "BOUNDARY", "SPEED",
+                        "SERVO", "WAIT", "VOLUME_CONV"]
         for section in def_sections:
             if section not in self.conf.sections():
                 err_msg = f"{section} not in config file {conf_path}.\n"
@@ -73,28 +89,33 @@ class AutoPipette:
             if "type" in options:
                 type = self.conf[coor_section]["type"]
                 self.set_plate(name_loc, type, row, col)
-
         # Append all AutoPipette conf settings to gcode buf
-        self._gcode_buf += f"; AutoPipette Settings loaded from {conf_file}\n"
+        self.file_header += f"; AutoPipette Settings loaded from {conf_file}\n"
         for section in all_sections:
-            self._gcode_buf += f"; {section}\n"
+            self.file_header += f"; {section}\n"
             for option in self.conf[section].keys():
                 val = self.conf[section][option]
-                self._gcode_buf += f";\t {option}: {val}\n"
-
+                self.file_header += f";\t {option}: {val}\n"
         # Set all var on the pipette using gcode and place in known position
-        self.init_all()
+        # Append gcode to file header
+        self.init_all(header=True)
+        # Process volume conversion variables
+        volumes_str = self.conf["VOLUME_CONV"]["volumes"]
+        steps_str = self.conf["VOLUME_CONV"]["steps"]
+        volumes = list(map(float, volumes_str.split(",")))
+        steps = list(map(float, steps_str.split(",")))
+        self.volconv = VolumeConverter(x=volumes, y=steps)
 
-    def init_all(self):
+    def init_all(self, header=False):
         """Initialize all relevant aspects of the pipette.
 
         Set the speed parameters, home all axis, and home the pipette.
         """
-        self.init_speed()
-        self.home_axis()
-        self.home_pipette_motors()
+        self.init_speed(header=header)
+        self.home_axis(header=header)
+        self.home_pipette_motors(header=header)
 
-    def init_speed(self):
+    def init_speed(self, header=False):
         """Set the speed parameters.
 
         SPEED_FACTOR: multiplies with calculated speed for a corrected value.
@@ -106,32 +127,32 @@ class AutoPipette:
         factor = float(self.conf["SPEED"]["SPEED_FACTOR"])
         velocity = float(self.conf["SPEED"]["VELOCITY_MAX"])
         accel = float(self.conf["SPEED"]["ACCEL_MAX"])
-        self.set_speed_factor(factor)
-        self.set_max_velocity(velocity)
-        self.set_max_accel(accel)
+        self.set_speed_factor(factor, header)
+        self.set_max_velocity(velocity, header)
+        self.set_max_accel(accel, header)
 
-    def set_speed_factor(self, factor):
+    def set_speed_factor(self, factor, header=False):
         """Set the speed factor using gcode."""
         self.conf["SPEED"]["SPEED_FACTOR"] = str(factor)
-        self.append_gcode(f"M220 S{factor}")
+        self.append_gcode(f"M220 S{factor}", header)
 
-    def set_max_velocity(self, velocity):
+    def set_max_velocity(self, velocity, header=False):
         """Set the max velocity using gcode."""
         self.conf["SPEED"]["VELOCITY_MAX"] = str(velocity)
-        self.append_gcode(f"""SET_VELOCITY_LIMIT VELOCITY={velocity}""")
+        self.append_gcode(f"SET_VELOCITY_LIMIT VELOCITY={velocity}", header)
 
-    def set_max_accel(self, accel):
+    def set_max_accel(self, accel, header=False):
         """Set the max acceleration using gcode."""
         self.conf["SPEED"]["ACCEL_MAX"] = str(accel)
-        self.append_gcode(f"SET_VELOCITY_LIMIT ACCEL={accel}")
+        self.append_gcode(f"SET_VELOCITY_LIMIT ACCEL={accel}", header)
 
-    def home_axis(self):
+    def home_axis(self, header=False):
         """Home x, y, and z axis.
 
         Home z axis first to prevent collisions then home the x and y axis.
         """
-        self.append_gcode("G28 Z")  # Home Z first
-        self.append_gcode("G28 X Y")
+        self.append_gcode("G28 Z", header)  # Home Z first
+        self.append_gcode("G28 X Y", header)
 
     def home_x(self):
         """Home x axis."""
@@ -148,35 +169,38 @@ class AutoPipette:
         gcode_command = "G28 Z"
         self.append_gcode(gcode_command)
 
-    def home_pipette_motors(self):
+    def home_pipette_motors(self, header=False):
         """Home motors associated with the pipette toolhead.
 
         Retract the servo that dispenses pipette tips and home the pipette
         stepper.
         """
-        self.home_servo()
-        self.home_pipette_stepper()
+        self.home_servo(header=header)
+        self.home_pipette_stepper(header=header)
 
-    def home_servo(self):
+    def home_servo(self, header=False):
         """Retract the servo that dispenses pipette tips."""
-        self.set_servo_angle(self.conf["SERVO"]["SERVO_ANGLE_RETRACT"])
-        self.gcode_wait(self.conf["WAIT"]["WAIT_TIME_MOVEMENT"])
+        self.set_servo_angle(self.conf["SERVO"]["SERVO_ANGLE_RETRACT"], header)
+        self.gcode_wait(self.conf["WAIT"]["WAIT_TIME_MOVEMENT"], header)
 
-    def home_pipette_stepper(self, speed=None):
+    def home_pipette_stepper(self, speed=None, header=False):
         """Home the pipette stepper."""
         if speed is None:
             speed = self.conf["SPEED"]["SPEED_PIPETTE"]
         stepper = self.conf["NAME"]["NAME_PIPETTE_STEPPER"]
         gcode_command = \
-            f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} MOVE=-30 STOP_ON_ENDSTOP=1"
-        self.append_gcode(gcode_command)
+            f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} MOVE=-50 STOP_ON_ENDSTOP=1"
+        self.append_gcode(gcode_command, header)
         gcode_command = \
             f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0"
-        self.append_gcode(gcode_command)
+        self.append_gcode(gcode_command, header)
 
-    def append_gcode(self, command):
+    def append_gcode(self, command, header=False):
         """Append gcode command to the buffer."""
-        self._gcode_buf += command + "\n"
+        if header:
+            self.file_header += command + "\n"
+        else:
+            self._gcode_buf += command + "\n"
 
     def return_gcode(self):
         """Return the gcode that's been added to the buffer and clear it."""
@@ -243,7 +267,7 @@ class AutoPipette:
         self.gcode_wait(wait_movement)
         self.has_tip = False
 
-    def set_servo_angle(self, angle):
+    def set_servo_angle(self, angle, header=False):
         """Set the servo angle.
 
         Args:
@@ -251,7 +275,7 @@ class AutoPipette:
         """
         servo = self.conf["NAME"]["NAME_PIPETTE_SERVO"]
         gcode_command = f"SET_SERVO SERVO={servo} ANGLE={angle}"
-        self.append_gcode(gcode_command)
+        self.append_gcode(gcode_command, header)
 
     def move_pipette_stepper(self, distance, speed=None):
         """Move the stepper associated with the pipette toolhead.
@@ -266,14 +290,14 @@ class AutoPipette:
         gcode_command = f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} MOVE={distance}"
         self.append_gcode(gcode_command)
 
-    def gcode_wait(self, mil):
+    def gcode_wait(self, mil, header=False):
         """Send a gcode command to wait for mil amount of milliseconds.
 
         Args:
            mil
         """
         gcode_command = f"G4 P{mil}"
-        self.append_gcode(gcode_command)
+        self.append_gcode(gcode_command, header)
 
     def dip_z_down(self, coordinate, dip_dist):
         """Dip the pipette toolhead down a set distance.
@@ -358,7 +382,7 @@ class AutoPipette:
         self.has_tip = True
 
     def plunge_down(self, vol_ul, speed=None):
-        """Move pipette plunger down to take in some microliters of liquid."""
+        """Move pipette plunger down."""
         if speed is None:
             speed = self.conf["SPEED"]["SPEED_PIPETTE"]
         self.move_pipette_stepper(self.volconv.vol_to_steps(vol_ul), speed)
@@ -369,15 +393,20 @@ class AutoPipette:
             speed = self.conf["SPEED"]["SPEED_PIPETTE"]
         self.move_pipette_stepper(self.volconv.dist_disp, speed)
 
-    def pipette(self, vol_ul, source: str, dest: str):
-        """Pipette a volume amount of liquid from source to dest."""
+    def pipette(self, vol_ul, source: str, dest: str,
+                keep_tip: bool = False, aspirate: bool = False):
+        """Pipette a volume amount of liquid from source to dest.
+
+        Tutorial to consistent pipetting:
+        https://www.thermofisher.com/ca/en/home/life-science/lab-plasticware-supplies/lab-plasticware-supplies-learning-center/lab-plasticware-supplies-resource-library/fundamentals-of-pipetting/proper-pipetting-techniques/10-steps-to-improve-pipetting-accuracy.html
+        """
         coor_source = self.get_location_coor(source)
         coor_dest = self.get_location_coor(dest)
         loc_source = self._locations[source]
         loc_dest = self._locations[dest]
+        time_aspirate = self.conf["WAIT"]["WAIT_TIME_ASPIRATE"]
         # Pickup a tip
         self.next_tip()
-
         remaining_vol = vol_ul
         while remaining_vol > 0:
             if remaining_vol >= 100:
@@ -390,7 +419,17 @@ class AutoPipette:
             self.move_to(coor_source)
             self.plunge_down(pip_vol)
             self.dip_z_down(coor_source, loc_source.DIP_DISTANCE)
+            # If True, aspirate small amount of liquid 3 times to wet tip
+            if aspirate:
+                for _ in range(1):
+                    self.home_pipette_stepper()
+                    self.gcode_wait(time_aspirate)
+                    self.plunge_down(pip_vol)
+                    self.gcode_wait(time_aspirate)
+            # Release plunger to aspirate measured amount
             self.home_pipette_stepper()
+            # Give time for the liquid to enter the tip
+            self.gcode_wait(time_aspirate)
             self.dip_z_return(coor_source, loc_source.DIP_DISTANCE)
             # Dropoff liquid
             self.move_to(coor_dest)
@@ -400,5 +439,6 @@ class AutoPipette:
             self.home_pipette_stepper()
             self.append_gcode(f"; Moved {pip_vol} uL from {source} to {dest}")
         # Eject tip
-        self.move_to(self.garbage.next())
-        self.eject_tip()
+        if not keep_tip:
+            self.move_to(self.garbage.next())
+            self.eject_tip()

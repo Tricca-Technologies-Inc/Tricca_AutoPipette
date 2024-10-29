@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """This file defines the how the .pipette protocol files work."""
 # TODO Throw proper errors and log them
-from AutoPipette import AutoPipette
-from Plates import PlateTypes
-from Coordinate import Coordinate
+from autopipette import AutoPipette
+from plates import PlateTypes
+from coordinate import Coordinate
 
 
 class ProtocolCommands:
@@ -16,8 +16,26 @@ class ProtocolCommands:
         """Initialize internal pipette object."""
         self._autopipette = autopipette
 
+    def split_vals_from_flags(self, args: str):
+        """Take a string of arguments and split them into values and flags.
+
+        Values are required for a command to function.
+
+        A flag starts with a dash (-) and represents an option for a
+        command. Flags can be followed by values to make the flag work.
+        """
+        list_args = args.split()
+        vals = []
+        flags = []
+        for arg in list_args:
+            if arg[0] == "-":
+                flags.append(arg)
+            else:
+                vals.append(arg)
+        return vals, flags
+
     def is_float(self, element: any) -> bool:
-        """Return True element converts to a float and Flase otherwise."""
+        """Return True if element converts to a float and False otherwise."""
         if element is None:
             return False
         try:
@@ -31,7 +49,7 @@ class ProtocolCommands:
 
         Needs to be called before writing anything else to the file.
         """
-        return self._autopipette.return_gcode()
+        return self._autopipette.file_header
 
     def set(self, args: str):
         """Set a variable on the pipette to a value."""
@@ -39,7 +57,7 @@ class ProtocolCommands:
         # args should contain a variable and a value
         if (not (len(_args) == 2)):
             err_msg = f"Wrong args:{_args} passed into set function."
-            print(err_msg)
+            # print(err_msg)
             return "; " + err_msg
         # Variable should exist in autopipette
         sections = self._autopipette.conf.keys()
@@ -53,13 +71,13 @@ class ProtocolCommands:
         if (pip_var not in options):
             err_msg = \
                 f"Variable {_args[0]} not recognized, it could not be set.\n"
-            print(err_msg)
+            # print(err_msg)
             return "; " + err_msg
         # 2nd arg speed should be a decimal.
         if (not (_args[1].isdecimal())):
             err_msg = \
                 f"Second arg:{_args[1]} passed into set is not a decimal.\n"
-            print(err_msg)
+            # print(err_msg)
             return "; " + err_msg
         if (pip_var == "SPEED_FACTOR"):
             temp = self._autopipette.conf["SPEED"]["SPEED_FACTOR"]
@@ -85,52 +103,56 @@ class ProtocolCommands:
                     self._autopipette.conf[section][pip_var] = str(pip_val)
                     return f"; {pip_var} changed from {temp} to {pip_val}\n"
         err_msg = f"Unknown error setting {pip_var} to {pip_val}\n"
-        print(err_msg)
+        # print(err_msg)
         return "; " + err_msg
 
     def pipette(self, args: str):
         """Move vol amount of liquid from src to dest."""
-        _args = args.split()
-        # Should be 3 arguments
-        arg_len = len(_args)
-        if (not (arg_len == 3)):
+        vals, flags = self.split_vals_from_flags(args)
+        # Process flags
+        aspirate = False
+        keep_tip = False
+        for flag in flags:
+            if flag == "--aspirate":
+                aspirate = True
+            elif flag == "--keep_tip":
+                keep_tip = True
+            else:
+                err_msg = \
+                    f"Flag:{flag} is not recognized as a flag for pipette func."
+        # First val should be a float
+        if not self.is_float(vals[0]):
             err_msg = \
-                f"Wrong number of args:{arg_len} passed to pipette function.\n"
-            print(err_msg)
-            return "; " + err_msg
-        # First arg should be a decimal
-        if (not (_args[0].isdecimal())):
-            err_msg = \
-                f"First arg:{_args[0]} passed into pipette is not a decimal.\n"
-            print(err_msg)
+                f"First arg:{vals[0]} passed into pipette is not a decimal.\n"
+            # print(err_msg)
             return "; " + err_msg
         # 2nd and 3rd arg are coordinates vars or plate[0-7]
-        vol_ul = float(_args[0])
-        source = _args[1]
-        dest = _args[2]
+        vol_ul = float(vals[0])
+        source = vals[1]
+        dest = vals[2]
         if (not self._autopipette.is_location(source)):
             err_msg = \
                 f"Source location:{source} does not exist.\n"
-            print(err_msg)
+            # print(err_msg)
             return "; " + err_msg
         if (not self._autopipette.is_location(dest)):
             err_msg = \
                 f"Destination location:{dest} does not exist.\n"
-            print(err_msg)
+            # print(err_msg)
             return "; " + err_msg
         # Make sure there is a garbage for tips
         if (self._autopipette.garbage is None):
             err_msg = \
                 "No coordinate set as Garbage.\n"
-            print(err_msg)
+            # print(err_msg)
             return "; " + err_msg
         # Make sure there is a tip box
         if (self._autopipette.tipboxes is None):
             err_msg = \
                 "No coordinate set as TipBox.\n"
-            print(err_msg)
+            # print(err_msg)
             return "; " + err_msg
-        self._autopipette.pipette(vol_ul, source, dest)
+        self._autopipette.pipette(vol_ul, source, dest, keep_tip, aspirate)
         return f"\n; Pipette {vol_ul} from {source} to {dest}\n" + \
             self._autopipette.return_gcode() + "\n"
 
@@ -148,7 +170,7 @@ class ProtocolCommands:
             if (plate_type not in PlateTypes.TYPES.keys()):
                 err_msg = \
                     f"Plate type:{plate_type} does not exist.\n"
-                print(err_msg)
+                # print(err_msg)
                 return "; " + err_msg
             # Check if num_row and num_col are passed in and call accordingly
             if (len(_args) == 2):
@@ -158,7 +180,7 @@ class ProtocolCommands:
                 # Next two args must be decimals
                 if (not (_args[2].isdecimal() and _args[3].isdecimal())):
                     err_msg = f"""Arg 2:{_args[2]} and Arg 3:{_args[3]} are not decimals.\n"""
-                    print(err_msg)
+                    # print(err_msg)
                     return "; " + err_msg
                 num_row = int(_args[2])
                 num_col = int(_args[3])
@@ -168,21 +190,21 @@ class ProtocolCommands:
             else:
                 num_args = len(_args)
                 err_msg = f"""Too many or too few args:{num_args} passed to gen_coordinate.\n"""
-                print(err_msg)
+                # print(err_msg)
                 return "; " + err_msg
         else:
             # If the following 3 are decimals, set a location
             if (self.is_float(_args[1])
                     and self.is_float(_args[2])
                     and self.is_float(_args[3])):
-                x = int(_args[1])
-                y = int(_args[2])
-                z = int(_args[3])
+                x = float(_args[1])
+                y = float(_args[2])
+                z = float(_args[3])
                 self._autopipette.set_location(name_loc, x, y, z)
                 return f"; Location:{name_loc} set to x:{x} y:{y} z:{z}\n"
             else:
                 err_msg = f"""Arg 1:{_args[1]}, Arg 2:{_args[2]}, and Arg 3:{_args[3]} must be decimals\n"""
-                print(err_msg)
+                # print(err_msg)
                 return "; " + err_msg
 
     def home(self, args: str):
@@ -191,7 +213,7 @@ class ProtocolCommands:
         # Should only be 1 arg
         if (not (len(_args) == 1)):
             err_msg = "Wrong args passed into home function.\n"
-            print(err_msg)
+            # print(err_msg)
             return "; " + err_msg
         if (_args[0] not in ["x", "y", "z", "axis", "all", "pipette"]):
             err_msg = \
@@ -213,7 +235,7 @@ class ProtocolCommands:
         else:
             err_msg = \
                 f"Arg:{_args[0]} passed into home function not recognized.\n"
-            print(err_msg)
+            # print(err_msg)
             return "; " + err_msg
 
         return self._autopipette.return_gcode()
@@ -227,7 +249,7 @@ class ProtocolCommands:
             if (not self._autopipette.is_location(_args[0])):
                 err_msg = \
                     f"Arg:{_args[0]} passed into move is not a location."
-                print(err_msg)
+                # print(err_msg)
                 return "; " + err_msg
             coor = self._autopipette.get_location_coor(_args[0])
             self._autopipette.move_to(coor)
@@ -239,7 +261,7 @@ class ProtocolCommands:
                     self.is_float(_args[2])):
                 err_msg = \
                     f"Args:{_args} must all be numbers to be a coordinate."
-                print(err_msg)
+                # print(err_msg)
                 return "; " + err_msg
             coor_x = float(_args[0])
             coor_y = float(_args[1])
@@ -250,7 +272,7 @@ class ProtocolCommands:
         else:
             err_msg = \
                 "Too many or too few args passed to move.\n"
-            print(err_msg)
+            # print(err_msg)
             return "; " + err_msg
 
     def next_tip(self, args: str):
@@ -259,12 +281,12 @@ class ProtocolCommands:
         # There should be no arguments passed in
         if len(_args) != 0:
             err_msg = "Function next_tip takes no args."
-            print(err_msg)
+            # print(err_msg)
             return "; " + err_msg
         # Check if there is a TipBox assigned to pipette
         if self._autopipette.tipboxes is None:
             err_msg = "No TipBox assigned to pipette."
-            print(err_msg)
+            # print(err_msg)
             return "; " + err_msg
         self._autopipette.next_tip()
         return self._autopipette.return_gcode()
@@ -274,7 +296,7 @@ class ProtocolCommands:
         _args = args.split()
         if len(_args) != 0:
             err_msg = "Function eject_tip takes no args."
-            print(err_msg)
+            # print(err_msg)
             return "; " + err_msg
         self._autopipette.eject_tip()
         return self._autopipette.return_gcode()
@@ -308,6 +330,6 @@ class ProtocolCommands:
         # Check if the cmd exists.
         if (cmd not in self._cmds):
             err_msg = f"Command {cmd} not found.\n"
-            print(err_msg)
+            # print(err_msg)
             return "; " + err_msg
         return self._cmds[cmd](self, args)
