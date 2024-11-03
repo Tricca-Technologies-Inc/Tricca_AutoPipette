@@ -71,8 +71,8 @@ def server(input, output, session):
     def _():
         reactive.invalidate_later(1) # https://shiny.posit.co/py/api/core/reactive.event.html
         
-        # coordinates = query_object.get_printer_coordinates()
-        coordinates = query_object.get_dummy_printer_coordinates()
+        coordinates = query_object.get_printer_coordinates()
+        # coordinates = query_object.get_dummy_printer_coordinates()
 
         # print(coordinates['X'], coordinates['Y'], coordinates['Z'], coordinates['E'])
 
