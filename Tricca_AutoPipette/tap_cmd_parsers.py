@@ -6,7 +6,7 @@ class TAPCmdParsers():
     """A data class containing all the parsers for TAP commands."""
 
     parser_home: Cmd2ArgumentParser = Cmd2ArgumentParser()
-    parser_home.add_argument("--motors", default=None, type=str)
+    parser_home.add_argument("motors", default=None, type=str)
 
     parser_set: Cmd2ArgumentParser = Cmd2ArgumentParser()
     parser_set.add_argument("pipvar", type=str)

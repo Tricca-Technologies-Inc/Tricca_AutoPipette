@@ -1,24 +1,19 @@
-# Automated Pipetting System
+# Tricca AutoPipette
 
-This repository contains the codebase for an automated pipetting system designed to manage protocols for kit manufacturing and sample preparation using a gantry system controlled by a pipette. The system is programmed using Python and interfaces with hardware through G-code commands and configuration files.
+Tricca AutoPipette is an automated liquid handling system (ALHS) that uses the Voron 3D printer platform. The software system controls the pipette as well as handles the creation and execution of protocols for assays.
 
 ## Table of Contents
 
-- [Overview](#overview)
 - [Files and Structure](#files-and-structure)
 - [Configuration](#configuration)
 - [Dependencies](#dependencies)
 - [Contributing](#contributing)
 - [License](#license)
 
-## Overview
-
-The automated pipetting system is designed for solution handling tasks, utilizing stepper motors and servos for accurate movement. This project includes functionality for controlling the pipette, moving to specific well coordinates, and executing complex liquid handling protocols.
-
 ## Files and Structure
 
-- **app.py**  
-  The main application entry point. Manages the overall flow of pipetting tasks.
+- **tricca_autopipette.py**  
+  The main application entry point. A shell environment where users can pass commands and run protocols.
 
 - **coordinates.py**  
   Defines the coordinate system and functions for generating well plate coordinates.

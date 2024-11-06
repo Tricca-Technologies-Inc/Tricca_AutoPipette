@@ -4,7 +4,6 @@ import requests
 from cmd2 import Cmd, Cmd2ArgumentParser, with_argparser
 import sys
 from autopipette import AutoPipette
-from command_set_pipette import CommandSetPipette
 from pathlib import Path
 from datetime import datetime
 from plates import PlateTypes
@@ -56,7 +55,8 @@ class TriccaAutoPipetteShell(Cmd):
     def preloop(self):
         """Execute before entering main loop."""
         self.poutput("Loading commands...")
-        self.register_command_set(CommandSetPipette())
+        # Example of how to load other commands
+        # self.register_command_set(CommandSetPipette())
         self.poutput("Initializing Pipette...")
         self.init_pipette()
 
