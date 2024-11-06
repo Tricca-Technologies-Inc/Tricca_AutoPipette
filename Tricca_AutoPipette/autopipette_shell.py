@@ -1,40 +1,53 @@
 #!/usr/bin/env python3
 """Holds the class to run a shell to control the autopipette."""
-import cmd
+import cmd2
 from protocol_commands import ProtocolCommands
 from autopipette import AutoPipette
 import requests
+import readline
 from pathlib import Path
 from gcode_generator import gen_gcode
+from argparse import ArgumentParser
 
 
-class AutoPipetteShell(cmd.Cmd):
+class AutoPipetteShell(cmd2.Cmd):
     """A terminal to control the pipette."""
 
     intro = r"""
-  ______     _                     ___         __        ____  _            __  __
- /_  __/____(_)_____________ _    /   | __  __/ /_____  / __ \(_)___  ___  / /_/ /____
-  / / / ___/ / ___/ ___/ __ `/   / /| |/ / / / __/ __ \/ /_/ / / __ \/ _ \/ __/ __/ _ \
- / / / /  / / /__/ /__/ /_/ /   / ___ / /_/ / /_/ /_/ / ____/ / /_/ /  __/ /_/ /_/  __/
-/_/ /_/  /_/\___/\___/\__,_/   /_/  |_\__,_/\__/\____/_/   /_/ .___/\___/\__/\__/\___/
-                                                            /_/
+  ______   _                    _         _        ____  _            _   _
+ /_  __/__(_) ___ ___ __ _     / \  _   _| |_ ___ |  _ \(_)_ __   ___| |_| |_ ___
+  / /| '__| |/ __/ __/ _` |   / _ \| | | | __/ _ \| |_) | | '_ \ / _ \ __| __/ _ \
+ / / | |  | | (_| (_| (_| |  / ___ \ |_| | || (_) |  __/| | |_) |  __/ |_| ||  __/
+/_/  |_|  |_|\___\___\__,_| /_/   \_\__,_|\__\___/|_|   |_| .__/ \___|\__|\__\___|
+                                                          |_|
 """
-    prompt = "autopipette >> "
-    file = None
+    prompt: str = "autopipette >> "
     _autopipette: AutoPipette = None
     _protocol_commands: ProtocolCommands = None
     _url: str = ""
-    GCODE_PATH = Path(__file__).parent.parent / 'gcode/'
-    PROTOCOL_PATH = Path(__file__).parent.parent / 'protocols/'
+    GCODE_PATH: Path = Path(__file__).parent.parent / 'gcode/'
+    PROTOCOL_PATH: Path = Path(__file__).parent.parent / 'protocols/'
+    _history_file: Path = Path(__file__).parent / '.tap_shell_history'
+    RECORD_PATH: Path = None
 
     def __init__(self,
                  autopipette: AutoPipette = AutoPipette(),
                  url: str = "http://0.0.0.0:7125/printer/gcode/script"):
         """Initialize self, AutoPipette and ProtocolCommands objects."""
-        super(AutoPipetteShell, self).__init__()
+        super().__init__()
         self._autopipette = autopipette
         self._protocol_commands = ProtocolCommands(self._autopipette)
         self._url = url
+        self.load_history()
+
+    def load_history(self):
+        """Load the history from previous sessions."""
+        if self._history_file.is_file():
+            readline.read_history_file(self._history_file)
+
+    def save_history(self):
+        """Save the history of this session."""
+        readline.write_history_file(self._history_file)
 
     def preloop(self):
         """Execute once before entering loop.
@@ -44,7 +57,14 @@ class AutoPipetteShell(cmd.Cmd):
         setup = self._autopipette.file_header.splitlines()
         print("Setting up pipette...")
         for code in setup:
-            self.send_gcode(code)
+            self.send_gcode_cmd(code)
+
+    def postloop(self):
+        """Execute once after exiting loop.
+
+        Used to save session history.
+        """
+        self.save_history()
 
     def run_gcode(self, filename: str):
         """Open a gcode file and execute it."""
@@ -55,9 +75,9 @@ class AutoPipetteShell(cmd.Cmd):
         with file.open() as fileobj:
             for line in fileobj:
                 print(line)
-                self.send_gcode(line)
+                self.send_gcode_cmd(line)
 
-    def send_gcode(self, command):
+    def send_gcode_cmd(self, command):
         """Send gcode to the pipette."""
         response = requests.post(self._url, json={"script": command})
         if response.status_code == 200:
@@ -67,6 +87,10 @@ class AutoPipetteShell(cmd.Cmd):
             print(f"Failed to send command: \
                 {response.status_code}, {response.text}")
 
+    def send_gcode_file(self, filename: str):
+        """Upload a gcode file to the pipette and immediately execute."""
+        pass
+
     def print_or_send_lines(self, gcode_lines: str):
         """Print a line if its a gcode comment, otherwise send it."""
         gcode_lines = gcode_lines.splitlines()
@@ -74,7 +98,7 @@ class AutoPipetteShell(cmd.Cmd):
             if gcode_line.startswith(";"):
                 print(gcode_line[2:])
             else:
-                self.send_gcode(gcode_line)
+                self.send_gcode_cmd(gcode_line)
 
     def do_move(self, arg):
         """Move the pipette to a specific coordinate."""
@@ -132,7 +156,7 @@ class AutoPipetteShell(cmd.Cmd):
         """
         if arg.endswith(".pipette"):
             _file = self.PROTOCOL_PATH / arg
-            self.file = open(_file, 'w')
+            self.RECORD_PATH = open(_file, 'w')
         else:
             print("Must have a '.pipette' suffix.")
 
@@ -159,16 +183,22 @@ class AutoPipetteShell(cmd.Cmd):
     def precmd(self, line):
         """Convert lines to lower and return it or print it if playback."""
         line = line.lower()
-        if self.file and 'playback' not in line:
-            print(line, file=self.file)
+        if self.RECORD_PATH and 'playback' not in line:
+            print(line, file=self.RECORD_PATH)
         return line
 
     def close(self):
         """Close the shell and handle file closing."""
-        if self.file:
-            self.file.close()
-            self.file = None
+        if self.RECORD_PATH:
+            self.RECORD_PATH.close()
+            self.RECORD_PATH = None
 
 
 if __name__ == '__main__':
-    AutoPipetteShell().cmdloop()
+    argparser = ArgumentParser()
+    argparser.add_argument("ip", type=str,
+                           help="ip address of the autopipette")
+    args = argparser.parse_args()
+    URL_MOONRAKER = \
+        "http://" + args.ip + ":7125/printer/gcode/script"
+    AutoPipetteShell(url=URL_MOONRAKER).cmdloop()

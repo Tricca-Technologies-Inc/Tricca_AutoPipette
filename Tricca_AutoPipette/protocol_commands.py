@@ -107,11 +107,23 @@ class ProtocolCommands:
         return "; " + err_msg
 
     def pipette(self, args: str):
-        """Move vol amount of liquid from src to dest."""
+        """Move vol amount of liquid from src to dest.
+
+        Example uses:
+        pipette --flags vol src dest
+        pipette --flags vol src row col dest row col
+        pipette --flags vol src row col dest
+        pipette --flags vol src dest row col
+        """
         vals, flags = self.split_vals_from_flags(args)
         # Process flags
         aspirate = False
         keep_tip = False
+        # Rows and columns
+        src_row = None
+        src_col = None
+        dest_row = None
+        dest_col = None
         for flag in flags:
             if flag == "--aspirate":
                 aspirate = True
@@ -120,26 +132,42 @@ class ProtocolCommands:
             else:
                 err_msg = \
                     f"Flag:{flag} is not recognized as a flag for pipette func."
-        # First val should be a float
+        # First val should be a float representing volume in uL
         if not self.is_float(vals[0]):
             err_msg = \
                 f"First arg:{vals[0]} passed into pipette is not a decimal.\n"
             # print(err_msg)
             return "; " + err_msg
-        # 2nd and 3rd arg are coordinates vars or plate[0-7]
-        vol_ul = float(vals[0])
-        source = vals[1]
-        dest = vals[2]
+        vol_ul = float(vals.pop(0))
+        # 2nd val should be the source
+        source = vals.pop(0)
         if (not self._autopipette.is_location(source)):
             err_msg = \
                 f"Source location:{source} does not exist.\n"
             # print(err_msg)
             return "; " + err_msg
+        # Check if next val is a float
+        # If it is, then we have a row followed by a column followed by the dest
+        if vals[0].isdigit() and vals[1].isdigit():
+            src_row = int(vals.pop(0))
+            src_col = int(vals.pop(0))
+            dest = vals.pop(0)
+        else:
+            dest = vals.pop(0)
         if (not self._autopipette.is_location(dest)):
             err_msg = \
                 f"Destination location:{dest} does not exist.\n"
             # print(err_msg)
             return "; " + err_msg
+        # If vals is not empty, then we have a row and column for dest
+        if vals is not []:
+            if vals[0].isdigit() and vals[1].isdigit():
+                dest_row = int(vals.pop(0))
+                dest_col = int(vals.pop(0))
+            else:
+                err_msg = \
+                    f"""Destination rows:{dest_row} and \
+                    columns:{dest_col} must be ints."""
         # Make sure there is a garbage for tips
         if (self._autopipette.garbage is None):
             err_msg = \
@@ -152,7 +180,9 @@ class ProtocolCommands:
                 "No coordinate set as TipBox.\n"
             # print(err_msg)
             return "; " + err_msg
-        self._autopipette.pipette(vol_ul, source, dest, keep_tip, aspirate)
+        self._autopipette.pipette(vol_ul, source, dest,
+                                  src_row, src_col, dest_row, dest_col,
+                                  keep_tip, aspirate)
         return f"\n; Pipette {vol_ul} from {source} to {dest}\n" + \
             self._autopipette.return_gcode() + "\n"
 

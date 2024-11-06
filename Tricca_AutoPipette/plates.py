@@ -15,6 +15,8 @@ class Plate:
         self.coors = self._gen_well_plate_coors(start_coor,
                                                 num_row, num_col,
                                                 spacing_row, spacing_col)
+        self.num_row = num_row
+        self.num_col = num_col
         self.curr = 0
 
     def _gen_well_plate_coors(self, start_coor,
@@ -37,6 +39,18 @@ class Plate:
     def get_coors(self):
         """Return the list of every coordinate generated."""
         return self.coors
+
+    def get_coor(self, row: int, col: int):
+        """Return a coordinate at a specific row and column.
+
+        Zero indexed. If error, return nothing.
+        """
+        if row >= self.num_row or row < 0:
+            return
+        if col >= self.num_col or col < 0:
+            return
+        index = col + self.num_col * row
+        return self.coors[index]
 
     def next(self):
         """Return the next coordinate.

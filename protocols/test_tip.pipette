@@ -1,385 +1,385 @@
 ; Go through a whole TipBox of tips and eject them
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip
 next_tip
-move garbage
+move_loc garbage
 eject_tip

@@ -1,0 +1,4 @@
+pipette 100 plate1 plate2
+pipette 100 plate1 0 0 plate2
+pipette 100 plate1 plate2 0 1
+pipette 100 plate1 0 1 plate2 0 0
