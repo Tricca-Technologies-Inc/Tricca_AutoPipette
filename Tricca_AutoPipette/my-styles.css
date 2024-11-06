@@ -81,5 +81,18 @@ body {
     font-weight: bold;
     margin-bottom: 10px;
     text-align: center;
-    color: #0288d1;
+    background-color: #0288d1;
+}
+
+
+.current_coordinates_row {
+    display: flex;           /* Make the div a flex container */
+    justify-content: space-between;  /* Distribute the inputs with space between */
+    background-color: lightgreen;
+    margin: 2px;
+}
+
+.current_coordinates_row .shiny-input-container {
+    width: 100px;  /* Set width for each input */
+    margin-right: 10px;  /* Optional: Add space between inputs */
 }
