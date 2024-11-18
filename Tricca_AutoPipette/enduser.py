@@ -7,6 +7,7 @@ from starlette.requests import Request
 import uvicorn
 from shiny import App, ui, reactive
 
+
 # FIRST PAGE UI AND SERVER FUNCTION
 def first_page_ui(request: Request):
     return ui.page_fluid(
@@ -58,7 +59,15 @@ def third_page_ui(request: Request):
     return ui.page_fluid(
         ui.tags.div(
             ui.h2(title_text),  # Display dynamic title based on the recipe selected
-            ui.input_action_button("start_button", "Start", style="padding:10px; font-size:16px;"),  # Action button
+            ui.p("Please follow these steps to set up your recipe before starting:"), 
+            ui.img(src="/static/testtube.jpg", style="width: 300px; margin-top: 20px;"),
+            ui.tags.ul(
+                ui.tags.li("Step 1: Gather all necessary ingredients and tools."),
+                ui.tags.li("Step 2: Pour 50ml methanol in the test tube marked A"),
+                ui.tags.li("Step 3: Double-check that you have the correct recipe and measurements."),
+                style="text-align: left; max-width: 500px; margin: 0 auto; font-size:14px;"
+            ),
+            ui.input_action_button("start_button", "Start", style="padding:10px; margin-top:100px; font-size:16px;"),  # Action button
             style="text-align: center; display: flex; flex-direction: column; align-items: center; height: 80vh;"  # Center-align all contents in this div
         )
     )
@@ -89,6 +98,7 @@ routes = [
     Mount("/first_page", app=first_page_app),
     Mount("/second_page", app=second_page_app),
     Mount("/third_page", app=third_page_app),
+    Mount("/static", app=StaticFiles(directory=".//www"), name="static"),  # Serve static files
 ]
 
 app = Starlette(routes=routes)
