@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """Holds class and methods for running Tricca AutoPipette Shell."""
-import requests
 from cmd2 import Cmd, Cmd2ArgumentParser, with_argparser
 import sys
 from autopipette import AutoPipette
@@ -9,6 +8,13 @@ from datetime import datetime
 from plates import PlateTypes
 from coordinate import Coordinate
 from tap_cmd_parsers import TAPCmdParsers
+from tap_web_utils import TAPWebUtils
+from rich import print as rprint
+from res.string_constants import TAP_CLR_BANNER
+from rich.console import Console
+from threaded_event_loop_manager import ThreadedEventLoopManager
+import asyncio
+from moonraker_requests import MoonrakerRequests
 
 
 def main():
@@ -24,130 +30,130 @@ def main():
 class TriccaAutoPipetteShell(Cmd):
     """Terminal to control pipette."""
 
-    intro = r"""
- ______    _                 _       _       ___ _           _   _
-/_  __/___(_)__________ _   /_\ _  _| |_ ___| _ (_)_ __  ___| |_| |_ ___
- / / / __/ / __/ __/ _ `/  / _ \ || |  _/ _ \  _/ | '_ \/ -_)  _|  _/ -_)
-/_/ /_/ /_/\__/\__/\_,_/  /_/ \_\_,_|\__\___/_| |_| .__/\___|\__|\__\___|
-                                                  |_|
-"""
+    # Prompt Variables
+    intro = ""
     prompt: str = "autopipette >> "
-    _autopipette: AutoPipette = None
+    ip: str = ""
+    webutils: TAPWebUtils = None
+    alert_manager: ThreadedEventLoopManager = None
+    alert_task = None
+    console: Console = None
+    mrr: MoonrakerRequests = None
+
+    # Paths
     GCODE_PATH: Path = Path(__file__).parent.parent / 'gcode/'
     PROTOCOL_PATH: Path = Path(__file__).parent.parent / 'protocols/'
-    ip: str = ""
+
+    # Gcode Variables
     _append_gcode: bool = False
     _gcode_buf: str = ""
+    _autopipette: AutoPipette = None
 
     def __init__(self,
                  autopipette: AutoPipette = AutoPipette(),
                  ip: str = "0.0.0.0"):
         """Initialize self, AutoPipette and ProtocolCommands objects."""
         super().__init__(allow_cli_args=False,
-                         persistent_history_file='.tap_shell_history',
-                         startup_script='.init_pipette',
+                         persistent_history_file=Path(__file__).parent
+                         / '.tap_history',
+                         startup_script=Path(__file__).parent
+                         / '.init_pipette',
                          auto_load_commands=False)
         self.ip = ip
         self._autopipette = autopipette
         self.debug = True
+        self.console = Console()
+        self.mrr = MoonrakerRequests()
+        self.alert_manager = ThreadedEventLoopManager()
+        self.alert_manager.start()
+        # Delete set cmd bc we use our own
         delattr(Cmd, 'do_set')
+        # Create some hooks to handle the starting and stopping of our thread
+        self.register_preloop_hook(self._preloop_hook)
+        self.register_postloop_hook(self._postloop_hook)
 
-    def preloop(self):
-        """Execute before entering main loop."""
-        self.poutput("Loading commands...")
+    def _preloop_hook(self) -> None:
+        """Start the alerter thread."""
+        # self.screen_printer = TAPScreenPrinter(self,
+        #                                        self.need_prompt_refresh,
+        #                                        self.async_refresh_prompt,
+        #                                        self.terminal_lock)
+        # self.screen_printer.refresh_screen()
+        self.console.print("\033c", end="")
+        self.console.print(TAP_CLR_BANNER)
+        self.console.print("[green]Connecting to Pipette...[/]")
+        self.webutils = TAPWebUtils(ip=self.ip)
+        self.console.print("[green]Initializing Pipette...[/]")
+        self.console.print("[green]Loading commands...[/]")
         # Example of how to load other commands
         # self.register_command_set(CommandSetPipette())
-        self.poutput("Initializing Pipette...")
-        self.init_pipette()
 
-    def output_gcode(self, gcode: str):
+    def _postloop_hook(self) -> None:
+        """Stop the alerter thread."""
+        # self.screen_printer.close()
+        self.alert_manager.stop()
+        self.webutils.stop_websocket_listener()
+        self.console.print("Exited gracefully.")
+
+    def output_gcode(self, gcode: str, filename: str = None) -> None:
         """Direct gcode output."""
         if self._append_gcode:
             self._gcode_buf += gcode + "\n"
         else:
             now = datetime.now()
-            filename = now.strftime("%Y-%m-%d-%H-%M-%S-%f.gcode")
+            if filename is None:
+                filename = now.strftime("%Y-%m-%d-%H-%M-%S-%f.gcode")
             file_path = self.GCODE_PATH / "temp/" / filename
             with open(file_path, 'w') as file:
                 file.write(gcode + "\n")
-            self.send_gcode_file(file_path)
+            self.webutils.exec_gcode_file(file_path, filename)
             # Delete temp file
             file_path.unlink()
 
-    def send_gcode_cmd(self, cmd: str):
-        """Send a line of gcode to the pipette.
+    async def alerter_coroutine(self):
+        """Coroutine for managing asynchronous alerts."""
+        while True:
+            if self.terminal_lock.acquire(blocking=False):
+                # Process messages from the queue
+                message = self.alert_manager.dequeue_message()
+                if message:
+                    self.async_alert(message)
+                self.terminal_lock.release()
+            await asyncio.sleep(0.5)  # Non-blocking sleep
 
-        Args:
-            cmd (str): The cmd to send to the pipette.
-        """
-        response = requests.post(
-            "http://" + self.ip + ":7125/printer/gcode/script",
-            json={"script": cmd})
-        if response.status_code == 200:
-            # print("Command sent successfully")
-            pass
-        else:
-            print(f"Failed to send command: \
-                {response.status_code}, {response.text}")
-
-    def send_gcode_file(self, file_path: str):
-        """Send a gcode file and execute it.
-
-        Args:
-            file_path (str): File to upload to the pipette.
-        """
-        # Set the base URL of your Moonraker server
-        base_url = 'http://' + self.ip + ':7125'
-
-        # Step 1: Upload the File
-        upload_url = f'{base_url}/server/files/upload'
-        with open(file_path, 'rb') as file:
-            files = {'file': ('myfile.gcode', file, 'application/octet-stream')}
-            upload_response = requests.post(upload_url, files=files)
-
-            if upload_response.status_code != 201:
-                self.poutput(f"File upload failed or unexpected response: \
-                {upload_response.text}, \
-                Upload Code{upload_response.status_code}")
-
-            uploaded_file_path = upload_response.json()['item']['path']
-            # Step 2: Start the Print
-            print_url = \
-                f'{base_url}/printer/print/start?filename={uploaded_file_path}'
-            print_response = requests.post(print_url)
-            # Check if print started successfully
-            if print_response.status_code == 200:
-                pass
-            else:
-                self.poutput(f"Failed to start print:{print_response.text}")
-
-    def init_pipette(self):
-        """Initialize the pipette."""
-        self.output_gcode(self._autopipette.return_header())
-
+    """--------------------------Commands Below-----------------------------"""
     @with_argparser(TAPCmdParsers.parser_home)
     def do_home(self, args):
         """Home a subset of motors on the pipette."""
         motors: str = args.motors
+        filename: str = None
         if motors == "x":
+            filename = "home_x.gcode"
             self._autopipette.home_x()
         elif motors == "y":
+            filename = "home_y.gcode"
             self._autopipette.home_y()
         elif motors == "z":
+            filename = "home_z.gcode"
             self._autopipette.home_z()
         elif motors == "pipette":
+            filename = "home_pipette.gcode"
             self._autopipette.home_pipette_motors()
         elif motors == "axis":
+            filename = "home_axis.gcode"
             self._autopipette.home_axis()
         elif motors == "all":
+            filename = "home_all.gcode"
             self._autopipette.home_axis()
             self._autopipette.home_pipette_motors()
         elif motors == "servo":
+            filename = "home_servo.gcode"
             self._autopipette.home_servo()
         else:
+            filename = "home_all.gcode"
             self._autopipette.home_axis()
             self._autopipette.home_pipette_motors()
-        self.output_gcode(self._autopipette.return_gcode())
+        self.output_gcode(self._autopipette.return_gcode(), filename)
 
     @with_argparser(TAPCmdParsers.parser_set)
     def do_set(self, args):
@@ -165,7 +171,7 @@ class TriccaAutoPipetteShell(Cmd):
         if (pip_var not in options):
             err_msg = \
                 f"Variable {pip_var} not recognized, it could not be set.\n"
-            self.poutput(err_msg)
+            rprint(err_msg)
             return
         if (pip_var == "SPEED_FACTOR"):
             temp = self._autopipette.conf["SPEED"]["SPEED_FACTOR"]
@@ -189,8 +195,7 @@ class TriccaAutoPipetteShell(Cmd):
                 if pip_var in self._autopipette.conf[section].keys():
                     temp = self._autopipette.conf[section][pip_var]
                     self._autopipette.conf[section][pip_var] = str(pip_val)
-                    self.poutput(
-                        f"{pip_var} changed from {temp} to {pip_val}\n")
+                    rprint(f"{pip_var} changed from {temp} to {pip_val}\n")
 
     @with_argparser(TAPCmdParsers.parser_coor)
     def do_coor(self, args):
@@ -215,10 +220,10 @@ class TriccaAutoPipetteShell(Cmd):
             if (plate_type not in PlateTypes.TYPES.keys()):
                 err_msg = \
                     f"Plate type:{plate_type} does not exist.\n"
-                self.poutput(err_msg)
+                rprint(err_msg)
         self._autopipette.set_plate(name_loc, plate_type,
                                     row, col)
-        self.poutput(f"Location:{name_loc} with rows:{row} cols:{col} set to Plate:{plate_type}\n")
+        rprint(f"Location:{name_loc} with rows:{row} cols:{col} set to Plate:{plate_type}\n")
 
     @with_argparser(TAPCmdParsers.parser_pipette)
     def do_pipette(self, args):
@@ -235,24 +240,24 @@ class TriccaAutoPipetteShell(Cmd):
         if (not self._autopipette.is_location(src)):
             err_msg = \
                 f"Source location:{src} does not exist.\n"
-            self.poutput(err_msg)
+            rprint(err_msg)
             return
         if (not self._autopipette.is_location(dest)):
             err_msg = \
                 f"Destination location:{dest} does not exist.\n"
-            self.poutput(err_msg)
+            rprint(err_msg)
             return
         # Make sure there is a garbage for tips
         if (self._autopipette.garbage is None):
             err_msg = \
                 "No coordinate set as Garbage.\n"
-            self.poutput(err_msg)
+            rprint(err_msg)
             return
         # Make sure there is a tip box
         if (self._autopipette.tipboxes is None):
             err_msg = \
                 "No coordinate set as TipBox.\n"
-            self.poutput(err_msg)
+            rprint(err_msg)
             return
         self._autopipette.pipette(vol_ul, src, dest,
                                   src_row, src_col, dest_row, dest_col,
@@ -263,12 +268,12 @@ class TriccaAutoPipetteShell(Cmd):
     @with_argparser(TAPCmdParsers.parser_move_loc)
     def do_move_loc(self, args):
         """Move to a location or a coordinate."""
-        loc: str = args.loc
+        loc: str = args.name_loc
         # There should either be one arg (location) or 3 (coordinate)
         if (not self._autopipette.is_location(loc)):
             err_msg = \
                 f"Arg:{loc} passed into move is not a location."
-            self.poutput(err_msg)
+            rprint(err_msg)
         coor = self._autopipette.get_location_coor(loc)
         self._autopipette.move_to(coor)
         self.output_gcode(self._autopipette.return_gcode())
@@ -283,24 +288,24 @@ class TriccaAutoPipetteShell(Cmd):
         self._autopipette.move_to(coor)
         self.output_gcode(self._autopipette.return_gcode())
 
-    def do_next_tip(self):
+    def do_next_tip(self, _):
         """Pickup the next tip in the tip box."""
         # Check if there is a TipBox assigned to pipette
         if self._autopipette.tipboxes is None:
             err_msg = "No TipBox assigned to pipette."
-            self.poutput(err_msg)
+            rprint(err_msg)
             return
         self._autopipette.next_tip()
         self.output_gcode(self._autopipette.return_gcode())
 
-    def do_eject_tip(self):
+    def do_eject_tip(self, _):
         """Eject the tip on the pipette."""
         self._autopipette.eject_tip()
         self.output_gcode(self._autopipette.return_gcode())
 
-    def do_print(self):
-        """Print anythong."""
-        self.poutput("Print")
+    def do_print(self, _):
+        """Print anything."""
+        rprint("Print")
 
     @with_argparser(TAPCmdParsers.parser_run)
     def do_run(self, args):
@@ -309,7 +314,7 @@ class TriccaAutoPipetteShell(Cmd):
         cmds = []
         file_path = self.PROTOCOL_PATH / filename
         if (not file_path.exists()):
-            self.poutput(f"File: {file_path} does not exist")
+            rprint(f"File: {file_path} does not exist")
             return
         with file_path.open("r") as fp:
             for line in fp:
@@ -322,24 +327,85 @@ class TriccaAutoPipetteShell(Cmd):
         self.output_gcode(self._gcode_buf)
         self._gcode_buf = ""
 
-    def do_stop(self):
-        """Send an emergency stop command to the pipette.
+    def do_stop(self, args):
+        """Send an emergency stop command to the pipette."""
+        rprint("[bold red]Emergency Stop.[/]")
+        self.webutils.append_to_send(
+            self.mrr.gen_request("printer.emergency_stop"))
 
-        Can also use Ctrl-Z.
+    def do_pause(self, args):
+        """Pause an ongoing protocol."""
+        rprint("Pause")
+        self.webutils.append_to_send(
+            self.mrr.gen_request("printer.print.pause"))
+
+    def do_resume(self, args):
+        """Resume an ongoing protocol."""
+        rprint("Resume")
+        self.webutils.append_to_send(
+            self.mrr.gen_request("printer.print.resume"))
+
+    def do_cancel(self, args):
+        """Cancel an ongoing protocol."""
+        rprint("Cancel")
+        self.webutils.append_to_send(
+            self.mrr.gen_request("printer.print.cancel"))
+
+    def do_request(self, args):
+        """Try a request."""
+        pass
+
+    def do_start_alerts(self, _):
+        """Start the alerter thread."""
+        if self.alert_task and not self.alert_task.done():
+            rprint("Alerts are already running.")
+        else:
+            self.alert_task = \
+                self.alert_manager.submit_coroutine(self.alerter_coroutine())
+            rprint("Alerts started.")
+
+    def do_stop_alerts(self, _):
+        """Stop the alerter thread."""
+        if self.alert_task:
+            self.alert_task.cancel()
+            print("Alerts stopped.")
+
+    def do_save(self, _):
+        """Save the autopipette config."""
+        self._autopipette.save_config_file()
+
+    @with_argparser(TAPCmdParsers.parser_reset_plate)
+    def do_reset_plate(self, args):
+        """Reset a specific plate."""
+        plate: str = args.plate
+        if plate not in self._autopipette.get_plate_locations():
+            rprint(f"Plate: {plate}, is not a plate.")
+            return
+        self._autopipette._locations[plate].curr = 0
+
+    def do_reset_plates(self, _):
+        """Reset plates by setting the position on all plates to the origin."""
+        for location in self._autopipette.get_plate_locations():
+            self._autopipette._locations[location].curr = 0
+        rprint("Plates Reset")
+
+    def do_printer(self, _):
+        """Print something to screen."""
+        rprint("do_printer")
+        self.alert_manager.enqueue_message("Queued message")
+
+    @with_argparser(TAPCmdParsers.parser_vol_to_steps)
+    def do_vol_to_steps(self, args):
+        """Print the number of steps for a given volume."""
+        vol = args.vol
+        rprint(self._autopipette.volconv.vol_to_steps(vol))
+
+    def do_break(self, _):
+        """Prompts the user to continue.
+
+        Useful for scripts.
         """
-        MOONRAKER_API_URL = \
-            "http://" + self.ip + ":7125/printer/emergency_stop"
-        payload = {
-            "jsonrpc": "2.0",
-            "method": "printer.emergency_stop",
-            "id": 4564
-        }
-        try:
-            response = requests.post(MOONRAKER_API_URL, json=payload)
-            response.raise_for_status()
-            self.poutput("Emergency stop sent.")
-        except requests.RequestException as e:
-            print(f"Failed to send emergency stop: {e}")
+        self.select("Yes", "Continue?")
 
 
 if __name__ == '__main__':

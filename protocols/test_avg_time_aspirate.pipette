@@ -1,0 +1,11 @@
+; Run this test with a timer to get an average time to pipette something with aspiration
+pipette 100 --aspirate plate1 dest_vial
+pipette 100 --aspirate plate1 dest_vial
+pipette 100 --aspirate plate1 dest_vial
+pipette 100 --aspirate plate1 dest_vial
+pipette 100 --aspirate plate1 dest_vial
+pipette 100 --aspirate plate1 dest_vial
+pipette 100 --aspirate plate1 dest_vial
+pipette 100 --aspirate plate1 dest_vial
+pipette 100 --aspirate plate1 dest_vial
+pipette 100 --aspirate plate1 dest_vial

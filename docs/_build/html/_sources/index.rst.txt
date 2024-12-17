@@ -15,13 +15,5 @@ documentation for details.
    :maxdepth: 2
    :caption: Contents:
 
-   AutoPipette
-   PipetteApp
-   VialHolder
-   WellPlate
-   volumes
-   TipBox
-   protocols
-   Coordinate
    modules
    api

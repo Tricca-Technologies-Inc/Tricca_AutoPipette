@@ -1,13 +1,11 @@
-coor test_100 88.0 144.5 40
-coor test_100 vialholder 1 1
 ; Test 100uL
-pipette --keep_tip --aspirate 100 plate1 test_100
-pipette --keep_tip --aspirate 100 plate1 test_100
-pipette --keep_tip --aspirate 100 plate1 test_100
-pipette --keep_tip --aspirate 100 plate1 test_100
-pipette --keep_tip --aspirate 100 plate1 test_100
-pipette --keep_tip --aspirate 100 plate1 test_100
-pipette --keep_tip --aspirate 100 plate1 test_100
-pipette --keep_tip --aspirate 100 plate1 test_100
-pipette --keep_tip --aspirate 100 plate1 test_100
-pipette --aspirate 100 plate1 test_100
+pipette --keep_tip --aspirate 100 plate1 dest_vial
+pipette --keep_tip --aspirate 100 plate1 dest_vial
+pipette --keep_tip --aspirate 100 plate1 dest_vial
+pipette --keep_tip --aspirate 100 plate1 dest_vial
+pipette --keep_tip --aspirate 100 plate1 dest_vial
+pipette --keep_tip --aspirate 100 plate1 dest_vial
+pipette --keep_tip --aspirate 100 plate1 dest_vial
+pipette --keep_tip --aspirate 100 plate1 dest_vial
+pipette --keep_tip --aspirate 100 plate1 dest_vial
+pipette --aspirate 100 plate1 dest_vial

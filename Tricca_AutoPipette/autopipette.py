@@ -97,12 +97,14 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         project.
 
         TODO Save new locations in this file as well
+        TODO Save locations when added and add location removal
+        TODO Save old and new locations with updated coors
 
         Args:
             filename (str): The filename to save the config as.
         """
         if filename is None:
-            filename = self._conf_filename
+            filename = self._conf_filename + "-test"
         conf_path = self.CONF_PATH / filename
         with open(conf_path, 'w') as fp:
             self.conf.write(fp)
@@ -403,6 +405,13 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             z (float): Number representing location in z axis.
         """
         self._locations[name_loc] = Coordinate(x, y, z)
+        conf_key = f"COORDINATE {name_loc}"
+        # Update config
+        if not self.conf.has_section(conf_key):
+            self.conf.add_section(conf_key)
+        self.conf.set(conf_key, "x", str(x))
+        self.conf.set(conf_key, "y", str(y))
+        self.conf.set(conf_key, "z", str(z))
 
     def is_location(self, name_loc: str):
         """Return True if name_loc is a location, false otherwise.
@@ -434,17 +443,33 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         coor = self._locations[name_loc]
         self._locations[name_loc] = \
             PlateTypes.TYPES[plate_type](coor, num_row, num_col)
+        # Update config
+        conf_key = f"COORDINATE {name_loc}"
+        self.conf[conf_key]["type"] = plate_type
+        if num_row is not None:
+            self.conf[conf_key]["row"] = str(num_row)
+        if num_col is not None:
+            self.conf[conf_key]["col"] = str(num_col)
         # Set garbage location if plate type is garbage.
-        if (plate_type == Garbage.__repr__()):
+        if (plate_type == Garbage.__repr__(None)):
             self.garbage = self._locations[name_loc]
             self._locations["garbage"] = self.garbage
         # Set tip box location if plate type is TipBox
-        elif (plate_type == TipBox.__repr__()):
+        elif (plate_type == TipBox.__repr__(None)):
             if (self.tipboxes is None):
                 self.tipboxes = self._locations[name_loc]
             else:
                 tipbox = self._locations[name_loc]
                 self.tipboxes.append_box(tipbox)
+
+    def get_plate_locations(self) -> list:
+        """Return a list of locations that are plates."""
+        plates: list = []
+        for location in self._locations:
+            if self._locations[location].__repr__() \
+               in PlateTypes.TYPES.keys():
+                plates.append(location)
+        return plates
 
     def get_location_coor(self, name_loc: str,
                           row: int = None, col: int = None):
@@ -561,5 +586,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             self.home_pipette_stepper()
         # Eject tip
         if not keep_tip:
-            self.move_to(self.garbage.next())
+            curr_coor = self.garbage.next()
+            self.move_to(curr_coor)
+            self.dip_z_down(curr_coor, self.garbage.DIP_DISTANCE)
             self.eject_tip()
+            self.dip_z_return(curr_coor, self.garbage.DIP_DISTANCE)

@@ -45,3 +45,9 @@ class TAPCmdParsers():
 
     parser_run: Cmd2ArgumentParser = Cmd2ArgumentParser()
     parser_run.add_argument("filename", type=str)
+
+    parser_reset_plate: Cmd2ArgumentParser = Cmd2ArgumentParser()
+    parser_reset_plate.add_argument("plate", type=str)
+
+    parser_vol_to_steps: Cmd2ArgumentParser = Cmd2ArgumentParser()
+    parser_vol_to_steps.add_argument("vol", type=float)

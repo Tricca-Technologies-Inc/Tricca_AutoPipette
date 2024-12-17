@@ -4,4 +4,5 @@ API
 .. autosummary::
    :toctree: generated
 
-   AutoPipette
+   tricca_autopipette
+   autopipette

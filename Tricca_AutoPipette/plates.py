@@ -87,7 +87,7 @@ class WellPlate(Plate):
                          num_row, num_col,
                          spacing_row, spacing_col)
 
-    def __repr__():
+    def __repr__(_):
         """Representation in string form."""
         return "wellplate"
 
@@ -95,7 +95,7 @@ class WellPlate(Plate):
 class TipBox(Plate):
     """A plate that contains the tips used in pipetting."""
 
-    DIP_DISTANCE = 83.5
+    DIP_DISTANCE = 82.5
 
     def __init__(self, start_coor,
                  num_row=None, num_col=None,
@@ -113,7 +113,7 @@ class TipBox(Plate):
                          num_row, num_col,
                          spacing_row, spacing_col)
 
-    def __repr__():
+    def __repr__(_):
         """Representation in string form."""
         return "tipbox"
 
@@ -143,7 +143,7 @@ class VialHolder(Plate):
                          num_row, num_col,
                          spacing_row, spacing_col)
 
-    def __repr__():
+    def __repr__(_):
         """Representation in string form."""
         return "vialholder"
 
@@ -151,7 +151,7 @@ class VialHolder(Plate):
 class Garbage(Plate):
     """A garbage to hold used pipette tips."""
 
-    DIP_DISTANCE = 35
+    DIP_DISTANCE = 75
 
     def __init__(self, start_coor,
                  num_row=None, num_col=None,
@@ -161,7 +161,7 @@ class Garbage(Plate):
                          num_row=1, num_col=1,
                          spacing_row=0, spacing_col=0)
 
-    def __repr__():
+    def __repr__(_):
         """Representation in string form."""
         return "garbage"
 
@@ -179,7 +179,7 @@ class TiltVial(Plate):
                          num_row=1, num_col=1,
                          spacing_row=0, spacing_col=0)
 
-    def __repr__():
+    def __repr__(_):
         """Representation in string form."""
         return "tiltv"
 
@@ -188,8 +188,8 @@ class PlateTypes:
     """A data class that holds meta-data on all the plate types."""
 
     # A full list of every Plate type
-    TYPES = {WellPlate.__repr__(): WellPlate,
-             TipBox.__repr__(): TipBox,
-             VialHolder.__repr__(): VialHolder,
-             Garbage.__repr__(): Garbage,
-             TiltVial.__repr__(): TiltVial}
+    TYPES = {WellPlate.__repr__(None): WellPlate,
+             TipBox.__repr__(None): TipBox,
+             VialHolder.__repr__(None): VialHolder,
+             Garbage.__repr__(None): Garbage,
+             TiltVial.__repr__(None): TiltVial}

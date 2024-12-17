@@ -1,13 +1,11 @@
-coor test_50 88.0 144.5 40
-plate test_50 vialholder 1 1
 ; Test 50uL
-pipette --keep_tip --aspirate 50 plate1 test_50
-pipette --keep_tip --aspirate 50 plate1 test_50
-pipette --keep_tip --aspirate 50 plate1 test_50
-pipette --keep_tip --aspirate 50 plate1 test_50
-pipette --keep_tip --aspirate 50 plate1 test_50
-pipette --keep_tip --aspirate 50 plate1 test_50
-pipette --keep_tip --aspirate 50 plate1 test_50
-pipette --keep_tip --aspirate 50 plate1 test_50
-pipette --keep_tip --aspirate 50 plate1 test_50
-pipette --aspirate 50 plate1 test_50
+pipette --keep_tip --aspirate 50 plate1 dest_vial
+pipette --keep_tip --aspirate 50 plate1 dest_vial
+pipette --keep_tip --aspirate 50 plate1 dest_vial
+pipette --keep_tip --aspirate 50 plate1 dest_vial
+pipette --keep_tip --aspirate 50 plate1 dest_vial
+pipette --keep_tip --aspirate 50 plate1 dest_vial
+pipette --keep_tip --aspirate 50 plate1 dest_vial
+pipette --keep_tip --aspirate 50 plate1 dest_vial
+pipette --keep_tip --aspirate 50 plate1 dest_vial
+pipette --aspirate 50 plate1 dest_vial
