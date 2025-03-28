@@ -74,7 +74,10 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self.load_config_file()
 
     def load_config_file(self):
-        """Load a config file to set passed in values."""
+        """Load a config file to set passed in values.
+
+        TODO Raise a proper error
+        """
         conf_path = self.CONF_PATH / self._conf_filename
         file = open(conf_path, mode='r')
         self.conf.read_file(file)
@@ -224,7 +227,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
 
         Home z axis first to prevent collisions then home the x and y axis.
         """
-        return "G28 Z\nG28 X Y"
+        return "G28 Z\nG28 Y\nG28 X\nG28 X"
 
     @append_to_buf
     def home_x(self) -> str:

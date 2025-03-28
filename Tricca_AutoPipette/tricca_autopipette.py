@@ -15,6 +15,7 @@ from rich.console import Console
 from threaded_event_loop_manager import ThreadedEventLoopManager
 import asyncio
 from moonraker_requests import MoonrakerRequests
+from tap_webcam import TAPWebcam
 
 
 def main():
@@ -22,9 +23,11 @@ def main():
     argparser = Cmd2ArgumentParser()
     argparser.add_argument("ip", type=str,
                            help="ip address of the autopipette")
+    argparser.add_argument("--conf", type=str, help="optional config file")
     args = argparser.parse_args()
     # Remove other processed parser commands to avoid cmd2 from using them
-    sys.exit(TriccaAutoPipetteShell(ip=args.ip).cmdloop())
+    sys.exit(TriccaAutoPipetteShell(conf_autopipette=args.conf,
+                                    ip=args.ip).cmdloop())
 
 
 class TriccaAutoPipetteShell(Cmd):
@@ -50,7 +53,7 @@ class TriccaAutoPipetteShell(Cmd):
     _autopipette: AutoPipette = None
 
     def __init__(self,
-                 autopipette: AutoPipette = AutoPipette(),
+                 conf_autopipette: str = None,
                  ip: str = "0.0.0.0"):
         """Initialize self, AutoPipette and ProtocolCommands objects."""
         super().__init__(allow_cli_args=False,
@@ -59,8 +62,11 @@ class TriccaAutoPipetteShell(Cmd):
                          startup_script=Path(__file__).parent
                          / '.init_pipette',
                          auto_load_commands=False)
+        if conf_autopipette is None:
+            self._autopipette = AutoPipette()
+        else:
+            self._autopipette = AutoPipette(conf_autopipette)
         self.ip = ip
-        self._autopipette = autopipette
         self.debug = True
         self.console = Console()
         self.mrr = MoonrakerRequests()
@@ -406,6 +412,12 @@ class TriccaAutoPipetteShell(Cmd):
         Useful for scripts.
         """
         self.select("Yes", "Continue?")
+
+    def do_webcam(self, _):
+        """Open a window with a webcam."""
+        url: str = "http://" + self.ip + "/webcam/?action=stream"
+        print(url)
+        TAPWebcam().stream_webcam(url)
 
 
 if __name__ == '__main__':

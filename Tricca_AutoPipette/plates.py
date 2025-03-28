@@ -69,7 +69,7 @@ class Plate:
 class WellPlate(Plate):
     """A plate with various wells to pipette into."""
 
-    DIP_DISTANCE = 40
+    DIP_DISTANCE = 58.3  # 40
 
     def __init__(self, start_coor,
                  num_row=None, num_col=None,

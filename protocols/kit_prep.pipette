@@ -1,54 +1,107 @@
-; Execute kit prep protocol
-home all
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 25 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 100 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 100 plate1 dest_vial
-pipette --aspirate 400 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 250 plate1 dest_vial
-pipette --aspirate 200 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
-pipette --aspirate 50 plate2 dest_vial
-pipette --aspirate 50 plate2 dest_vial
-pipette --aspirate 200 plate2 dest_vial
-pipette --aspirate 50 plate2 dest_vial
-pipette --aspirate 50 plate2 dest_vial
-pipette --aspirate 100 plate2 dest_vial
-pipette --aspirate 50 plate2 dest_vial
-pipette --aspirate 100 plate2 dest_vial
-pipette --aspirate 25 plate2 dest_vial
-pipette --aspirate 160 plate2 dest_vial
-pipette --aspirate 400 plate2 dest_vial
-pipette --aspirate 400 plate2 dest_vial
-pipette --aspirate 50 plate2 dest_vial
-pipette --aspirate 50 plate2 dest_vial
-pipette --aspirate 160 plate2 dest_vial
-reset_plates
-; 36 * 50 + 2 * 25 + 4 * 100 + 3 * 400 + 250 + 2 * 200 + 2 * 160 = 4420
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 --keep_tip plate2 --src_col 0 --src_row 0 plate3
+pipette 10 plate2 --src_col 0 --src_row 0 plate3

@@ -1,6 +1,7 @@
 /Tricca_AutoPipette/__pycache__/
-/.venv/
+.venv/
 temp/
 gcode/temp
 docs/_build
 Tricca_AutoPipette/.tap_history
+/.dir-locals.el
