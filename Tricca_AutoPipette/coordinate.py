@@ -9,6 +9,9 @@ class Coordinate:
         self.x = x
         self.y = y
         self.z = z
+        # TODO Find a way to completely isolate dip_distance to a plate
+        # TODO Raise error if pipetting to/from a location, not a plate
+        self.dip_distance = 0
 
     def __repr__(self):
         """Representation in string format."""

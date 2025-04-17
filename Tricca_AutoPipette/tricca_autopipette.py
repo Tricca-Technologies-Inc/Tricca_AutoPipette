@@ -280,8 +280,7 @@ class TriccaAutoPipetteShell(Cmd):
             err_msg = \
                 f"Arg:{loc} passed into move is not a location."
             rprint(err_msg)
-        coor = self._autopipette.get_location_coor(loc)
-        self._autopipette.move_to(coor)
+        self._autopipette.move_to_loc(loc)
         self.output_gcode(self._autopipette.return_gcode())
 
     @with_argparser(TAPCmdParsers.parser_move)
@@ -418,6 +417,63 @@ class TriccaAutoPipetteShell(Cmd):
         url: str = "http://" + self.ip + "/webcam/?action=stream"
         print(url)
         TAPWebcam().stream_webcam(url)
+
+    def dip(self, coor):
+        """Manage how far the pipette dips down."""
+        total_dist = 0.0
+        while True:
+            user_input = self.read_input("How far to dip?: ")
+            if user_input is None:
+                return
+            try:
+                dist = float(user_input)
+                if dist <= 0.0 or dist >= 25.0:
+                    self.perror("Dip distance is too small or too large.")
+                    continue
+                total_dist += dist
+                self._autopipette.dip_z_down(coor, dist)
+                self.output_gcode(self._autopipette.return_gcode())
+                self.poutput(f"Dipped {total_dist} so far.")
+                dip_again = self.read_input("Dip again?(y/n): ")\
+                                .strip().lower()
+                dip_again = dip_again if dip_again else "n"
+                if dip_again == "y":
+                    continue
+                else:
+                    break
+            except ValueError:
+                self.perror("Not a valid number!")
+        self._autopipette.dip_z_return(coor, total_dist)
+        self.output_gcode(self._autopipette.return_gcode())
+
+    def do_world_tour(self, _):
+        """Go to every location."""
+        while True:
+            locs = self._autopipette._locations
+            locs.append("stop")
+            loc = self.select(locs, "Go to? ")
+            if loc == "stop":
+                break
+            self._autopipette.move_to_loc(loc)
+            self.output_gcode(self._autopipette.return_gcode())
+            select = self.select("adjust dip next stop", "Which option? ")
+            if select == "adjust":
+                break
+            elif select == "dip":
+                self.dip(self._autopipette.get_location_coor(loc))
+            elif select == "next":
+                continue
+            elif select == "stop":
+                break
+            else:
+                break
+
+    @with_argparser(TAPCmdParsers.parser_move_pip)
+    def do_move_pip(self, args):
+        """Move the pipette plunger."""
+        dist = args.dist
+        self._autopipette.move_pipette_stepper(dist)
+        self.output_gcode(self._autopipette.return_gcode())
 
 
 if __name__ == '__main__':

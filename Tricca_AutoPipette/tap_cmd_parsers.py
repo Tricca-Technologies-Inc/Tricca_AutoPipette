@@ -51,3 +51,6 @@ class TAPCmdParsers():
 
     parser_vol_to_steps: Cmd2ArgumentParser = Cmd2ArgumentParser()
     parser_vol_to_steps.add_argument("vol", type=float)
+
+    parser_move_pip: Cmd2ArgumentParser = Cmd2ArgumentParser()
+    parser_move_pip.add_argument("dist", type=float)
