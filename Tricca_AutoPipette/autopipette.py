@@ -227,7 +227,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
 
         Home z axis first to prevent collisions then home the x and y axis.
         """
-        return "G28 Z\nG28 Y\nG28 X\nG28 X"
+        return "G28"
 
     @append_to_buf
     def home_x(self) -> str:
@@ -268,7 +268,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             speed = self.conf["SPEED"]["SPEED_PIPETTE"]
         stepper = self.conf["NAME"]["NAME_PIPETTE_STEPPER"]
         gcode_command = \
-            f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} MOVE=-50 STOP_ON_ENDSTOP=1\n"
+            f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} MOVE=50 STOP_ON_ENDSTOP=1 SET_POSITION=0 ACCEL=10\n"
         gcode_command += \
             f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0"
         return gcode_command
@@ -365,7 +365,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if speed is None:
             speed = self.conf["SPEED"]["SPEED_PIPETTE"]
         stepper = self.conf["NAME"]["NAME_PIPETTE_STEPPER"]
-        return f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} MOVE={distance}"
+        return f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} MOVE=-{distance} ACCEL=10"
 
     @append_to_buf
     def gcode_wait(self, mil: float) -> str:
