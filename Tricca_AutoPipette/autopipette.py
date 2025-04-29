@@ -136,13 +136,23 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             # Check for plate type, rows and columns
             row = None
             col = None
+            spacing_row = None
+            spacing_col = None
+            dip_distance = None
             if "row" in options:
                 row = self.conf[coor_section].getint("row")
             if "col" in options:
                 col = self.conf[coor_section].getint("col")
+            if "spacing_row" in options:
+                spacing_row = self.conf[coor_section].getfloat("spacing_row")
+            if "spacing_col" in options:
+                spacing_col = self.conf[coor_section].getfloat("spacing_col")
+            if "dip_distance" in options:
+                dip_distance = self.conf[coor_section].getfloat("dip_distance")
             if "type" in options:
                 type = self.conf[coor_section]["type"]
-                self.set_plate(name_loc, type, row, col)
+                self.set_plate(name_loc, type, row, col,
+                               spacing_row, spacing_col, dip_distance)
 
     def generate_file_header(self):
         """Generate a gcode string to set variables and home the motors."""
@@ -171,6 +181,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
 
         Set the speed parameters, home all axis, and home the pipette.
         """
+        self.set_coor_sys("absolute")
         self.init_speed()
         self.home_axis()
         self.home_pipette_motors()
@@ -190,6 +201,32 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self.set_speed_factor(factor)
         self.set_max_velocity(velocity)
         self.set_max_accel(accel)
+
+    @append_to_buf
+    def set_coor_sys(self, mode):
+        """Return the G-code command for the specified coordinate system mode.
+
+        Args:
+        mode (str): Either "absolute" or "incremental" (case-insensitive).
+
+        Returns:
+        str: "G90" for absolute, "G91" for incremental.
+
+        Raises:
+        ValueError: If an invalid mode is provided.
+
+        TODO Proper errors, enum, switch func
+        """
+        mode = mode.lower()  # Make comparison case-insensitive
+
+        if mode == "absolute":
+            return "G90"
+        elif mode in ("incremental", "relative"):  # Accepts both terms
+            return "G91"
+        else:
+            raise ValueError(
+                f"Invalid coordinate system mode: '{mode}'." +
+                "Expected 'absolute' or 'incremental'.")
 
     @append_to_buf
     def set_speed_factor(self, factor: float) -> str:
@@ -265,10 +302,10 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             speed (float): The speed to home the pipette.
         """
         if speed is None:
-            speed = self.conf["SPEED"]["SPEED_PIPETTE"]
+            speed = self.conf["SPEED"]["SPEED_PIPETTE_UP_SLOW"]
         stepper = self.conf["NAME"]["NAME_PIPETTE_STEPPER"]
         gcode_command = \
-            f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} MOVE=50 STOP_ON_ENDSTOP=1 SET_POSITION=0 ACCEL=10\n"
+            f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} MOVE=50 STOP_ON_ENDSTOP=1 SET_POSITION=0 ACCEL=1000\n"
         gcode_command += \
             f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0"
         return gcode_command
@@ -363,9 +400,9 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             speed (float): Speed to move the plunger.
         """
         if speed is None:
-            speed = self.conf["SPEED"]["SPEED_PIPETTE"]
+            speed = self.conf["SPEED"]["SPEED_PIPETTE_UP_SLOW"]
         stepper = self.conf["NAME"]["NAME_PIPETTE_STEPPER"]
-        return f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} MOVE=-{distance} ACCEL=10"
+        return f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} MOVE=-{distance} ACCEL=900"
 
     @append_to_buf
     def gcode_wait(self, mil: float) -> str:
@@ -383,18 +420,20 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             curr_coor (Coordinate): The coordinate to move from.
             distance (float): Distance to move in the z axis.
         """
-        curr_coor.z += distance
-        self.move_to_z(curr_coor)
+        copy_coor = Coordinate(0, 0, 0)
+        copy_coor.x = curr_coor.x
+        copy_coor.y = curr_coor.y
+        copy_coor.z = distance
+        self.move_to_z(copy_coor)
         self.gcode_wait(self.conf["WAIT"]["WAIT_TIME_MOVEMENT"])
 
-    def dip_z_return(self, curr_coor: Coordinate, distance: float):
+    def dip_z_return(self, curr_coor: Coordinate):
         """Bring up the pipette toolhead a set distance.
 
         Args:
             curr_coor (Coordinate): The coordinate to move from.
             distance (float): Distance to move in the z axis.
         """
-        curr_coor.z -= distance
         self.move_to_z(curr_coor)
         self.gcode_wait(self.conf["WAIT"]["WAIT_TIME_MOVEMENT"])
 
@@ -425,7 +464,9 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         return name_loc in self._locations.keys()
 
     def set_plate(self, name_loc: str, plate_type: str,
-                  num_row: int = None, num_col: int = None):
+                  num_row: int = None, num_col: int = None,
+                  spacing_row: float = None, spacing_col: float = None,
+                  dip_distance: float = None):
         """Create a plate from an existing location name.
 
         Args:
@@ -445,7 +486,9 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             return
         coor = self._locations[name_loc]
         self._locations[name_loc] = \
-            PlateTypes.TYPES[plate_type](coor, num_row, num_col)
+            PlateTypes.TYPES[plate_type](coor, num_row, num_col,
+                                         spacing_row, spacing_col,
+                                         dip_distance)
         # Update config
         conf_key = f"COORDINATE {name_loc}"
         self.conf[conf_key]["type"] = plate_type
@@ -453,6 +496,12 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             self.conf[conf_key]["row"] = str(num_row)
         if num_col is not None:
             self.conf[conf_key]["col"] = str(num_col)
+        if spacing_row is not None:
+            self.conf[conf_key]["spacing_row"] = str(spacing_row)
+        if spacing_col is not None:
+            self.conf[conf_key]["spacing_col"] = str(spacing_col)
+        if dip_distance is not None:
+            self.conf[conf_key]["dip_distance"] = str(dip_distance)
         # Set garbage location if plate type is garbage.
         if (plate_type == Garbage.__repr__(None)):
             self.garbage = self._locations[name_loc]
@@ -507,8 +556,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             return
         loc_tip = self.tipboxes.next()
         self.move_to(loc_tip)
-        self.dip_z_down(loc_tip, self.tipboxes.DIP_DISTANCE)
-        self.dip_z_return(loc_tip, self.tipboxes.DIP_DISTANCE)
+        self.dip_z_down(loc_tip, self.tipboxes.dip_distance)
+        self.dip_z_return(loc_tip)
         self.has_tip = True
 
     def plunge_down(self, vol_ul: float, speed: float = None):
@@ -519,7 +568,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             speed (float): The speed to move the plunger.
         """
         if speed is None:
-            speed = self.conf["SPEED"]["SPEED_PIPETTE"]
+            speed = self.conf["SPEED"]["SPEED_PIPETTE_UP_SLOW"]
         self.move_pipette_stepper(self.volconv.vol_to_steps(vol_ul), speed)
 
     def clear_pipette(self, speed: float = None):
@@ -529,8 +578,31 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             speed (float): The speed to move the plunger.
         """
         if speed is None:
-            speed = self.conf["SPEED"]["SPEED_PIPETTE"]
+            speed = self.conf["SPEED"]["SPEED_PIPETTE_UP_SLOW"]
         self.move_pipette_stepper(self.volconv.dist_disp, speed)
+
+    def wiggle(self, curr_coor: Coordinate, dip_distance: float):
+        """Vigorously shake the pipette to drop liquid."""
+        copy_coor = Coordinate(0, 0, 0)
+        copy_coor.x = curr_coor.x
+        copy_coor.y = curr_coor.y
+        copy_coor.z = dip_distance
+        copy_coor.x += 1
+        self.move_to(copy_coor)
+        copy_coor.x -= 1
+        self.move_to(copy_coor)
+        copy_coor.x -= 1
+        self.move_to(copy_coor)
+        copy_coor.x += 1
+        self.move_to(copy_coor)
+        copy_coor.y += 1
+        self.move_to(copy_coor)
+        copy_coor.y -= 1
+        self.move_to(copy_coor)
+        copy_coor.y -= 1
+        self.move_to(copy_coor)
+        copy_coor.y += 1
+        self.move_to(copy_coor)
 
     def pipette(self, vol_ul: float, source: str, dest: str,
                 src_row: int = None, src_col: int = None,
@@ -555,42 +627,48 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         loc_source = self._locations[source]
         loc_dest = self._locations[dest]
         time_aspirate = self.conf["WAIT"]["WAIT_TIME_ASPIRATE"]
+        max_vol = self.conf["VOLUME_CONV"].getfloat("max_vol")
+        speed_up_slow = self.conf["SPEED"].getfloat("SPEED_PIPETTE_UP_SLOW")
+        speed_up = self.conf["SPEED"].getfloat("SPEED_PIPETTE_UP")
+        speed_down = self.conf["SPEED"].getfloat("SPEED_PIPETTE_DOWN")
         # Pickup a tip
         self.next_tip()
         remaining_vol = vol_ul
         while remaining_vol > 0:
-            if remaining_vol >= 100:
-                pip_vol = 100
+            if remaining_vol >= max_vol:
+                pip_vol = max_vol
                 remaining_vol -= pip_vol
             else:
                 pip_vol = remaining_vol
                 remaining_vol -= pip_vol
             # Pickup liquid
             self.move_to(coor_source)
-            self.plunge_down(pip_vol)
-            self.dip_z_down(coor_source, loc_source.DIP_DISTANCE)
+            self.plunge_down(pip_vol, speed_down)
+            self.dip_z_down(coor_source, loc_source.dip_distance)
             # If True, aspirate small amount of liquid 3 times to wet tip
             if aspirate:
                 for _ in range(1):
-                    self.home_pipette_stepper()
+                    self.home_pipette_stepper(speed_up_slow)
                     self.gcode_wait(time_aspirate)
-                    self.plunge_down(pip_vol)
+                    self.plunge_down(pip_vol, speed_down)
                     self.gcode_wait(time_aspirate)
             # Release plunger to aspirate measured amount
-            self.home_pipette_stepper()
+            self.home_pipette_stepper(speed_up_slow)
             # Give time for the liquid to enter the tip
             self.gcode_wait(time_aspirate)
-            self.dip_z_return(coor_source, loc_source.DIP_DISTANCE)
+            self.dip_z_return(coor_source)
             # Dropoff liquid
             self.move_to(coor_dest)
-            self.dip_z_down(coor_dest, loc_dest.DIP_DISTANCE)
-            self.clear_pipette()
-            self.dip_z_return(coor_dest, loc_dest.DIP_DISTANCE)
-            self.home_pipette_stepper()
+            self.dip_z_down(coor_dest, loc_dest.dip_distance)
+            self.clear_pipette(speed_down)
+            self.wiggle(coor_dest, loc_dest.dip_distance)
+            self.gcode_wait(time_aspirate)
+            self.dip_z_return(coor_dest)
+            self.home_pipette_stepper(speed_up)
         # Eject tip
         if not keep_tip:
             curr_coor = self.garbage.next()
             self.move_to(curr_coor)
-            self.dip_z_down(curr_coor, self.garbage.DIP_DISTANCE)
+            self.dip_z_down(curr_coor, self.garbage.dip_distance)
             self.eject_tip()
-            self.dip_z_return(curr_coor, self.garbage.DIP_DISTANCE)
+            self.dip_z_return(curr_coor)

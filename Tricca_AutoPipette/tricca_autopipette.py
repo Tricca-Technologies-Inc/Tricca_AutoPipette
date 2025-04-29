@@ -281,6 +281,7 @@ class TriccaAutoPipetteShell(Cmd):
                 f"Arg:{loc} passed into move is not a location."
             rprint(err_msg)
         coor = self._autopipette.get_location_coor(loc)
+        print(coor)
         self._autopipette.move_to(coor)
         self.output_gcode(self._autopipette.return_gcode())
 
@@ -410,8 +411,9 @@ class TriccaAutoPipetteShell(Cmd):
         """Prompts the user to continue.
 
         Useful for scripts.
+        TODO make this generic
         """
-        self.select("Yes", "Continue?")
+        self.select("Yes", prompt="Continue?")
 
     def do_webcam(self, _):
         """Open a window with a webcam."""
