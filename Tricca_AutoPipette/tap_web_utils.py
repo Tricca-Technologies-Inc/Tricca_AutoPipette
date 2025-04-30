@@ -53,8 +53,8 @@ class TAPWebUtils():
         uri = "ws://" + self.ip + ":7125/websocket"
         # Start the WebSocket listener in a separate thread
         self.run_websocket_listener(uri)
-        request_sub = self.mrrequests.request_sub_to_objs(["gcode_move"])
-        self.append_to_send(request_sub)
+        # request_sub = self.mrrequests.request_sub_to_objs(["gcode_move"])
+        # self.append_to_send(request_sub)
 
     def run_websocket_listener(self, uri: str):
         """Start the async WebSocket listener in a separate thread."""

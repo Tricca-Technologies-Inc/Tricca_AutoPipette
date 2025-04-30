@@ -2,7 +2,7 @@
 """Holds class and methods for running Tricca AutoPipette Shell."""
 from cmd2 import Cmd, Cmd2ArgumentParser, with_argparser
 import sys
-from autopipette import AutoPipette
+from autopipette import AutoPipette, TipAlreadyOnError, NoTipboxError
 from pathlib import Path
 from datetime import datetime
 from plates import PlateTypes
@@ -15,7 +15,7 @@ from rich.console import Console
 from threaded_event_loop_manager import ThreadedEventLoopManager
 import asyncio
 from moonraker_requests import MoonrakerRequests
-from tap_webcam import TAPWebcam
+# from tap_webcam import TAPWebcam
 
 
 def main():
@@ -271,6 +271,16 @@ class TriccaAutoPipetteShell(Cmd):
         self.output_gcode(f"\n; Pipette {vol_ul} from {src} to {dest}\n" +
                           self._autopipette.return_gcode() + "\n")
 
+    @with_argparser(TAPCmdParsers.parser_move)
+    def do_move(self, args):
+        """Move to a coordinate."""
+        x: float = args.x
+        y: float = args.y
+        z: float = args.z
+        coor = Coordinate(x, y, z)
+        self._autopipette.move_to(coor)
+        self.output_gcode(self._autopipette.return_gcode())
+
     @with_argparser(TAPCmdParsers.parser_move_loc)
     def do_move_loc(self, args):
         """Move to a location or a coordinate."""
@@ -284,24 +294,17 @@ class TriccaAutoPipetteShell(Cmd):
         self._autopipette.move_to(coor)
         self.output_gcode(self._autopipette.return_gcode())
 
-    @with_argparser(TAPCmdParsers.parser_move)
-    def do_move(self, args):
-        """Move to a coordinate."""
-        x: float = args.x
-        y: float = args.y
-        z: float = args.z
-        coor = Coordinate(x, y, z)
-        self._autopipette.move_to(coor)
-        self.output_gcode(self._autopipette.return_gcode())
+    # @with_argparser(TAPCmdParsers.parser_move_rel)
 
     def do_next_tip(self, _):
         """Pickup the next tip in the tip box."""
         # Check if there is a TipBox assigned to pipette
-        if self._autopipette.tipboxes is None:
-            err_msg = "No TipBox assigned to pipette."
-            rprint(err_msg)
-            return
-        self._autopipette.next_tip()
+        try:
+            self._autopipette.next_tip()
+        except NoTipboxError as e:
+            rprint(e)
+        except TipAlreadyOnError as e:
+            rprint(e)
         self.output_gcode(self._autopipette.return_gcode())
 
     def do_eject_tip(self, _):

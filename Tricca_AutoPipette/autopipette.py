@@ -19,6 +19,49 @@ from configparser import ExtendedInterpolation
 from pathlib import Path
 
 
+class TipAlreadyOnError(Exception):
+    """An exception to deal with putting a tip on when one is already on."""
+
+    pass
+
+
+class NotALocationError(Exception):
+    """An exception to deal with a Coordinate not being a Location."""
+
+    def __init__(self, location):
+        """Set the string to display when error is raised."""
+        self.location = location
+        super().__init__(f"{location} is not a named location.")
+
+
+class NoTipboxError(Exception):
+    """An exception to deal with no Plate set as TipBox."""
+
+    def __init__(self):
+        """Set the string to display when error is raised."""
+        super().__init__("No Plate set a as TipBox in config.")
+
+
+class NotAPlateTypeError(Exception):
+    """An exception to deal with a string not being a type of Plate."""
+
+    def __init__(self, plate):
+        """Set the string to display when error is raised."""
+        self.plate = plate
+        super().__init__(f"{plate} is not a valid Plate type.\n" +
+                         f"Valid Plate types are {PlateTypes.TYPES.keys()}")
+
+
+class MissingConfigError(Exception):
+    """An exception to deal with missing parts of the config."""
+
+    def __init__(self, section, conf_path):
+        """Set the string to display when error is raised."""
+        self.section = section
+        super().__init__(f"Config found at {conf_path}" +
+                         f" is missing the section: {section}")
+
+
 class AutoPipetteMeta(type):
     """Provides Singleton Pattern when inherited from."""
 
@@ -74,10 +117,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self.load_config_file()
 
     def load_config_file(self):
-        """Load a config file to set passed in values.
-
-        TODO Raise a proper error
-        """
+        """Load a config file to set passed in values."""
         conf_path = self.CONF_PATH / self._conf_filename
         file = open(conf_path, mode='r')
         self.conf.read_file(file)
@@ -86,8 +126,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                         "SERVO", "WAIT", "VOLUME_CONV"]
         for section in def_sections:
             if section not in self.conf.sections():
-                err_msg = f"{section} not in config file {conf_path}.\n"
-                print(err_msg)
+                raise MissingConfigError(section, conf_path)
         self.generate_coordinates(def_sections)
         self.generate_file_header()
         self.generate_volume_converter()
@@ -436,13 +475,12 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             num_col (int): The total number of columns on the plate. If None,
                 use the default number for that plate type.
         """
-        # TODO Throw errors
         # If name_loc doesn't exist as a location, do nothing
         if (name_loc not in self._locations.keys()):
-            return
+            raise NotALocationError(name_loc)
         # If plate_type doesn't match a type of plate, do nothing
         if (plate_type not in PlateTypes.TYPES.keys()):
-            return
+            raise NotAPlateTypeError(plate_type)
         coor = self._locations[name_loc]
         self._locations[name_loc] = \
             PlateTypes.TYPES[plate_type](coor, num_row, num_col)
@@ -485,7 +523,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         """
         # If name_loc doesn't exist as a location, do nothing
         if (name_loc not in self._locations.keys()):
-            return
+            raise NotALocationError(name_loc)
         # If the returned location is a coordinate, return it.
         # Otherwise, if it is a plate, next() is called and returned
         loc = self._locations[name_loc]
@@ -497,14 +535,15 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         elif (isinstance(loc, Coordinate)):
             return loc
         else:
+            # TODO consider raising an error here
             return
 
     def next_tip(self):
         """Grab the next tip in the tip box."""
         if self.tipboxes is None:
-            return
+            raise NoTipboxError()
         if self.has_tip:
-            return
+            raise TipAlreadyOnError()
         loc_tip = self.tipboxes.next()
         self.move_to(loc_tip)
         self.dip_z_down(loc_tip, self.tipboxes.DIP_DISTANCE)
