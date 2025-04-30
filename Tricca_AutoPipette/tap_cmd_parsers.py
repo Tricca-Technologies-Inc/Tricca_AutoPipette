@@ -32,6 +32,11 @@ class TAPCmdParsers():
     parser_move_loc: Cmd2ArgumentParser = Cmd2ArgumentParser()
     parser_move_loc.add_argument("name_loc", type=str)
 
+    parser_move_rel: Cmd2ArgumentParser = Cmd2ArgumentParser()
+    parser_move_rel.add_argument("--x", default=0, type=float)
+    parser_move_rel.add_argument("--y", default=0, type=float)
+    parser_move_rel.add_argument("--z", default=0, type=float)
+
     parser_pipette: Cmd2ArgumentParser = Cmd2ArgumentParser()
     parser_pipette.add_argument("vol_ul", type=float)
     parser_pipette.add_argument("src", type=str)

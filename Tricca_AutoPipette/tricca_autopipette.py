@@ -295,7 +295,17 @@ class TriccaAutoPipetteShell(Cmd):
         self._autopipette.move_to(coor)
         self.output_gcode(self._autopipette.return_gcode())
 
-    # @with_argparser(TAPCmdParsers.parser_move_rel)
+    @with_argparser(TAPCmdParsers.parser_move_rel)
+    def do_move_rel(self, args):
+        """Move relative to the current position."""
+        x: float = args.x
+        y: float = args.y
+        z: float = args.z
+        coor = Coordinate(x, y, z)
+        self._autopipette.set_coor_sys("relative")
+        self._autopipette.move_to(coor)
+        self._autopipette.set_coor_sys("absolute")
+        self.output_gcode(self._autopipette.return_gcode())
 
     def do_next_tip(self, _):
         """Pickup the next tip in the tip box."""

@@ -1,12 +1,11 @@
 """
-Holds the AutoPipette class.
+Holds the AutoPipette class and related error classes.
 
 The AutoPipette class is responsible for functions relating to the AutoPipette.
 This includes sending and receiving commands, managing different parameters
 and managing the different states of the pipette.
 
 TODO Add Logger obj
-TODO Decorator refactor to remove header bool to append to file header
 """
 from coordinate import Coordinate
 from plates import PlateTypes
