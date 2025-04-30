@@ -128,15 +128,15 @@ class TAPWebUtils():
 
     async def _run_websocket_tasks(self, websocket):
         """Run producer and consumer tasks for the WebSocket."""
-        send_task = create_task(self.send_messages(websocket))
-        receive_task = create_task(self.receive_messages(websocket))
+        # send_task = create_task(self.send_messages(websocket))
+        # receive_task = create_task(self.receive_messages(websocket))
 
-        try:
-            await self._process_received_messages()
-        finally:
-            send_task.cancel()
-            receive_task.cancel()
-            await gather(send_task, receive_task, return_exceptions=True)
+        # try:
+        #     await self._process_received_messages()
+        # finally:
+        #     send_task.cancel()
+        #     receive_task.cancel()
+        #     await gather(send_task, receive_task, return_exceptions=true)
 
     async def _process_received_messages(self):
         """Process received messages from the queue."""
