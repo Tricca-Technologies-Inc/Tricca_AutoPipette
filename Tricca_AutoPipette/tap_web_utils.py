@@ -128,6 +128,9 @@ class TAPWebUtils():
 
     async def _run_websocket_tasks(self, websocket):
         """Run producer and consumer tasks for the WebSocket."""
+        while not self.shutdown_event.is_set():
+            sleep(0)
+
         # send_task = create_task(self.send_messages(websocket))
         # receive_task = create_task(self.receive_messages(websocket))
 
