@@ -6,17 +6,17 @@ from coordinate import Coordinate
 class Plate:
     """Generate and manage coordinates to pipette into."""
 
-    DIP_DISTANCE = 35
-
     def __init__(self, start_coor,
                  num_row, num_col,
-                 spacing_row, spacing_col):
+                 spacing_row, spacing_col,
+                 dip_distance):
         """Initialize by creating all coordinates on the plate."""
         self.coors = self._gen_well_plate_coors(start_coor,
                                                 num_row, num_col,
                                                 spacing_row, spacing_col)
         self.num_row = num_row
         self.num_col = num_col
+        self.dip_distance = dip_distance
         self.curr = 0
 
     def _gen_well_plate_coors(self, start_coor,
@@ -69,11 +69,12 @@ class Plate:
 class WellPlate(Plate):
     """A plate with various wells to pipette into."""
 
-    DIP_DISTANCE = 58.3  # 40
+    dip_distance = 84.45
 
     def __init__(self, start_coor,
                  num_row=None, num_col=None,
-                 spacing_row=None, spacing_col=None):
+                 spacing_row=None, spacing_col=None,
+                 dip_distance=None):
         """Initialize by creating all coordinates on the plate."""
         if num_row is None:
             num_row = 12
@@ -83,9 +84,12 @@ class WellPlate(Plate):
             spacing_row = 9
         if spacing_col is None:
             spacing_col = 9
+        if dip_distance is None:
+            dip_distance = 84.45
         super().__init__(start_coor,
                          num_row, num_col,
-                         spacing_row, spacing_col)
+                         spacing_row, spacing_col,
+                         dip_distance)
 
     def __repr__(_):
         """Representation in string form."""
@@ -95,11 +99,10 @@ class WellPlate(Plate):
 class TipBox(Plate):
     """A plate that contains the tips used in pipetting."""
 
-    DIP_DISTANCE = 82.5
-
     def __init__(self, start_coor,
                  num_row=None, num_col=None,
-                 spacing_row=None, spacing_col=None):
+                 spacing_row=None, spacing_col=None,
+                 dip_distance=None):
         """Initialize by creating all coordinates on the plate."""
         if num_row is None:
             num_row = 12
@@ -109,9 +112,12 @@ class TipBox(Plate):
             spacing_row = 9
         if spacing_col is None:
             spacing_col = 9
+        if dip_distance is None:
+            dip_distance = 94.5
         super().__init__(start_coor,
                          num_row, num_col,
-                         spacing_row, spacing_col)
+                         spacing_row, spacing_col,
+                         dip_distance)
 
     def __repr__(_):
         """Representation in string form."""
@@ -125,11 +131,10 @@ class TipBox(Plate):
 class VialHolder(Plate):
     """A plate that holds vials to pipette into."""
 
-    DIP_DISTANCE = 55
-
     def __init__(self, start_coor,
                  num_row=None, num_col=None,
-                 spacing_row=None, spacing_col=None):
+                 spacing_row=None, spacing_col=None,
+                 dip_distance=None):
         """Initialize by creating all coordinates on the plate."""
         if num_row is None:
             num_row = 7
@@ -139,9 +144,12 @@ class VialHolder(Plate):
             spacing_row = 18
         if spacing_col is None:
             spacing_col = 18
+        if dip_distance is None:
+            dip_distance = 115
         super().__init__(start_coor,
                          num_row, num_col,
-                         spacing_row, spacing_col)
+                         spacing_row, spacing_col,
+                         dip_distance)
 
     def __repr__(_):
         """Representation in string form."""
@@ -151,15 +159,25 @@ class VialHolder(Plate):
 class Garbage(Plate):
     """A garbage to hold used pipette tips."""
 
-    DIP_DISTANCE = 75
-
     def __init__(self, start_coor,
                  num_row=None, num_col=None,
-                 spacing_row=None, spacing_col=None):
+                 spacing_row=None, spacing_col=None,
+                 dip_distance=None):
         """Initialize by creating by calling super method."""
+        if num_row is None:
+            num_row = 1
+        if num_col is None:
+            num_col = 1
+        if spacing_row is None:
+            spacing_row = 0
+        if spacing_col is None:
+            spacing_col = 0
+        if dip_distance is None:
+            dip_distance = 75
         super().__init__(start_coor,
-                         num_row=1, num_col=1,
-                         spacing_row=0, spacing_col=0)
+                         num_row, num_col,
+                         spacing_row, spacing_col,
+                         dip_distance)
 
     def __repr__(_):
         """Representation in string form."""
@@ -169,19 +187,57 @@ class Garbage(Plate):
 class TiltVial(Plate):
     """A tilted vial to hold the end product."""
 
-    DIP_DISTANCE = 35
-
     def __init__(self, start_coor,
                  num_row=None, num_col=None,
-                 spacing_row=None, spacing_col=None):
+                 spacing_row=None, spacing_col=None,
+                 dip_distance=None):
         """Initialize by creating by calling super method."""
+        if num_row is None:
+            num_row = 1
+        if num_col is None:
+            num_col = 1
+        if spacing_row is None:
+            spacing_row = 0
+        if spacing_col is None:
+            spacing_col = 0
+        if dip_distance is None:
+            dip_distance = 110
         super().__init__(start_coor,
-                         num_row=1, num_col=1,
-                         spacing_row=0, spacing_col=0)
+                         num_row, num_col,
+                         spacing_row, spacing_col,
+                         dip_distance)
 
     def __repr__(_):
         """Representation in string form."""
         return "tiltv"
+
+
+class FalconTube(Plate):
+    """A large tube to hold up to 50 mL of solution."""
+
+    def __init__(self, start_coor,
+                 num_row=None, num_col=None,
+                 spacing_row=None, spacing_col=None,
+                 dip_distance=None):
+        """Initialize by creating by calling super method."""
+        if num_row is None:
+            num_row = 1
+        if num_col is None:
+            num_col = 1
+        if spacing_row is None:
+            spacing_row = 0
+        if spacing_col is None:
+            spacing_col = 0
+        if dip_distance is None:
+            dip_distance = 75
+        super().__init__(start_coor,
+                         num_row, num_col,
+                         spacing_row, spacing_col,
+                         dip_distance)
+
+    def __repr__(_):
+        """Representation in string form."""
+        return "falcontube"
 
 
 class PlateTypes:
@@ -192,4 +248,5 @@ class PlateTypes:
              TipBox.__repr__(None): TipBox,
              VialHolder.__repr__(None): VialHolder,
              Garbage.__repr__(None): Garbage,
-             TiltVial.__repr__(None): TiltVial}
+             TiltVial.__repr__(None): TiltVial,
+             FalconTube.__repr__(None): FalconTube}
