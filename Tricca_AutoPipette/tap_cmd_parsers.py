@@ -31,6 +31,8 @@ class TAPCmdParsers():
 
     parser_move_loc: Cmd2ArgumentParser = Cmd2ArgumentParser()
     parser_move_loc.add_argument("name_loc", type=str)
+    parser_move_loc.add_argument("--row", default=None, type=int)
+    parser_move_loc.add_argument("--col", default=None, type=int)
 
     parser_move_rel: Cmd2ArgumentParser = Cmd2ArgumentParser()
     parser_move_rel.add_argument("--x", default=0, type=float)
@@ -56,3 +58,9 @@ class TAPCmdParsers():
 
     parser_vol_to_steps: Cmd2ArgumentParser = Cmd2ArgumentParser()
     parser_vol_to_steps.add_argument("vol", type=float)
+
+    parser_ls: Cmd2ArgumentParser = Cmd2ArgumentParser()
+    parser_ls.add_argument("var", default=None, type=str)
+
+    parser_load_conf: Cmd2ArgumentParser = Cmd2ArgumentParser()
+    parser_load_conf.add_argument("filename", default=None, type=str)

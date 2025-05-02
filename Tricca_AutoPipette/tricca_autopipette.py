@@ -21,13 +21,10 @@ from moonraker_requests import MoonrakerRequests
 def main():
     """Entry point for the program."""
     argparser = Cmd2ArgumentParser()
-    argparser.add_argument("ip", type=str,
-                           help="ip address of the autopipette")
     argparser.add_argument("--conf", type=str, help="optional config file")
     args = argparser.parse_args()
     # Remove other processed parser commands to avoid cmd2 from using them
-    sys.exit(TriccaAutoPipetteShell(conf_autopipette=args.conf,
-                                    ip=args.ip).cmdloop())
+    sys.exit(TriccaAutoPipetteShell(conf_autopipette=args.conf).cmdloop())
 
 
 class TriccaAutoPipetteShell(Cmd):
@@ -53,8 +50,7 @@ class TriccaAutoPipetteShell(Cmd):
     _autopipette: AutoPipette = None
 
     def __init__(self,
-                 conf_autopipette: str = None,
-                 ip: str = "0.0.0.0"):
+                 conf_autopipette: str = None):
         """Initialize self, AutoPipette and ProtocolCommands objects."""
         super().__init__(allow_cli_args=False,
                          persistent_history_file=Path(__file__).parent
@@ -66,7 +62,7 @@ class TriccaAutoPipetteShell(Cmd):
             self._autopipette = AutoPipette()
         else:
             self._autopipette = AutoPipette(conf_autopipette)
-        self.ip = ip
+        self.hostname = self._autopipette.conf["NETWORK"]["HOSTNAME"]
         self.debug = True
         self.console = Console()
         self.mrr = MoonrakerRequests()
@@ -88,7 +84,7 @@ class TriccaAutoPipetteShell(Cmd):
         self.console.print("\033c", end="")
         self.console.print(TAP_CLR_BANNER)
         self.console.print("[green]Connecting to Pipette...[/]")
-        self.webutils = TAPWebUtils(ip=self.ip)
+        self.webutils = TAPWebUtils(ip=self.hostname)
         self.console.print("[green]Initializing Pipette...[/]")
         self.console.print("[green]Loading commands...[/]")
         # Example of how to load other commands
@@ -313,9 +309,9 @@ class TriccaAutoPipetteShell(Cmd):
         try:
             self._autopipette.next_tip()
         except NoTipboxError as e:
-            rprint(e)
+            rprint(f"[yellow]{e}[/]")
         except TipAlreadyOnError as e:
-            rprint(e)
+            rprint(f"[yellow]{e}[/]")
         self.output_gcode(self._autopipette.return_gcode())
 
     def do_eject_tip(self, _):
@@ -401,12 +397,12 @@ class TriccaAutoPipetteShell(Cmd):
         if plate not in self._autopipette.get_plate_locations():
             rprint(f"Plate: {plate}, is not a plate.")
             return
-        self._autopipette._locations[plate].curr = 0
+        self._autopipette.locations[plate].curr = 0
 
     def do_reset_plates(self, _):
         """Reset plates by setting the position on all plates to the origin."""
         for location in self._autopipette.get_plate_locations():
-            self._autopipette._locations[location].curr = 0
+            self._autopipette.locations[location].curr = 0
         rprint("Plates Reset")
 
     def do_printer(self, _):
@@ -430,9 +426,90 @@ class TriccaAutoPipetteShell(Cmd):
 
     def do_webcam(self, _):
         """Open a window with a webcam."""
-        url: str = "http://" + self.ip + "/webcam/?action=stream"
+        url: str = "http://" + self.hostname + "/webcam/?action=stream"
         print(url)
         TAPWebcam().stream_webcam(url)
+
+    def ls_locs(self):
+        """Print all locations."""
+        if not self._autopipette.locations:
+            rprint("There are no set locations for the pipette.")
+            return
+        for loc_name in self._autopipette.locations.keys():
+            rprint(f"{loc_name}")
+            for loc_var in self._autopipette.conf[f"COORDINATE {loc_name}"].keys():
+                loc_val = self._autopipette.conf[f"COORDINATE {loc_name}"][loc_var]
+                rprint(f"\t{loc_var}: {loc_val}")
+
+    def ls_plates(self):
+        """Print all locations."""
+        plates = self._autopipette.get_plate_locations()
+        if not plates:
+            rprint("There are no set plates for the pipette.")
+            return
+        for plate in plates:
+            rprint(plate)
+            for plate_var in self._autopipette.conf[f"COORDINATE {plate}"].keys():
+                plate_val = self._autopipette.conf[f"COORDINATE {plate}"][plate_var]
+                rprint(f"\t{plate_var}: {plate_val}")
+
+    def ls_vars(self):
+        """Print all locations."""
+        sections_dict = {}
+        sections_dict = self._autopipette.conf
+        filtered_dict = {
+            key: value
+            for key, value in sections_dict.items()
+            if not key.startswith("COORDINATE")
+        }
+        del filtered_dict["VOLUME_CONV"]
+        for section in filtered_dict.keys():
+            rprint(section)
+            for var_var in self._autopipette.conf[section].keys():
+                var_val = self._autopipette.conf[section][var_var]
+                rprint(f"\t{var_var}: {var_val}")
+
+    def ls_conf(self):
+        """Print the whole conf file."""
+        for section in self._autopipette.conf.keys():
+            rprint(section)
+            for key in self._autopipette.conf[section].keys():
+                val = self._autopipette.conf[section][key]
+                rprint(f"\t{key}: {val}")
+
+    def ls_vol(self):
+        """Print the volume conversion variables."""
+        rprint("VOLUME_CONV")
+        for vol_var in self._autopipette.conf["VOLUME_CONV"].keys():
+            vol_val = self._autopipette.conf["VOLUME_CONV"][vol_var]
+            rprint(f"\t{vol_var}: {vol_val}")
+
+    @with_argparser(TAPCmdParsers.parser_ls)
+    def do_ls(self, args):
+        """List a variety of variables associated with the pipette.
+
+        Options: locs, locations, plates, vars, conf, config, vol, volumes
+        """
+        var: str = args.var
+        var.lower()
+        if var in ["locs", "locations"]:
+            self.ls_locs()
+        elif var == "plates":
+            self.ls_plates()
+        elif var == "vars":
+            self.ls_vars()
+        elif var in ["conf", "config"]:
+            self.ls_conf()
+        elif var in ["vol", "volume"]:
+            self.ls_vol()
+        else:
+            rprint(f"Unknown variable {var}. Couldn't list its properties.")
+
+    @with_argparser(TAPCmdParsers.parser_load_conf)
+    def do_load_conf(self, args):
+        """Load a new configuration file."""
+        filename: str = args.filename
+        self._autopipette.load_config_file(filename)
 
 
 if __name__ == '__main__':

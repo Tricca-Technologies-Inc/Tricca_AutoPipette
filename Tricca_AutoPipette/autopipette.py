@@ -21,7 +21,10 @@ from pathlib import Path
 class TipAlreadyOnError(Exception):
     """An exception to deal with putting a tip on when one is already on."""
 
-    pass
+    def __init__(self):
+        """Set the string to display when error is raised."""
+        super().__init__("There is already a tip on the pipette. " +
+                         "Eject tip before putting on another.")
 
 
 class NotALocationError(Exception):
@@ -38,7 +41,7 @@ class NoTipboxError(Exception):
 
     def __init__(self):
         """Set the string to display when error is raised."""
-        super().__init__("No Plate set a as TipBox in config.")
+        super().__init__("No plate set a as tipbox in config.")
 
 
 class NotAPlateTypeError(Exception):
@@ -81,17 +84,17 @@ class AutoPipette(metaclass=AutoPipetteMeta):
     variables and managing the different states of the autopipette.
     """
 
-    conf: ConfigParser = ConfigParser(interpolation=ExtendedInterpolation())
+    conf: ConfigParser = None
     CONF_PATH = Path(__file__).parent.parent / 'conf/'
     _conf_filename = ""
     has_tip: bool = False
     volconv: VolumeConverter = None
     garbage: Garbage = None
     tipboxes: TipBox = None
+    locations: dict = {}
     _append_to_header: bool = False
     _header_buf: str = ""
     _gcode_buf: str = ""
-    _locations: dict = {}
 
     def append_to_buf(func):
         """Control which buffer is appended to."""
@@ -103,7 +106,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 self._gcode_buf += func(self, *args, **kwargs) + "\n"
         return wrapper
 
-    def __init__(self, conf_filename=None):
+    def __init__(self, conf_filename: str = None):
         """Initialize autopipette.
 
         Args:
@@ -113,15 +116,18 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             self._conf_filename = "autopipette.conf"
         else:
             self._conf_filename = conf_filename
-        self.load_config_file()
+        self.load_config_file(self._conf_filename)
 
-    def load_config_file(self):
+    def load_config_file(self, filename: str = None):
         """Load a config file to set passed in values."""
+        if filename:
+            self._conf_filename = filename
+        self.conf = ConfigParser(interpolation=ExtendedInterpolation())
         conf_path = self.CONF_PATH / self._conf_filename
         file = open(conf_path, mode='r')
         self.conf.read_file(file)
         # Ensure default sections exist
-        def_sections = ["NAME", "BOUNDARY", "SPEED",
+        def_sections = ["NETWORK", "NAME", "BOUNDARY", "SPEED",
                         "SERVO", "WAIT", "VOLUME_CONV"]
         for section in def_sections:
             if section not in self.conf.sections():
@@ -156,6 +162,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         Args:
             ignore_sections (list[str]): A list of configuration sections to ignore.
         """
+        # Delete previous location in case we are loading a new config
+        self.locations = {}
         all_sections = self.conf.sections()
         coor_sections = \
             [item for item in all_sections if item not in ignore_sections]
@@ -484,7 +492,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             y (float): Number representing location in y axis.
             z (float): Number representing location in z axis.
         """
-        self._locations[name_loc] = Coordinate(x, y, z)
+        self.locations[name_loc] = Coordinate(x, y, z)
         conf_key = f"COORDINATE {name_loc}"
         # Update config
         if not self.conf.has_section(conf_key):
@@ -499,7 +507,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         Args:
             name_loc (str): The possible name of Coordinate.
         """
-        return name_loc in self._locations.keys()
+        return name_loc in self.locations.keys()
 
     def set_plate(self, name_loc: str, plate_type: str,
                   num_row: int = None, num_col: int = None,
@@ -516,13 +524,13 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 use the default number for that plate type.
         """
         # If name_loc doesn't exist as a location, do nothing
-        if (name_loc not in self._locations.keys()):
+        if (name_loc not in self.locations.keys()):
             raise NotALocationError(name_loc)
         # If plate_type doesn't match a type of plate, do nothing
         if (plate_type not in PlateTypes.TYPES.keys()):
             raise NotAPlateTypeError(plate_type)
-        coor = self._locations[name_loc]
-        self._locations[name_loc] = \
+        coor = self.locations[name_loc]
+        self.locations[name_loc] = \
             PlateTypes.TYPES[plate_type](coor, num_row, num_col,
                                          spacing_row, spacing_col,
                                          dip_distance)
@@ -541,21 +549,21 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             self.conf[conf_key]["dip_distance"] = str(dip_distance)
         # Set garbage location if plate type is garbage.
         if (plate_type == Garbage.__repr__(None)):
-            self.garbage = self._locations[name_loc]
-            self._locations["garbage"] = self.garbage
+            self.garbage = self.locations[name_loc]
+            self.locations["garbage"] = self.garbage
         # Set tip box location if plate type is TipBox
         elif (plate_type == TipBox.__repr__(None)):
             if (self.tipboxes is None):
-                self.tipboxes = self._locations[name_loc]
+                self.tipboxes = self.locations[name_loc]
             else:
-                tipbox = self._locations[name_loc]
+                tipbox = self.locations[name_loc]
                 self.tipboxes.append_box(tipbox)
 
     def get_plate_locations(self) -> list:
         """Return a list of locations that are plates."""
         plates: list = []
-        for location in self._locations:
-            if self._locations[location].__repr__() \
+        for location in self.locations:
+            if self.locations[location].__repr__() \
                in PlateTypes.TYPES.keys():
                 plates.append(location)
         return plates
@@ -570,11 +578,11 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             col (int): A column on a plate.
         """
         # If name_loc doesn't exist as a location, do nothing
-        if (name_loc not in self._locations.keys()):
+        if (name_loc not in self.locations.keys()):
             raise NotALocationError(name_loc)
         # If the returned location is a coordinate, return it.
         # Otherwise, if it is a plate, next() is called and returned
-        loc = self._locations[name_loc]
+        loc = self.locations[name_loc]
         if (isinstance(loc, Plate)):
             if row is None and col is None:
                 return loc.next()
@@ -662,8 +670,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         """
         coor_source = self.get_location_coor(source, src_row, src_col)
         coor_dest = self.get_location_coor(dest, dest_row, dest_col)
-        loc_source = self._locations[source]
-        loc_dest = self._locations[dest]
+        loc_source = self.locations[source]
+        loc_dest = self.locations[dest]
         time_aspirate = self.conf["WAIT"]["WAIT_TIME_ASPIRATE"]
         max_vol = self.conf["VOLUME_CONV"].getfloat("max_vol")
         speed_up_slow = self.conf["SPEED"].getfloat("SPEED_PIPETTE_UP_SLOW")
