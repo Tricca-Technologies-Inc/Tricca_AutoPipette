@@ -21,14 +21,14 @@ Tricca AutoPipette is an automated liquid handling system (ALHS) that uses the V
   Main command-line entry point. Accepts IP address of the Manta board and optionally a `--conf` YAML file to load custom configuration. Example usage:
 
   ```bash
-  python tricca_autopipette.py 192.168.1.100
+  python tricca_autopipette.py
   ```
 
   
   This script contains `do_` functions that execute pipetting tasks via HTTP POST requests to the Moonraker API:
 
-  - `do_home` – Home motors (`x`, `y`, `z`, `axis`, `pipette`, `servo`, or `all`).
-  - `do_set` – Set a configuration variable, like `SPEED_FACTOR`, `VELOCITY_MAX`, or `ACCEL_MAX`.
+  - `do_home` – Home motors (`x`, `y`, `z`, `pipette`, `axis`, `servo`, or `all`).
+  - `do_set` – Set a variable, like `SPEED_FACTOR`, `VELOCITY_MAX`, or `ACCEL_MAX`.
   - `do_coor` – Define a named coordinate with X, Y, Z values.
   - `do_plate` – Assign a location to a plate type with specified rows and columns.
   - `do_pipette` – Move a volume of liquid between source and destination coordinates.
@@ -38,7 +38,7 @@ Tricca AutoPipette is an automated liquid handling system (ALHS) that uses the V
   - `do_next_tip` – Pick up the next available tip from a tip box.
   - `do_eject_tip` – Eject the currently held pipette tip.
   - `do_print` – Simple debug print command.
-  - `do_run` – Run a protocol file from disk.
+  - `do_run` – Run a protocol file from path.
   - `do_stop` – Send an emergency stop command.
   - `do_pause` – Pause a currently running protocol.
   - `do_resume` – Resume a paused protocol.
@@ -47,12 +47,12 @@ Tricca AutoPipette is an automated liquid handling system (ALHS) that uses the V
   - `do_start_alerts` – Start the alerts system background task.
   - `do_stop_alerts` – Stop the alerts background task.
   - `do_save` – Save the current configuration to file.
-  - `do_reset_plate` – Reset a single plate's current position to 0.
+  - `do_reset_plate` – Reset a plate's current position to 0.
   - `do_reset_plates` – Reset all plates to their starting positions.
   - `do_printer` – Print a test message and send a queued alert.
-  - `do_vol_to_steps` – Convert a given volume to motor steps.
+  - `do_vol_to_steps` – Convert volume to motor steps.
   - `do_break` – Pause script execution and wait for user input.
-  - `do_webcam` – Open the Klipper webcam stream in a browser window.
+  - `do_webcam` – Open the Klipper webcam stream in a browser window. 
 
 - **coordinates.py**  
   Holds 'Coordinate' class used for pipette positioning
@@ -77,7 +77,7 @@ Tricca AutoPipette is an automated liquid handling system (ALHS) that uses the V
 
 ### `conf/config_name.conf`
 
-YAML-based configuration files that define protocol setup, speeds,  layout, etc. Edit or create a config file under the conf folder and pass it using the --conf flag.
+YAML-based configuration files that define protocol setup, speeds,  layout, etc. Edit or create a config file under the conf folder and pass it using the --conf flag when running the CMD line interface.
 
 
 ---
@@ -100,11 +100,10 @@ pip install -r requirements.txt
 Clone this repository and open it in VS Code:
 
 ```bash
-git clone https://github.com/your-org/tricca_autopipette.git  
-cd Tricca_autopipette
+git clone https://github.com/Tricca-Technologies-Inc/Tricca_AutoPipette.git
 ```
 
-### 3. Update the IP Address  
+### 3. Update the IP Address (Optional)
 Edit `tricca_autopipette.py` to use the IP address of the Manta board, or pass it via command line.
 
 ### 4. Launch  
