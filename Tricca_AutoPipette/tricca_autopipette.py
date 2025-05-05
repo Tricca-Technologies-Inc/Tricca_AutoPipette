@@ -33,7 +33,7 @@ class TriccaAutoPipetteShell(Cmd):
     # Prompt Variables
     intro = ""
     prompt: str = "autopipette >> "
-    ip: str = ""
+    hostname: str = ""
     webutils: TAPWebUtils = None
     alert_manager: ThreadedEventLoopManager = None
     alert_task = None
@@ -62,7 +62,10 @@ class TriccaAutoPipetteShell(Cmd):
             self._autopipette = AutoPipette()
         else:
             self._autopipette = AutoPipette(conf_autopipette)
-        self.hostname = self._autopipette.conf["NETWORK"]["HOSTNAME"]
+        if self._autopipette.conf.has_option("NETWORK", "IP"):
+            self.hostname = self._autopipette.conf["NETWORK"]["IP"]
+        else:
+            self.hostname = self._autopipette.conf["NETWORK"]["HOSTNAME"]
         self.debug = True
         self.console = Console()
         self.mrr = MoonrakerRequests()
