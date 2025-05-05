@@ -13,9 +13,6 @@ Tricca AutoPipette is an automated liquid handling system (ALHS) that uses the V
 ## Files and Structure
 
 - **tricca_autopipette.py**  
-<<<<<<< HEAD
-  The main application entry point. A shell environment where users can pass commands and run protocols.
-=======
   Main command-line entry point. Accepts IP address of the Manta board and optionally a `--conf` YAML file to load custom configuration. Example usage:
 
   ```bash
@@ -51,7 +48,6 @@ Tricca AutoPipette is an automated liquid handling system (ALHS) that uses the V
   - `do_vol_to_steps` – Convert volume to motor steps.
   - `do_break` – Pause script execution and wait for user input.
   - `do_webcam` – Open the Klipper webcam stream in a browser window. 
->>>>>>> 8198d8e (Update README.md for better readability)
 
 - **coordinates.py**  
   Defines the coordinate system and functions for generating well plate coordinates.
@@ -69,18 +65,7 @@ Tricca AutoPipette is an automated liquid handling system (ALHS) that uses the V
   Contains definitions for solution volumes used in pipetting protocols.
 
 ## Configuration
-<<<<<<< HEAD
-printer.cfg
-This file contains the configuration for the Klipper firmware, including stepper motors, endstops, and other hardware parameters. Modify this file according to  specific hardware configuration.
-=======
-
-### `conf/config_name.conf`
-
 YAML-based configuration files that define protocol setup, speeds,  layout, etc. Edit or create a config file under the conf folder and pass it using the --conf flag when running the CMD line interface.
-
-
----
->>>>>>> 8198d8e (Update README.md for better readability)
 
 ## Dependencies
 Ensure that Python 3.x is installed on your system. You will also need to install the necessary Python packages. You can do this by running:
@@ -99,16 +84,14 @@ Ensure that Python 3.x is installed on your system. You will also need to instal
   First, click 'initialize pipette' on the web app to home all motors and set the right speeds.
   Then, set the speed to 100% first before executing any protocols. Click 'kit manufacturing' to run the test. Once the protocol is ran, you can set the speed up to 800%. Finally, wait for the protocol to finish. Have Mainsail open for emergency stop, just in case the machine/program fails.
 
-<<<<<<< HEAD
-- **5.) Notes**  
+- **5.) Notes**
   Calibrate the coordinates manually using mainsail before executing protocols to prevent any collisions/problems.
   
-=======
 ## How to Run
 
-### 1. Connect to the Board  
+### 1. Connect to the Board
 
-### 2. Set Up the Code  
+### 2. Set Up the Code
 Clone this repository and open it in VS Code:
 
 ```bash
@@ -123,22 +106,13 @@ Run the application via command line:
 
 ```bash
 python tricca_autopipette.py 192.168.1.X
-```
-
----
 
 ## Usage Notes
-
-
----
 
 ## Contributing
 
 Make sure code style and docstrings follow PEP8.
 
----
-
 ## License
 
 This project is licensed under the [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.en.html).
->>>>>>> 8198d8e (Update README.md for better readability)
