@@ -95,6 +95,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
     _append_to_header: bool = False
     _header_buf: str = ""
     _gcode_buf: str = ""
+    homed: bool = False
 
     def append_to_buf(func):
         """Control which buffer is appended to."""
@@ -322,6 +323,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         """Home y axis."""
         return "G28 Y"
 
+    @append_to_buf
     def home_z(self) -> str:
         """Home z axis."""
         return "G28 Z"
@@ -458,6 +460,11 @@ class AutoPipette(metaclass=AutoPipetteMeta):
            mil (float): Number of milliseconds the machine should wait.
         """
         return f"G4 P{mil}"
+
+    @append_to_buf
+    def gcode_print(self, msg: str) -> str:
+        """Send a gcode command to print a message to screen."""
+        return f"M117 {msg}"
 
     def dip_z_down(self, curr_coor: Coordinate, distance: float):
         """Dip the pipette toolhead down a set distance.

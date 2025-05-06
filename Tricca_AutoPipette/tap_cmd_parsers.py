@@ -64,3 +64,6 @@ class TAPCmdParsers():
 
     parser_load_conf: Cmd2ArgumentParser = Cmd2ArgumentParser()
     parser_load_conf.add_argument("filename", default=None, type=str)
+
+    parser_gcode_print: Cmd2ArgumentParser = Cmd2ArgumentParser()
+    parser_gcode_print.add_argument("msg", default=None, type=str)
