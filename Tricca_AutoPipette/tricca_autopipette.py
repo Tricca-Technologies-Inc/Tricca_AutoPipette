@@ -258,6 +258,7 @@ class TriccaAutoPipetteShell(Cmd):
         dest: str = args.dest
         aspirate: bool = args.aspirate
         keep_tip: bool = args.keep_tip
+        wiggle: bool = args.wiggle
         src_row: int = args.src_row
         src_col: int = args.src_col
         dest_row: int = args.dest_row
@@ -286,7 +287,7 @@ class TriccaAutoPipetteShell(Cmd):
             return
         self._autopipette.pipette(vol_ul, src, dest,
                                   src_row, src_col, dest_row, dest_col,
-                                  keep_tip, aspirate)
+                                  keep_tip, aspirate, wiggle)
         self.output_gcode(f"\n; Pipette {vol_ul} from {src} to {dest}\n" +
                           self._autopipette.return_gcode() + "\n")
 

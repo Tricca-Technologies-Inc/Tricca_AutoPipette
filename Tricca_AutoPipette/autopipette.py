@@ -660,7 +660,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
     def pipette(self, vol_ul: float, source: str, dest: str,
                 src_row: int = None, src_col: int = None,
                 dest_row: int = None, dest_col: int = None,
-                keep_tip: bool = False, aspirate: bool = False):
+                keep_tip: bool = False, aspirate: bool = False,
+                wiggle: bool = False):
         """Pipette a volume of liquid from source to destination.
 
         Args:
@@ -714,7 +715,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             self.move_to(coor_dest)
             self.dip_z_down(coor_dest, loc_dest.dip_distance)
             self.clear_pipette(speed_down)
-            self.wiggle(coor_dest, loc_dest.dip_distance)
+            if wiggle:
+                self.wiggle(coor_dest, loc_dest.dip_distance)
             self.gcode_wait(time_aspirate)
             self.dip_z_return(coor_dest)
             self.home_pipette_stepper(speed_up)
