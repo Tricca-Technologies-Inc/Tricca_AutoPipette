@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Holds class and methods for running Tricca AutoPipette Shell."""
-from cmd2 import Cmd, Cmd2ArgumentParser, with_argparser
+from cmd2 import Cmd, Cmd2ArgumentParser, with_argparser, Statement, plugin
 import sys
 from autopipette import AutoPipette, TipAlreadyOnError, NoTipboxError
 from pathlib import Path
@@ -48,7 +48,7 @@ class TriccaAutoPipetteShell(Cmd):
     _append_gcode: bool = False
     _gcode_buf: str = ""
     _autopipette: AutoPipette = None
-
+   
     def __init__(self,
                  conf_autopipette: str = None):
         """Initialize self, AutoPipette and ProtocolCommands objects."""
@@ -76,6 +76,7 @@ class TriccaAutoPipetteShell(Cmd):
         # Create some hooks to handle the starting and stopping of our thread
         self.register_preloop_hook(self._preloop_hook)
         self.register_postloop_hook(self._postloop_hook)
+        self.register_precmd_hook(self._precommand_hook)
 
     def _preloop_hook(self) -> None:
         """Start the alerter thread."""
@@ -99,6 +100,20 @@ class TriccaAutoPipetteShell(Cmd):
         self.alert_manager.stop()
         self.webutils.stop_websocket_listener()
         self.console.print("Exited gracefully.")
+
+    def _precommand_hook(self, data: plugin.PrecommandData) -> plugin.PrecommandData:
+        """Check commands before running.
+
+        TODO find a way to label all moving commands so the below doesn't need
+        to be updated
+        """
+        if data.statement.command not in ["pipette", "move", "move_loc",
+                                          "move_rel", "next_tip", "run"]:
+            return data
+        if not self._autopipette.homed:
+            rprint("[red]Pipette not homed. Run the 'home all' command.[/]")
+            data.stop = True
+        return data
 
     def output_gcode(self, gcode: str, filename: str = None) -> None:
         """Direct gcode output."""
@@ -132,6 +147,10 @@ class TriccaAutoPipetteShell(Cmd):
         """Home a subset of motors on the pipette."""
         motors: str = args.motors
         filename: str = None
+        if motors not in ["x", "y", "z", "pipette", "axis", "all", "servo"]:
+            # TODO raise error
+            rprint(f"{motors} is not a valid argument.")
+            return
         if motors == "x":
             filename = "home_x.gcode"
             self._autopipette.home_x()
@@ -151,6 +170,7 @@ class TriccaAutoPipetteShell(Cmd):
             filename = "home_all.gcode"
             self._autopipette.home_axis()
             self._autopipette.home_pipette_motors()
+            self._autopipette.homed = True
         elif motors == "servo":
             filename = "home_servo.gcode"
             self._autopipette.home_servo()
@@ -238,6 +258,7 @@ class TriccaAutoPipetteShell(Cmd):
         dest: str = args.dest
         aspirate: bool = args.aspirate
         keep_tip: bool = args.keep_tip
+        wiggle: bool = args.wiggle
         src_row: int = args.src_row
         src_col: int = args.src_col
         dest_row: int = args.dest_row
@@ -266,7 +287,7 @@ class TriccaAutoPipetteShell(Cmd):
             return
         self._autopipette.pipette(vol_ul, src, dest,
                                   src_row, src_col, dest_row, dest_col,
-                                  keep_tip, aspirate)
+                                  keep_tip, aspirate, wiggle)
         self.output_gcode(f"\n; Pipette {vol_ul} from {src} to {dest}\n" +
                           self._autopipette.return_gcode() + "\n")
 
@@ -408,10 +429,13 @@ class TriccaAutoPipetteShell(Cmd):
             self._autopipette.locations[location].curr = 0
         rprint("Plates Reset")
 
-    def do_printer(self, _):
-        """Print something to screen."""
-        rprint("do_printer")
-        self.alert_manager.enqueue_message("Queued message")
+    @with_argparser(TAPCmdParsers.parser_gcode_print)
+    def do_gcode_print(self, args):
+        """Send a gcode command to print something to the screen."""
+        msg = args.msg
+        rprint(msg)
+        self._autopipette.gcode_print(msg)
+        self.output_gcode(self._autopipette.return_gcode())
 
     @with_argparser(TAPCmdParsers.parser_vol_to_steps)
     def do_vol_to_steps(self, args):
@@ -431,7 +455,7 @@ class TriccaAutoPipetteShell(Cmd):
         """Open a window with a webcam."""
         url: str = "http://" + self.hostname + "/webcam/?action=stream"
         print(url)
-        TAPWebcam().stream_webcam(url)
+        # TAPWebcam().stream_webcam(url)
 
     def ls_locs(self):
         """Print all locations."""
