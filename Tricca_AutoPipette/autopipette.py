@@ -95,6 +95,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
     _append_to_header: bool = False
     _header_buf: str = ""
     _gcode_buf: str = ""
+    homed: bool = False
 
     def append_to_buf(func):
         """Control which buffer is appended to."""
@@ -322,6 +323,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         """Home y axis."""
         return "G28 Y"
 
+    @append_to_buf
     def home_z(self) -> str:
         """Home z axis."""
         return "G28 Z"
@@ -458,6 +460,11 @@ class AutoPipette(metaclass=AutoPipetteMeta):
            mil (float): Number of milliseconds the machine should wait.
         """
         return f"G4 P{mil}"
+
+    @append_to_buf
+    def gcode_print(self, msg: str) -> str:
+        """Send a gcode command to print a message to screen."""
+        return f"M117 {msg}"
 
     def dip_z_down(self, curr_coor: Coordinate, distance: float):
         """Dip the pipette toolhead down a set distance.
@@ -653,7 +660,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
     def pipette(self, vol_ul: float, source: str, dest: str,
                 src_row: int = None, src_col: int = None,
                 dest_row: int = None, dest_col: int = None,
-                keep_tip: bool = False, aspirate: bool = False):
+                keep_tip: bool = False, aspirate: bool = False,
+                wiggle: bool = False):
         """Pipette a volume of liquid from source to destination.
 
         Args:
@@ -707,7 +715,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             self.move_to(coor_dest)
             self.dip_z_down(coor_dest, loc_dest.dip_distance)
             self.clear_pipette(speed_down)
-            self.wiggle(coor_dest, loc_dest.dip_distance)
+            if wiggle:
+                self.wiggle(coor_dest, loc_dest.dip_distance)
             self.gcode_wait(time_aspirate)
             self.dip_z_return(coor_dest)
             self.home_pipette_stepper(speed_up)

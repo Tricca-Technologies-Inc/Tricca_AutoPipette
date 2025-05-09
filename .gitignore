@@ -1,7 +1,13 @@
 /Tricca_AutoPipette/__pycache__/
+/Tricca_AutoPipette/res/__pycache__/
 .venv/
 temp/
 gcode/temp
 docs/_build
 Tricca_AutoPipette/.tap_history
 /.dir-locals.el
+<<<<<<< HEAD
+Tricca_AutoPipette/res/__pycache__/*
+=======
+Tricca_AutoPipette/res/__pycache__/
+>>>>>>> wiggle

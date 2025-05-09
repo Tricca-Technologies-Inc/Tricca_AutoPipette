@@ -45,6 +45,7 @@ class TAPCmdParsers():
     parser_pipette.add_argument("dest", type=str)
     parser_pipette.add_argument("--aspirate", action="store_true")
     parser_pipette.add_argument("--keep_tip", action="store_true")
+    parser_pipette.add_argument("--wiggle", action="store_true")
     parser_pipette.add_argument("--src_row", default=None, type=int)
     parser_pipette.add_argument("--src_col", default=None, type=int)
     parser_pipette.add_argument("--dest_row", default=None, type=int)
@@ -64,3 +65,6 @@ class TAPCmdParsers():
 
     parser_load_conf: Cmd2ArgumentParser = Cmd2ArgumentParser()
     parser_load_conf.add_argument("filename", default=None, type=str)
+
+    parser_gcode_print: Cmd2ArgumentParser = Cmd2ArgumentParser()
+    parser_gcode_print.add_argument("msg", default=None, type=str)

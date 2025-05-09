@@ -1,1 +1,1 @@
-home all
+gcode_print "TAP CLI instantiated"
