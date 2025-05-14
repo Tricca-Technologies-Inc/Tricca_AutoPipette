@@ -1,83 +1,79 @@
 """
-Holds the AutoPipette class and related error classes.
+Module containing the AutoPipette class and related error classes.
 
-The AutoPipette class is responsible for functions relating to the AutoPipette.
-This includes sending and receiving commands, managing different parameters
-and managing the different states of the pipette.
+The AutoPipette class manages pipette operations including movement commands,
+tip handling, and protocol execution. It follows the Singleton pattern to
+ensure a single instance controls hardware resources.
 
 TODO Add Logger obj
 """
-from coordinate import Coordinate
-from plates import PlateTypes
-from plates import Plate
-from plates import Garbage
-from plates import TipBox
-from plates import Well
-from volume_converter import VolumeConverter
-from configparser import ConfigParser
-from configparser import ExtendedInterpolation
+from __future__ import annotations
+import logging
+from typing import Optional, Union, Callable, Any
 from pathlib import Path
+from configparser import ConfigParser, ExtendedInterpolation, NoSectionError
+
+from coordinate import Coordinate
+from plates import PlateTypes, Plate, Garbage, TipBox, Well
+from volume_converter import VolumeConverter
 
 
 class TipAlreadyOnError(Exception):
-    """An exception to deal with putting a tip on when one is already on."""
+    """Raised when trying to attach a tip on when one is already attached."""
 
-    def __init__(self):
-        """Set the string to display when error is raised."""
-        super().__init__("There is already a tip on the pipette. " +
-                         "Eject tip before putting on another.")
+    def __init__(self) -> None:
+        """Initialize error."""
+        super().__init__("Tip already attached. Eject current tip first.")
 
 
 class NotALocationError(Exception):
-    """An exception to deal with a Coordinate not being a Location."""
+    """Raised when accessing an undefined location."""
 
-    def __init__(self, location):
-        """Set the string to display when error is raised."""
+    def __init__(self, location) -> None:
+        """Initialize error."""
         self.location = location
         super().__init__(f"{location} is not a named location.")
 
 
 class NoTipboxError(Exception):
-    """An exception to deal with no Plate set as TipBox."""
+    """Raised when no tipbox is configured."""
 
-    def __init__(self):
-        """Set the string to display when error is raised."""
-        super().__init__("No plate set a as tipbox in config.")
+    def __init__(self) -> None:
+        """Initialize error."""
+        super().__init__("No tipbox configured.")
 
 
 class NotAPlateTypeError(Exception):
-    """An exception to deal with a string not being a type of Plate."""
+    """Raised when an invalid plate type is specified."""
 
-    def __init__(self, plate):
-        """Set the string to display when error is raised."""
-        self.plate = plate
-        super().__init__(f"{plate} is not a valid Plate type.\n" +
-                         f"Valid Plate types are {PlateTypes.TYPES.keys()}")
+    def __init__(self, plate) -> None:
+        """Initialize error."""
+        valid = list(PlateTypes.TYPES.keys())
+        super().__init__(f"Invalid plate type {plate!r}. Valid types: {valid}")
 
 
 class MissingConfigError(Exception):
-    """An exception to deal with missing parts of the config."""
+    """Raised when required configuration sections are missing."""
 
-    def __init__(self, section, conf_path):
-        """Set the string to display when error is raised."""
-        self.section = section
-        super().__init__(f"Config found at {conf_path}" +
-                         f" is missing the section: {section}")
+    def __init__(self, section, conf_path) -> None:
+        """Initialize error."""
+        super().__init__(f"Missing section {section!r} in config: {conf_path}")
 
 
-class NotADipStratError(Exception):
-    """An exception to deal with a string not being a type of Plate."""
+class NotADipStrategyError(Exception):
+    """Raised when an invalid dipping strategy is specified."""
 
-    def __init__(self, dip_func):
-        """Set the string to display when error is raised."""
-        super().__init__(f"{dip_func} is not a valid dip strategy.\n" +
-                         f"Valid dip strategies are {Well.DIP_DIST.keys()}")
+    def __init__(self, strategy) -> None:
+        """Initialize error."""
+        valid = list(Well.DIP_FUNCS.keys())
+        super().__init__(f"Invalid dip strategy {strategy!r}. " +
+                         f"Valid options: {valid}")
 
 
 class AutoPipetteMeta(type):
     """Provides Singleton Pattern when inherited from."""
 
-    _instances = {}
+    _instances: dict[type, AutoPipette] = {}
 
     def __call__(cls, *args, **kwargs):
         """Maintain one instance of our class."""
