@@ -18,7 +18,7 @@ class Well:
         @staticmethod
         def simple(well: 'Well', vol: float) -> float:
             """Return the dip distance without modification."""
-            return well.dip_curr
+            return well.dip_top
 
         @staticmethod
         def cylinder(well: 'Well', vol: float) -> float:
@@ -27,10 +27,10 @@ class Well:
             if well.dip_btm is None:
                 raise ValueError("dip_btm must be set for cylinder strategy")
             # Calculate the change in height from taking out liquid
-            well.dip_curr = well.dip_curr - \
+            well.dip_curr = well.dip_curr + \
                 (vol / (math.pi * (well.diameter / 2.0)**2))
-            # Make sure the dip distance never becomes lower than the dip_btm
-            if well.dip_curr < well.dip_btm:
+            # Make sure to never dip further than dip_btm
+            if well.dip_curr > well.dip_btm:
                 well.dip_curr = well.dip_btm
             return well.dip_curr
 
