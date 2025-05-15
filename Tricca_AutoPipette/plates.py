@@ -198,10 +198,10 @@ class PlateArray(Plate):
 
         Restart if the last has been returned.
         """
-        if self.curr >= len(self.wells):
-            self.curr = 0
         coor = self.wells[self.curr].coor
         self.curr += 1
+        if self.curr >= len(self.wells):
+            self.curr = 0
         return coor
 
 
