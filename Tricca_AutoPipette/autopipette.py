@@ -12,6 +12,7 @@ from plates import PlateTypes
 from plates import Plate
 from plates import Garbage
 from plates import TipBox
+from plates import Well
 from volume_converter import VolumeConverter
 from configparser import ConfigParser
 from configparser import ExtendedInterpolation
@@ -62,6 +63,15 @@ class MissingConfigError(Exception):
         self.section = section
         super().__init__(f"Config found at {conf_path}" +
                          f" is missing the section: {section}")
+
+
+class NotADipStratError(Exception):
+    """An exception to deal with a string not being a type of Plate."""
+
+    def __init__(self, dip_func):
+        """Set the string to display when error is raised."""
+        super().__init__(f"{dip_func} is not a valid dip strategy.\n" +
+                         f"Valid dip strategies are {Well.DIP_DIST.keys()}")
 
 
 class AutoPipetteMeta(type):
@@ -171,10 +181,10 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         # Go through coordinate sections, turn locations into plates if needed
         for coor_section in coor_sections:
             # coordinate section should look like [COORDINATE name_loc]
-            coor = coor_section.split()
-            if coor[0] != "COORDINATE":
+            coor_list = coor_section.split()
+            if coor_list[0] != "COORDINATE":
                 pass
-            name_loc = coor[1]
+            name_loc = coor_list[1]
             options = self.conf[coor_section].keys()
             self.set_location(name_loc,
                               self.conf[coor_section].getfloat("x"),
@@ -185,7 +195,11 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             col = None
             spacing_row = None
             spacing_col = None
-            dip_distance = None
+            dip_top = None
+            dip_btm = None
+            dip_func = None
+            dip_dist_func = None
+            well_diameter = None
             if "row" in options:
                 row = self.conf[coor_section].getint("row")
             if "col" in options:
@@ -194,12 +208,27 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 spacing_row = self.conf[coor_section].getfloat("spacing_row")
             if "spacing_col" in options:
                 spacing_col = self.conf[coor_section].getfloat("spacing_col")
-            if "dip_distance" in options:
-                dip_distance = self.conf[coor_section].getfloat("dip_distance")
+            if "dip_top" in options:
+                dip_top = self.conf[coor_section].getfloat("dip_top")
+            if "dip_btm" in options:
+                dip_btm = self.conf[coor_section].getfloat("dip_btm")
+            if "dip_func" in options:
+                dip_func = self.conf[coor_section].get("dip_func")
+                if (dip_func not in Well.DIP_FUNCS.keys()):
+                    raise NotADipStratError(dip_func)
+                dip_dist_func = Well.DIP_FUNCS[dip_func]
+            if "well_diameter" in options:
+                well_diameter = self.conf[coor_section].getfloat("well_diameter")
             if "type" in options:
                 type = self.conf[coor_section]["type"]
-                self.set_plate(name_loc, type, row, col,
-                               spacing_row, spacing_col, dip_distance)
+                # Guaranteed to not be a plate at this point
+                # next() will not be called
+                coor = self.get_location_coor(name_loc)
+                well = Well(coor,
+                            dip_top, dip_btm,
+                            dip_dist_func, well_diameter)
+                self.set_plate(name_loc, type, well, row, col,
+                               spacing_row, spacing_col)
 
     def generate_file_header(self):
         """Generate a gcode string to set variables and home the motors."""
@@ -516,10 +545,12 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         """
         return name_loc in self.locations.keys()
 
-    def set_plate(self, name_loc: str, plate_type: str,
+    def set_plate(self,
+                  name_loc: str,
+                  plate_type: str,
+                  well: Well,
                   num_row: int = None, num_col: int = None,
-                  spacing_row: float = None, spacing_col: float = None,
-                  dip_distance: float = None):
+                  spacing_row: float = None, spacing_col: float = None):
         """Create a plate from an existing location name.
 
         Args:
@@ -530,17 +561,18 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             num_col (int): The total number of columns on the plate. If None,
                 use the default number for that plate type.
         """
-        # If name_loc doesn't exist as a location, do nothing
+        # Make sure this name is a location name
         if (name_loc not in self.locations.keys()):
             raise NotALocationError(name_loc)
-        # If plate_type doesn't match a type of plate, do nothing
+        # Make sure the plate type exists
         if (plate_type not in PlateTypes.TYPES.keys()):
             raise NotAPlateTypeError(plate_type)
         coor = self.locations[name_loc]
         self.locations[name_loc] = \
-            PlateTypes.TYPES[plate_type](coor, num_row, num_col,
-                                         spacing_row, spacing_col,
-                                         dip_distance)
+            PlateTypes.TYPES[plate_type](coor,
+                                         well,
+                                         num_row, num_col,
+                                         spacing_row, spacing_col)
         # Update config
         conf_key = f"COORDINATE {name_loc}"
         self.conf[conf_key]["type"] = plate_type
@@ -552,14 +584,18 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             self.conf[conf_key]["spacing_row"] = str(spacing_row)
         if spacing_col is not None:
             self.conf[conf_key]["spacing_col"] = str(spacing_col)
-        if dip_distance is not None:
-            self.conf[conf_key]["dip_distance"] = str(dip_distance)
+        if well.dip_top is not None:
+            self.conf[conf_key]["dip_top"] = str(well.dip_top)
+        if well.dip_btm is not None:
+            self.conf[conf_key]["dip_btm"] = str(well.dip_btm)
+        if well.dip_dist_func is not None:
+            self.conf[conf_key]["dip_func"] = Well.DIP_FUNCS[well.dip_dist_func]
         # Set garbage location if plate type is garbage.
-        if (plate_type == Garbage.__repr__(None)):
+        if (plate_type == "garbage"):
             self.garbage = self.locations[name_loc]
             self.locations["garbage"] = self.garbage
         # Set tip box location if plate type is TipBox
-        elif (plate_type == TipBox.__repr__(None)):
+        elif (plate_type == "tipbox"):
             if (self.tipboxes is None):
                 self.tipboxes = self.locations[name_loc]
             else:
@@ -609,7 +645,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             raise TipAlreadyOnError()
         loc_tip = self.tipboxes.next()
         self.move_to(loc_tip)
-        self.dip_z_down(loc_tip, self.tipboxes.dip_distance)
+        self.dip_z_down(loc_tip, self.tipboxes.get_dip_distance())
         self.dip_z_return(loc_tip)
         self.has_tip = True
 
@@ -699,8 +735,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             # Pickup liquid
             self.move_to(coor_source)
             self.plunge_down(pip_vol, speed_down)
-            self.dip_z_down(coor_source, loc_source.dip_distance)
-            # If True, aspirate small amount of liquid 3 times to wet tip
+            self.dip_z_down(coor_source, loc_source.get_dip_distance(pip_vol))
+            # If True, aspirate small amount of liquid 1 time to wet tip
             if aspirate:
                 for _ in range(1):
                     self.home_pipette_stepper(speed_up_slow)
@@ -714,10 +750,10 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             self.dip_z_return(coor_source)
             # Dropoff liquid
             self.move_to(coor_dest)
-            self.dip_z_down(coor_dest, loc_dest.dip_distance)
+            self.dip_z_down(coor_dest, loc_dest.get_dip_distance(pip_vol))
             self.clear_pipette(speed_down)
             if wiggle:
-                self.wiggle(coor_dest, loc_dest.dip_distance)
+                self.wiggle(coor_dest, loc_dest.get_dip_distance(pip_vol))
             self.gcode_wait(time_aspirate)
             self.dip_z_return(coor_dest)
             self.home_pipette_stepper(speed_up)
@@ -725,6 +761,6 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip:
             curr_coor = self.garbage.next()
             self.move_to(curr_coor)
-            self.dip_z_down(curr_coor, self.garbage.dip_distance)
+            self.dip_z_down(curr_coor, self.garbage.get_dip_distance())
             self.eject_tip()
             self.dip_z_return(curr_coor)
