@@ -606,8 +606,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         """Return a list of locations that are plates."""
         plates: list = []
         for location in self.locations:
-            if self.locations[location].__repr__() \
-               in PlateTypes.TYPES.keys():
+            if isinstance(self.locations[location], Plate):
                 plates.append(location)
         return plates
 
