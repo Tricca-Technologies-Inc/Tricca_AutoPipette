@@ -686,7 +686,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         speed_up = self.conf["SPEED"].getfloat("SPEED_PIPETTE_UP")
         speed_down = self.conf["SPEED"].getfloat("SPEED_PIPETTE_DOWN")
         # Pickup a tip
-        self.next_tip()
+        if not self.has_tip:
+            self.next_tip()
         remaining_vol = vol_ul
         while remaining_vol > 0:
             if remaining_vol >= max_vol:
