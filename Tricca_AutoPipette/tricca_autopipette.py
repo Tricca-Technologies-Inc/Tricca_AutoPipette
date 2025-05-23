@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """Holds class and methods for running Tricca AutoPipette Shell."""
-from cmd2 import Cmd, Cmd2ArgumentParser, with_argparser, Statement, plugin
+from cmd2 import Cmd, Cmd2ArgumentParser, with_argparser, plugin
 import sys
 from autopipette import AutoPipette, TipAlreadyOnError, NoTipboxError
 from pathlib import Path
 from datetime import datetime
-from plates import PlateTypes
 from coordinate import Coordinate
 from tap_cmd_parsers import TAPCmdParsers
 from tap_web_utils import TAPWebUtils
@@ -15,6 +14,7 @@ from rich.console import Console
 from threaded_event_loop_manager import ThreadedEventLoopManager
 import asyncio
 from moonraker_requests import MoonrakerRequests
+from plates import Plate, PlateFactory
 # from tap_webcam import TAPWebcam
 
 
@@ -44,11 +44,6 @@ class TriccaAutoPipetteShell(Cmd):
     GCODE_PATH: Path = Path(__file__).parent.parent / 'gcode/'
     PROTOCOL_PATH: Path = Path(__file__).parent.parent / 'protocols/'
 
-    # Gcode Variables
-    _append_gcode: bool = False
-    _gcode_buf: str = ""
-    _autopipette: AutoPipette = None
-   
     def __init__(self,
                  conf_autopipette: str = None):
         """Initialize self, AutoPipette and ProtocolCommands objects."""
@@ -62,15 +57,20 @@ class TriccaAutoPipetteShell(Cmd):
             self._autopipette = AutoPipette()
         else:
             self._autopipette = AutoPipette(conf_autopipette)
-        if self._autopipette.conf.has_option("NETWORK", "IP"):
-            self.hostname = self._autopipette.conf["NETWORK"]["IP"]
+        if self._autopipette.config.has_option("NETWORK", "IP"):
+            self.hostname = self._autopipette.config["NETWORK"]["IP"]
         else:
-            self.hostname = self._autopipette.conf["NETWORK"]["HOSTNAME"]
+            self.hostname = self._autopipette.config["NETWORK"]["HOSTNAME"]
         self.debug = True
         self.console = Console()
         self.mrr = MoonrakerRequests()
         self.alert_manager = ThreadedEventLoopManager()
         self.alert_manager.start()
+
+        # Gcode Variables
+        self._gcode_buffer: list[str] = []
+        self._append_gcode: bool = False
+
         # Delete set cmd bc we use our own
         delattr(Cmd, 'do_set')
         # Create some hooks to handle the starting and stopping of our thread
@@ -101,7 +101,8 @@ class TriccaAutoPipetteShell(Cmd):
         self.webutils.stop_websocket_listener()
         self.console.print("Exited gracefully.")
 
-    def _precommand_hook(self, data: plugin.PrecommandData) -> plugin.PrecommandData:
+    def _precommand_hook(self,
+                         data: plugin.PrecommandData) -> plugin.PrecommandData:
         """Check commands before running.
 
         TODO find a way to label all moving commands so the below doesn't need
@@ -115,17 +116,26 @@ class TriccaAutoPipetteShell(Cmd):
             data.stop = True
         return data
 
-    def output_gcode(self, gcode: str, filename: str = None) -> None:
+    def output_gcode(self,
+                     gcode: list[str],
+                     filename: str = None,
+                     append_header: bool = False) -> None:
         """Direct gcode output."""
         if self._append_gcode:
-            self._gcode_buf += gcode + "\n"
+            self._gcode_buffer + gcode
+            self._gcode_buffer.append("\n")
         else:
             now = datetime.now()
             if filename is None:
                 filename = now.strftime("%Y-%m-%d-%H-%M-%S-%f.gcode")
             file_path = self.GCODE_PATH / "temp/" / filename
             with open(file_path, 'w') as file:
-                file.write(gcode + "\n")
+                if append_header:
+                    header = self._autopipette.get_header()
+                    for comment in header:
+                        file.write(comment)
+                for cmd in gcode:
+                    file.write(cmd)
             self.webutils.exec_gcode_file(file_path, filename)
             # Delete temp file
             file_path.unlink()
@@ -178,7 +188,7 @@ class TriccaAutoPipetteShell(Cmd):
             filename = "home_all.gcode"
             self._autopipette.home_axis()
             self._autopipette.home_pipette_motors()
-        self.output_gcode(self._autopipette.return_gcode(), filename)
+        self.output_gcode(self._autopipette.get_gcode(), filename)
 
     @with_argparser(TAPCmdParsers.parser_set)
     def do_set(self, args):
@@ -186,12 +196,12 @@ class TriccaAutoPipetteShell(Cmd):
         pip_var: str = args.pip_var
         pip_val: float = args.pip_val
         # Variable should exist in autopipette
-        sections = self._autopipette.conf.keys()
+        sections = self._autopipette.config.keys()
         options = []
         pip_var = pip_var.upper()
         # TODO put limits on pip_val
         for section in sections:
-            options += list(self._autopipette.conf[section].keys())
+            options += list(self._autopipette.config[section].keys())
         options = list(map(str.upper, options))
         if (pip_var not in options):
             err_msg = \
@@ -199,27 +209,27 @@ class TriccaAutoPipetteShell(Cmd):
             rprint(err_msg)
             return
         if (pip_var == "SPEED_FACTOR"):
-            temp = self._autopipette.conf["SPEED"]["SPEED_FACTOR"]
+            temp = self._autopipette.config["SPEED"]["SPEED_FACTOR"]
             msg = f"; SPEED_FACTOR changed from {temp} to {pip_val}\n"
             self._autopipette.set_speed_factor(pip_val)
-            self.output_gcode(msg + self._autopipette.return_gcode())
+            self.output_gcode(self._autopipette.get_gcode().insert(0, msg))
         elif (pip_var == "VELOCITY_MAX"):
-            temp = self._autopipette.conf["SPEED"]["VELOCITY_MAX"]
+            temp = self._autopipette.config["SPEED"]["VELOCITY_MAX"]
             msg = f"; MAX_VELOCITY changed from {temp} to {pip_val}\n"
             self._autopipette.set_max_velocity(pip_val)
-            self.output_gcode(msg + self._autopipette.return_gcode())
+            self.output_gcode(self._autopipette.get_gcode().insert(0, msg))
         elif (pip_var == "ACCEL_MAX"):
-            temp = self._autopipette.conf["SPEED"]["ACCEL_MAX"]
+            temp = self._autopipette.config["SPEED"]["ACCEL_MAX"]
             msg = f"; MAX_ACCEL changed from {temp} to {pip_val}\n"
             self._autopipette.set_max_accel(pip_val)
-            self.output_gcode(msg + self._autopipette.return_gcode())
+            self.output_gcode(self._autopipette.get_gcode().insert(0, msg))
         else:
             for section in sections:
                 # If the variable we want to set is in that section,
                 # set it and return
-                if pip_var in self._autopipette.conf[section].keys():
-                    temp = self._autopipette.conf[section][pip_var]
-                    self._autopipette.conf[section][pip_var] = str(pip_val)
+                if pip_var in self._autopipette.config[section].keys():
+                    temp = self._autopipette.config[section][pip_var]
+                    self._autopipette.config[section][pip_var] = str(pip_val)
                     rprint(f"{pip_var} changed from {temp} to {pip_val}\n")
 
     @with_argparser(TAPCmdParsers.parser_coor)
@@ -231,7 +241,8 @@ class TriccaAutoPipetteShell(Cmd):
         z: float = args.z
         # If the following 3 are decimals, set a location
         self._autopipette.set_location(name_loc, x, y, z)
-        self.output_gcode(f"; Location:{name_loc} set to x:{x} y:{y} z:{z}\n")
+        self.output_gcode(
+            [f"; Location:{name_loc} set to x:{x} y:{y} z:{z}\n"])
 
     @with_argparser(TAPCmdParsers.parser_plate)
     def do_plate(self, args):
@@ -242,7 +253,7 @@ class TriccaAutoPipetteShell(Cmd):
         col: int = args.col
         if (self._autopipette.is_location(name_loc)):
             # If plate type should exist
-            if (plate_type not in PlateTypes.TYPES.keys()):
+            if (plate_type not in PlateFactory.registered()):
                 err_msg = \
                     f"Plate type:{plate_type} does not exist.\n"
                 rprint(err_msg)
@@ -256,7 +267,7 @@ class TriccaAutoPipetteShell(Cmd):
         vol_ul: float = args.vol_ul
         src: str = args.src
         dest: str = args.dest
-        aspirate: bool = args.aspirate
+        prewet: bool = args.prewet
         keep_tip: bool = args.keep_tip
         wiggle: bool = args.wiggle
         src_row: int = args.src_row
@@ -274,9 +285,9 @@ class TriccaAutoPipetteShell(Cmd):
             rprint(err_msg)
             return
         # Make sure there is a garbage for tips
-        if (self._autopipette.garbage is None):
+        if (self._autopipette.waste_container is None):
             err_msg = \
-                "No coordinate set as Garbage.\n"
+                "No plate set as waste container.\n"
             rprint(err_msg)
             return
         # Make sure there is a tip box
@@ -287,9 +298,9 @@ class TriccaAutoPipetteShell(Cmd):
             return
         self._autopipette.pipette(vol_ul, src, dest,
                                   src_row, src_col, dest_row, dest_col,
-                                  keep_tip, aspirate, wiggle)
-        self.output_gcode(f"\n; Pipette {vol_ul} from {src} to {dest}\n" +
-                          self._autopipette.return_gcode() + "\n")
+                                  keep_tip, prewet, wiggle)
+        self.output_gcode([f"\n; Pipette {vol_ul} from {src} to {dest}\n"] +
+                          self._autopipette.get_gcode() + ["\n"])
 
     @with_argparser(TAPCmdParsers.parser_move)
     def do_move(self, args):
@@ -299,7 +310,7 @@ class TriccaAutoPipetteShell(Cmd):
         z: float = args.z
         coor = Coordinate(x, y, z)
         self._autopipette.move_to(coor)
-        self.output_gcode(self._autopipette.return_gcode())
+        self.output_gcode(self._autopipette.get_gcode())
 
     @with_argparser(TAPCmdParsers.parser_move_loc)
     def do_move_loc(self, args):
@@ -313,7 +324,7 @@ class TriccaAutoPipetteShell(Cmd):
         coor = self._autopipette.get_location_coor(loc)
         print(coor)
         self._autopipette.move_to(coor)
-        self.output_gcode(self._autopipette.return_gcode())
+        self.output_gcode(self._autopipette.get_gcode())
 
     @with_argparser(TAPCmdParsers.parser_move_rel)
     def do_move_rel(self, args):
@@ -325,7 +336,7 @@ class TriccaAutoPipetteShell(Cmd):
         self._autopipette.set_coor_sys("relative")
         self._autopipette.move_to(coor)
         self._autopipette.set_coor_sys("absolute")
-        self.output_gcode(self._autopipette.return_gcode())
+        self.output_gcode(self._autopipette.get_gcode())
 
     def do_next_tip(self, _):
         """Pickup the next tip in the tip box."""
@@ -336,12 +347,12 @@ class TriccaAutoPipetteShell(Cmd):
             rprint(f"[yellow]{e}[/]")
         except TipAlreadyOnError as e:
             rprint(f"[yellow]{e}[/]")
-        self.output_gcode(self._autopipette.return_gcode())
+        self.output_gcode(self._autopipette.get_gcode())
 
     def do_eject_tip(self, _):
         """Eject the tip on the pipette."""
         self._autopipette.eject_tip()
-        self.output_gcode(self._autopipette.return_gcode())
+        self.output_gcode(self._autopipette.get_gcode())
 
     def do_print(self, _):
         """Print anything."""
@@ -364,8 +375,8 @@ class TriccaAutoPipetteShell(Cmd):
                                 add_to_history=False,
                                 stop_on_keyboard_interrupt=True)
         self._append_gcode = False
-        self.output_gcode(self._gcode_buf)
-        self._gcode_buf = ""
+        self.output_gcode(self._gcode_buffer, filename, append_header=True)
+        self._gcode_buffer = []
 
     def do_stop(self, args):
         """Send an emergency stop command to the pipette."""
@@ -435,7 +446,7 @@ class TriccaAutoPipetteShell(Cmd):
         msg = args.msg
         rprint(msg)
         self._autopipette.gcode_print(msg)
-        self.output_gcode(self._autopipette.return_gcode())
+        self.output_gcode(self._autopipette.get_gcode())
 
     @with_argparser(TAPCmdParsers.parser_vol_to_steps)
     def do_vol_to_steps(self, args):
@@ -464,8 +475,13 @@ class TriccaAutoPipetteShell(Cmd):
             return
         for loc_name in self._autopipette.locations.keys():
             rprint(f"{loc_name}")
-            for loc_var in self._autopipette.conf[f"COORDINATE {loc_name}"].keys():
-                loc_val = self._autopipette.conf[f"COORDINATE {loc_name}"][loc_var]
+            location = self._autopipette.locations[loc_name]
+            if isinstance(location, Coordinate):
+                key = f"COORDINATE {loc_name}"
+            elif isinstance(location, Plate):
+                key = f"PLATE {loc_name}"
+            for loc_var in self._autopipette.config[key].keys():
+                loc_val = self._autopipette.config[key][loc_var]
                 rprint(f"\t{loc_var}: {loc_val}")
 
     def ls_plates(self):
@@ -476,14 +492,14 @@ class TriccaAutoPipetteShell(Cmd):
             return
         for plate in plates:
             rprint(plate)
-            for plate_var in self._autopipette.conf[f"COORDINATE {plate}"].keys():
-                plate_val = self._autopipette.conf[f"COORDINATE {plate}"][plate_var]
+            for plate_var in self._autopipette.config[f"COORDINATE {plate}"].keys():
+                plate_val = self._autopipette.config[f"COORDINATE {plate}"][plate_var]
                 rprint(f"\t{plate_var}: {plate_val}")
 
     def ls_vars(self):
         """Print all locations."""
         sections_dict = {}
-        sections_dict = self._autopipette.conf
+        sections_dict = self._autopipette.config
         filtered_dict = {
             key: value
             for key, value in sections_dict.items()
@@ -492,23 +508,23 @@ class TriccaAutoPipetteShell(Cmd):
         del filtered_dict["VOLUME_CONV"]
         for section in filtered_dict.keys():
             rprint(section)
-            for var_var in self._autopipette.conf[section].keys():
-                var_val = self._autopipette.conf[section][var_var]
+            for var_var in self._autopipette.config[section].keys():
+                var_val = self._autopipette.config[section][var_var]
                 rprint(f"\t{var_var}: {var_val}")
 
     def ls_conf(self):
         """Print the whole conf file."""
-        for section in self._autopipette.conf.keys():
+        for section in self._autopipette.config.keys():
             rprint(section)
-            for key in self._autopipette.conf[section].keys():
-                val = self._autopipette.conf[section][key]
+            for key in self._autopipette.config[section].keys():
+                val = self._autopipette.config[section][key]
                 rprint(f"\t{key}: {val}")
 
     def ls_vol(self):
         """Print the volume conversion variables."""
         rprint("VOLUME_CONV")
-        for vol_var in self._autopipette.conf["VOLUME_CONV"].keys():
-            vol_val = self._autopipette.conf["VOLUME_CONV"][vol_var]
+        for vol_var in self._autopipette.config["VOLUME_CONV"].keys():
+            vol_val = self._autopipette.config["VOLUME_CONV"][vol_var]
             rprint(f"\t{vol_var}: {vol_val}")
 
     @with_argparser(TAPCmdParsers.parser_ls)

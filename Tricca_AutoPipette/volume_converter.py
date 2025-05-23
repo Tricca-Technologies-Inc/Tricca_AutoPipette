@@ -18,7 +18,7 @@ class VolumeConverter:
                300.0: 117.75,
                400.0: 157.00}
     # Polynomial to get proper uL
-    _poly = Polynomial.fit(list(_consts.keys()), list(_consts.values()), 2)
+    _poly = Polynomial.fit(list(_consts.keys()), list(_consts.values()), 1)
     _poly = _poly.convert()
     # Number of steps to dispense
     dist_disp = 46
