@@ -43,7 +43,7 @@ class TAPCmdParsers():
     parser_pipette.add_argument("vol_ul", type=float)
     parser_pipette.add_argument("src", type=str)
     parser_pipette.add_argument("dest", type=str)
-    parser_pipette.add_argument("--aspirate", action="store_true")
+    parser_pipette.add_argument("--prewet", action="store_true")
     parser_pipette.add_argument("--keep_tip", action="store_true")
     parser_pipette.add_argument("--wiggle", action="store_true")
     parser_pipette.add_argument("--src_row", default=None, type=int)

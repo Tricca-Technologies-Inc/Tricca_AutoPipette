@@ -1,75 +1,59 @@
 #!/usr/bin/env python3
 """Holds the various plate classes."""
+from __future__ import annotations
 from coordinate import Coordinate
-from typing import List, Optional, Callable
+from typing import List, Optional, Type, Dict, ClassVar
 from abc import ABC, abstractmethod
-import math
+from well import Well
+from pydantic import BaseModel, conint, confloat, validator, ConfigDict, \
+                     field_validator, ValidationInfo
 
 
-class Well:
-    """A vessel to hold chemicals."""
+class NotAPlateTypeError(Exception):
+    """Raised when an invalid plate type is specified."""
 
-    class DipStrategies:
-        """A variety of functions to define how to dip into a well.
+    def __init__(self, plate) -> None:
+        """Initialize error."""
+        super().__init__(
+            f"Invalid plate type {plate!r}. "
+            f"Valid types: {PlateFactory.registered()}")
 
-        Add new strategies to DIP_DIST_FUNCS dictionary.
-        """
 
-        @staticmethod
-        def simple(well: 'Well', vol: float) -> float:
-            """Return the dip distance without modification."""
-            return well.dip_top
+class SmartDefaultModel(BaseModel):
+    """Base model that uses defaults for explicit `None` values."""
 
-        @staticmethod
-        def cylinder(well: 'Well', vol: float) -> float:
-            """Return the dip distance of a liquid in a cylinder."""
-            # Make sure dip_btm is defined and return just the top if not
-            if well.dip_btm is None:
-                raise ValueError("dip_btm must be set for cylinder strategy")
-            # Calculate the change in height from taking out liquid
-            well.dip_curr = well.dip_curr + \
-                (vol / (math.pi * (well.diameter / 2.0)**2))
-            # Make sure to never dip further than dip_btm
-            if well.dip_curr > well.dip_btm:
-                well.dip_curr = well.dip_btm
-            return well.dip_curr
+    @field_validator("*", mode="before")
+    def _replace_none_with_default(cls, value, info: ValidationInfo):
+        field = cls.model_fields[info.field_name]
+        return value if value is not None else field.get_default()
 
-    DIP_FUNCS = {"simple": DipStrategies.simple,
-                 "cylinder": DipStrategies.cylinder,
-                 # Reverse the mapping as well so we can save in config
-                 DipStrategies.simple: "simple",
-                 DipStrategies.cylinder: "cylinder"}
 
-    def __init__(self,
-                 coor: Coordinate,
-                 dip_top: float, dip_btm: Optional[float] = None,
-                 dip_dist_func:
-                     Optional[Callable[['Well', float], float]] = None,
-                 diameter: Optional[float] = None):
-        """Initialize a well."""
-        self.coor = coor
-        self.dip_top = dip_top
-        self.dip_btm = dip_btm
-        # Always start at the top of the well
-        self.dip_curr = dip_top
-        self.dip_dist_func = dip_dist_func
-        self.diameter = diameter
-        if (dip_dist_func == Well.DipStrategies.cylinder
-           and (diameter is None or dip_btm is None)):
-            raise ValueError(
-                "diameter and dip_btm required for cylinder strategy")
+class PlateParams(SmartDefaultModel):
+    """A data validation class to hold Plate related variables.
 
-    def get_dip_distance(self, vol: float) -> float:
-        """Return the distance needed to dip into a well."""
-        if self.dip_dist_func:
-            return self.dip_dist_func(self, vol)
-        return self.dip_top
+    TODO Implement validators that set good defaults when None is set
+    """
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)  # Critical fix
+
+    plate_type: str
+    well_template: Well
+    num_row: conint(ge=1) = 1
+    num_col: conint(ge=1) = 1
+    spacing_row: confloat(ge=0) = 0
+    spacing_col: confloat(ge=0) = 0
+
+    @validator("plate_type")
+    def validate_plate_type(cls, v, values):
+        """Ensure the plate_type string can be mapped to a Plate type."""
+        if v not in PlateFactory.registered():
+            raise NotAPlateTypeError(v)
+        return v
 
 
 class Plate(ABC):
     """Generate and manage wells to pipette into."""
 
-    start_coor: Coordinate
     num_row: int
     num_col: int
     spacing_row: float
@@ -77,25 +61,21 @@ class Plate(ABC):
     curr: int
     wells: List[Well]
 
-    def __init__(self,
-                 start_coor: Coordinate,
-                 well: Well,
-                 num_row: int, num_col: int,
-                 spacing_row: float, spacing_col: float):
+    def __init__(self, plate_params: PlateParams) -> None:
         """Initialize by creating all wells on the plate."""
-        self.start_coor = start_coor
-        self.num_row = num_row
-        self.num_col = num_col
-        self.spacing_row = spacing_row
-        self.spacing_col = spacing_col
-        self.wells = self._gen_wells(start_coor, well,
-                                     num_row, num_col,
-                                     spacing_row, spacing_col)
+        self.start_coor = plate_params.well_template.coor
+        self.well_template = plate_params.well_template
+        self.num_row = plate_params.num_row
+        self.num_col = plate_params.num_col
+        self.spacing_row = plate_params.spacing_row
+        self.spacing_col = plate_params.spacing_col
+        self.wells = self._gen_wells(self.start_coor,
+                                     self.well_template,
+                                     self.num_row,
+                                     self.num_col,
+                                     self.spacing_row,
+                                     self.spacing_col)
         self.curr = 0
-
-    def __repr__(self) -> str:
-        """Representation in string form."""
-        return "plate"
 
     @abstractmethod
     def _gen_wells(self,
@@ -128,22 +108,55 @@ class Plate(ABC):
         pass
 
 
+class PlateFactory:
+    """Dedicated factory for plate creation and management."""
+
+    _registry: ClassVar[Dict[str, Type[Plate]]] = {}
+
+    @classmethod
+    def register(cls, plate_type: str) -> callable:
+        """Decorate classes for registering new plate types."""
+        def decorator(subclass: Type[Plate]) -> Type[Plate]:
+            if not issubclass(subclass, Plate):
+                raise TypeError(f"{subclass.__name__} must subclass Plate")
+
+            key = plate_type.strip().lower()
+            if key in cls._registry:
+                raise ValueError(f"Plate type '{key}' already registered")
+
+            cls._registry[key] = subclass
+            return subclass
+        return decorator
+
+    @classmethod
+    def create(cls, plate_params: PlateParams) -> Plate:
+        """Create a plate instance with validation."""
+        key = plate_params.plate_type.strip().lower()
+        if not key:
+            raise ValueError("Plate type cannot be empty")
+        try:
+            plate_class = cls._registry[key]
+        except KeyError:
+            available = list(cls._registry.keys())
+            raise ValueError(
+                f"Invalid plate type '{key}'. Registered types: {available}"
+            ) from None
+
+        return plate_class(plate_params)
+
+    @classmethod
+    def registered(cls) -> List:
+        """Return a list of the keys of the registered classes."""
+        return list(cls._registry.keys())
+
+
+@PlateFactory.register("array")
 class PlateArray(Plate):
     """Generate and manage wells to pipette into."""
 
-    def __init__(self,
-                 start_coor: Coordinate,
-                 well: Well,
-                 num_row: int, num_col: int,
-                 spacing_row: float, spacing_col: float):
+    def __init__(self, plate_params: PlateParams) -> None:
         """Initialize by creating all coordinates on the plate."""
-        super().__init__(start_coor, well,
-                         num_row, num_col,
-                         spacing_row, spacing_col)
-
-    def __repr__(self) -> str:
-        """Representation in string form."""
-        return "platearray"
+        super().__init__(plate_params)
 
     def _gen_wells(self,
                    start_coor: Coordinate,
@@ -151,14 +164,6 @@ class PlateArray(Plate):
                    num_row: int, num_col: int,
                    spacing_row: float, spacing_col: float) -> List[Well]:
         """Generate all the coordinates for the plate."""
-        if num_row is None:
-            num_row = 1
-        if num_col is None:
-            num_col = 1
-        if spacing_row is None:
-            spacing_row = 0
-        if spacing_col is None:
-            spacing_col = 0
         wells = []
         x_start = start_coor.x
         y_start = start_coor.y
@@ -169,10 +174,10 @@ class PlateArray(Plate):
                 y = y_start + (row * spacing_row)
                 z = z_start
                 new_well = Well(
-                    Coordinate(x, y, z),
+                    Coordinate(x=x, y=y, z=z),
                     well.dip_top,
                     well.dip_btm,
-                    well.dip_dist_func,
+                    well.dip_func,
                     diameter=well.diameter)
                 wells.append(new_well)
         return wells
@@ -205,20 +210,17 @@ class PlateArray(Plate):
         return coor
 
 
+@PlateFactory.register("singleton")
 class PlateSingleton(PlateArray):
     """Generate and manage coordinates to pipette into."""
 
-    def __init__(self,
-                 start_coor: Coordinate,
-                 well: Well,
-                 num_row: int, num_col: int,
-                 spacing_row: float, spacing_col: float):
+    def __init__(self, plate_params: PlateParams) -> None:
         """Initialize by creating all coordinates on the plate."""
-        super().__init__(start_coor, well, 1, 1, 0, 0)
-
-    def __repr__(self) -> str:
-        """Representation in string form."""
-        return "platesingleton"
+        plate_params.num_row = 1
+        plate_params.num_col = 1
+        plate_params.spacing_row = 0
+        plate_params.spacing_col = 0
+        super().__init__(plate_params)
 
     def next(self) -> Coordinate:
         """Return the next coordinate.
@@ -228,33 +230,13 @@ class PlateSingleton(PlateArray):
         return self.wells[0].coor
 
 
+@PlateFactory.register("tipbox")
 class TipBox(PlateArray):
     """A plate that contains the tips used in pipetting."""
 
-    def __init__(self,
-                 start_coor: Coordinate,
-                 well: Well = None,
-                 num_row: int = None, num_col: int = None,
-                 spacing_row: float = None, spacing_col: float = None):
+    def __init__(self, plate_params: PlateParams) -> None:
         """Initialize by creating all coordinates on the plate."""
-        if num_row is None:
-            num_row = 12
-        if num_col is None:
-            num_col = 8
-        if spacing_row is None:
-            spacing_row = 9
-        if spacing_col is None:
-            spacing_col = 9
-        if well is None:
-            well = Well(start_coor, 0, 0, Well.DipStrategies.simple, 7)
-        super().__init__(start_coor,
-                         well,
-                         num_row, num_col,
-                         spacing_row, spacing_col)
-
-    def __repr__(self) -> str:
-        """Representation in string form."""
-        return "tipbox"
+        super().__init__(plate_params)
 
     def append_box(self, tipbox: 'TipBox'):
         """Append the coordinates of another TipBox."""
@@ -265,36 +247,15 @@ class TipBox(PlateArray):
         return super().get_dip_distance(vol)
 
 
-class Garbage(PlateSingleton):
-    """A garbage to hold used pipette tips."""
+@PlateFactory.register("waste_container")
+class WasteContainer(PlateSingleton):
+    """A plate to hold used pipette tips and other waste."""
 
-    def __init__(self,
-                 start_coor: Coordinate,
-                 well: Well = None,
-                 num_row: int = None, num_col: int = None,
-                 spacing_row: float = None, spacing_col: float = None):
+    def __init__(self, plate_params: PlateParams) -> None:
         """Initialize by creating by calling super method."""
         # Can never have variation in how far it dips
-        if well is None:
-            well = Well(start_coor, 0, 0, Well.DipStrategies.simple, 7)
-        super().__init__(start_coor, well, 1, 1, 0, 0)
-
-    def __repr__(self) -> str:
-        """Representation in string form."""
-        return "garbage"
+        super().__init__(plate_params)
 
     def get_dip_distance(self, vol: float = 0.0) -> float:
         """Return the distance to dip and grab a tip."""
         return super().get_dip_distance(vol)
-
-
-class PlateTypes:
-    """A data class that holds meta-data on all the plate types."""
-
-    # A full list of every Plate type
-    TYPES = {
-        "array": PlateArray,
-        "singleton": PlateSingleton,
-        "tipbox": TipBox,
-        "garbage": Garbage
-        }
