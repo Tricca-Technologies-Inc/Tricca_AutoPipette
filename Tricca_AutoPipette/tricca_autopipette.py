@@ -11,8 +11,6 @@ from tap_web_utils import TAPWebUtils
 from rich import print as rprint
 from res.string_constants import TAP_CLR_BANNER
 from rich.console import Console
-from threaded_event_loop_manager import ThreadedEventLoopManager
-import asyncio
 from moonraker_requests import MoonrakerRequests
 from plates import Plate, PlateFactory
 # from tap_webcam import TAPWebcam
@@ -35,8 +33,6 @@ class TriccaAutoPipetteShell(Cmd):
     prompt: str = "autopipette >> "
     hostname: str = ""
     webutils: TAPWebUtils = None
-    alert_manager: ThreadedEventLoopManager = None
-    alert_task = None
     console: Console = None
     mrr: MoonrakerRequests = None
 
@@ -64,8 +60,6 @@ class TriccaAutoPipetteShell(Cmd):
         self.debug = True
         self.console = Console()
         self.mrr = MoonrakerRequests()
-        self.alert_manager = ThreadedEventLoopManager()
-        self.alert_manager.start()
 
         # Gcode Variables
         self._gcode_buffer: list[str] = []
@@ -79,7 +73,7 @@ class TriccaAutoPipetteShell(Cmd):
         self.register_precmd_hook(self._precommand_hook)
 
     def _preloop_hook(self) -> None:
-        """Start the alerter thread."""
+        """Print the banner."""
         # self.screen_printer = TAPScreenPrinter(self,
         #                                        self.need_prompt_refresh,
         #                                        self.async_refresh_prompt,
@@ -95,9 +89,8 @@ class TriccaAutoPipetteShell(Cmd):
         # self.register_command_set(CommandSetPipette())
 
     def _postloop_hook(self) -> None:
-        """Stop the alerter thread."""
+        """Stop other threads."""
         # self.screen_printer.close()
-        self.alert_manager.stop()
         self.webutils.stop_websocket_listener()
         self.console.print("Exited gracefully.")
 
@@ -139,17 +132,6 @@ class TriccaAutoPipetteShell(Cmd):
             self.webutils.exec_gcode_file(file_path, filename)
             # Delete temp file
             file_path.unlink()
-
-    async def alerter_coroutine(self):
-        """Coroutine for managing asynchronous alerts."""
-        while True:
-            if self.terminal_lock.acquire(blocking=False):
-                # Process messages from the queue
-                message = self.alert_manager.dequeue_message()
-                if message:
-                    self.async_alert(message)
-                self.terminal_lock.release()
-            await asyncio.sleep(0.5)  # Non-blocking sleep
 
     """--------------------------Commands Below-----------------------------"""
     @with_argparser(TAPCmdParsers.parser_home)
@@ -196,6 +178,7 @@ class TriccaAutoPipetteShell(Cmd):
         pip_var: str = args.pip_var
         pip_val: float = args.pip_val
         # Variable should exist in autopipette
+        # TODO use pydantic properly here
         sections = self._autopipette.config.keys()
         options = []
         pip_var = pip_var.upper()
@@ -405,21 +388,6 @@ class TriccaAutoPipetteShell(Cmd):
     def do_request(self, args):
         """Try a request."""
         pass
-
-    def do_start_alerts(self, _):
-        """Start the alerter thread."""
-        if self.alert_task and not self.alert_task.done():
-            rprint("Alerts are already running.")
-        else:
-            self.alert_task = \
-                self.alert_manager.submit_coroutine(self.alerter_coroutine())
-            rprint("Alerts started.")
-
-    def do_stop_alerts(self, _):
-        """Stop the alerter thread."""
-        if self.alert_task:
-            self.alert_task.cancel()
-            print("Alerts stopped.")
 
     def do_save(self, _):
         """Save the autopipette config."""
