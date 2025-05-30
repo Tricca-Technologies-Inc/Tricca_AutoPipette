@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Holds the requests for the pipette server."""
+import uuid
+from typing import Dict, List, Optional, Union
 
 
-class MoonrakerRequests():
+class MoonrakerRequests:
     """A data class holding all the requests for Moonraker."""
 
-    jsonrpc: str = "2.0"
-    methods: list[str] = [
+    JSON_RPC_VERSION: str = "2.0"
+    METHODS: List[str] = [
         # Server
         "server.info",
         "server.config",
@@ -29,10 +31,10 @@ class MoonrakerRequests():
         "printer.gcode.script",
         "printer.gcode.help",
         # Print Management
-        "printer.print.start",           # Done
-        "printer.print.pause",           # Done
-        "printer.print.resume",          # Done
-        "printer.print.cancel",          # Done
+        "printer.print.start",
+        "printer.print.pause",
+        "printer.print.resume",
+        "printer.print.cancel",
         # Machine Requests
         "machine.system_info",
         "machine.shutdown",
@@ -139,939 +141,677 @@ class MoonrakerRequests():
         "server.sensors.measurements",
         "server.sensors.measurements",
     ]
-    id: int = 0
-    subscribable: list[str] = [
-        "angle"
-        "bed_mesh",
-        "bed_screws",
-        "configfile",
-        "display_status",
-        "endstop_phase",
-        "exclude_object",
-        "extruder_stepper",
-        "fan",
-        "filament_switch_sensor",
-        "filament_motion_sensor",
-        "firmware_retraction",
-        "gcode",
-        "gcode_button",
-        "gcode_macro",
-        "gcode_move",
-        "hall_filament_width_sensor",
-        "heater",
-        "heaters",
-        "idle_timeout",
-        "led",
-        "manual_probe",
-        "mcu",
-        "motion_report",
-        "output_pin",
-        "palette2",
-        "pause_resume",
-        "print_stats",
-        "probe",
-        "pwm_cycle_time",
-        "quad_gantry_level",
-        "query_endstops",
-        "screws_tilt_adjust",
-        "servo",
-        "stepper_enable",
-        "system_stats",
-        "temperature sensors",
-        "temperature_fan",
-        "temperature_sensor",
-        "tmc drivers",
-        "toolhead",
-        "dual_carriage",
-        "virtual_sdcard",
-        "webhooks",
-        "z_thermal_adjust",
-        "z_tilt",
-        ]
+    SUBSCRIBABLE: List[str] = [
+        "angle", "bed_mesh", "bed_screws", "configfile", "display_status",
+        "endstop_phase", "exclude_object", "extruder_stepper", "fan",
+        "filament_switch_sensor", "filament_motion_sensor",
+        "firmware_retraction", "gcode", "gcode_button", "gcode_macro",
+        "gcode_move", "hall_filament_width_sensor", "heater", "heaters",
+        "idle_timeout", "led", "manual_probe", "mcu", "motion_report",
+        "output_pin", "palette2", "pause_resume", "print_stats", "probe",
+        "pwm_cycle_time", "quad_gantry_level", "query_endstops",
+        "screws_tilt_adjust", "servo", "stepper_enable", "system_stats",
+        "temperature sensors", "temperature_fan", "temperature_sensor",
+        "tmc drivers", "toolhead", "dual_carriage", "virtual_sdcard",
+        "webhooks", "z_thermal_adjust", "z_tilt",
+    ]
 
-    def __init__(self):
-        """Initialize the data class."""
-        pass
+    def gen_request(
+        self,
+        method: str,
+        params: Optional[Dict] = None
+    ) -> Dict[str, Union[str, Dict]]:
+        """
+        Generate a Moonraker JSON-RPC request.
 
-    def gen_request(self, method: str, params: dict = None) -> dict:
-        """Return a dictionary object representative of a moonraker request."""
-        if params is None:
-            request = {
-                "jsonrpc": self.jsonrpc,
-                "method": method,
-                "id": self.gen_id(),
-            }
-        else:
-            request = {
-                "jsonrpc": self.jsonrpc,
-                "method": method,
-                "params": params,
-                "id": self.gen_id(),
-            }
+        Args:
+            method: The Moonraker method to call
+            params: Optional parameters for the method
+
+        Returns:
+            Dictionary representing the JSON-RPC request
+        """
+        request = {
+            "jsonrpc": self.JSON_RPC_VERSION,
+            "method": method,
+            "id": str(uuid.uuid4()),
+        }
+        if params is not None:
+            request["params"] = params
         return request
 
-    def gen_id(self) -> str:
-        """Generate a unique id."""
-        self.id += 1
-        return self.id
+    def request_sub_to_objs(self, objs: List[str]) -> Dict:
+        """
+        Create subscription request for printer objects.
 
-    def request_sub_to_objs(self, objs: list[str]) -> None:
-        """Create a subsciption request to monitor objects on the pipette."""
-        objects = {}
-        for obj in objs:
-            if obj not in self.subscribable:
-                continue
-            objects[obj] = None
+        Args:
+           objs: List of objects to subscribe to
+
+        Returns:
+            Subscription request dictionary
+        """
+        objects = {obj: None for obj in objs if obj in self.SUBSCRIBABLE}
+        return self.gen_request("printer.objects.subscribe",
+                                {"objects": objects})
+
+    # ------ Server Administration --------------------------------------------
+    def server_info(self) -> Dict:
+        """Get server information."""
+        return self.gen_request("server.info")
+
+    def server_config(self) -> Dict:
+        """Get server configuration."""
+        return self.gen_request("server.config")
+
+    def server_temperature_store(self, include_monitors: bool = False) -> Dict:
+        """Get temperature store data."""
+        return self.gen_request("server.temperature_store",
+                                {"include_monitors": include_monitors})
+
+    def server_gcode_store(self, count: int = 100) -> Dict:
+        """Get stored GCode commands."""
+        return self.gen_request("server.gcode_store", {"count": count})
+
+    def server_logs_rollover(self, application: str = "moonraker") -> Dict:
+        """Roll over log files."""
+        return self.gen_request("server.logs.rollover",
+                                {"application": application})
+
+    def server_restart(self) -> Dict:
+        """Restart Moonraker service."""
+        return self.gen_request("server.restart")
+
+    def server_connection_identify(
+        self,
+        client_name: str,
+        version: str,
+        client_type: str,
+        url: str,
+        access_token: Optional[str] = None,
+        api_key: Optional[str] = None
+    ) -> Dict:
+        """Identify client connection."""
+        params = {
+            "client_name": client_name,
+            "version": version,
+            "type": client_type,
+            "url": url,
+        }
+        if access_token:
+            params["access_token"] = access_token
+        if api_key:
+            params["api_key"] = api_key
+        return self.gen_request("server.connection.identify", params)
+
+    def server_websocket_id(self) -> Dict:
+        """Get WebSocket connection ID."""
+        return self.gen_request("server.websocket.id")
+
+    # ------ Printer Administration -------------------------------------------
+    def printer_info(self) -> Dict:
+        """Get printer information."""
+        return self.gen_request("printer.info")
+
+    def printer_emergency_stop(self) -> Dict:
+        """Execute emergency stop."""
+        return self.gen_request("printer.emergency_stop")
+
+    def printer_restart(self) -> Dict:
+        """Restart printer/firmware."""
+        return self.gen_request("printer.restart")
+
+    # ------ Printer Status ---------------------------------------------------
+    def printer_objects_list(self) -> Dict:
+        """List available printer objects."""
+        return self.gen_request("printer.objects.list")
+
+    def printer_objects_query(self,
+                              objects: Dict[str, Optional[List[str]]]) -> Dict:
+        """
+        Query printer objects.
+
+        Args:
+            objects: Dictionary of objects to query {object: [fields]}
+        """
+        return self.gen_request("printer.objects.query", {"objects": objects})
+
+    def printer_query_endstops_status(self) -> Dict:
+        """Query endstop status."""
+        return self.gen_request("printer.query_endstops.status")
+
+    # ------ GCode API --------------------------------------------------------
+    def printer_gcode_script(self, script: str) -> Dict:
+        """Execute GCode script."""
+        return self.gen_request("printer.gcode.script", {"script": script})
+
+    def printer_gcode_help(self) -> Dict:
+        """Get GCode help."""
+        return self.gen_request("printer.gcode.help")
+
+    # ------ Print Management -------------------------------------------------
+    def printer_print_start(self, filename: str) -> Dict:
+        """Start a print job."""
+        return self.gen_request("printer.print.start", {"filename": filename})
+
+    def printer_print_pause(self) -> Dict:
+        """Pause current print."""
+        return self.gen_request("printer.print.pause")
+
+    def printer_print_resume(self) -> Dict:
+        """Resume paused print."""
+        return self.gen_request("printer.print.resume")
+
+    def printer_print_cancel(self) -> Dict:
+        """Cancel current print."""
+        return self.gen_request("printer.print.cancel")
+
+    # ------ Machine Requests -------------------------------------------------
+    def machine_system_info(self) -> Dict:
+        """Get system information."""
+        return self.gen_request("machine.system_info")
+
+    def machine_shutdown(self) -> Dict:
+        """Shutdown system."""
+        return self.gen_request("machine.shutdown")
+
+    def machine_reboot(self) -> Dict:
+        """Reboot system."""
+        return self.gen_request("machine.reboot")
+
+    def machine_services_restart(self, service: str) -> Dict:
+        """Restart system service."""
+        return self.gen_request("machine.services.restart",
+                                {"service": service})
+
+    def machine_services_stop(self, service: str) -> Dict:
+        """Stop system service."""
+        return self.gen_request("machine.services.stop", {"service": service})
+
+    def machine_proc_stats(self) -> Dict:
+        """Request system usage."""
+        return self.gen_request("machine.proc_stats")
+
+    def machine_sudo_info(self, check_access: bool = False) -> Dict:
+        """Retrieve sudo information status."""
+        return self.gen_request("machine.sudo.info",
+                                {"check_access": check_access})
+
+    def machine_sudo_password(self, password: str) -> Dict:
+        """Set the sudo password currently used by Moonraker."""
+        return self.gen_request("machine.sudo.password",
+                                {"password": password})
+
+    def machine_peripherals_usb(self) -> Dict:
+        """List all USB devices currently detected on system."""
+        return self.gen_request("machine.peripheral.usb")
+
+    def machine_peripherals_serial(self) -> Dict:
+        """List all serial devices currently detected on system."""
+        return self.gen_request("machine.peripherals.serial")
+
+    def machine_peripherals_video(self) -> Dict:
+        """List all V4L2 video capture devices on the system."""
+        return self.gen_request("machine.peripherals.video")
+
+    def machine_peripherals_canbus(self, interface: str = "can0") -> Dict:
+        """Query the provided canbus interface."""
+        return self.gen_request("machine.peripherals.canbus",
+                                {"interface": interface})
+
+    # ------ File Operations -------------------------------------------------
+    def server_files_list(self, root: Optional[str] = None) -> Dict:
+        """List files in a directory."""
         params = {}
-        params["objects"] = objects
-        return self.gen_request("printer.objects.subscribe", params)
+        if root is not None:
+            params["root"] = root
+        return self.gen_request("server.files.list", params)
 
-    # ------Server Administration----------------------------------------------
-    request_server_info = {
-        "jsonrpc": "2.0",
-        "method": "server.info",
-        "id": 9546
-    }
-    request_server_config = {
-        "jsonrpc": "2.0",
-        "method": "server.config",
-        "id": 5616
-    }
-    request_temperature_store = {
-        "jsonrpc": "2.0",
-        "method": "server.temperature_store",
-        "params": {
-            "include_monitors": False
-        },
-        "id": 2313
-    }
-    request_gcode_store = {
-        "jsonrpc": "2.0",
-        "method": "server.gcode_store",
-        "params": {
-            "count": 100
-        },
-        "id": 7643
-    }
-    request_roll_over = {
-        "jsonrpc": "2.0",
-        "method": "server.logs.rollover",
-        "params": {
-            "application": "moonraker"
-        },
-        "id": 4656
-    }
-    request_restart = {
-        "jsonrpc": "2.0",
-        "method": "server.restart",
-        "id": 4656
-    }
-    request_identify_connection = {
-        "jsonrpc": "2.0",
-        "method": "server.connection.identify",
-        "params": {
-            "client_name": "moontest",
-            "version": "0.0.1",
-            "type": "web",
-            "url": "http://github.com/arksine/moontest",
-            "access_token": "<base64 encoded token>",
-            "api_key": "<system api key>"
-        },
-        "id": 4656
-    }
-    request_websocket_id = {
-        "jsonrpc": "2.0",
-        "method": "server.websocket.id",
-        "id": 4656
-    }
+    def server_files_roots(self) -> Dict:
+        """Get available file roots."""
+        return self.gen_request("server.files.roots")
 
-    # ------printer administration---------------------------------------------
-    request_info = {
-        "jsonrpc": "2.0",
-        "method": "printer.info",
-        "id": 5445
-    }
-    request_emergency_stop = {
-        "jsonrpc": "2.0",
-        "method": "printer.emergency_stop",
-        "id": 4564
-    }
-    request_restart = {
-        "jsonrpc": "2.0",
-        "method": "printer.restart",
-        "id": 4894
-    }
-    # ------printer status-----------------------------------------------------
-    request_objs_list = {
-        "jsonrpc": "2.0",
-        "method": "printer.objects.list",
-        "id": 1454
-    }
-    request_objs_query = {
-        "jsonrpc": "2.0",
-        "method": "printer.objects.query",
-        "params": {
-            "objects": {
-                "gcode_move": None,
-                "toolhead": ["position", "status"]
-            }
-        },
-        "id": 4654
-    }
-    request_objs_sub = {
-        "jsonrpc": "2.0",
-        "method": "printer.objects.subscribe",
-        "params": {
-            "objects": {
-                "gcode_move": None,
-                "toolhead": ["position", "status"]
-            }
-        },
-        "id": 5434
-    }
-    request_query_endstops = {
-        "jsonrpc": "2.0",
-        "method": "printer.query_endstops.status",
-        "id": 3456
-    }
-    # ------gcode api----------------------------------------------------------
-    request_gcode_script = {
-        "jsonrpc": "2.0",
-        "method": "printer.gcode.script",
-        "params": {
-            "script": "g28"
-        },
-        "id": 7466
-    }
-    request_gcode_help = {
-        "jsonrpc": "2.0",
-        "method": "printer.gcode.help",
-        "id": 4645
-    }
-    # ------print management--------------------------------------------------
-    request_print_start = {
-        "jsonrpc": "2.0",
-        "method": "printer.print.start",
-        "params": {
-            "filename": "test_pring.gcode"
-        },
-        "id": 4654
-    }
-    request_print_pause = {
-        "jsonrpc": "2.0",
-        "method": "printer.print.pause",
-        "id": 4564
-    }
-    request_print_resume = {
-        "jsonrpc": "2.0",
-        "method": "printer.print.resume",
-        "id": 1465
-    }
-    request_print_cancel = {
-        "jsonrpc": "2.0",
-        "method": "printer.print.cancel",
-        "id": 2578
-    }
-    # ------machine requests---------------------------------------------------
-    request_machine_sys_info = {
-        "jsonrpc": "2.0",
-        "method": "machine.system_info",
-        "id": 4665
-    }
-    request_machine_shutdown = {
-        "jsonrpc": "2.0",
-        "method": "machine.shutdown",
-        "id": 4665
-    }
-    request_machine_reboot = {
-        "jsonrpc": "2.0",
-        "method": "machine.reboot",
-        "id": 4665
-    }
-    request_machine_services_restart = {
-        "jsonrpc": "2.0",
-        "method": "machine.services.restart",
-        "params": {
-            "service": "{name}"
-        },
-        "id": 4656
-    }
-    request_machine_services_stop = {
-        "jsonrpc": "2.0",
-        "method": "machine.services.stop",
-        "params": {
-            "service": "{name}"
-            },
-        "id": 4645
-    }
-    request_machine_services_start = {
-        "jsonrpc": "2.0",
-        "method": "machine.services.start",
-        "params": {
-            "service": "{name}"
-        },
-        "id": 4645
-    }
-    request_machine_proc_stats = {
-        "jsonrpc": "2.0",
-        "method": "machine.proc_stats",
-        "id": 7896
-    }
-    request_sudo_info = {
-        "jsonrpc": "2.0",
-        "method": "machine.sudo.info",
-        "params": {
-            "check_access": False
-        },
-        "id": 7896
-    }
-    request_sudo_password = {
-        "jsonrpc": "2.0",
-        "method": "machine.sudo.password",
-        "params": {
-            "password": "linux_user_password"
-        },
-        "id": 7896
-    }
-    request_peripherals_usb = {
-        "jsonrpc": "2.0",
-        "method": "machine.peripherals.usb",
-        "id": 7896
-    }
-    request_peripherals_serial = {
-        "jsonrpc": "2.0",
-        "method": "machine.peripherals.serial",
-        "id": 7896
-    }
-    request_peripherals_video = {
-        "jsonrpc": "2.0",
-        "method": "machine.peripherals.video",
-        "id": 7896
-    }
-    request_peripherals_canbus = {
-        "jsonrpc": "2.0",
-        "method": "machine.peripherals.canbus",
-        "params": {
-            "interface": "can0"
-        },
-        "id": 7896
-    }
-    # ------file operations----------------------------------------------------
-    request_files_list = {
-        "jsonrpc": "2.0",
-        "method": "server.files.list",
-        "params": {
-            "root": "{root_folder}"
-        },
-        "id": 4644
-    }
-    request_files_roots = {
-        "jsonrpc": "2.0",
-        "method": "server.files.roots",
-        "id": 4644
-    }
-    request_files_metadata = {
-        "jsonrpc": "2.0",
-        "method": "server.files.metadata",
-        "params": {
-            "filename": "{filename}"
-        },
-        "id": 3545
-    }
-    request_files_metascan = {
-        "jsonrpc": "2.0",
-        "method": "server.files.metascan",
-        "params": {
-            "filename": "{filename}"
-        },
-        "id": 3545
-    }
-    request_files_thumbnail = {
-        "jsonrpc": "2.0",
-        "method": "server.files.thumbnails",
-        "params": {
-            "filename": "{filename}"
-        },
-        "id": 3545
-    }
-    request_files_get_directory = {
-        "jsonrpc": "2.0",
-        "method": "server.files.get_directory",
-        "params": {
-            "path": "gcodes/my_subdir",
-            "extended": True
-        },
-        "id": 5644
-    }
-    request_files_post_directory = {
-        "jsonrpc": "2.0",
-        "method": "server.files.post_directory",
-        "params": {
-            "path": "gcodes/my_new_dir"
-        },
-        "id": 6548
-    }
-    request_files_delete_directory = {
-        "jsonrpc": "2.0",
-        "method": "server.files.delete_directory",
-        "params": {
-            "path": "gcodes/my_subdir",
-            "force": False
-        },
-        "id": 6545
-    }
-    request_files_move = {
-        "jsonrpc": "2.0",
-        "method": "server.files.move",
-        "params": {
-            "source": "gcodes/testdir/my_file.gcode",
-            "dest": "gcodes/subdir/my_file.gcode"
-        },
-        "id": 5664
-    }
-    request_files_copy = {
-        "jsonrpc": "2.0",
-        "method": "server.files.copy",
-        "params": {
-            "source": "gcodes/my_file.gcode",
-            "dest": "gcodes/subdir/my_file.gcode"
-        },
-        "id": 5623
-    }
-    request_files_zip = {
-        "jsonrpc": "2.0",
-        "method": "server.files.zip",
-        "params": {
-            "dest": "config/errorlogs.zip",
-            "items": [
-                "config/printer.cfg",
-                "logs",
-                "gcodes/subfolder"
-            ],
-            "store_only": False
-        },
-        "id": 5623
-    }
-    # upload / download done through http request
-    request_files_delete = {
-        "jsonrpc": "2.0",
-        "method": "server.files.delete_file",
-        "params": {
-            "path": "{root}/{filename}"
-        },
-        "id": 1323
-    }
-    # ------authorization------------------------------------------------------
-    request_access_login = {
-        "jsonrpc": "2.0",
-        "method": "access.login",
-        "params": {
-            "username": "my_user",
-            "password": "my_password",
-            "source": "moonraker"
-        },
-        "id": 1323
-    }
-    request_access_logout = {
-        "jsonrpc": "2.0",
-        "method": "access.logout",
-        "id": 1323
-    }
-    request_get_user = {
-        "jsonrpc": "2.0",
-        "method": "access.get_user",
-        "id": 1323
-    }
-    request_access_post_user = {
-        "jsonrpc": "2.0",
-        "method": "access.post_user",
-        "params": {
-            "username": "my_user",
-            "password": "my_password"
-        },
-        "id": 1323
-    }
-    request_access_delete_user = {
-        "jsonrpc": "2.0",
-        "method": "access.delete_user",
-        "params": {
-            "username": "my_username"
-        },
-        "id": 1323
-    }
-    request_access_users_list = {
-        "jsonrpc": "2.0",
-        "method": "access.users.list",
-        "id": 1323
-    }
-    request_access_user_password = {
-        "jsonrpc": "2.0",
-        "method": "access.user.password",
-        "params": {
-            "password": "my_current_password",
-            "new_password": "my_new_pass"
-        },
-        "id": 1323
-    }
-    request_access_refesh_jwt = {
-        "jsonrpc": "2.0",
-        "method": "access.refresh_jwt",
-        "params": {
-            "refresh_token": "long-string-looking-thing"
-        },
-        "id": 1323
-    }
-    request_access_oneshot_token = {
-        "jsonrpc": "2.0",
-        "method": "access.oneshot_token",
-        "id": 1323
-    }
-    request_access_info = {
-        "jsonrpc": "2.0",
-        "method": "access.info",
-        "id": 1323
-    }
-    request_access_get_api_key = {
-        "jsonrpc": "2.0",
-        "method": "access.get_api_key",
-        "id": 1323
-    }
-    request_access_post_api_key = {
-        "jsonrpc": "2.0",
-        "method": "access.post_api_key",
-        "id": 1323
-    }
-    # ------database apis------------------------------------------------------
-    request_database_list = {
-        "jsonrpc": "2.0",
-        "method": "server.database.list",
-        "id": 8694
-    }
-    request_database_get_item = {
-        "jsonrpc": "2.0",
-        "method": "server.database.get_item",
-        "params": {
-            "namespace": "{namespace}",
-            "key": "{key}"
-        },
-        "id": 5644
-    }
-    request_database_post_item = {
-        "jsonrpc": "2.0",
-        "method": "server.database.post_item",
-        "params": {
-            "namespace": "{namespace}",
-            "key": "{key}",
-            "value": 100
-        },
-        "id": 4654
-    }
-    request_database_delete_item = {
-        "jsonrpc": "2.0",
-        "method": "server.database.delete_item",
-        "params": {
-            "namespace": "{namespace}",
-            "key": "{key}"
-        },
-        "id": 4654
-    }
-    request_database_compact = {
-        "jsonrpc": "2.0",
-        "method": "server.database.compact",
-        "id": 4654
-    }
-    request_database_post_backup = {
-        "jsonrpc": "2.0",
-        "method": "server.database.post_backup",
-        "params": {
-            "filename": "sql-db-backup.db"
-        },
-        "id": 4654
-    }
-    request_database_delete_backup = {
-        "jsonrpc": "2.0",
-        "method": "server.database.delete_backup",
-        "params": {
-            "filename": "sql-db-backup.db"
-        },
-        "id": 4654
-    }
-    request_database_restore = {
-        "jsonrpc": "2.0",
-        "method": "server.database.restore",
-        "params": {
-            "filename": "sql-db-backup.db"
-        },
-        "id": 4654
-    }
-    # ------job queue apis-----------------------------------------------------
-    request_job_queue_status = {
-        "jsonrpc": "2.0",
-        "method": "server.job_queue.status",
-        "id": 4654
-    }
-    request_job_queue_post_job = {
-        "jsonrpc": "2.0",
-        "method": "server.job_queue.post_job",
-        "params": {
-            "filenames": [
-                "job1.gcode",
-                "job2.gcode",
-                "subdir/job3.gcode"
-            ],
-            "reset": False
-        },
-        "id": 4654
-    }
-    request_job_queue_delete_job = {
-        "jsonrpc": "2.0",
-        "method": "server.job_queue.delete_job",
-        "params": {
-            "job_ids": [
-                "0000000066d991f0",
-                "0000000066d99d80"
-            ]
-        },
-        "id": 4654
-    }
-    request_job_queue_pause = {
-        "jsonrpc": "2.0",
-        "method": "server.job_queue.pause",
-        "id": 4654
-    }
-    request_job_queue_start = {
-        "jsonrpc": "2.0",
-        "method": "server.job_queue.start",
-        "id": 4654
-    }
-    request_job_queue_jump = {
-        "jsonrpc": "2.0",
-        "method": "server.job_queue.jump",
-        "params": {
-            "job_id": "0000000066d991f0"
-        },
-        "id": 4654
-    }
-    # ------announcement apis--------------------------------------------------
-    request_announcements_list = {
-        "jsonrpc": "2.0",
-        "method": "server.announcements.list",
-        "params": {
-            "include_dismissed": False
-        },
-        "id": 4654
-    }
-    request_announcements_update = {
-        "jsonrpc": "2.0",
-        "method": "server.announcements.update",
-        "id": 4654
-    }
-    request_announcements_dismiss = {
-        "jsonrpc": "2.0",
-        "method": "server.announcements.dismiss",
-        "params": {
-            "entry_id": "arksine/moonlight/issue/1",
-            "wake_time": 600
-        },
-        "id": 4654
-    }
-    request_announcements_feeds = {
-        "jsonrpc": "2.0",
-        "method": "server.announcements.feeds",
-        "id": 4654
-    }
-    requests_announcements_post_feed = {
-        "jsonrpc": "2.0",
-        "method": "server.announcements.post_feed",
-        "params": {
-            "name": "my_feed"
-        },
-        "id": 4654
-    }
-    request_announcements_delete_feed = {
-        "jsonrpc": "2.0",
-        "method": "server.announcements.delete_feed",
-        "params": {
-            "name": "my_feed"
-        },
-        "id": 4654
-    }
-    # ------webcam apis--------------------------------------------------------
-    request_webcams_list ={
-        "jsonrpc": "2.0",
-        "method": "server.webcams.list",
-        "id": 4654
-    }
-    request_webcams_get_item = {
-        "jsonrpc": "2.0",
-        "method": "server.webcams.get_item",
-        "params": {
-            "uid": "341778f9-387f-455b-8b69-ff68442d41d9"
-        },
-        "id": 4654
-    }
-    request_webcams_post_item = {
-        "jsonrpc": "2.0",
-        "method": "server.webcams.post_item",
-        "params": {
-            "name": "cam_name",
-            "snapshot_url": "/webcam?action=snapshot",
-            "stream_url": "/webcam?action=stream"
-        },
-        "id": 4654
-    }
-    request_webcams_delete_item = {
-        "jsonrpc": "2.0",
-        "method": "server.webcams.delete_item",
-        "params": {
-            "uid": "341778f9-387f-455b-8b69-ff68442d41d9"
-        },
-        "id": 4654
-    }
-    request_webcams_test = {
-        "jsonrpc": "2.0",
-        "method": "server.webcams.test",
-        "params": {
-            "uid": "341778f9-387f-455b-8b69-ff68442d41d9"
-        },
-        "id": 4654
-    }
-    # ------notifier apis------------------------------------------------------
-    request_notifiers_list = {
-        "jsonrpc": "2.0",
-        "method": "server.notifiers.list",
-        "id": 4654
-    }
-    # ------update manager apis------------------------------------------------
-    request_update_status = {
-        "jsonrpc": "2.0",
-        "method": "machine.update.status",
-        "params": {
-            "refresh": False
-        },
-        "id": 4644
-    }
-    request_update_refresh = {
-        "jsonrpc": "2.0",
-        "method": "machine.update.refresh",
-        "params": {
-            "name": "klipper"
-        },
-        "id": 4644
-    }
-    request_update_full = {
-        "jsonrpc": "2.0",
-        "method": "machine.update.full",
-        "id": 4645
-    }
-    request_update_moonraker = {
-        "jsonrpc": "2.0",
-        "method": "machine.update.moonraker",
-        "id": 4645
-    }
-    request_update_klipper = {
-        "jsonrpc": "2.0",
-        "method": "machine.update.klipper",
-        "id": 5745
-    }
-    request_update_client = {
-        "jsonrpc": "2.0",
-        "method":  "machine.update.client",
-        "params": {
-            "name": "client_name"
-        },
-        "id": 8546
-    }
-    request_update_system = {
-        "jsonrpc": "2.0",
-        "method": "machine.update.system",
-        "id": 4564
-    }
-    request_update_recover = {
-        "jsonrpc": "2.0",
-        "method": "machine.update.recover",
-        "params": {
-            "name": "moonraker",
-            "hard": False
-        },
-        "id": 4564
-    }
-    request_update_rollback = {
-        "jsonrpc": "2.0",
-        "method": "machine.update.rollback",
-        "params": {
-            "name": "moonraker"
-        },
-        "id": 4564
-    }
-    # ------power apis---------------------------------------------------------
-    request_device_power_devices = {
-        "jsonrpc": "2.0",
-        "method": "machine.device_power.devices",
-        "id": 5646
-    }
-    request_device_power_get_device = {
-        "jsonrpc": "2.0",
-        "method": "machine.device_power.get_device",
-        "params": {
-            "device": "green_led"
-        },
-        "id": 4564
-    }
-    request_device_power_post_device = {
-        "jsonrpc": "2.0",
-        "method": "machine.device_power.post_device",
-        "params": {
-            "device": "green_led",
-            "action": "on"
-        },
-        "id": 4564
-    }
-    request_device_power_status = {
-        "jsonrpc": "2.0",
-        "method": "machine.device_power.status",
-        "params": {
-            "dev_one": None,
-            "dev_two": None
-        },
-        "id": 4564
-    }
-    request_device_power_on = {
-        "jsonrpc": "2.0",
-        "method": "machine.device_power.on",
-        "params": {
-            "dev_one": None,
-            "dev_two": None
-        },
-        "id": 4564
-    }
-    request_device_power_off = {
-        "jsonrpc": "2.0",
-        "method": "machine.device_power.off",
-        "params": {
-            "dev_one": None,
-            "dev_two": None
-        },
-        "id": 4564
-    }
-    # ------wled apis----------------------------------------------------------
-    request_wled_strips = {
-        "jsonrpc": "2.0",
-        "method": "machine.wled.strips",
-        "id": 7123
-    }
-    request_wled_status = {
-        "jsonrpc": "2.0",
-        "method": "machine.wled.status",
-        "params": {
-            "lights": None,
-            "desk": None
-        },
-        "id": 7124
-    }
-    request_wled_on = {
-        "jsonrpc": "2.0",
-        "method": "machine.wled.on",
-        "params": {
-            "lights": None,
-            "desk": None
-        },
-        "id": 7125
-    }
-    request_wled_off = {
-        "jsonrpc": "2.0",
-        "method": "machine.wled.off",
-        "params": {
-            "lights": None,
-            "desk": None
-        },
-        "id": 7126
-    }
-    request_wled_toggle = {
-        "jsonrpc": "2.0",
-        "method": "machine.wled.toggle",
-        "params": {
-            "lights": None,
-            "desk": None
-        },
-        "id": 7127
-    }
-    # ------sensor apis--------------------------------------------------------
-    request_sensors_list = {
-        "jsonrpc": "2.0",
-        "method": "server.sensors.list",
-        "params": {
-            "extended": False
-        },
-        "id": 5646
-    }
-    request_sensors_info = {
-        "jsonrpc": "2.0",
-        "method": "server.sensors.info",
-        "params": {
-            "sensor": "sensor1",
-            "extended": False
-        },
-        "id": 4564
-    }
-    request_sensors_measurement = {
-        "jsonrpc": "2.0",
-        "method": "server.sensors.measurements",
-        "params": {
-            "sensor": "sensor1"
-        },
-        "id": 4564
-    }
-    request_sensors_measurements = {
-        "jsonrpc": "2.0",
-        "method": "server.sensors.measurements",
-        "id": 4564
-    }
-    # ------spoolman apis------------------------------------------------------
-    # n/a
-    # ------octoprint api emulation--------------------------------------------
-    # n/a
-    # ------history apis-------------------------------------------------------
-    request_history_list = {
-        "jsonrpc": "2.0",
-        "method": "server.history.list",
-        "params":{
-            "limit": 50,
-            "start": 10,
-            "since": 464.54,
-            "before": 1322.54,
-            "order": "asc"
-        },
-        "id": 5656
-    }
-    request_history_totals = {
-        "jsonrpc": "2.0",
-        "method": "server.history.totals",
-        "id": 5656
-    }
-    request_history_reset_totals = {
-        "jsonrpc": "2.0",
-        "method": "server.history.reset_totals",
-        "id": 5534
-    }
-    request_history_get_job = {
-        "jsonrpc": "2.0",
-        "method": "server.history.get_job",
-        "params":{"uid": "{uid}"},
-        "id": 4564
-    }
-    request_history_delete_job = {
-        "jsonrpc": "2.0",
-        "method": "server.history.delete_job",
-        "params":{
-            "uid": "{uid}"
-        },
-        "id": 5534
-    }
-    # ------mqtt apis----------------------------------------------------------
-    # n/a
-    # ------extension apis-----------------------------------------------------
-    # n/a note, maybe this should be an extension
-    # ------debug apis---------------------------------------------------------
-    # n/a
-    # ------websocket notifications--------------------------------------------
+    def server_files_metadata(self, filename: str) -> Dict:
+        """Get file metadata."""
+        return self.gen_request("server.files.metadata",
+                                {"filename": filename})
+
+    def server_files_metascan(self, filename: str) -> Dict:
+        """Scan file for metadata."""
+        return self.gen_request("server.files.metascan",
+                                {"filename": filename})
+
+    def server_files_thumbnails(self, filename: str) -> Dict:
+        """Get file thumbnails."""
+        return self.gen_request("server.files.thumbnails",
+                                {"filename": filename})
+
+    def server_files_get_directory(self,
+                                   path: str,
+                                   extended: bool = True) -> Dict:
+        """Get directory contents."""
+        return self.gen_request("server.files.get_directory", {
+            "path": path,
+            "extended": extended
+        })
+
+    def server_files_post_directory(self, path: str) -> Dict:
+        """Create a directory."""
+        return self.gen_request("server.files.post_directory", {"path": path})
+
+    def server_files_delete_directory(self,
+                                      path: str,
+                                      force: bool = False) -> Dict:
+        """Delete a directory."""
+        return self.gen_request("server.files.delete_directory", {
+            "path": path,
+            "force": force
+        })
+
+    def server_files_move(self, source: str, dest: str) -> Dict:
+        """Move a file or directory."""
+        return self.gen_request("server.files.move", {
+            "source": source,
+            "dest": dest
+        })
+
+    def server_files_copy(self, source: str, dest: str) -> Dict:
+        """Copy a file or directory."""
+        return self.gen_request("server.files.copy", {
+            "source": source,
+            "dest": dest
+        })
+
+    def server_files_zip(
+        self,
+        dest: str,
+        items: List[str],
+        store_only: bool = False
+    ) -> Dict:
+        """Create a zip archive."""
+        return self.gen_request("server.files.zip", {
+            "dest": dest,
+            "items": items,
+            "store_only": store_only
+        })
+
+    def server_files_delete(self, path: str) -> Dict:
+        """Delete a file."""
+        return self.gen_request("server.files.delete_file", {"path": path})
+
+    # ------ Authorization ---------------------------------------------------
+    def access_login(
+        self,
+        username: str,
+        password: str,
+        source: str = "moonraker"
+    ) -> Dict:
+        """Login to Moonraker."""
+        return self.gen_request("access.login", {
+            "username": username,
+            "password": password,
+            "source": source
+        })
+
+    def access_logout(self) -> Dict:
+        """Logout from Moonraker."""
+        return self.gen_request("access.logout")
+
+    def access_get_user(self) -> Dict:
+        """Get current user information."""
+        return self.gen_request("access.get_user")
+
+    def access_post_user(self, username: str, password: str) -> Dict:
+        """Create a new user."""
+        return self.gen_request("access.post_user", {
+            "username": username,
+            "password": password
+        })
+
+    def access_delete_user(self, username: str) -> Dict:
+        """Delete a user."""
+        return self.gen_request("access.delete_user", {"username": username})
+
+    def access_users_list(self) -> Dict:
+        """List all users."""
+        return self.gen_request("access.users.list")
+
+    def access_user_password(self, password: str, new_password: str) -> Dict:
+        """Change user password."""
+        return self.gen_request("access.user.password", {
+            "password": password,
+            "new_password": new_password
+        })
+
+    def access_refresh_jwt(self, refresh_token: str) -> Dict:
+        """Refresh JWT token."""
+        return self.gen_request("access.refresh_jwt",
+                                {"refresh_token": refresh_token})
+
+    def access_oneshot_token(self) -> Dict:
+        """Get one-shot token."""
+        return self.gen_request("access.oneshot_token")
+
+    def access_info(self) -> Dict:
+        """Get access information."""
+        return self.gen_request("access.info")
+
+    def access_get_api_key(self) -> Dict:
+        """Get API key."""
+        return self.gen_request("access.get_api_key")
+
+    def access_post_api_key(self) -> Dict:
+        """Generate new API key."""
+        return self.gen_request("access.post_api_key")
+
+    # ------ Database APIs ---------------------------------------------------
+    def server_database_list(self) -> Dict:
+        """List databases."""
+        return self.gen_request("server.database.list")
+
+    def server_database_get_item(self, namespace: str, key: str) -> Dict:
+        """Get database item."""
+        return self.gen_request("server.database.get_item", {
+            "namespace": namespace,
+            "key": key
+        })
+
+    def server_database_post_item(
+        self,
+        namespace: str,
+        key: str,
+        value: Any
+    ) -> Dict:
+        """Set database item."""
+        return self.gen_request("server.database.post_item", {
+            "namespace": namespace,
+            "key": key,
+            "value": value
+        })
+
+    def server_database_delete_item(self, namespace: str, key: str) -> Dict:
+        """Delete database item."""
+        return self.gen_request("server.database.delete_item", {
+            "namespace": namespace,
+            "key": key
+        })
+
+    def server_database_compact(self) -> Dict:
+        """Compact database."""
+        return self.gen_request("server.database.compact")
+
+    def server_database_post_backup(self, filename: str) -> Dict:
+        """Backup database."""
+        return self.gen_request("server.database.post_backup",
+                                {"filename": filename})
+
+    def server_database_delete_backup(self, filename: str) -> Dict:
+        """Delete database backup."""
+        return self.gen_request("server.database.delete_backup",
+                                {"filename": filename})
+
+    def server_database_restore(self, filename: str) -> Dict:
+        """Restore database from backup."""
+        return self.gen_request("server.database.restore",
+                                {"filename": filename})
+
+    # ------ Job Queue APIs --------------------------------------------------
+    def server_job_queue_status(self) -> Dict:
+        """Get job queue status."""
+        return self.gen_request("server.job_queue.status")
+
+    def server_job_queue_post_job(
+        self,
+        filenames: List[str],
+        reset: bool = False
+    ) -> Dict:
+        """Add jobs to queue."""
+        return self.gen_request("server.job_queue.post_job", {
+            "filenames": filenames,
+            "reset": reset
+        })
+
+    def server_job_queue_delete_job(self, job_ids: List[str]) -> Dict:
+        """Delete jobs from queue."""
+        return self.gen_request("server.job_queue.delete_job",
+                                {"job_ids": job_ids})
+
+    def server_job_queue_pause(self) -> Dict:
+        """Pause job queue."""
+        return self.gen_request("server.job_queue.pause")
+
+    def server_job_queue_start(self) -> Dict:
+        """Start job queue."""
+        return self.gen_request("server.job_queue.start")
+
+    def server_job_queue_jump(self, job_id: str) -> Dict:
+        """Jump to a specific job in queue."""
+        return self.gen_request("server.job_queue.jump", {"job_id": job_id})
+
+    # ------ Announcement APIs -----------------------------------------------
+    def server_announcements_list(self,
+                                  include_dismissed: bool = False) -> Dict:
+        """List announcements."""
+        return self.gen_request("server.announcements.list", {
+            "include_dismissed": include_dismissed
+        })
+
+    def server_announcements_update(self) -> Dict:
+        """Update announcements."""
+        return self.gen_request("server.announcements.update")
+
+    def server_announcements_dismiss(
+        self,
+        entry_id: str,
+        wake_time: int = 600
+    ) -> Dict:
+        """Dismiss announcement."""
+        return self.gen_request("server.announcements.dismiss", {
+            "entry_id": entry_id,
+            "wake_time": wake_time
+        })
+
+    def server_announcements_feeds(self) -> Dict:
+        """Get announcement feeds."""
+        return self.gen_request("server.announcements.feeds")
+
+    def server_announcements_post_feed(self, name: str) -> Dict:
+        """Add announcement feed."""
+        return self.gen_request("server.announcements.post_feed",
+                                {"name": name})
+
+    def server_announcements_delete_feed(self, name: str) -> Dict:
+        """Delete announcement feed."""
+        return self.gen_request("server.announcements.delete_feed",
+                                {"name": name})
+
+    # ------ Webcam APIs -----------------------------------------------------
+    def server_webcams_list(self) -> Dict:
+        """List webcams."""
+        return self.gen_request("server.webcams.list")
+
+    def server_webcams_get_item(self, uid: str) -> Dict:
+        """Get webcam by UID."""
+        return self.gen_request("server.webcams.get_item", {"uid": uid})
+
+    def server_webcams_post_item(
+        self,
+        name: str,
+        snapshot_url: str,
+        stream_url: str
+    ) -> Dict:
+        """Add webcam."""
+        return self.gen_request("server.webcams.post_item", {
+            "name": name,
+            "snapshot_url": snapshot_url,
+            "stream_url": stream_url
+        })
+
+    def server_webcams_delete_item(self, uid: str) -> Dict:
+        """Delete webcam."""
+        return self.gen_request("server.webcams.delete_item", {"uid": uid})
+
+    def server_webcams_test(self, uid: str) -> Dict:
+        """Test webcam."""
+        return self.gen_request("server.webcams.test", {"uid": uid})
+
+    # ------ Notifier APIs ---------------------------------------------------
+    def server_notifiers_list(self) -> Dict:
+        """List notifiers."""
+        return self.gen_request("server.notifiers.list")
+
+    # ------ Update Manager APIs ---------------------------------------------
+    def machine_update_status(self, refresh: bool = False) -> Dict:
+        """Get update status."""
+        return self.gen_request("machine.update.status", {"refresh": refresh})
+
+    def machine_update_refresh(self, name: str) -> Dict:
+        """Refresh update information."""
+        return self.gen_request("machine.update.refresh", {"name": name})
+
+    def machine_update_full(self) -> Dict:
+        """Perform full update."""
+        return self.gen_request("machine.update.full")
+
+    def machine_update_moonraker(self) -> Dict:
+        """Update Moonraker."""
+        return self.gen_request("machine.update.moonraker")
+
+    def machine_update_klipper(self) -> Dict:
+        """Update Klipper."""
+        return self.gen_request("machine.update.klipper")
+
+    def machine_update_client(self, name: str) -> Dict:
+        """Update client."""
+        return self.gen_request("machine.update.client", {"name": name})
+
+    def machine_update_system(self) -> Dict:
+        """Update system packages."""
+        return self.gen_request("machine.update.system")
+
+    def machine_update_recover(self, name: str, hard: bool = False) -> Dict:
+        """Recover update."""
+        return self.gen_request("machine.update.recover", {
+            "name": name,
+            "hard": hard
+        })
+
+    def machine_update_rollback(self, name: str) -> Dict:
+        """Rollback update."""
+        return self.gen_request("machine.update.rollback", {"name": name})
+
+    # ------ Power APIs ------------------------------------------------------
+    def machine_device_power_devices(self) -> Dict:
+        """Get power devices."""
+        return self.gen_request("machine.device_power.devices")
+
+    def machine_device_power_get_device(self, device: str) -> Dict:
+        """Get power device status."""
+        return self.gen_request("machine.device_power.get_device",
+                                {"device": device})
+
+    def machine_device_power_post_device(self,
+                                         device: str,
+                                         action: str) -> Dict:
+        """Control power device."""
+        return self.gen_request("machine.device_power.post_device", {
+            "device": device,
+            "action": action
+        })
+
+    def machine_device_power_status(self, devices: List[str]) -> Dict:
+        """Get status of multiple devices."""
+        params = {dev: None for dev in devices}
+        return self.gen_request("machine.device_power.status", params)
+
+    def machine_device_power_on(self, devices: List[str]) -> Dict:
+        """Turn on multiple devices."""
+        params = {dev: None for dev in devices}
+        return self.gen_request("machine.device_power.on", params)
+
+    def machine_device_power_off(self, devices: List[str]) -> Dict:
+        """Turn off multiple devices."""
+        params = {dev: None for dev in devices}
+        return self.gen_request("machine.device_power.off", params)
+
+    # ------ WLED APIs -------------------------------------------------------
+    def machine_wled_strips(self) -> Dict:
+        """Get WLED strips."""
+        return self.gen_request("machine.wled.strips")
+
+    def machine_wled_status(self, strips: List[str]) -> Dict:
+        """Get WLED strip status."""
+        params = {strip: None for strip in strips}
+        return self.gen_request("machine.wled.status", params)
+
+    def machine_wled_on(self, strips: List[str]) -> Dict:
+        """Turn on WLED strips."""
+        params = {strip: None for strip in strips}
+        return self.gen_request("machine.wled.on", params)
+
+    def machine_wled_off(self, strips: List[str]) -> Dict:
+        """Turn off WLED strips."""
+        params = {strip: None for strip in strips}
+        return self.gen_request("machine.wled.off", params)
+
+    def machine_wled_toggle(self, strips: List[str]) -> Dict:
+        """Toggle WLED strips."""
+        params = {strip: None for strip in strips}
+        return self.gen_request("machine.wled.toggle", params)
+
+    # ------ Sensor APIs -----------------------------------------------------
+    def server_sensors_list(self, extended: bool = False) -> Dict:
+        """List sensors."""
+        return self.gen_request("server.sensors.list", {"extended": extended})
+
+    def server_sensors_info(
+        self,
+        sensor: str,
+        extended: bool = False
+    ) -> Dict:
+        """Get sensor information."""
+        return self.gen_request("server.sensors.info", {
+            "sensor": sensor,
+            "extended": extended
+        })
+
+    def server_sensors_measurement(self, sensor: str) -> Dict:
+        """Get sensor measurements."""
+        return self.gen_request("server.sensors.measurements",
+                                {"sensor": sensor})
+
+    def server_sensors_measurements(self) -> Dict:
+        """Get all sensor measurements."""
+        return self.gen_request("server.sensors.measurements")
+
+    # ------ History APIs -----------------------------------------------------
+    def server_history_list(
+        self,
+        limit: int = 50,
+        start: int = 0,
+        since: Optional[float] = None,
+        before: Optional[float] = None,
+        order: str = "asc"
+    ) -> Dict:
+        """List print history."""
+        params = {"limit": limit, "start": start, "order": order}
+        if since is not None:
+            params["since"] = since
+        if before is not None:
+            params["before"] = before
+        return self.gen_request("server.history.list", params)
+
+    def server_history_totals(self) -> Dict:
+        """Get print history totals."""
+        return self.gen_request("server.history.totals")
+
+    def server_history_reset_totals(self) -> Dict:
+        """Reset history totals."""
+        return self.gen_request("server.history.reset_totals")
+
+    def server_history_get_job(self, uid: str) -> Dict:
+        """Get job by UID."""
+        return self.gen_request("server.history.get_job", {"uid": uid})
+
+    def server_history_delete_job(self, uid: str) -> Dict:
+        """Delete job by UID."""
+        return self.gen_request("server.history.delete_job", {"uid": uid})

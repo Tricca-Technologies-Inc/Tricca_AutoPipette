@@ -13,7 +13,9 @@ from res.string_constants import TAP_CLR_BANNER
 from rich.console import Console
 from moonraker_requests import MoonrakerRequests
 from plates import Plate, PlateFactory
-# from tap_webcam import TAPWebcam
+from async_manager import AsyncManager
+from concurrent.futures import Future
+import queue
 
 
 def main():
@@ -60,7 +62,8 @@ class TriccaAutoPipetteShell(Cmd):
         self.debug = True
         self.console = Console()
         self.mrr = MoonrakerRequests()
-
+        uri = "ws://" + self.hostname + ":7125/websocket"
+        self.async_mgr = AsyncManager(uri)
         # Gcode Variables
         self._gcode_buffer: list[str] = []
         self._append_gcode: bool = False
@@ -71,6 +74,7 @@ class TriccaAutoPipetteShell(Cmd):
         self.register_preloop_hook(self._preloop_hook)
         self.register_postloop_hook(self._postloop_hook)
         self.register_precmd_hook(self._precommand_hook)
+        self.register_postcmd_hook(self._postcommand_hook)
 
     def _preloop_hook(self) -> None:
         """Print the banner."""
@@ -91,7 +95,9 @@ class TriccaAutoPipetteShell(Cmd):
     def _postloop_hook(self) -> None:
         """Stop other threads."""
         # self.screen_printer.close()
-        self.webutils.stop_websocket_listener()
+        self.poutput("Shutting down...")
+        shutdown_future = self.async_mgr.schedule_shutdown()
+        shutdown_future.result(timeout=5)
         self.console.print("Exited gracefully.")
 
     def _precommand_hook(self,
@@ -108,6 +114,28 @@ class TriccaAutoPipetteShell(Cmd):
             rprint("[red]Pipette not homed. Run the 'home all' command.[/]")
             data.stop = True
         return data
+
+    def _postcommand_hook(self,
+                          data: plugin.PostcommandData
+                          ) -> plugin.PostcommandData:
+        """Process pending UI updates after each command."""
+        while not self.async_mgr.callback_queue.empty():
+            try:
+                self.async_mgr.callback_queue.get_nowait()()
+            except queue.Empty:
+                break
+        return data
+
+    def _handle_response(self, future: Future, method: str):
+        """Process async response in main thread."""
+        def ui_callback():
+            try:
+                result = future.result()
+                self.poutput(f"{method} result: {result}")
+            except Exception as e:
+                self.poutput(f"{method} error: {str(e)}")
+
+        self.async_mgr.callback_queue.put(ui_callback)
 
     def output_gcode(self,
                      gcode: list[str],
@@ -134,6 +162,19 @@ class TriccaAutoPipetteShell(Cmd):
             file_path.unlink()
 
     """--------------------------Commands Below-----------------------------"""
+    def do_call(self, arg: str):
+        """Call JSON-RPC method: call <method> [param1 param2 ...]."""
+        if not arg:
+            self.poutput("Usage: call <method> [params]")
+            return
+
+        parts = arg.split()
+        method = parts[0]
+        params = parts[1:]
+
+        future = self.async_mgr.send_request(method, params)
+        future.add_done_callback(lambda f: self._handle_response(f, method))
+
     @with_argparser(TAPCmdParsers.parser_home)
     def do_home(self, args):
         """Home a subset of motors on the pipette."""
