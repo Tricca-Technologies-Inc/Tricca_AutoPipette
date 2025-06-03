@@ -50,7 +50,7 @@ class TAPWebUtils():
         self.send_queue = Queue()
         self.recv_queue = Queue()
         self.mrrequests = MoonrakerRequests()
-        uri = "ws://" + self.ip + ":7125/websocket"
+        uri = "ws://" + self.ip + ":80/websocket"
         # Start the WebSocket listener in a separate thread
         self.run_websocket_listener(uri)
         # request_sub = self.mrrequests.request_sub_to_objs(["gcode_move"])
@@ -165,7 +165,7 @@ class TAPWebUtils():
         while not self.shutdown_event.is_set():
             try:
                 response = requests.get(
-                    f"http://{self.ip}:7125/server/info", timeout=1)
+                    f"http://{self.ip}:80/server/info", timeout=1)
                 if response.status_code == 200:
                     data = response.json()
                     klippy_state = data["result"].get("klippy_state")
@@ -321,7 +321,7 @@ class TAPWebUtils():
 
     def upload_gcode_file(self, file_name, file_path):
         """Upload a file to the pipette."""
-        url = f'http://{self.ip}:7125/server/files/upload'
+        url = f'http://{self.ip}/server/files/upload'
         try:
             with open(file_path, 'rb') as file:
                 response = \
@@ -347,7 +347,7 @@ class TAPWebUtils():
 
     def start_gcode(self, server_fp):
         """Start executing a gcode file."""
-        url = f'http://{self.ip}:7125/printer/print/start?filename={server_fp}'
+        url = f'http://{self.ip}/printer/print/start?filename={server_fp}'
         try:
             response = requests.post(url)
             if response.status_code != 200:
