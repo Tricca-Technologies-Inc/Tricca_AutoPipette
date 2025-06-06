@@ -519,7 +519,7 @@ class MoonrakerRequests:
         self,
         namespace: str,
         key: str,
-        value: Any
+        value: str,
     ) -> Dict:
         """Set database item."""
         return self.gen_request("server.database.post_item", {
