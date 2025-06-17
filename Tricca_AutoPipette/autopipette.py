@@ -606,9 +606,9 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             distance (float): Distance to move in the z axis.
         """
         coor_dip = Coordinate(
-            curr_coor.x,
-            curr_coor.y,
-            distance)
+            x=curr_coor.x,
+            y=curr_coor.y,
+            z=distance)
         self.move_to_z(coor_dip)
         self.gcode_wait(self.pipette_params.wait_movement)
 
