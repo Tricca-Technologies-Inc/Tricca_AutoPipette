@@ -1,0 +1,29 @@
+
+home all
+
+next_tip
+
+pipette 10 CALIB_SRC CALIB_DEST
+home all
+pause
+
+pipette 10 CALIB_SRC CALIB_DEST
+home all
+pause
+
+pipette 10 CALIB_SRC CALIB_DEST
+home all
+pause
+
+pipette 10 CALIB_SRC CALIB_DEST
+home all
+pause
+
+pipette 10 CALIB_SRC CALIB_DEST
+home all
+pause
+
+
+eject_tip
+
+home all
