@@ -43,7 +43,7 @@ class TAPCmdParsers():
     parser_pipette.add_argument("vol_ul", type=float)
     parser_pipette.add_argument("src", type=str)
     parser_pipette.add_argument("dest", type=str)
-    parser_pipette.add_argument("--aspirate", action="store_true")
+    parser_pipette.add_argument("--prewet", action="store_true")
     parser_pipette.add_argument("--keep_tip", action="store_true")
     parser_pipette.add_argument("--wiggle", action="store_true")
     parser_pipette.add_argument("--src_row", default=None, type=int)
@@ -68,3 +68,22 @@ class TAPCmdParsers():
 
     parser_gcode_print: Cmd2ArgumentParser = Cmd2ArgumentParser()
     parser_gcode_print.add_argument("msg", default=None, type=str)
+
+    parser_send: Cmd2ArgumentParser = Cmd2ArgumentParser(
+        description="Send a JSON-RPC request.")
+    parser_send.add_argument("method", help="JSON-RPC method to call")
+    parser_send.add_argument("params",
+                             nargs="?",
+                             help="JSON string of parameters")
+
+    parser_notify: Cmd2ArgumentParser = Cmd2ArgumentParser(
+        description="Send a JSON-RPC notification.")
+    parser_notify.add_argument("method", help="JSON-RPC method to notify")
+    parser_notify.add_argument("params",
+                               nargs="?",
+                               help="JSON string of parameters")
+
+    parser_upload: Cmd2ArgumentParser = Cmd2ArgumentParser(
+        description="Upload a G-code file to the pipette.")
+    parser_upload.add_argument("file_name", help="Name to assign on the server")
+    parser_upload.add_argument("file_path", help="Local path to G-code file")

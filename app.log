@@ -1,0 +1,74 @@
+2025-06-03 12:46:43,844 [base_events] ERROR: Task exception was never retrieved
+future: <Task finished name='Task-10' coro=<AsyncJSONRPCClient._receive_messages() done, defined at /home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/async_manager.py:96> exception=ConnectionClosedOK(Close(code=1000, reason=''), Close(code=<CloseCode.NORMAL_CLOSURE: 1000>, reason=''), False)>
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/async_manager.py", line 100, in _receive_messages
+    response = await ws.recv()
+               ^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/websockets/legacy/protocol.py", line 564, in recv
+    await self.ensure_open()
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/websockets/legacy/protocol.py", line 940, in ensure_open
+    raise self.connection_closed_exc()
+websockets.exceptions.ConnectionClosedOK: sent 1000 (OK); then received 1000 (OK)
+2025-06-03 13:34:36,030 [async_manager] INFO: Connected to ws://triccaautopipette.local:7125/websocket
+2025-06-03 13:34:37,031 [async_manager] WARNING: Connection handling timed out
+2025-06-03 13:34:37,048 [async_manager] INFO: Connected to ws://triccaautopipette.local:7125/websocket
+2025-06-03 13:34:38,049 [async_manager] WARNING: Connection handling timed out
+2025-06-03 13:34:38,073 [async_manager] INFO: Connected to ws://triccaautopipette.local:7125/websocket
+2025-06-03 13:34:39,074 [async_manager] WARNING: Connection handling timed out
+2025-06-03 13:34:39,093 [async_manager] INFO: Connected to ws://triccaautopipette.local:7125/websocket
+2025-06-03 13:34:39,139 [async_manager] INFO: Starting RPC client shutdown
+2025-06-03 13:34:39,143 [async_manager] INFO: RPC client shutdown completed
+2025-06-03 13:51:28,766 [async_manager] INFO: Connected to ws://triccaautopipette.local:7125/websocket
+2025-06-03 13:51:29,768 [async_manager] WARNING: Connection handling timed out
+2025-06-03 13:51:29,842 [async_manager] INFO: Connected to ws://triccaautopipette.local:7125/websocket
+2025-06-03 13:51:30,843 [async_manager] WARNING: Connection handling timed out
+2025-06-03 13:51:30,880 [async_manager] INFO: Connected to ws://triccaautopipette.local:7125/websocket
+2025-06-03 13:51:31,881 [async_manager] WARNING: Connection handling timed out
+2025-06-03 13:51:31,906 [async_manager] INFO: Connected to ws://triccaautopipette.local:7125/websocket
+2025-06-03 13:51:32,749 [async_manager] INFO: Starting RPC client shutdown
+2025-06-03 13:51:32,756 [async_manager] INFO: RPC client shutdown completed
+2025-06-03 14:02:31,069 [async_manager] INFO: Connected to ws://triccaautopipette.local:7125/websocket
+2025-06-03 14:02:32,070 [async_manager] WARNING: Connection handling timed out
+2025-06-03 14:02:32,087 [async_manager] INFO: Connected to ws://triccaautopipette.local:7125/websocket
+2025-06-03 14:02:33,089 [async_manager] WARNING: Connection handling timed out
+2025-06-03 14:02:33,108 [async_manager] INFO: Connected to ws://triccaautopipette.local:7125/websocket
+2025-06-03 14:02:34,109 [async_manager] WARNING: Connection handling timed out
+2025-06-03 14:02:34,131 [async_manager] INFO: Connected to ws://triccaautopipette.local:7125/websocket
+2025-06-03 14:02:34,223 [async_manager] INFO: Starting RPC client shutdown
+2025-06-03 14:02:34,228 [async_manager] INFO: RPC client shutdown completed
+2025-06-04 13:21:44,390 [async_manager] INFO: Connected to ws://triccaautopipette.local:7125/websocket
+2025-06-04 13:21:45,391 [async_manager] WARNING: Connection handling timed out
+2025-06-04 13:21:45,407 [async_manager] INFO: Connected to ws://triccaautopipette.local:7125/websocket
+2025-06-04 13:21:46,407 [async_manager] WARNING: Connection handling timed out
+2025-06-04 13:21:46,420 [async_manager] INFO: Connected to ws://triccaautopipette.local:7125/websocket
+2025-06-04 13:21:47,421 [async_manager] WARNING: Connection handling timed out
+2025-06-04 13:21:47,438 [async_manager] INFO: Connected to ws://triccaautopipette.local:7125/websocket
+2025-06-04 13:21:48,439 [async_manager] WARNING: Connection handling timed out
+2025-06-04 13:21:48,451 [async_manager] INFO: Connected to ws://triccaautopipette.local:7125/websocket
+2025-06-04 13:21:49,451 [async_manager] WARNING: Connection handling timed out
+2025-06-04 13:21:49,463 [async_manager] INFO: Connected to ws://triccaautopipette.local:7125/websocket
+2025-06-04 13:21:50,464 [async_manager] WARNING: Connection handling timed out
+2025-06-04 13:21:50,481 [async_manager] INFO: Connected to ws://triccaautopipette.local:7125/websocket
+2025-06-04 13:21:51,482 [async_manager] WARNING: Connection handling timed out
+2025-06-04 13:21:51,495 [async_manager] INFO: Connected to ws://triccaautopipette.local:7125/websocket
+2025-06-04 13:21:52,495 [async_manager] WARNING: Connection handling timed out
+2025-06-04 13:21:52,510 [async_manager] INFO: Connected to ws://triccaautopipette.local:7125/websocket
+2025-06-04 13:21:53,511 [async_manager] WARNING: Connection handling timed out
+2025-06-04 13:21:53,526 [async_manager] INFO: Connected to ws://triccaautopipette.local:7125/websocket
+2025-06-04 13:21:54,328 [async_manager] INFO: Starting RPC client shutdown
+2025-06-04 13:21:54,332 [async_manager] INFO: RPC client shutdown completed
+2025-06-05 15:06:09,554 [async_manager] INFO: Connected to ws://triccaautopipette.local/websocket
+2025-06-05 15:06:10,556 [async_manager] WARNING: Connection handling timed out
+2025-06-05 15:06:10,578 [async_manager] INFO: Connected to ws://triccaautopipette.local/websocket
+2025-06-05 15:06:11,580 [async_manager] WARNING: Connection handling timed out
+2025-06-05 15:06:11,600 [async_manager] INFO: Connected to ws://triccaautopipette.local/websocket
+2025-06-05 15:06:12,601 [async_manager] WARNING: Connection handling timed out
+2025-06-05 15:06:12,627 [async_manager] INFO: Connected to ws://triccaautopipette.local/websocket
+2025-06-05 15:06:13,629 [async_manager] WARNING: Connection handling timed out
+2025-06-05 15:06:13,648 [async_manager] INFO: Connected to ws://triccaautopipette.local/websocket
+2025-06-05 15:06:14,649 [async_manager] WARNING: Connection handling timed out
+2025-06-05 15:06:14,680 [async_manager] INFO: Connected to ws://triccaautopipette.local/websocket
+2025-06-05 15:06:15,681 [async_manager] WARNING: Connection handling timed out
+2025-06-05 15:06:15,743 [async_manager] INFO: Connected to ws://triccaautopipette.local/websocket
+2025-06-05 15:06:16,724 [async_manager] INFO: Starting RPC client shutdown
+2025-06-05 15:06:16,740 [async_manager] INFO: RPC client shutdown completed
