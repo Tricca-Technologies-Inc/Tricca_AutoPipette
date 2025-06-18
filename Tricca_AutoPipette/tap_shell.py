@@ -477,7 +477,7 @@ class TriccaAutoPipetteShell(Cmd):
     def do_vol_to_steps(self, args):
         """Print the number of steps for a given volume."""
         vol = args.vol
-        rprint(self._autopipette.volconv.vol_to_steps(vol))
+        rprint(self._autopipette.volume_converter.vol_to_steps(vol))
 
     def do_break(self, _):
         """Prompts the user to continue.

@@ -364,7 +364,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         volumes = list(map(float,
                            self.config["VOLUME_CONV"]["volumes"].split(",")))
         steps = list(map(float,
-                         self.config["VOLUME_CONV"]["volumes"].split(",")))
+                         self.config["VOLUME_CONV"]["steps"].split(",")))
         self.volume_converter = VolumeConverter(volumes, steps)
 
     def init_pipette(self) -> None:
