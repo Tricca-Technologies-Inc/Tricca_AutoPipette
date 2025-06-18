@@ -50,6 +50,13 @@ class TAPCmdParsers():
     parser_pipette.add_argument("--src_col", default=None, type=int)
     parser_pipette.add_argument("--dest_row", default=None, type=int)
     parser_pipette.add_argument("--dest_col", default=None, type=int)
+    parser_pipette.add_argument(
+    "--dispense-vol", "-d",
+    dest="disp_vol_ul",
+    type=float,
+    default=None,
+    help="µL to dispense (if different from vol_ul)"
+    )
 
     parser_run: Cmd2ArgumentParser = Cmd2ArgumentParser()
     parser_run.add_argument("filename", type=str)

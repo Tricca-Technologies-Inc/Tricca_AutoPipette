@@ -18,6 +18,7 @@ from configparser import ConfigParser
 from configparser import ExtendedInterpolation
 from pathlib import Path
 
+from typing import Optional
 
 class TipAlreadyOnError(Exception):
     """An exception to deal with putting a tip on when one is already on."""
@@ -659,15 +660,25 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             speed = self.conf["SPEED"]["SPEED_PIPETTE_UP_SLOW"]
         self.move_pipette_stepper(self.volconv.vol_to_steps(vol_ul), speed)
 
-    def clear_pipette(self, speed: float = None):
-        """Expell any liquid in tip.
+    def clear_pipette(self,
+                    volume: Optional[float] = None,
+                    speed: float = None):
+        """Expell liquid from tip.
 
-        Args:
-            speed (float): The speed to move the plunger.
+        If volume is None, dumps everything (old behavior).
+        Otherwise pushes exactly `volume` µL out.
         """
         if speed is None:
             speed = self.conf["SPEED"]["SPEED_PIPETTE_UP_SLOW"]
-        self.move_pipette_stepper(self.volconv.dist_disp, speed)
+
+        if volume is None:
+            # original “dump all” distance
+            steps = self.volconv.dist_disp
+        else:
+            # exact-volume behavior
+            steps = self.volconv.vol_to_steps(volume)
+
+        self.move_pipette_stepper(steps, speed)
 
     def wiggle(self, curr_coor: Coordinate, dip_distance: float):
         """Vigorously shake the pipette to drop liquid."""
@@ -692,7 +703,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         copy_coor.y += 1
         self.move_to(copy_coor)
 
-    def pipette(self, vol_ul: float, source: str, dest: str,
+    def pipette(self, vol_ul: float, source: str, dest: str, disp_vol_ul: float | None = None,
                 src_row: int = None, src_col: int = None,
                 dest_row: int = None, dest_col: int = None,
                 keep_tip: bool = False, aspirate: bool = False,
@@ -750,7 +761,14 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             # Dropoff liquid
             self.move_to(coor_dest)
             self.dip_z_down(coor_dest, loc_dest.get_dip_distance(pip_vol))
-            self.clear_pipette(speed_down)
+            
+            if disp_vol_ul is None:
+                # old behavior: dump everything
+                self.clear_pipette(volume=None, speed=speed_down)
+            else:
+                # new behavior: push exactly disp_vol_ul µL
+                self.clear_pipette(volume=disp_vol_ul, speed=speed_down)
+            
             if wiggle:
                 self.wiggle(coor_dest, loc_dest.get_dip_distance(pip_vol))
             self.gcode_wait(time_aspirate)
