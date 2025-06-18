@@ -750,7 +750,9 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self.move_pipette_stepper(self.volume_converter.vol_to_steps(vol_ul),
                                   speed)
 
-    def clear_pipette(self, speed: float = None) -> None:
+    def clear_pipette(self,
+                      volume: Optional[float] = None,
+                      speed: float = None) -> None:
         """Expell any liquid in tip.
 
         Args:
@@ -758,7 +760,15 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         """
         if speed is None:
             speed = self.pipette_params.speed_pipette_up_slow
-        self.move_pipette_stepper(self.volume_converter.dist_disp, speed)
+
+        if volume is None:
+            # original “dump all” distance
+            steps = self.volume_converter.dist_disp
+        else:
+            # exact-volume behavior
+            steps = self.volume_converter.vol_to_steps(volume)
+
+        self.move_pipette_stepper(steps, speed)
 
     def wiggle(self, curr_coor: Coordinate, dip_distance: float) -> None:
         """Shake the pipette to dislodge residual liquid.
@@ -827,6 +837,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                         dest: str,
                         dest_row: Optional[int] = None,
                         dest_col: Optional[int] = None,
+                        disp_vol_ul: float | None = None,
                         wiggle: bool = False):
         """Dip into a well and expel some liquid."""
         coor_dest = self.get_location_coor(dest, dest_row, dest_col)
@@ -834,9 +845,12 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         # Dropoff liquid
         self.move_to(coor_dest)
         self.dip_z_down(coor_dest, loc_dest.get_dip_distance(volume))
-        self.clear_pipette(self.pipette_params.speed_pipette_down)
+
+        self.clear_pipette(volume=disp_vol_ul,speed=self.pipette_params.speed_pipette_down)
+
         if wiggle:
             self.wiggle(coor_dest, loc_dest.get_dip_distance(volume))
+        
         self.gcode_wait(self.pipette_params.wait_aspirate)
         self.dip_z_return(coor_dest)
         self.home_pipette_stepper(self.pipette_params.speed_pipette_up)
@@ -854,6 +868,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 vol_ul: float,
                 source: str,
                 dest: str,
+                disp_vol_ul: float | None = None,
                 src_row: Optional[int] = None,
                 src_col: Optional[int] = None,
                 dest_row: Optional[int] = None,
@@ -897,7 +912,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         # Execute transfer sequence
         for pip_vol in transfer_volumes:
             self.aspirate_volume(vol_ul, source, src_row, src_col, prewet)
-            self.dispense_volume(vol_ul, dest, dest_row, dest_col, wiggle)
+            self.dispense_volume(vol_ul, dest, dest_row, dest_col, disp_vol_ul, wiggle)
 
         # Eject tip
         if not keep_tip:

@@ -308,6 +308,7 @@ class TriccaAutoPipetteShell(Cmd):
         src: str = args.src
         dest: str = args.dest
         prewet: bool = args.prewet
+        disp_vol  = args.disp_vol_ul
         keep_tip: bool = args.keep_tip
         wiggle: bool = args.wiggle
         src_row: int = args.src_row
@@ -336,7 +337,7 @@ class TriccaAutoPipetteShell(Cmd):
                 "No coordinate set as TipBox.\n"
             rprint(err_msg)
             return
-        self._autopipette.pipette(vol_ul, src, dest,
+        self._autopipette.pipette(vol_ul, src, dest, disp_vol,
                                   src_row, src_col, dest_row, dest_col,
                                   keep_tip, prewet, wiggle)
         self.output_gcode([f"\n; Pipette {vol_ul} from {src} to {dest}\n"] +
