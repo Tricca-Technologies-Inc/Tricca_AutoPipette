@@ -6,7 +6,7 @@ from typing import List, Optional, Type, Dict, ClassVar
 from abc import ABC, abstractmethod
 from well import Well
 from pydantic import BaseModel, conint, confloat, validator, ConfigDict, \
-                     field_validator, ValidationInfo
+                     field_validator, ValidationInfo, Field
 
 
 class NotAPlateTypeError(Exception):
@@ -34,14 +34,15 @@ class PlateParams(SmartDefaultModel):
     TODO Implement validators that set good defaults when None is set
     """
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)  # Critical fix
+    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
+
 
     plate_type: str
     well_template: Well
-    num_row: conint(ge=1) = 1
-    num_col: conint(ge=1) = 1
-    spacing_row: confloat(ge=0) = 0
-    spacing_col: confloat(ge=0) = 0
+    num_row: conint(ge=1)   = Field(1, alias="row")
+    num_col: conint(ge=1)   = Field(1, alias="col")
+    spacing_row: confloat(ge=0) = Field(0, alias="spacing_row")
+    spacing_col: confloat(ge=0) = Field(0, alias="spacing_col")
 
     @validator("plate_type")
     def validate_plate_type(cls, v, values):
