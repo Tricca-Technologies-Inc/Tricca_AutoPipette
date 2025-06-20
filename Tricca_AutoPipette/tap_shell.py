@@ -171,8 +171,9 @@ class TriccaAutoPipetteShell(Cmd):
                      append_header: bool = False) -> None:
         """Direct gcode output."""
         if self._append_gcode:
-            self._gcode_buffer + gcode
+            self._gcode_buffer.extend(gcode)
             self._gcode_buffer.append("\n")
+            return
         else:
             now = datetime.now()
             if filename is None:
@@ -308,6 +309,7 @@ class TriccaAutoPipetteShell(Cmd):
         src: str = args.src
         dest: str = args.dest
         prewet: bool = args.prewet
+        disp_vol  = args.disp_vol_ul
         keep_tip: bool = args.keep_tip
         wiggle: bool = args.wiggle
         src_row: int = args.src_row
@@ -336,7 +338,7 @@ class TriccaAutoPipetteShell(Cmd):
                 "No coordinate set as TipBox.\n"
             rprint(err_msg)
             return
-        self._autopipette.pipette(vol_ul, src, dest,
+        self._autopipette.pipette(vol_ul, src, dest, disp_vol,
                                   src_row, src_col, dest_row, dest_col,
                                   keep_tip, prewet, wiggle)
         self.output_gcode([f"\n; Pipette {vol_ul} from {src} to {dest}\n"] +
@@ -400,23 +402,25 @@ class TriccaAutoPipetteShell(Cmd):
 
     @with_argparser(TAPCmdParsers.parser_run)
     def do_run(self, args):
-        """Run a protocol."""
-        filename: str = args.filename
-        cmds = []
-        file_path = self.PROTOCOL_PATH / filename
-        if (not file_path.exists()):
-            rprint(f"File: {file_path} does not exist")
+        filename = args.filename
+        proto = self.PROTOCOL_PATH / filename
+        if not proto.exists():
+            rprint(f"File not found: {proto}")
             return
-        with file_path.open("r") as fp:
-            for line in fp:
-                cmds.append(line)
+
+        lines = proto.read_text().splitlines()
         self._append_gcode = True
-        self.runcmds_plus_hooks(cmds,
+        self.runcmds_plus_hooks([ln + "\n" for ln in lines],
                                 add_to_history=False,
                                 stop_on_keyboard_interrupt=True)
         self._append_gcode = False
-        self.output_gcode(self._gcode_buffer, filename, append_header=True)
+
+        # now write & upload
+        self.output_gcode(self._gcode_buffer,
+                        Path(filename).with_suffix('.gcode').name,
+                        append_header=True)
         self._gcode_buffer = []
+
 
     def do_stop(self, args):
         """Send an emergency stop command to the pipette."""
