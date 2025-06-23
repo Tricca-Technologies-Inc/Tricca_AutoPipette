@@ -1,97 +1,96 @@
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
 
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
-pipette 490 --keep_tip DFIBUF DFIPLATE
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
+pipette 550 --keep_tip DFIBUF DFIPLATE --dispense_vol 450
 pipette 490 DFIBUF DFIPLATE

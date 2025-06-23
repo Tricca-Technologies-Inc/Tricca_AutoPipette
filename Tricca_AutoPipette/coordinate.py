@@ -16,4 +16,9 @@ class Coordinate(BaseModel):
 
     def generate_offset(self, dx: float, dy: float, dz: float) -> Coordinate:
         """Generate a coordinate that is offset in the passed in direction."""
-        return Coordinate(self.x + dx, self.y + dy, self.z + dz)
+        return Coordinate(
+            x=self.x + dx,
+            y=self.y + dy,
+            z=self.z + dz
+        )
+
