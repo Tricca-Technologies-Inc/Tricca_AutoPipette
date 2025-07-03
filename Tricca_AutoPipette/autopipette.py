@@ -14,10 +14,10 @@ from pathlib import Path
 from configparser import ConfigParser, ExtendedInterpolation
 from pydantic import BaseModel, conint, Field, validator
 
-from coordinate import Coordinate
-from plates import Plate, WasteContainer, TipBox, PlateFactory, PlateParams
-from well import Well, WellParams
-from volume_converter import VolumeConverter
+from .coordinate import Coordinate
+from .plates import Plate, WasteContainer, TipBox, PlateFactory, PlateParams
+from .well import Well, WellParams
+from .volume_converter import VolumeConverter
 
 
 class TipAlreadyOnError(Exception):
