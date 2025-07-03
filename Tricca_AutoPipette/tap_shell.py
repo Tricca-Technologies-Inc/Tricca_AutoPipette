@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """Holds class and methods for running Tricca AutoPipette Shell."""
 from cmd2 import Cmd, with_argparser, plugin, Statement
-from autopipette import AutoPipette, TipAlreadyOnError, NoTipboxError
+from .autopipette import AutoPipette, TipAlreadyOnError, NoTipboxError
 from pathlib import Path, PosixPath
 from datetime import datetime
-from coordinate import Coordinate
-from tap_cmd_parsers import TAPCmdParsers
+from .coordinate import Coordinate
+from .tap_cmd_parsers import TAPCmdParsers
 from rich import print as rprint
 from res.string_constants import TAP_CLR_BANNER
 from rich.console import Console
 from rich.text import Text
-from moonraker_requests import MoonrakerRequests
-from plates import Plate, PlateFactory
-from websocketclient import WebSocketClient
+from .moonraker_requests import MoonrakerRequests
+from .plates import Plate, PlateFactory
+from .websocketclient import WebSocketClient
 from typing import Any, Dict, Optional
 import logging
 import threading

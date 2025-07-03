@@ -1,0 +1,19 @@
+Collecting pydantic
+  Downloading pydantic-2.11.7-py3-none-any.whl (444 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 444.8/444.8 kB 1.2 MB/s eta 0:00:00
+Collecting annotated-types>=0.6.0
+  Downloading annotated_types-0.7.0-py3-none-any.whl (13 kB)
+Collecting pydantic-core==2.33.2
+  Downloading pydantic_core-2.33.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (1.9 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.9/1.9 MB 2.6 MB/s eta 0:00:00
+Collecting typing-extensions>=4.12.2
+  Downloading typing_extensions-4.14.0-py3-none-any.whl (43 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 43.8/43.8 kB 905.5 kB/s eta 0:00:00
+Collecting typing-inspection>=0.4.0
+  Downloading typing_inspection-0.4.1-py3-none-any.whl (14 kB)
+Installing collected packages: typing-extensions, annotated-types, typing-inspection, pydantic-core, pydantic
+  Attempting uninstall: typing-extensions
+    Found existing installation: typing_extensions 4.4.0
+    Not uninstalling typing-extensions at /usr/lib/python3/dist-packages, outside environment /usr
+    Can't uninstall 'typing_extensions'. No files were found to uninstall.
+Successfully installed annotated-types-0.7.0 pydantic-2.11.7 pydantic-core-2.33.2 typing-extensions-4.14.0 typing-inspection-0.4.1

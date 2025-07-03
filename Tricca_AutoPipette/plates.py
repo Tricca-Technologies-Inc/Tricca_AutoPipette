@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Holds the various plate classes."""
 from __future__ import annotations
-from coordinate import Coordinate
+from .coordinate import Coordinate
 from typing import List, Optional, Type, Dict, ClassVar
 from abc import ABC, abstractmethod
-from well import Well
+from .well import Well
 from pydantic import BaseModel, conint, confloat, validator, ConfigDict, \
                      field_validator, ValidationInfo, Field
 
