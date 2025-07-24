@@ -1,11 +1,2 @@
 ; Test 50uL
-pipette --keep_tip --aspirate 50 plate1 dest_vial
-pipette --keep_tip --aspirate 50 plate1 dest_vial
-pipette --keep_tip --aspirate 50 plate1 dest_vial
-pipette --keep_tip --aspirate 50 plate1 dest_vial
-pipette --keep_tip --aspirate 50 plate1 dest_vial
-pipette --keep_tip --aspirate 50 plate1 dest_vial
-pipette --keep_tip --aspirate 50 plate1 dest_vial
-pipette --keep_tip --aspirate 50 plate1 dest_vial
-pipette --keep_tip --aspirate 50 plate1 dest_vial
-pipette --aspirate 50 plate1 dest_vial
+pipette 50 --keep_tip src dest

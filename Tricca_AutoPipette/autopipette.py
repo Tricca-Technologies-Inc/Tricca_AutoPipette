@@ -584,7 +584,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         stepper = self.pipette_params.name_pipette_stepper
         self._buffer_command(
             f"MANUAL_STEPPER STEPPER={stepper} "
-            f"SPEED={speed} MOVE=-{distance} ACCEL=900\n")
+            f"SPEED={speed} MOVE=-{distance} ACCEL=300\n")
 
     def gcode_wait(self, mil: float) -> str:
         """Send a gcode command to wait for mil amount of milliseconds.
@@ -814,6 +814,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         # Maybe check if we have liquid in tip already?
         # Pickup liquid
         self.move_to(coor_source)
+        # 3ul right now is 29.11
+        self.move_pipette_stepper(self.volume_converter.vol_to_steps(3),speed=self.pipette_params.speed_pipette_down)
         self.dip_z_down(coor_source, loc_source.get_dip_distance(volume))
         self.plunge_down(volume, self.pipette_params.speed_pipette_down)
         # If True, aspirate small amount of liquid 1 time to wet tip
