@@ -22,6 +22,7 @@ class MoonrakerRequests:
         "printer.info",
         "printer.emergency_stop",
         "printer.restart",
+        "printer.firmware_restart"
         # Printer Status
         "printer.objects.list",
         "printer.objects.query",

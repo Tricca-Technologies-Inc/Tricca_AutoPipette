@@ -1,86 +1,140 @@
 # backend/controller.py
 import threading
-import configparser
-import shlex
 import time
 from pathlib import Path
 from datetime import datetime
 from typing import Optional, Callable, Any, Dict
+from queue import Empty
+
+import configparser
+from configparser import ConfigParser, ExtendedInterpolation
 
 from .autopipette import (
     AutoPipette, Coordinate, TipAlreadyOnError, NoTipboxError, NotALocationError
 )
 from .moonraker_requests import MoonrakerRequests
 from .websocketclient import WebSocketClient
-
+from .tap_cmd_parsers import TAPCmdParsers
+from .utils.gcode_manager import GCodeManager
+from .utils.command_dispatcher import CommandDispatcher
+from .utils.protocol_runner import ProtocolRunner
 
 class Controller:
-    def __init__(self, status_cb: Callable[[str], None]):
-        self.ap = AutoPipette()
-        self.mrr = MoonrakerRequests()
-        self.client: Optional[WebSocketClient] = None
+    def __init__(self,
+                 status_cb: Callable[[str], None],
+                 config_file: str | None = None):
         self.status_cb = status_cb
 
-        #stash UI callbacks:
-        self._pos_listeners = []
-        self._prog_listeners = []
-        self._conn_listeners: list[Callable[[bool],None]] = []
+        # ── a) Initialize AutoPipette exactly like the shell does ───────
+        if config_file:
+            # Passing a config path into AutoPipette causes it to read
+            # that file via load_config_file(), which runs all the hooks.
+            self.ap = AutoPipette(config_file)
+            self.status_cb(f"Loaded pipette config from {config_file}")
+        else:
+            self.ap = AutoPipette()
+            self.status_cb("Loaded default pipette config")
+
+        self.status_cb("Connecting to pipette…")
+        net = self.ap.config["NETWORK"]
+        host = net.get("IP", fallback=None) or net["HOSTNAME"]
+        port = net.getint("PORT", 7125)
+        ws_url = f"ws://{host}:{port}/websocket"
+
+        self.mrr = MoonrakerRequests()
+        self.client: Optional[WebSocketClient] = None
+
+        # ── 3) spin up WebSocket & wait for it ───────────────────────
+        self.client = WebSocketClient(ws_url)
+        self.client.start()
+        threading.Thread(target=self._wait_for_ws, daemon=True).start()
+
+        # Command parsing & execution
+        self.parsers = TAPCmdParsers()
+        self.dispatcher = CommandDispatcher(self)
+        self.runner = ProtocolRunner(self)
+
+        # UI listener registries
+        self._pos_listeners: list[Callable[[list[float]], None]] = []
+        self._prog_listeners: list[Callable[[float], None]] = []
+        self._conn_listeners: list[Callable[[bool], None]] = []
+        self._config_reload_listeners: list[Callable[[], None]] = []
+        self._step_listeners: list[Callable[[str, str], None]]  = []
+        self._time_listeners: list[Callable[[str, str], None]]  = []
+
+        temp_dir = Path(__file__).parent.parent.parent / "backend"/"gcode"/"temp"
+        self.gcode = GCodeManager(
+            client      = self.client,
+            mrr         = self.mrr,
+            autopipette = self.ap,
+            status_cb   = self.status_cb,
+            temp_dir    = temp_dir
+        )
+
+        # start pumping messages into your status callback
+        threading.Thread(target=self._start_message_polling, daemon=True).start()
+        threading.Thread(target=self.start_connection_polling, daemon=True).start()
 
     def _wait_for_ws(self):
         if self.client._connected.wait(timeout=10):
             self.status_cb("WebSocket connected")
+            self.connect_and_subscribe()
         else:
             self.status_cb("WebSocket failed to connect")
 
-    def _send_gcode(self, gcode: list[str], filename: Optional[str]):
-        # ensure temp folder exists
-        gcode_dir = Path(__file__).parent.parent / "backend" / "gcode" / "temp"
-        gcode_dir.mkdir(parents=True, exist_ok=True)
-        name = filename or datetime.now().strftime("%Y-%m-%d-%H-%M-%S.gcode")
-        path = gcode_dir / name
-        with open(path, "w") as f:
-            for line in gcode:
-                f.write(line if line.endswith("\n") else line + "\n")
+    def reload_autopipette(self, config_path: str):
+        """
+        1) Tell AutoPipette to read exactly that file (absolute or in conf/).
+        2) Swap the new settings into GCodeManager.
+        3) Fire any UI listeners so they redraw.
+        """
+        # 1) load it (wipes old parser, rebuilds params+locations+volumes+header)
+        self.ap.locations.clear()
+        self.ap.load_config_file(config_path)
 
-        def _worker():
+        # 2) make sure your G-code pipeline uses the updated autopipette
+        self.gcode.autopipette = self.ap
+
+        # 3) notify any frames that registered for config reloads
+        for cb in self._config_reload_listeners:
             try:
-                fut = self.client.upload_gcode_file(name, path)
-                server_path = fut.result(timeout=30)
-                self.status_cb(f"Uploaded → {server_path}")
-                payload = self.mrr.printer_print_start(name)
-                resp = self.client.send_jsonrpc(payload)
-                self.status_cb(f"Print started: {resp}")
-            except Exception as e:
-                self.status_cb(f"Error: {e}")
+                cb()
+            except Exception:
+                pass
 
-        threading.Thread(target=_worker, daemon=True).start()
+        # optional status update
+        self.status_cb(f"Reloaded pipette config from {config_path}")
 
     # ───── Motion / Homing ─────
     def home_all(self):
         self.ap.home_axis()
         self.ap.home_pipette_motors()
         self.ap.homed = True
-        self._send_gcode(self.ap.get_gcode(), "home_all.gcode")
+        self.gcode.send(self.ap.get_gcode(), "home_all.gcode")
 
     def home_x(self):
         self.ap.home_x()
-        self._send_gcode(self.ap.get_gcode(), "home_x.gcode")
+        self.gcode.send(self.ap.get_gcode(), "home_x.gcode")
 
     def home_y(self):
         self.ap.home_y()
-        self._send_gcode(self.ap.get_gcode(), "home_y.gcode")
+        self.gcode.send(self.ap.get_gcode(), "home_y.gcode")
 
     def home_z(self):
         self.ap.home_z()
-        self._send_gcode(self.ap.get_gcode(), "home_z.gcode")
+        self.gcode.send(self.ap.get_gcode(), "home_z.gcode")
 
     def home_servo(self):
         self.ap.home_servo()
-        self._send_gcode(self.ap.get_gcode(), "home_servo.gcode")
+        self.gcode.send(self.ap.get_gcode(), "home_servo.gcode")
 
     def move_to(self, x: float, y: float, z: float):
-        self.ap.move_to(Coordinate(x, y, z))
-        self._send_gcode(self.ap.get_gcode(), "move.gcode")
+        self.ap.move_to(Coordinate(x=x, y=y, z=z))
+        self.gcode.send(self.ap.get_gcode(), "move.gcode")
+
+    def home_pipette(self):
+        self.ap.home_pipette_motors()
+        self.gcode.send(self.ap.get_gcode(), "home_pipette.gcode")
 
     def move_to_location(self, name: str):
         try:
@@ -89,25 +143,25 @@ class Controller:
             self.status_cb(str(e))
             return
         self.ap.move_to(coor)
-        self._send_gcode(self.ap.get_gcode(), f"move_{name}.gcode")
+        self.gcode.send(self.ap.get_gcode(), f"move_{name}.gcode")
 
     def move_relative(self, dx: float, dy: float, dz: float):
         self.ap.set_coor_sys("relative")
-        self.ap.move_to(Coordinate(dx, dy, dz))
+        self.ap.move_to(Coordinate(x=dx, y=dy, z=dz))
         self.ap.set_coor_sys("absolute")
-        self._send_gcode(self.ap.get_gcode(), "move_rel.gcode")
+        self.gcode.send(self.ap.get_gcode(), "move_rel.gcode")
 
     # ───── Tip Handling ─────
     def next_tip(self):
         try:
             self.ap.next_tip()
-            self._send_gcode(self.ap.get_gcode(), "next_tip.gcode")
+            self.gcode.send(self.ap.get_gcode(), "next_tip.gcode")
         except (NoTipboxError, TipAlreadyOnError) as e:
             self.status_cb(str(e))
 
     def eject_tip(self):
         self.ap.eject_tip()
-        self._send_gcode(self.ap.get_gcode(), "eject_tip.gcode")
+        self.gcode.send(self.ap.get_gcode(), "eject_tip.gcode")
 
     # ───── Pipetting ─────
     def pipette(
@@ -124,6 +178,7 @@ class Controller:
         prewet: bool = False,
         wiggle: bool = False
     ):
+        # validate
         for loc in (src, dest):
             if not self.ap.is_location(loc):
                 self.status_cb(f"Location {loc!r} not found")
@@ -135,57 +190,21 @@ class Controller:
             self.status_cb("No tip box set")
             return
 
+        # run pipette
         self.ap.pipette(
             vol_ul, src, dest,
             disp_vol_ul, src_row, src_col,
             dest_row, dest_col, keep_tip, prewet, wiggle
         )
-        self._send_gcode(self.ap.get_gcode(), "pipette.gcode")
-
-    def _run_lines(self, lines: list[str], out_name: str):
-        """
-        Core helper to take a list of G-code lines, upload & start them.
-        Mirrors what do_run does with output_gcode.
-        """
-        #collect into buffer with a newline appended
-        self.ap._gcode_buffer = []
-        for ln in lines:
-            self.ap._gcode_buffer.append(ln if ln.endswith("\n") else ln + "\n")
-
-        # actually send to printer
-        header = self.ap.get_header()
-        body   = self.ap._gcode_buffer
-        self._send_gcode(header + body, out_name)
-
-        #clear buffer for next time
-        self.ap._gcode_buffer = []
+        self.gcode.send(self.ap.get_gcode(), "pipette.gcode")
 
     # ───── Protocols ─────
-    def run_program(self, filename: str):
-        """
-        1) Parse & validate the file exists
-        2) Read its lines
-        3) Call shared _run_lines helper
-        """
-        proto_path = (Path(__file__).parent.parent.parent
-                      / "backend" / "programs" / filename)
-        if not proto_path.exists():
-            self.status_cb(f"Program not found: {filename}")
-            return
+    def run_cmd(self, line: str):
+        self.dispatcher.dispatch(line)
 
-        # 1) read all lines
-        raw_lines = proto_path.read_text().splitlines()
-
-        # 2) filter out blanks & comments
-        lines = [
-            ln for ln in raw_lines
-            if ln.strip() and not ln.strip().startswith("#")
-        ]
-
-        # 3) run
-        out_name = Path(filename).with_suffix('.gcode').name
-        self._run_lines(lines, out_name)
-        self.status_cb(f"Running protocol: {filename}")
+    def run_protocol_file(self, filename: str):
+        msg = self.runner.run_file(filename)
+        self.status_cb(msg)
 
     # ───── Flow Control ─────
     def stop(self):
@@ -205,7 +224,12 @@ class Controller:
         payload = self.mrr.gen_request("printer.print.cancel")
         self.send_rpc(payload)
 
-    # ───── Config & Utility ─────
+    def firmware_restart(self):
+        payload = self.mrr.gen_request("printer.firmware_restart")
+        self.send_rpc(payload)
+        self.status_cb("Sent firmware restart command")
+
+    # ───── Config Loading & Utility ─────
     def save_config(self):
         self.ap.save_config_file()
         self.status_cb("Config saved")
@@ -222,60 +246,18 @@ class Controller:
             self.ap.locations[p].curr = 0
         self.status_cb("All plates reset")
 
-    def print_message(self, msg: str):
-        self.ap.gcode_print(msg)
-        self._send_gcode(self.ap.get_gcode(), "print_msg.gcode")
-
-    def vol_to_steps(self, vol: float):
-        steps = self.ap.volume_converter.vol_to_steps(vol)
-        self.status_cb(f"{vol} µL → {steps} steps")
-
-    # ───── Listings & Config Loading ─────
     def list_locations(self) -> list[str]:
         return list(self.ap.locations.keys())
 
     def list_plate_locations(self) -> list[str]:
         return self.ap.get_plate_locations()
 
-    def load_config(self, filepath: str):
-        """
-        1) Load the .conf (absolute path or packaged)
-        2) Parse NETWORK.IP / HOSTNAME
-        3) Spin up WebSocketClient to ws://<host>:7125/websocket
-        """
-        path = Path(filepath)
+    def vol_to_steps(self, vol: float):
+        steps = self.ap.volume_converter.vol_to_steps(vol)
+        self.status_cb(f"{vol} µL → {steps} steps")
 
-        # ── 1) Load the config file itself ─────────────────────────────
-        if path.is_file():
-            # User gave us a full path: read it directly
-            parser = configparser.ConfigParser(
-                interpolation=configparser.ExtendedInterpolation()
-            )
-            parser.read(path)
-            self.ap.config = parser  # overwrite the AutoPipette.ConfigParser
-
-            # Now replicate the post-load hooks from AutoPipette.load_config_file:
-            self.ap._parse_config_locations()
-            self.ap._init_volume_converter()
-            self.ap._build_header()
-
-            self.status_cb(f"Config {path.name} loaded from {path}")
-        else:
-            # Fallback to the built-in config directory (same as before)
-            self.ap.load_config_file(filepath)
-            self.status_cb(f"Config {filepath} loaded")
-
-        # ── 2) Extract the host / ip ───────────────────────────────────
-        cfg = self.ap.config
-        host = cfg["NETWORK"].get("IP") or cfg["NETWORK"].get("HOSTNAME")
-        uri = f"ws://{host}:7125/websocket"
-
-        # ── 3) Start the WebSocketClient ──────────────────────────────
-        self.client = WebSocketClient(uri)
-        self.client.start()
-
-        # ── 4) Notify once we’ve successfully connected ───────────────
-        threading.Thread(target=self._wait_for_ws, daemon=True).start()
+    def add_config_reload_listener(self, cb: Callable[[],None]):
+        self._config_reload_listeners.append(cb)
 
     # ───── JSON-RPC Helpers ─────
     def send_rpc(self, payload: Optional[Dict[str, Any]]):
@@ -286,7 +268,10 @@ class Controller:
                 resp = self.client.send_jsonrpc(payload)
                 self.status_cb(f"RPC response: {resp}")
             except Exception as e:
-                self.status_cb(f"RPC error: {e}")
+                if hasattr(e, "response"):
+                    self.status_cb(f"Upload failed {e.response.status_code}: {e.response.text}")
+                else:
+                    self.status_cb(f"Upload failed: {e}")
         threading.Thread(target=_worker, daemon=True).start()
 
     def notify(self, method: str, params: Optional[dict] = None):
@@ -327,16 +312,13 @@ class Controller:
             self.status_cb("Reconnect failed")
 
     # ─── Subscription & Handlers ────────────────────────────────────────────
-    
     def connect_and_subscribe(self):
-        """Kick off the WS connection and subscribe to motion_report, etc."""
-        # register a single handler
+        # register handler for printer-objects notifications
         self.client.register_handler(
             "notify_printer.objects.subscribe",
             self._on_printer_objects
         )
-
-        # subscribe
+        # send subscribe request
         sub = self.mrr.gen_request(
             "printer.objects.subscribe",
             {"objects": {
@@ -346,8 +328,7 @@ class Controller:
             }}
         )
         self.client.send_jsonrpc(sub)
-
-        # optional one-shot query so we get an immediate update
+        # one-shot query for initial state
         qry = self.mrr.printer_objects_query({
             "motion_report": ["live_position"],
             "display_status":  ["progress"],
@@ -356,29 +337,30 @@ class Controller:
         self.send_rpc(qry)
 
     def _on_printer_objects(self, params):
-        # extract position + progress
-        pos = params.get("motion_report", {}).get("live_position", [0,0,0])
+        pos  = params.get("motion_report", {}).get("live_position", [0,0,0])
         prog = params.get("display_status", {}).get("progress", 0.0)
-
-        # fire all registered callbacks
         for cb in self._pos_listeners:
             cb(pos)
         for cb in self._prog_listeners:
             cb(prog)
 
-    # allow frames to register callbacks:
-    def add_position_listener(self, callback):
+    # ───── Listeners ─────
+    def add_position_listener(self, callback: Callable[[list[float]], None]):
         self._pos_listeners.append(callback)
 
-    def add_progress_listener(self, callback):
+    def add_progress_listener(self, callback: Callable[[float], None]):
         self._prog_listeners.append(callback)
 
     def add_connection_listener(self, cb: Callable[[bool],None]):
-        """Frames call this to get notified of connect/disconnect."""
         self._conn_listeners.append(cb)
 
+    def add_step_listener(self, cb: Callable[[str, str], None]):
+        self._step_listeners.append(cb)
+
+    def add_time_listener(self, cb: Callable[[str, str], None]):
+        self._time_listeners.append(cb)
+
     def start_connection_polling(self, interval: float = 1.0):
-        """Background thread that checks connection every `interval` seconds."""
         def _poll_loop():
             while True:
                 connected = bool(self.client and self.client._connected.is_set())
@@ -386,3 +368,19 @@ class Controller:
                     cb(connected)
                 time.sleep(interval)
         threading.Thread(target=_poll_loop, daemon=True).start()
+
+    def _start_message_polling(self, interval: float = 0.1):
+        def loop():
+            while True:
+                try:
+                    msg = self.client.message_queue.get_nowait()
+                    self.status_cb(f"[notify] {msg}")
+                except Empty:
+                    pass
+                time.sleep(interval)
+        threading.Thread(target=loop, daemon=True).start()
+
+    def show_full_protocol(self):
+        """Called when the user clicks 'Show Full Protocol'."""
+        # TODO: actually pop up a window or switch view
+        print("Full protocol requested")

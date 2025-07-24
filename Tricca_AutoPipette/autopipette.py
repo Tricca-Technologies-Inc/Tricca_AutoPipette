@@ -64,7 +64,9 @@ class NotADipStrategyError(Exception):
 
 class PipetteParams(BaseModel):
     """Pipette configuration parameters with validation."""
-
+    safe_altitude: conint(gt=0) = Field(
+        ...,
+        description="safe Z height")
     # Required parameters
     name_pipette_servo: str = Field(
         ...,
@@ -186,7 +188,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self.pipette_params: PipetteParams | None = None
 
         self.DEFAULT_CONFIG = "autopipette.conf"
-        self.CONFIG_PATH = Path(__file__).parent.parent / 'conf'
+        self.CONFIG_PATH = Path(__file__).parent.parent.parent / "backend" / "conf"
 
         self.has_tip: bool = False
         self.has_liquid: bool = False
@@ -211,7 +213,18 @@ class AutoPipette(metaclass=AutoPipetteMeta):
 
     def load_config_file(self, filename: str) -> None:
         """Load a config file to set passed in values."""
-        config_path = self.CONFIG_PATH / filename
+        
+        # Figure out the real path:
+        fn = Path(filename)
+        if fn.is_absolute() and fn.exists():
+            config_path = fn
+        else:
+            config_path = self.CONFIG_PATH / filename
+
+        # Start from scratch so no old values stay
+        self.config = ConfigParser(interpolation=ExtendedInterpolation())
+        self._config_file = config_path.name
+
         try:
             with config_path.open("r") as f:
                 self.config.read_file(f)
@@ -242,8 +255,10 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 wait_eject=self.config["WAIT"].getint("WAIT_EJECT"),
                 wait_movement=self.config["WAIT"].getint("WAIT_MOVEMENT"),
                 wait_aspirate=self.config["WAIT"].getint("WAIT_ASPIRATE"),
-                max_vol=self.config["VOLUME_CONV"].getint("max_vol")
+                max_vol=self.config["VOLUME_CONV"].getint("max_vol"),
+                safe_altitude=self.config["BOUNDARY"].getfloat("safe_altitude")
                 )
+        self.locations = {}
         self._parse_config_locations()
         self._init_volume_converter()
         self._build_header()
@@ -584,7 +599,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         stepper = self.pipette_params.name_pipette_stepper
         self._buffer_command(
             f"MANUAL_STEPPER STEPPER={stepper} "
-            f"SPEED={speed} MOVE=-{distance} ACCEL=900\n")
+            f"SPEED={speed} MOVE=-{distance} ACCEL=300\n")
 
     def gcode_wait(self, mil: float) -> str:
         """Send a gcode command to wait for mil amount of milliseconds.
@@ -814,8 +829,9 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         # Maybe check if we have liquid in tip already?
         # Pickup liquid
         self.move_to(coor_source)
-        self.plunge_down(volume, self.pipette_params.speed_pipette_down)
+        self.move_pipette_stepper(self.volume_converter.vol_to_steps(3),speed=self.pipette_params.speed_pipette_down)
         self.dip_z_down(coor_source, loc_source.get_dip_distance(volume))
+        self.plunge_down(volume, self.pipette_params.speed_pipette_down)
         # If True, aspirate small amount of liquid 1 time to wet tip
         if prewet:
             for _ in range(1):
@@ -826,7 +842,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                                  self.pipette_params.speed_pipette_down)
                 self.gcode_wait(self.pipette_params.wait_aspirate)
         # Release plunger to aspirate measured amount
-        self.home_pipette_stepper(self.pipette_params.speed_pipette_up_slow)
+        # self.home_pipette_stepper(self.pipette_params.speed_pipette_up_slow)
         # Give time for the liquid to enter the tip
         self.gcode_wait(self.pipette_params.wait_aspirate)
         self.dip_z_return(coor_source)
