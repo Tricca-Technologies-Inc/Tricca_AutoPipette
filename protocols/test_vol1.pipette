@@ -1,2 +1,2 @@
-; Test 50uL
-pipette 50 --keep_tip src dest
+pipette 10 --keep_tip src dest
+move_loc src

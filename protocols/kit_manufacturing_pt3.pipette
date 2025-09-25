@@ -1,103 +1,104 @@
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --prewet
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
 
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
 
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
 
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
 
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
 
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
 
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
 
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 --keep_tip PITC 96wellplate
-pipette 50 PITC 96wellplate
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 --keep_tip PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
+

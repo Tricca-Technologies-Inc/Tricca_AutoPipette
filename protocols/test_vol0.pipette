@@ -1,1 +1,2 @@
-pipette 10 --keep_tip src dest
+pipette 20 --keep_tip src dest --dispense_vol 10
+move_loc src

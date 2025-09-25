@@ -233,19 +233,55 @@ class PlateSingleton(PlateArray):
 
 @PlateFactory.register("tipbox")
 class TipBox(PlateArray):
-    """A plate that contains the tips used in pipetting."""
+    """A plate that contains the tips used in pipetting.
+
+    Iteration order:
+      start at bottom-right, move left across the row,
+      then jump one row up and repeat, until top-left.
+    """
 
     def __init__(self, plate_params: PlateParams) -> None:
-        """Initialize by creating all coordinates on the plate."""
         super().__init__(plate_params)
 
-    def append_box(self, tipbox: 'TipBox'):
-        """Append the coordinates of another TipBox."""
-        self.wells = self.wells + tipbox.wells
+    def _idx_for_position(self, pos: int) -> int:
+        """Map logical position → physical wells index
+        using bottom-right → left, then up traversal.
+        Supports multiple appended boxes of the same shape.
+        """
+        if not self.wells:
+            raise IndexError("TipBox has no wells")
+
+        block = self.num_row * self.num_col
+        box_base = (pos // block) * block          # which box (if append_box used)
+        off      =  pos % block                    # offset within that box
+
+        # Offset counted from bottom-right:
+        r_from_bottom = off // self.num_col        # 0,1,2... upward
+        c_from_right  = off %  self.num_col        # 0,1,2... leftward
+
+        r = (self.num_row - 1) - r_from_bottom     # convert to top-based row
+        c = (self.num_col - 1) - c_from_right      # convert to left-based col
+
+        return box_base + (c + self.num_col * r)   # row-major index in wells[]
+
+    def next(self) -> Coordinate:
+        """Return next tip coord in bottom-right → left → up order."""
+        idx = self._idx_for_position(self.curr)
+        coor = self.wells[idx].coor
+        self.curr += 1
+        if self.curr >= len(self.wells):
+            self.curr = 0
+        return coor
 
     def get_dip_distance(self, vol: float = 0.0) -> float:
-        """Return the distance to dip and grab a tip."""
-        return super().get_dip_distance(vol)
+        """Match the well returned by the last next()."""
+        prev_pos = (self.curr - 1) % len(self.wells)
+        idx = self._idx_for_position(prev_pos)
+        return self.wells[idx].get_dip_distance(vol)
+
+    def append_box(self, tipbox: 'TipBox'):
+        """Append another tip box. Assumes same num_row/num_col."""
+        self.wells = self.wells + tipbox.wells
 
 
 @PlateFactory.register("waste_container")

@@ -1,97 +1,97 @@
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
 
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
-pipette 450 --keep_tip WATER LCPLATE
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
+pipette 450 --keep_tip WATER LCPLATE --dispense_vol 450 --tipbox tipbox
 pipette 450 WATER LCPLATE

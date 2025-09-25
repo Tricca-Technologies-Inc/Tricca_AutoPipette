@@ -1,29 +1,10 @@
-
-home all
-
-next_tip
-
-pipette 10 CALIB_SRC CALIB_DEST
-home all
-pause
-
-pipette 10 CALIB_SRC CALIB_DEST
-home all
-pause
-
-pipette 10 CALIB_SRC CALIB_DEST
-home all
-pause
-
-pipette 10 CALIB_SRC CALIB_DEST
-home all
-pause
-
-pipette 10 CALIB_SRC CALIB_DEST
-home all
-pause
-
-
-eject_tip
-
-home all
+pipette 50 FIS1 dest --keep_tip --dispense_vol 50 --tipbox tipbox3
+pipette 50 FIS1 dest --keep_tip --dispense_vol 50 --tipbox tipbox3
+pipette 50 FIS1 dest --keep_tip --dispense_vol 50 --tipbox tipbox3
+pipette 50 FIS1 dest --keep_tip --dispense_vol 50 --tipbox tipbox3
+pipette 50 FIS1 dest --keep_tip --dispense_vol 50 --tipbox tipbox3
+pipette 50 FIS1 dest --keep_tip --dispense_vol 50 --tipbox tipbox3
+pipette 50 FIS1 dest --keep_tip --dispense_vol 50 --tipbox tipbox3
+pipette 50 FIS1 dest --keep_tip --dispense_vol 50 --tipbox tipbox3
+pipette 50 FIS1 dest --keep_tip --dispense_vol 50 --tipbox tipbox3
+pipette 50 FIS1 dest --keep_tip --dispense_vol 50 --tipbox tipbox3

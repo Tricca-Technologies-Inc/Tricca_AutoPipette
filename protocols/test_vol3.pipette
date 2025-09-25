@@ -1,3 +1,2 @@
-; Test 100uL
-pipette 100 --keep_tip src dest
-
+pipette 110 --keep_tip src dest --dispense_vol 100
+move_loc src

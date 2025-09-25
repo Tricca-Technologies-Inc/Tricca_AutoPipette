@@ -1,3 +1,2 @@
-; Test 75uL
-pipette 75 --keep_tip src dest
-
+pipette 100 --keep_tip src dest
+move_loc src
