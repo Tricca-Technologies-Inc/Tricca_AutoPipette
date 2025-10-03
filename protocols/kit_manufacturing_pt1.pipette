@@ -1,5 +1,5 @@
+pipette 0 --wiggle FIS1 96wellplate --dispense_vol 0 --tipbox tipbox 
 pipette 10.8 --wiggle FIS1 96wellplate --dispense_vol 10.8 --tipbox tipbox --prewet
-pipette 10.8 --wiggle FIS1 96wellplate --dispense_vol 10.8 --tipbox tipbox 
 pipette 10.8 --wiggle FIS1 96wellplate --dispense_vol 10.8 --tipbox tipbox
 pipette 10.8 --wiggle FIS1 96wellplate --dispense_vol 10.8 --tipbox tipbox
 pipette 10.8 --wiggle FIS1 96wellplate --dispense_vol 10.8 --tipbox tipbox

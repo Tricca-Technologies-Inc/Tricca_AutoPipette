@@ -959,10 +959,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self.move_to(coor_source)
 
         self.home_pipette_stepper(self.pipette_params.speed_pipette_up_slow)
-        
-        # HARD CODED STEP! 
-        # self.plunge_down(2.5, speed=self.pipette_params.speed_pipette_down)
-        
+
         self.dip_z_down(coor_source, loc_source.get_dip_distance(volume))
         self.plunge_down(volume, self.pipette_params.speed_pipette_down)
         # If True, aspirate small amount of liquid 1 time to wet tip
