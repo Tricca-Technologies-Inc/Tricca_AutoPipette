@@ -1,11 +1,2 @@
-; Test 75uL
-pipette --keep_tip --aspirate 75 plate1 dest_vial
-pipette --keep_tip --aspirate 75 plate1 dest_vial
-pipette --keep_tip --aspirate 75 plate1 dest_vial
-pipette --keep_tip --aspirate 75 plate1 dest_vial
-pipette --keep_tip --aspirate 75 plate1 dest_vial
-pipette --keep_tip --aspirate 75 plate1 dest_vial
-pipette --keep_tip --aspirate 75 plate1 dest_vial
-pipette --keep_tip --aspirate 75 plate1 dest_vial
-pipette --keep_tip --aspirate 75 plate1 dest_vial
-pipette --aspirate 75 plate1 dest_vial
+pipette 100 --keep_tip src dest
+move_loc src

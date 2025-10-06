@@ -8,6 +8,9 @@ class TAPCmdParsers():
     parser_home: Cmd2ArgumentParser = Cmd2ArgumentParser()
     parser_home.add_argument("motors", default=None, type=str)
 
+    parser_profile: Cmd2ArgumentParser = Cmd2ArgumentParser()
+    parser_profile.add_argument("name", type=str,)
+
     parser_set: Cmd2ArgumentParser = Cmd2ArgumentParser()
     parser_set.add_argument("pipvar", type=str)
     parser_set.add_argument("pipval", type=float)
@@ -56,6 +59,38 @@ class TAPCmdParsers():
     default=None,
     type=float,
     )
+
+    parser_pipette.add_argument(
+    "--splits",
+    type=str,
+    default=None,
+    help=("Semicolon list of partial dispenses. "
+          "Format: DEST:VOL[@ROW,COL];DEST:VOL[@ROW,COL] ...  "
+          "Example: '96wellplate:12@1,1;96wellplate:8@1,2'")
+    )
+
+    parser_pipette.add_argument(
+        "--leftover",
+        choices=["keep", "waste"],
+        default="keep",
+        help="What to do if sum(splits) < vol_ul (default: keep in tip)."
+    )
+
+    # pipette override
+    parser_pipette.add_argument(
+        "--tipbox",
+        dest="tipbox_name",
+        type=str,
+        help="Use this named tipbox (e.g. tipbox or tipbox2)."
+    )
+
+    parser_tipbox: Cmd2ArgumentParser = Cmd2ArgumentParser()
+    parser_tipbox.add_argument("name", type=str)
+
+    parser_trigger: Cmd2ArgumentParser = Cmd2ArgumentParser()
+    parser_trigger.add_argument("channel", type=str, help="Trigger alias (e.g., air|shake|aux)")
+    parser_trigger.add_argument("state",   type=str, help="on/off/1/0/high/low/true/false")
+
 
     parser_run: Cmd2ArgumentParser = Cmd2ArgumentParser()
     parser_run.add_argument("filename", type=str)

@@ -304,45 +304,76 @@ class TriccaAutoPipetteShell(Cmd):
 
     @with_argparser(TAPCmdParsers.parser_pipette)
     def do_pipette(self, args):
-        """Move an amount of liquid from soure to destination."""
+        """Move an amount of liquid from source to destination (supports --splits)."""
         vol_ul: float = args.vol_ul
         src: str = args.src
         dest: str = args.dest
         prewet: bool = args.prewet
-        disp_vol  = args.disp_vol_ul
+        disp_vol = args.disp_vol_ul
         keep_tip: bool = args.keep_tip
         wiggle: bool = args.wiggle
         src_row: int = args.src_row
         src_col: int = args.src_col
         dest_row: int = args.dest_row
         dest_col: int = args.dest_col
-        if (not self._autopipette.is_location(src)):
-            err_msg = \
-                f"Source location:{src} does not exist.\n"
-            rprint(err_msg)
+        splits_spec: str | None = args.splits
+        leftover_action: str = args.leftover  # "keep" or "waste"
+        tipbox_name: str = args.tipbox_name
+
+        # Validate source
+        if not self._autopipette.is_location(src):
+            rprint(f"Source location:{src} does not exist.\n")
             return
-        if (not self._autopipette.is_location(dest)):
-            err_msg = \
-                f"Destination location:{dest} does not exist.\n"
-            rprint(err_msg)
+
+        # Validate dest if we're doing the classic single-dispense path
+        if not splits_spec and not self._autopipette.is_location(dest):
+            rprint(f"Destination location:{dest} does not exist.\n")
             return
-        # Make sure there is a garbage for tips
-        if (self._autopipette.waste_container is None):
-            err_msg = \
-                "No plate set as waste container.\n"
-            rprint(err_msg)
+
+        # Validate tip/waste infrastructure (same as old behavior)
+        if self._autopipette.waste_container is None:
+            rprint("No plate set as waste container.\n")
             return
-        # Make sure there is a tip box
-        if (self._autopipette.tipboxes is None):
-            err_msg = \
-                "No coordinate set as TipBox.\n"
-            rprint(err_msg)
+        try:
+            # ensure there is a usable tipbox (named or pooled)
+            self._autopipette._resolve_tipbox(tipbox_name)
+        except Exception as e:
+            rprint(f"{e}\n")
             return
-        self._autopipette.pipette(vol_ul, src, dest, disp_vol,
-                                  src_row, src_col, dest_row, dest_col,
-                                  keep_tip, prewet, wiggle)
-        self.output_gcode([f"\n; Pipette {vol_ul} from {src} to {dest}\n"] +
-                          self._autopipette.get_gcode() + ["\n"])
+
+        # If splits are provided, validate each split destination exists
+        if splits_spec:
+            try:
+                split_list = self._autopipette._parse_splits_spec(splits_spec)
+            except Exception as e:
+                rprint(f"Invalid --splits: {e}\n")
+                return
+            for s in split_list:
+                if not self._autopipette.is_location(s.dest):
+                    rprint(f"Split destination '{s.dest}' does not exist.\n")
+                    return
+            # Also check the total split volume vs aspirate
+            total_split = sum(s.vol_ul for s in split_list)
+            if total_split - vol_ul > 1e-6:
+                rprint(f"Split volumes ({total_split} uL) exceed aspirate ({vol_ul} uL).\n")
+                return
+
+        # Build the G-code using the same call pattern as before
+        self._autopipette.pipette(
+            vol_ul, src, dest, disp_vol,
+            src_row, src_col, dest_row, dest_col,
+            keep_tip, prewet, wiggle,
+            splits=splits_spec,
+            leftover_action=leftover_action,
+            tipbox_name=tipbox_name,
+        )
+
+        # IMPORTANT: send exactly like the old version (simple header, ASCII only)
+        self.output_gcode(
+            [f"\n; Pipette {vol_ul} from {src} to {dest}\n"]
+            + self._autopipette.get_gcode()
+            + ["\n"]
+        )
 
     @with_argparser(TAPCmdParsers.parser_move)
     def do_move(self, args):
@@ -393,8 +424,23 @@ class TriccaAutoPipetteShell(Cmd):
 
     def do_eject_tip(self, _):
         """Eject the tip on the pipette."""
-        self._autopipette.eject_tip()
+        self._autopipette.dispose_tip()
         self.output_gcode(self._autopipette.get_gcode())
+
+    def do_trigger(self, arg: str):
+        """trigger <channel> <on|off>"""
+        try:
+            parts = arg.split()
+            if len(parts) != 2:
+                self.perror("Usage: trigger <air|shake|aux> <on|off>")
+                return
+
+            channel, state = parts
+            self._autopipette.set_trigger(channel, state)
+            self.output_gcode(self._autopipette.get_gcode())
+        except Exception as e:
+            self.perror(f"Trigger error: {e}")
+
 
     def do_print(self, _):
         """Print anything."""

@@ -1,29 +1,103 @@
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
 
-home all
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
 
-next_tip
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
 
-pipette 10 CALIB_SRC CALIB_DEST
-home all
-pause
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
 
-pipette 10 CALIB_SRC CALIB_DEST
-home all
-pause
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
 
-pipette 10 CALIB_SRC CALIB_DEST
-home all
-pause
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
 
-pipette 10 CALIB_SRC CALIB_DEST
-home all
-pause
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
 
-pipette 10 CALIB_SRC CALIB_DEST
-home all
-pause
-
-
-eject_tip
-
-home all
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
+pipette 10.4 FIS2 SAMPLEPLATE --dispense_vol 10.4 --tipbox tipbox --wiggle
