@@ -984,7 +984,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                         dest_row: Optional[int] = None,
                         dest_col: Optional[int] = None,
                         disp_vol_ul: float | None = None,
-                        wiggle: bool = False):
+                        wiggle: bool = False,
+                        touch: bool = False) -> None:
         """Dip into a well and expel some liquid."""
         coor_dest = self.get_location_coor(dest, dest_row, dest_col)
         loc_dest  = self.locations[dest]
@@ -1016,6 +1017,14 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         # 2) Optional wiggle
         if wiggle:
             self.wiggle(coor_dest, loc_dest.get_dip_distance(volume))
+
+        # 3) Optional touch (a small single dip)
+        if touch:
+            touch_depth = loc_dest.get_dip_distance(volume) + 5.3
+            self.move_to_z(Coordinate(x=coor_dest.x, y=coor_dest.y, z=touch_depth))
+            self.gcode_wait(self.pipette_params.wait_movement)
+            self.move_to_z(Coordinate(x=coor_dest.x, y=coor_dest.y, z=loc_dest.get_dip_distance(volume)))
+            self.gcode_wait(self.pipette_params.wait_movement)
 
         # 3) Settle & retract Z
         self.gcode_wait(self.pipette_params.wait_aspirate)
@@ -1086,6 +1095,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 keep_tip: bool = False,
                 prewet: bool = False,
                 wiggle: bool = False,
+                touch: bool = False,
                 *,
                 splits: Optional[str] = None,           # NEW
                 leftover_action: str = "keep",            # NEW: "keep" or "waste"
@@ -1149,7 +1159,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         for pip_vol in transfer_volumes:
             # BUGFIX: use 'pip_vol' (not 'vol_ul') for each chunk
             self.aspirate_volume(pip_vol, source, src_row, src_col, prewet, tipbox_name=tipbox_name)
-            self.dispense_volume(pip_vol, dest, dest_row, dest_col, disp_vol_ul, wiggle)
+            self.dispense_volume(pip_vol, dest, dest_row, dest_col, disp_vol_ul, wiggle=wiggle, touch=touch)
 
         if not keep_tip:
             self.dispose_tip()
@@ -1165,6 +1175,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         keep_tip: bool = False,
         prewet: bool = False,
         wiggle: bool = False,
+        touch: bool = False,
         leftover_action: str = "keep",  # "keep" or "waste"
         tipbox_name: str | None = None
     ) -> None:
@@ -1202,7 +1213,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 dest_row=s.dest_row,
                 dest_col=s.dest_col,
                 disp_vol_ul=disp_cum,
-                wiggle=wiggle
+                wiggle=wiggle,
+                touch=touch
             )
 
         # 3) Leftover handling
@@ -1216,7 +1228,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                     volume=vol_ul,
                     dest="waste_container",
                     disp_vol_ul=vol_ul,   # absolute: empty the tip
-                    wiggle=False
+                    wiggle=False,
+                    touch=False
                 )
                 self.has_liquid = False
             else:  # "keep"

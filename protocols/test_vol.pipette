@@ -1,2 +1,0 @@
-pipette 15 src dest --dispense_vol 5
-move_loc src
