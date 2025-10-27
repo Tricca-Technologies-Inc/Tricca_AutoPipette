@@ -1,107 +1,36 @@
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
 
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox --prewet
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
 
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
 
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS_FULLM --dispense_vol 88 --tipbox tipbox3
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
 
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS2M --dispense_vol 88 --tipbox tipbox3
-
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --keep_tip --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
-pipette 88 --wiggle 4DR STANS3M --dispense_vol 88 --tipbox tipbox3
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 88 --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
