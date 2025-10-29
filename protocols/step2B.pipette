@@ -1,4 +1,4 @@
-pipette 340 --keep_tip WATER SAMPLEPLATE --dispense_vol 340 --tipbox tipbox
+pipette 340 --keep_tip WATER SAMPLEPLATE --dispense_vol 340 --tipbox tipbox --prewet
 pipette 340 --keep_tip WATER SAMPLEPLATE --dispense_vol 340 --tipbox tipbox
 pipette 340 --keep_tip WATER SAMPLEPLATE --dispense_vol 340 --tipbox tipbox
 pipette 340 --keep_tip WATER SAMPLEPLATE --dispense_vol 340 --tipbox tipbox
