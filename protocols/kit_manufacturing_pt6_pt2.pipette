@@ -48,7 +48,7 @@ pipette 485 --keep_tip DFIBUF DFIPLATE --dispense_vol 485 --tipbox tipbox
 pipette 485 --keep_tip DFIBUF DFIPLATE --dispense_vol 485 --tipbox tipbox
 pipette 485 --keep_tip DFIBUF DFIPLATE --dispense_vol 485 --tipbox tipbox
 pipette 485 --keep_tip DFIBUF DFIPLATE --dispense_vol 485 --tipbox tipbox
-
+pipette 485 --keep_tip DFIBUF DFIPLATE --dispense_vol 485 --tipbox tipbox
 pipette 485 --keep_tip DFIBUF DFIPLATE --dispense_vol 485 --tipbox tipbox
 pipette 485 --keep_tip DFIBUF DFIPLATE --dispense_vol 485 --tipbox tipbox
 pipette 485 --keep_tip DFIBUF DFIPLATE --dispense_vol 485 --tipbox tipbox
