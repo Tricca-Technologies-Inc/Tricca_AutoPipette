@@ -1,2 +1,0 @@
-pipette 10 --keep_tip src dest
-move_loc src
