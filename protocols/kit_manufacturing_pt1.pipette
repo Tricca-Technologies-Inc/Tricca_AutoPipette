@@ -1,105 +1,212 @@
-pipette 0 --wiggle FIS1 FIS2 --dispense_vol 0 --tipbox tipbox 
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox --prewet
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
+pipette 0 --wiggle FIS1 96wellplate --dispense_vol 0 --tipbox tipbox 
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --prewet
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
 
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
 
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
 
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
 
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
 
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
 
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
 
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --keep_tip --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
-pipette 10.8 --wiggle FIS1 FIS2 --dispense_vol 10.8 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
 
-reset_plate FIS2
+reset_plate 96wellplate
+
+pipette 0 --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox --prewet
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --keep_tip FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle FIS2 96wellplate --dispense_vol 11.4 --tipbox tipbox
+
+reset_plate 96wellplate
+
