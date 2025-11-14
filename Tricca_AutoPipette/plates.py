@@ -34,13 +34,12 @@ class PlateParams(SmartDefaultModel):
     TODO Implement validators that set good defaults when None is set
     """
 
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
-
-
+    model_config = ConfigDict(arbitrary_types_allowed=True,
+                              populate_by_name=True)
     plate_type: str
     well_template: Well
-    num_row: conint(ge=1)   = Field(1, alias="row")
-    num_col: conint(ge=1)   = Field(1, alias="col")
+    num_row: conint(ge=1) = Field(1, alias="row")
+    num_col: conint(ge=1) = Field(1, alias="col")
     spacing_row: confloat(ge=0) = Field(0, alias="spacing_row")
     spacing_col: confloat(ge=0) = Field(0, alias="spacing_col")
 

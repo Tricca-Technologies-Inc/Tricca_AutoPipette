@@ -9,7 +9,7 @@ TODO Add Logger obj
 """
 from __future__ import annotations
 import logging
-from typing import Optional, Sequence, NamedTuple, cast
+from typing import Optional, Sequence, NamedTuple
 from pathlib import Path
 from configparser import ConfigParser, ExtendedInterpolation
 from pydantic import BaseModel, conint, Field, validator
@@ -20,6 +20,7 @@ from well import Well, WellParams
 from volume_converter import VolumeConverter
 
 import copy
+
 
 class TipAlreadyOnError(Exception):
     """Raised when trying to attach a tip on when one is already attached."""
@@ -67,6 +68,12 @@ class PipetteParams(BaseModel):
     """Pipette configuration parameters with validation."""
 
     # Required parameters
+    model: str = Field(
+        ...,
+        min_length=1,
+        description="Pipette model identifier")
+
+    # Name of servo for tips and name of motor to operate syringes
     name_pipette_servo: str = Field(
         ...,
         min_length=1,
@@ -107,7 +114,7 @@ class PipetteParams(BaseModel):
         ...,
         description="Retracted position angle (20-160°)"
     )
-    servo_angle_ready: conint(ge=20, le=160) = Field(
+    servo_angle_eject: conint(ge=20, le=160) = Field(
         ...,
         description="Ready position angle (20-160°)"
     )
@@ -142,20 +149,13 @@ class PipetteParams(BaseModel):
                 "Slow speed must be less than normal ascension speed")
         return v
 
-    @validator("servo_angle_ready")
-    def validate_servo_angles(cls, v, values):
-        """Ensure ready angle is less than the retract angle."""
-        if "servo_angle_retract" in values \
-           and v >= values["servo_angle_retract"]:
-            raise ValueError(
-                "Ready angle must be less than retracted angle")
-        return v
 
 class Split(NamedTuple):
     dest: str
     vol_ul: float
     dest_row: Optional[int] = None
     dest_col: Optional[int] = None
+
 
 class AutoPipetteMeta(type):
     """Metaclass implementing the Singleton Pattern."""
@@ -232,7 +232,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         # gcode buffers
         self._gcode_buffer = []
         # (keep header; it will be rebuilt after load)
-        
+
     def load_config_file(self, filename: str) -> None:
         """Load a config file (absolute path or from self.CONFIG_PATH)."""
         # Resolve path (abs path is used as-is; otherwise join with CONFIG_PATH)
@@ -262,6 +262,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
 
         # Build validated params
         self.pipette_params = PipetteParams(
+            model=self.config["MODEL"]["model"],
             name_pipette_servo=self.config["NAME"]["NAME_PIPETTE_SERVO"],
             name_pipette_stepper=self.config["NAME"]["NAME_PIPETTE_STEPPER"],
             speed_xy=self.config["SPEED"].getint("SPEED_XY"),
@@ -274,7 +275,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             velocity_max=self.config["SPEED"].getint("VELOCITY_MAX"),
             accel_max=self.config["SPEED"].getint("ACCEL_MAX"),
             servo_angle_retract=self.config["SERVO"].getint("SERVO_ANGLE_RETRACT"),
-            servo_angle_ready=self.config["SERVO"].getint("SERVO_ANGLE_READY"),
+            servo_angle_eject=self.config["SERVO"].getint("SERVO_ANGLE_EJECT"),
             wait_eject=self.config["WAIT"].getint("WAIT_EJECT"),
             wait_movement=self.config["WAIT"].getint("WAIT_MOVEMENT"),
             wait_aspirate=self.config["WAIT"].getint("WAIT_ASPIRATE"),
@@ -422,7 +423,6 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self._init_triggers()
         self.home_axis()
         self.home_pipette_motors()
-        
 
     def init_speed(self) -> None:
         """Set the speed parameters.
@@ -534,10 +534,15 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if speed is None:
             speed = self.pipette_params.speed_pipette_up_slow
         stepper = self.pipette_params.name_pipette_stepper
+        move = 300
+        # TODO write a better more class based approach
+        if self.pipette_params.model == "verticle":
+            move *= 1
         self._buffer_command(
             f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} "
-            "MOVE=300 STOP_ON_ENDSTOP=1 SET_POSITION=0 ACCEL=800\n"
+            f"MOVE={move} STOP_ON_ENDSTOP=1 SET_POSITION=0 ACCEL=100\n"
             f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0\n")
+        # ACCEL old = 800
 
     def home_pipette_stepper_disp(self, volume: float, speed: float = None) -> str:
         """Home the pipette stepper.
@@ -552,10 +557,15 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         total_ul = volume + 10
         stepsq = self.volume_converter.vol_to_steps(total_ul)
 
+        # TODO write a better more class based approach
+        if self.pipette_params.model == "verticle":
+            stepsq *= 1
+
         self._buffer_command(
             f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} "
-            f"MOVE={stepsq} STOP_ON_ENDSTOP=1 SET_POSITION=0 ACCEL=800\n"
+            f"MOVE={stepsq} STOP_ON_ENDSTOP=1 SET_POSITION=0 ACCEL=100\n"
             f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0\n")
+        # ACCEL old = 800
 
     def get_gcode(self) -> list[str]:
         """Return the gcode that's been added to the buffer and clear it."""
@@ -616,11 +626,11 @@ class AutoPipette(metaclass=AutoPipetteMeta):
     def eject_tip(self) -> None:
         """Eject the pipette tip."""
         angle_retract = self.pipette_params.servo_angle_retract
-        angle_ready = self.pipette_params.servo_angle_ready
+        angle_eject = self.pipette_params.servo_angle_eject
         wait_eject = self.pipette_params.wait_eject
         wait_movement = self.pipette_params.wait_movement
         self.set_servo_angle(angle_retract)
-        self.set_servo_angle(angle_ready)
+        self.set_servo_angle(angle_eject)
         self.gcode_wait(wait_eject)
         self.set_servo_angle(angle_retract)
         self.gcode_wait(wait_movement)
@@ -671,6 +681,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
     def set_trigger(self, channel: str, state) -> None:
         """
         Drive a named trigger via Klipper SET_PIN.
+
         Example: channel='air'/'shake'/'aux', state='on'/'off'/1/0/...
         """
         alias = str(channel).strip().lower()
@@ -683,15 +694,20 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self._buffer_command(f"SET_PIN PIN={pin} VALUE={val}\n")
         self._buffer_command("M400\n")  # wait for completion
 
-
     def move_pipette_stepper(self, distance: float, speed: float = None) -> str:
         """Move the plunger by 'distance' steps (caller handles vol→steps)."""
         if speed is None:
             speed = self.pipette_params.speed_pipette_up_slow
         stepper = self.pipette_params.name_pipette_stepper
+
+        # TODO better class based approach
+        if self.pipette_params.model == "verticle":
+            distance *= -1
+
         self._buffer_command(
-            f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} MOVE=-{distance} ACCEL=800\n"
+            f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} MOVE={distance} ACCEL=100\n"
         )
+        # ACCEL old = 800
 
     def gcode_wait(self, mil: float) -> str:
         """Send a gcode command to wait for mil amount of milliseconds.
@@ -805,7 +821,6 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 # append wells into the pooled copy (do NOT touch the original tb)
                 self.pooled_tipbox.wells += tb.wells
 
-
     def get_plate_locations(self) -> list:
         """Return a list of locations that are plates."""
         plates: list = []
@@ -840,6 +855,10 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             raise NotALocationError(name_loc)
 
     def next_tip(self, from_box: Optional[str] = None) -> None:
+        """Grab the next tip.
+
+        TODO Check if it already has a tip.
+        """
         box = self._resolve_tipbox(from_box)
         loc_tip = box.next()
         self.move_to(loc_tip)
@@ -987,14 +1006,14 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                         wiggle: bool = False):
         """Dip into a well and expel some liquid."""
         coor_dest = self.get_location_coor(dest, dest_row, dest_col)
-        loc_dest  = self.locations[dest]
+        loc_dest = self.locations[dest]
 
         # 1) Move into the well and dip
         self.move_to(coor_dest)
         self.dip_z_down(coor_dest, loc_dest.get_dip_distance(volume))
 
         stepper = self.pipette_params.name_pipette_stepper
-        speed   = self.pipette_params.speed_pipette_down
+        speed = self.pipette_params.speed_pipette_down
 
         if disp_vol_ul is not None:
             # ----- ABSOLUTE partial-dispense -----
@@ -1005,9 +1024,14 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             target = -(A - D)               # ∈ [-A, 0]
             if abs(target) < 1e-9: target = 0.0  # avoid "-0.0"
 
+            # TODO find a better class-based approach
+            if self.pipette_params.model == "verticle":
+                target *= -1
+
             self._buffer_command(
-                f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} MOVE={target} ACCEL=800\n"
+                f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} MOVE={target} ACCEL=100\n"
             )
+            # ACCEL old = 800
             # self._buffer_command("M400\n")  # wait for stepper to finish
         else:
             # ----- Full dump to 0 (legacy) -----
@@ -1036,6 +1060,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
     def _parse_splits_spec(spec: str) -> list[Split]:
         """
         Parse 'DEST:VOL[@ROW,COL];DEST2:VOL2[@ROW,COL]' -> List[Split].
+
         - DEST must match a configured location/plate name
         - VOL is float in µL
         - ROW,COL are optional ints
@@ -1102,7 +1127,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         """
         if vol_ul < 0:
             raise ValueError(f"Invalid volume: {vol_ul}μL")
-        
+
         if vol_ul == 0:
             # Only advance the iterator when no explicit well is specified
             if dest_row is None and dest_col is None:
@@ -1112,7 +1137,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 except NotALocationError:
                     raise
             else:
-                self._buffer_command(f"; SKIP requested but explicit dest well given; no advance\n")
+                self._buffer_command(
+                    "; SKIP requested but explicit dest well given; no advance\n")
             return
 
         # ── New multi-dispense path ─────────────────────────────────────────
@@ -1169,6 +1195,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         tipbox_name: str | None = None
     ) -> None:
         """
+        Aspirate once and dispene to multiple destinations.
+       
         Aspirate 'vol_ul' once from 'source', then dispense to multiple
         destinations in order, using absolute partial-dispense semantics.
 

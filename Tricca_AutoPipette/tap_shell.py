@@ -424,6 +424,11 @@ class TriccaAutoPipetteShell(Cmd):
 
     def do_eject_tip(self, _):
         """Eject the tip on the pipette."""
+        self._autopipette.eject_tip()
+        self.output_gcode(self._autopipette.get_gcode())
+
+    def do_dispose_tip(self, _):
+        """Dispose the tip on the pipette."""
         self._autopipette.dispose_tip()
         self.output_gcode(self._autopipette.get_gcode())
 
