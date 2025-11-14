@@ -964,13 +964,32 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self.plunge_down(volume, self.pipette_params.speed_pipette_down)
         # If True, aspirate small amount of liquid 1 time to wet tip
         if prewet:
+            dip_z = loc_source.get_dip_distance(volume)
             for _ in range(3):
+                # Raise Z by 5 mm (absolute move)
+                raise_z = dip_z - 15
+                self.move_to_z(Coordinate(
+                    x=coor_source.x,
+                    y=coor_source.y,
+                    z=raise_z
+                ))
+
                 self.home_pipette_stepper_disp(volume,
                     self.pipette_params.speed_pipette_up_slow)
+
+                self.move_to_z(Coordinate(
+                    x=coor_source.x,
+                    y=coor_source.y,
+                    z=raise_z + 15
+                ))
+
                 self.gcode_wait(self.pipette_params.wait_aspirate)
+
+                # Go back down and re-aspirate
                 self.plunge_down(volume,
-                                 self.pipette_params.speed_pipette_down)
+                                self.pipette_params.speed_pipette_down)
                 self.gcode_wait(self.pipette_params.wait_aspirate)
+
         # Release plunger to aspirate measured amount
         # self.home_pipette_stepper(self.pipette_params.speed_pipette_up_slow)
         # Give time for the liquid to enter the tip
