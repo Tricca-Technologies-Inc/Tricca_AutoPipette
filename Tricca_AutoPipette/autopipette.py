@@ -966,8 +966,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if prewet:
             dip_z = loc_source.get_dip_distance(volume)
             for _ in range(3):
-                # Raise Z by 5 mm (absolute move)
-                raise_z = dip_z - 15
+                # Raise Z by 20 mm (absolute move)
+                raise_z = dip_z - 20
                 self.move_to_z(Coordinate(
                     x=coor_source.x,
                     y=coor_source.y,
@@ -980,7 +980,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 self.move_to_z(Coordinate(
                     x=coor_source.x,
                     y=coor_source.y,
-                    z=raise_z + 15
+                    z=raise_z + 20
                 ))
 
                 self.gcode_wait(self.pipette_params.wait_aspirate)
