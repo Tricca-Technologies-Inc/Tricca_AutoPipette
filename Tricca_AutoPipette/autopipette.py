@@ -964,17 +964,36 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self.plunge_down(volume, self.pipette_params.speed_pipette_down)
         # If True, aspirate small amount of liquid 1 time to wet tip
         if prewet:
+            dip_z = loc_source.get_dip_distance(volume)
             for _ in range(3):
+                # Raise Z by 20 mm (absolute move)
+                raise_z = dip_z - 20
+                self.move_to_z(Coordinate(
+                    x=coor_source.x,
+                    y=coor_source.y,
+                    z=raise_z
+                ))
+
                 self.home_pipette_stepper_disp(volume,
                     self.pipette_params.speed_pipette_up_slow)
+
+                self.move_to_z(Coordinate(
+                    x=coor_source.x,
+                    y=coor_source.y,
+                    z=raise_z + 20
+                ))
+
                 self.gcode_wait(self.pipette_params.wait_aspirate)
+
+                # Go back down and re-aspirate
                 self.plunge_down(volume,
-                                 self.pipette_params.speed_pipette_down)
+                                self.pipette_params.speed_pipette_down)
                 self.gcode_wait(self.pipette_params.wait_aspirate)
+
         # Release plunger to aspirate measured amount
         # self.home_pipette_stepper(self.pipette_params.speed_pipette_up_slow)
         # Give time for the liquid to enter the tip
-        # self.gcode_wait(self.pipette_params.wait_aspirate)
+        self.gcode_wait(self.pipette_params.wait_aspirate)
         self.dip_z_return(coor_source)
         self.has_liquid = True
 
@@ -1020,7 +1039,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
 
         # 3) Optional touch (a small single dip)
         if touch:
-            touch_depth = loc_dest.get_dip_distance(volume) + 4.3
+            touch_depth = loc_dest.get_dip_distance(volume) + 5
             self.move_to_z(Coordinate(x=coor_dest.x, y=coor_dest.y, z=touch_depth))
             self.gcode_wait(self.pipette_params.wait_movement)
             self.move_to_z(Coordinate(x=coor_dest.x, y=coor_dest.y, z=loc_dest.get_dip_distance(volume)))
@@ -1233,8 +1252,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 )
                 self.has_liquid = False
             else:  # "keep"
-                self.has_liquid = False
-                keep_tip = False  # don't eject a tip with liquid still inside
+                self.has_liquid = True
+                # keep_tip = False  # don't eject a tip with liquid still inside
 
         # 4) Eject tip if requested and empty
         if not keep_tip and not self.has_liquid:
