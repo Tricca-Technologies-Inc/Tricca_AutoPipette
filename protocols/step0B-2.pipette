@@ -1,36 +1,71 @@
+pipette 73 --keep_tip --wiggle --dest_row 0 --dest_col 0 4DR STANS4M  --dispense_vol 73 --tipbox tipbox --prewet
+pipette 73 --keep_tip --wiggle --dest_row 0 --dest_col 1 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 0 --dest_col 2 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 0 --dest_col 3 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 0 --dest_col 4 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 0 --dest_col 5 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 0 --dest_col 6 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 0 --dest_col 7 4DR STANS4M --dispense_vol 73 --tipbox tipbox
 
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox --prewet
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 1 --dest_col 0 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 1 --dest_col 1 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 1 --dest_col 2 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 1 --dest_col 3 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 1 --dest_col 4 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 1 --dest_col 5 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 1 --dest_col 6 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 1 --dest_col 7 4DR STANS4M --dispense_vol 73 --tipbox tipbox
 
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 2 --dest_col 0 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 2 --dest_col 1 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 2 --dest_col 2 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 2 --dest_col 3 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 2 --dest_col 4 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 2 --dest_col 5 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 2 --dest_col 6 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 2 --dest_col 7 4DR STANS4M --dispense_vol 73 --tipbox tipbox
 
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 3 --dest_col 0 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 3 --dest_col 1 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 3 --dest_col 2 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 3 --dest_col 3 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 3 --dest_col 4 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 3 --dest_col 5 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 3 --dest_col 6 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 3 --dest_col 7 4DR STANS4M --dispense_vol 73 --tipbox tipbox
 
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
-pipette 88 --keep_tip --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
-pipette 88 --wiggle 4DR STANS4M --dispense_vol 88 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 0 --dest_col 0 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 0 --dest_col 1 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 0 --dest_col 2 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 0 --dest_col 3 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 0 --dest_col 4 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 0 --dest_col 5 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 0 --dest_col 6 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 0 --dest_col 7 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+
+pipette 73 --keep_tip --wiggle --dest_row 1 --dest_col 0 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 1 --dest_col 1 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 1 --dest_col 2 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 1 --dest_col 3 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 1 --dest_col 4 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 1 --dest_col 5 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 1 --dest_col 6 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 1 --dest_col 7 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+
+pipette 73 --keep_tip --wiggle --dest_row 2 --dest_col 0 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 2 --dest_col 1 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 2 --dest_col 2 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 2 --dest_col 3 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 2 --dest_col 4 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 2 --dest_col 5 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 2 --dest_col 6 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 2 --dest_col 7 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+
+pipette 73 --keep_tip --wiggle --dest_row 3 --dest_col 0 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 3 --dest_col 1 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 3 --dest_col 2 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 3 --dest_col 3 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 3 --dest_col 4 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 3 --dest_col 5 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --keep_tip --wiggle --dest_row 3 --dest_col 6 4DR STANS4M --dispense_vol 73 --tipbox tipbox
+pipette 73 --wiggle --dest_row 3 --dest_col 7 4DR STANS4M --dispense_vol 73 --tipbox tipbox
