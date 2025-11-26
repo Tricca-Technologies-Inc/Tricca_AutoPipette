@@ -107,7 +107,18 @@ class PipetteParams(BaseModel):
         description="Speed multiplier factor (1-200%)"
     )
     velocity_max: conint(gt=0) = Field(..., description="Maximum velocity")
-    accel_max: conint(gt=0) = Field(..., description="Maximum acceleration")
+    accel_pipette_home: conint(gt=0) = Field(
+        default=800,
+        description="Acceleration of pipette when homing."
+    )
+    accel_pipette_move: conint(gt=0) = Field(
+        default=800,
+        description="Acceleration of pipette when moving."
+    )
+    accel_gantry_max: conint(gt=0) = Field(
+        ...,
+        description="Maximum acceleration of gantry."
+    )
 
     # Servo parameters (degrees)
     servo_angle_retract: conint(ge=20, le=160) = Field(
@@ -151,6 +162,11 @@ class PipetteParams(BaseModel):
 
 
 class Split(NamedTuple):
+    """Define destination for split dispense operation.
+
+    TODO: rename to be specific
+    """
+   
     dest: str
     vol_ul: float
     dest_row: Optional[int] = None
@@ -273,7 +289,9 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             speed_max=self.config["SPEED"].getint("SPEED_MAX"),
             speed_factor=self.config["SPEED"].getint("SPEED_FACTOR"),
             velocity_max=self.config["SPEED"].getint("VELOCITY_MAX"),
-            accel_max=self.config["SPEED"].getint("ACCEL_MAX"),
+            accel_pipette_home=self.config["SPEED"].getint("ACCEL_PIPETTE_HOME"),
+            accel_pipette_move=self.config["SPEED"].getint("ACCEL_PIPETTE_MOVE"),
+            accel_gantry_max=self.config["SPEED"].getint("ACCEL_GANTRY_MAX"),
             servo_angle_retract=self.config["SERVO"].getint("SERVO_ANGLE_RETRACT"),
             servo_angle_eject=self.config["SERVO"].getint("SERVO_ANGLE_EJECT"),
             wait_eject=self.config["WAIT"].getint("WAIT_EJECT"),
@@ -428,7 +446,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         """Set the speed parameters.
 
         SPEED_FACTOR: multiplies with calculated speed for a corrected value.
-
+
         MAX_VELOCITY: the maximum possible velocity (mm/sec).
 
         MAX_ACCEL: the maximum possible acceleration (mm/sec^2).
@@ -488,7 +506,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         Args:
             accel (float): The maximum acceleration the pipette will travel.
         """
-        self.config["SPEED"]["ACCEL_MAX"] = str(accel)
+        self.config["SPEED"]["ACCEL_GANTRY_MAX"] = str(accel)
         self.pipette_params.accel_max = accel
         self._buffer_command(f"SET_VELOCITY_LIMIT ACCEL={accel}\n")
 
@@ -534,15 +552,19 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if speed is None:
             speed = self.pipette_params.speed_pipette_up_slow
         stepper = self.pipette_params.name_pipette_stepper
+        # TODO: replace magic number
         move = 300
+        accel_home = self.pipette_params.accel_pipette_home
         # TODO write a better more class based approach
         if self.pipette_params.model == "verticle":
             move *= 1
         self._buffer_command(
-            f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} "
-            f"MOVE={move} STOP_ON_ENDSTOP=1 SET_POSITION=0 ACCEL=100\n"
+            f"MANUAL_STEPPER STEPPER={stepper} "
+            f"SPEED={speed} "
+            f"MOVE={move} "
+            "STOP_ON_ENDSTOP=1 SET_POSITION=0 "
+            f"ACCEL={accel_home}\n"
             f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0\n")
-        # ACCEL old = 800
 
     def home_pipette_stepper_disp(self, volume: float, speed: float = None) -> str:
         """Home the pipette stepper.
@@ -556,16 +578,19 @@ class AutoPipette(metaclass=AutoPipetteMeta):
 
         total_ul = volume + 10
         stepsq = self.volume_converter.vol_to_steps(total_ul)
+        accel_home = self.pipette_params.accel_pipette_home
 
         # TODO write a better more class based approach
         if self.pipette_params.model == "verticle":
             stepsq *= 1
 
         self._buffer_command(
-            f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} "
-            f"MOVE={stepsq} STOP_ON_ENDSTOP=1 SET_POSITION=0 ACCEL=100\n"
+            f"MANUAL_STEPPER STEPPER={stepper} "
+            f"SPEED={speed} "
+            f"MOVE={stepsq} "
+            "STOP_ON_ENDSTOP=1 SET_POSITION=0 "
+            f"ACCEL={accel_home}\n"
             f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0\n")
-        # ACCEL old = 800
 
     def get_gcode(self) -> list[str]:
         """Return the gcode that's been added to the buffer and clear it."""
@@ -699,15 +724,18 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if speed is None:
             speed = self.pipette_params.speed_pipette_up_slow
         stepper = self.pipette_params.name_pipette_stepper
+        accel_move = self.pipette_params.accel_pipette_move
 
         # TODO better class based approach
         if self.pipette_params.model == "verticle":
             distance *= -1
 
         self._buffer_command(
-            f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} MOVE={distance} ACCEL=100\n"
+            f"MANUAL_STEPPER STEPPER={stepper} "
+            f"SPEED={speed} "
+            f"MOVE={distance} "
+            f"ACCEL={accel_move}\n"
         )
-        # ACCEL old = 800
 
     def gcode_wait(self, mil: float) -> str:
         """Send a gcode command to wait for mil amount of milliseconds.
@@ -867,6 +895,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self.has_tip = True
 
     def set_active_tipbox(self, name: str | None) -> None:
+        """Make a tipbox active."""
         if name is None:
             self.active_tipbox_name = None
             return
@@ -875,6 +904,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self.active_tipbox_name = name
 
     def _resolve_tipbox(self, from_box: str | None) -> TipBox:
+        """Choose a tipbox to pick from."""
         if from_box:
             tb = self.tipboxes_map.get(from_box)
             if not isinstance(tb, TipBox):
@@ -946,7 +976,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self.gcode_wait(wait_ms)
 
         # Bounds: deeper = dip + offset; shallower = dip - offset but not above start Z
-        z_deeper    = dip_distance + shake_offset
+        z_deeper = dip_distance + shake_offset
         z_shallower = max(dip_distance - shake_offset, curr_coor.z)
 
         # 2) Shake in Z
@@ -982,6 +1012,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self.dip_z_down(coor_source, loc_source.get_dip_distance(volume))
         self.plunge_down(volume, self.pipette_params.speed_pipette_down)
         # If True, aspirate small amount of liquid 1 time to wet tip
+        # Use truthiness: change prewet to default 0
+        #   and pass in number otherwise to prewet that many times
         if prewet:
             dip_z = loc_source.get_dip_distance(volume)
             for _ in range(3):
@@ -993,7 +1025,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                     z=raise_z
                 ))
 
-                self.home_pipette_stepper_disp(volume,
+                self.home_pipette_stepper_disp(
+                    volume,
                     self.pipette_params.speed_pipette_up_slow)
 
                 self.move_to_z(Coordinate(
@@ -1039,23 +1072,31 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             # ----- ABSOLUTE partial-dispense -----
             A = float(self.volume_converter.vol_to_steps(volume))
             D = float(self.volume_converter.vol_to_steps(disp_vol_ul))
-            if D < 0.0: D = 0.0
-            if D > A:   D = A
+            if D < 0.0:
+                D = 0.0
+            if D > A:
+                D = A
             target = -(A - D)               # ∈ [-A, 0]
-            if abs(target) < 1e-9: target = 0.0  # avoid "-0.0"
+            if abs(target) < 1e-9:
+                target = 0.0  # avoid "-0.0"
+            accel_move = self.pipette_params.accel_pipette_move
 
             # TODO find a better class-based approach
             if self.pipette_params.model == "verticle":
                 target *= -1
 
             self._buffer_command(
-                f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} MOVE={target} ACCEL=100\n"
+                f"MANUAL_STEPPER STEPPER={stepper} "
+                f"SPEED={speed} "
+                f"MOVE={target} "
+                f"ACCEL={accel_move}\n"
             )
-            # ACCEL old = 800
             # self._buffer_command("M400\n")  # wait for stepper to finish
         else:
             # ----- Full dump to 0 (legacy) -----
-            self.home_pipette_stepper_disp(volume, self.pipette_params.speed_pipette_up)
+            self.home_pipette_stepper_disp(
+                volume,
+                self.pipette_params.speed_pipette_up)
 
         # 2) Optional wiggle
         if wiggle:
