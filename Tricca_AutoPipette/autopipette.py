@@ -446,7 +446,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         """Set the speed parameters.
 
         SPEED_FACTOR: multiplies with calculated speed for a corrected value.
-
+
+
         MAX_VELOCITY: the maximum possible velocity (mm/sec).
 
         MAX_ACCEL: the maximum possible acceleration (mm/sec^2).

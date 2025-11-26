@@ -383,7 +383,10 @@ class TriccaAutoPipetteShell(Cmd):
         x: float = args.x
         y: float = args.y
         z: float = args.z
-        coor = Coordinate(x, y, z)
+        coor = Coordinate(
+            x=args.x, 
+            y=args.y,
+            z=args.z)
         self._autopipette.move_to(coor)
         self.output_gcode(self._autopipette.get_gcode())
 
