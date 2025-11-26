@@ -1,0 +1,2 @@
+pipette --keep_tip --prewet 10 V1 V2
+move 150 0 0
