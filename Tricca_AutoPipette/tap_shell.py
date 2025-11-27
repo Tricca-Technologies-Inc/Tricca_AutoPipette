@@ -312,6 +312,7 @@ class TriccaAutoPipetteShell(Cmd):
         disp_vol = args.disp_vol_ul
         keep_tip: bool = args.keep_tip
         wiggle: bool = args.wiggle
+        extra_air: bool = args.extra_air
         touch: bool = args.touch
         src_row: int = args.src_row
         src_col: int = args.src_col
@@ -368,6 +369,7 @@ class TriccaAutoPipetteShell(Cmd):
             leftover_action=leftover_action,
             tipbox_name=tipbox_name,
             touch=touch,
+            extra_air=extra_air,
         )
 
         # IMPORTANT: send exactly like the old version (simple header, ASCII only)

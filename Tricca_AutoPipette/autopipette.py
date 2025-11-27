@@ -947,6 +947,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                         src_row: Optional[int] = None,
                         src_col: Optional[int] = None,
                         prewet: bool = False,
+                        extra_air: bool = False,
                         tipbox_name: str | None = None) -> None:
         """Dip into a well and take in some liquid."""
         coor_source = self.get_location_coor(source, src_row, src_col)
@@ -960,9 +961,27 @@ class AutoPipette(metaclass=AutoPipetteMeta):
 
         self.home_pipette_stepper(self.pipette_params.speed_pipette_up_slow)
 
-        self.dip_z_down(coor_source, loc_source.get_dip_distance(volume))
-        self.plunge_down(volume, self.pipette_params.speed_pipette_down)
-        # If True, aspirate small amount of liquid 1 time to wet tip
+        if extra_air:
+            AIR_CUSHION_UL = 10.0
+            self.plunge_down(
+                AIR_CUSHION_UL,
+                self.pipette_params.speed_pipette_up_slow
+            )
+            self.gcode_wait(self.pipette_params.wait_aspirate)
+
+        # Dip into the liquid
+        dip_dist = loc_source.get_dip_distance(volume)
+        self.dip_z_down(coor_source, dip_dist)
+
+        # Total aspirate = liquid + optional air cushion
+        aspirate_amount = volume + (AIR_CUSHION_UL if extra_air else 0.0)
+
+        # Aspirate from well
+        self.plunge_down(
+            aspirate_amount,
+            self.pipette_params.speed_pipette_down
+        )
+        
         if prewet:
             dip_z = loc_source.get_dip_distance(volume)
             for _ in range(3):
@@ -1119,6 +1138,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 splits: Optional[str] = None,           # NEW
                 leftover_action: str = "keep",            # NEW: "keep" or "waste"
                 tipbox_name: Optional[str] = None,
+                extra_air: bool = False,
                 ) -> None:
         """Transfer liquid between locations.
 
@@ -1177,7 +1197,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
 
         for pip_vol in transfer_volumes:
             # BUGFIX: use 'pip_vol' (not 'vol_ul') for each chunk
-            self.aspirate_volume(pip_vol, source, src_row, src_col, prewet, tipbox_name=tipbox_name)
+            self.aspirate_volume(pip_vol, source, src_row, src_col, prewet, tipbox_name=tipbox_name, extra_air=extra_air)
             self.dispense_volume(pip_vol, dest, dest_row, dest_col, disp_vol_ul, wiggle=wiggle, touch=touch)
 
         if not keep_tip:
