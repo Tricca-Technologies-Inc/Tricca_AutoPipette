@@ -378,6 +378,48 @@ class TriccaAutoPipetteShell(Cmd):
             + ["\n"]
         )
 
+    @with_argparser(TAPCmdParsers.parser_aspirate)
+    def do_aspirate(self, args):
+        """Aspirate a certain amount of liquid."""
+        vol_ul: float = args.vol_ul
+        src: str = args.src
+        src_row: int = args.src_row
+        src_col: int = args.src_col
+        prewet: bool = args.prewet
+        tipbox: str = args.tipbox_name
+        self._autopipette.aspirate_volume(
+            volume=vol_ul,
+            source=src,
+            src_row=src_row,
+            src_col=src_col,
+            prewet=prewet,
+            tipbox_name=tipbox
+            )
+        self.output_gcode(self._autopipette.get_gcode())
+
+    @with_argparser(tapcmdparsers.parser_dispense)
+    def do_dispense(self, args):
+        """Dispense a certain amount of liquid."""
+        vol_ul: float = args.vol_ul
+        dest: str = args.dest
+        dest_row: int = args.dest_row
+        dest_col: int = args.dest_col
+        keep_tip: bool = args.keep_tip
+        wiggle: bool = args.wiggle
+        touch: bool = args.touch
+        flush: bool = args.flush
+        self._autopipette.dispense_volume(
+            volume=vol_ul,
+            dest=dest,
+            dest_row=dest_row,
+            dest_col=dest_col,
+            disp_vol_ul=vol_ul,
+            wiggle=wiggle,
+            touch=touch,
+            flush=flush
+        )
+        self.output_gcode(self._autopipette.get_gcode())
+
     @with_argparser(TAPCmdParsers.parser_move)
     def do_move(self, args):
         """Move to a coordinate."""

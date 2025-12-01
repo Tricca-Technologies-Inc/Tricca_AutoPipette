@@ -544,7 +544,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self.set_servo_angle(self.pipette_params.servo_angle_retract)
         self.gcode_wait(self.pipette_params.wait_movement)
 
-    def home_pipette_stepper(self, speed: float = None) -> str:
+    def home_pipette_stepper(self,
+                             speed: float = None) -> str:
         """Home the pipette stepper.
 
         Args:
@@ -567,11 +568,15 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             f"ACCEL={accel_home}\n"
             f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0\n")
 
-    def home_pipette_stepper_disp(self, volume: float, speed: float = None) -> str:
+    def home_pipette_stepper_disp(self,
+                                  volume: float,
+                                  speed: float = None) -> str:
         """Home the pipette stepper.
 
         Args:
             speed (float): The speed to home the pipette.
+
+        TODO remove
         """
         if speed is None:
             speed = self.pipette_params.speed_pipette_up_slow
@@ -1013,6 +1018,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not self.has_tip:
             self.next_tip(from_box=tipbox_name)
         # Maybe check if we have liquid in tip already?
+        # No, keep freedom, maybe we aspirate multiple times before dispensing
         # Pickup liquid
         if source:
             self.move_to(coor_source)
@@ -1068,8 +1074,13 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                         dest_col: Optional[int] = None,
                         disp_vol_ul: float | None = None,
                         wiggle: bool = False,
-                        touch: bool = False) -> None:
-        """Dip into a well and expel some liquid."""
+                        touch: bool = False,
+                        flush: bool = False) -> None:
+        """
+        Dip into a well and expel some liquid.
+
+        TODO consolidate disp_vol_ul and volume
+        """
         if dest:
             coor_dest = self.get_location_coor(dest, dest_row, dest_col)
             loc_dest = self.locations[dest]
@@ -1105,12 +1116,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 f"MOVE={target} "
                 f"ACCEL={accel_move}\n"
             )
-            # self._buffer_command("M400\n")  # wait for stepper to finish
-        else:
-            # ----- Full dump to 0 (legacy) -----
-            self.home_pipette_stepper_disp(
-                volume,
-                self.pipette_params.speed_pipette_up)
+        if flush:
+            self.home_pipette_stepper(self.pipette_params.speed_pipette_down)
 
         # 2) Optional wiggle
         if wiggle and dest:
@@ -1200,9 +1207,10 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 prewet: bool = False,
                 wiggle: bool = False,
                 touch: bool = False,
+                flush: bool = False,
                 *,
-                splits: Optional[str] = None,           # NEW
-                leftover_action: str = "keep",            # NEW: "keep" or "waste"
+                splits: Optional[str] = None,
+                leftover_action: str = "keep",            # "keep" or "waste"
                 tipbox_name: Optional[str] = None,
                 ) -> None:
         """Transfer liquid between locations.
@@ -1248,6 +1256,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 keep_tip=keep_tip,
                 prewet=prewet,
                 wiggle=wiggle,
+                touch=touch,
+                flush=flush,
                 leftover_action=leftover_action,
                 tipbox_name=tipbox_name,
             )
@@ -1263,8 +1273,22 @@ class AutoPipette(metaclass=AutoPipetteMeta):
 
         for pip_vol in transfer_volumes:
             # BUGFIX: use 'pip_vol' (not 'vol_ul') for each chunk
-            self.aspirate_volume(pip_vol, source, src_row, src_col, prewet, tipbox_name=tipbox_name)
-            self.dispense_volume(pip_vol, dest, dest_row, dest_col, disp_vol_ul, wiggle=wiggle, touch=touch)
+            self.aspirate_volume(
+                pip_vol,
+                source,
+                src_row,
+                src_col,
+                prewet,
+                tipbox_name=tipbox_name)
+            self.dispense_volume(
+                pip_vol,
+                dest,
+                dest_row,
+                dest_col,
+                disp_vol_ul,
+                wiggle=wiggle,
+                touch=touch,
+                flush=flush)
 
         if not keep_tip:
             self.dispose_tip()
@@ -1281,12 +1305,13 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         prewet: bool = False,
         wiggle: bool = False,
         touch: bool = False,
+        flush: bool = False,
         leftover_action: str = "keep",  # "keep" or "waste"
         tipbox_name: str | None = None
     ) -> None:
         """
         Aspirate once and dispene to multiple destinations.
-       
+
         Aspirate 'vol_ul' once from 'source', then dispense to multiple
         destinations in order, using absolute partial-dispense semantics.
 
@@ -1306,26 +1331,33 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             )
 
         # 1) Aspirate once
-        self.aspirate_volume(vol_ul, source, src_row, src_col, prewet, tipbox_name=tipbox_name)
+        self.aspirate_volume(
+            vol_ul,
+            source,
+            src_row,
+            src_col,
+            prewet,
+            tipbox_name=tipbox_name)
 
         # 2) Sequential partial dispenses.
         #    dispense_volume expects 'volume' = the original aspirated amount,
         #    and 'disp_vol_ul' = cumulative dispensed so far (absolute target).
-        disp_cum = 0.0
+        disp_cumu = 0.0
         for i, s in enumerate(splits, start=1):
-            disp_cum += s.vol_ul
+            disp_cumu += s.vol_ul
             self.dispense_volume(
                 volume=vol_ul,
                 dest=s.dest,
                 dest_row=s.dest_row,
                 dest_col=s.dest_col,
-                disp_vol_ul=disp_cum,
+                disp_vol_ul=disp_cumu,
                 wiggle=wiggle,
-                touch=touch
+                touch=touch,
+                flush=flush
             )
 
         # 3) Leftover handling
-        leftover = vol_ul - disp_cum
+        leftover = vol_ul - disp_cumu
         if leftover > 1e-6:
             if leftover_action == "waste":
                 if self.waste_container is None:
