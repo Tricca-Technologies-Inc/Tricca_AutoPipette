@@ -720,7 +720,9 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self._buffer_command(f"SET_PIN PIN={pin} VALUE={val}\n")
         self._buffer_command("M400\n")  # wait for completion
 
-    def move_pipette_stepper(self, distance: float, speed: float = None) -> str:
+    def move_pipette_stepper(self,
+                             distance: float,
+                             speed: float = None) -> str:
         """Move the plunger by 'distance' steps (caller handles vol→steps)."""
         if speed is None:
             speed = self.pipette_params.speed_pipette_up_slow
@@ -923,6 +925,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
     def plunge_down(self, vol_ul: float, speed: float = None) -> None:
         """Move pipette plunger down.
 
+        TODO remove this function or replace it
         Args:
             vol_ul (float): The volume in microliters to be pipetted.
             speed (float): The speed to move the plunger.
@@ -962,7 +965,9 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         settle_ms: int | None = None
     ) -> None:
         """
-        Z-axis shake around the dip depth (higher Z = deeper). Ends at dip Z.
+        Z-axis shake around the dip depth (higher Z = deeper).
+
+        Ends at dip Z.
         """
         if shake_offset <= 0:
             return
@@ -982,9 +987,11 @@ class AutoPipette(metaclass=AutoPipetteMeta):
 
         # 2) Shake in Z
         for _ in range(cycles):
-            self.move_to_z(Coordinate(x=curr_coor.x, y=curr_coor.y, z=z_deeper))
+            self.move_to_z(
+                Coordinate(x=curr_coor.x, y=curr_coor.y, z=z_deeper))
             self.gcode_wait(wait_ms)
-            self.move_to_z(Coordinate(x=curr_coor.x, y=curr_coor.y, z=z_shallower))
+            self.move_to_z(
+                Coordinate(x=curr_coor.x, y=curr_coor.y, z=z_shallower))
             self.gcode_wait(wait_ms)
 
         # 3) Return to base dip Z
@@ -993,29 +1000,32 @@ class AutoPipette(metaclass=AutoPipetteMeta):
 
     def aspirate_volume(self,
                         volume: float,
-                        source: str,
+                        source: str = None,
                         src_row: Optional[int] = None,
                         src_col: Optional[int] = None,
                         prewet: bool = False,
                         tipbox_name: str | None = None) -> None:
         """Dip into a well and take in some liquid."""
-        coor_source = self.get_location_coor(source, src_row, src_col)
-        loc_source = self.locations[source]
+        if source:
+            coor_source = self.get_location_coor(source, src_row, src_col)
+            loc_source = self.locations[source]
         # Pickup a tip
         if not self.has_tip:
             self.next_tip(from_box=tipbox_name)
         # Maybe check if we have liquid in tip already?
         # Pickup liquid
-        self.move_to(coor_source)
+        if source:
+            self.move_to(coor_source)
 
         self.home_pipette_stepper(self.pipette_params.speed_pipette_up_slow)
 
-        self.dip_z_down(coor_source, loc_source.get_dip_distance(volume))
+        if source:
+            self.dip_z_down(coor_source, loc_source.get_dip_distance(volume))
         self.plunge_down(volume, self.pipette_params.speed_pipette_down)
         # If True, aspirate small amount of liquid 1 time to wet tip
         # Use truthiness: change prewet to default 0
         #   and pass in number otherwise to prewet that many times
-        if prewet:
+        if prewet and source:
             dip_z = loc_source.get_dip_distance(volume)
             for _ in range(3):
                 # Raise Z by 20 mm (absolute move)
@@ -1040,31 +1050,34 @@ class AutoPipette(metaclass=AutoPipetteMeta):
 
                 # Go back down and re-aspirate
                 self.plunge_down(volume,
-                                self.pipette_params.speed_pipette_down)
+                                 self.pipette_params.speed_pipette_down)
                 self.gcode_wait(self.pipette_params.wait_aspirate)
 
         # Release plunger to aspirate measured amount
         # self.home_pipette_stepper(self.pipette_params.speed_pipette_up_slow)
         # Give time for the liquid to enter the tip
         self.gcode_wait(self.pipette_params.wait_aspirate)
-        self.dip_z_return(coor_source)
+        if source:
+            self.dip_z_return(coor_source)
         self.has_liquid = True
 
     def dispense_volume(self,
                         volume: float,
-                        dest: str,
+                        dest: str = None,
                         dest_row: Optional[int] = None,
                         dest_col: Optional[int] = None,
                         disp_vol_ul: float | None = None,
                         wiggle: bool = False,
                         touch: bool = False) -> None:
         """Dip into a well and expel some liquid."""
-        coor_dest = self.get_location_coor(dest, dest_row, dest_col)
-        loc_dest = self.locations[dest]
+        if dest:
+            coor_dest = self.get_location_coor(dest, dest_row, dest_col)
+            loc_dest = self.locations[dest]
 
         # 1) Move into the well and dip
-        self.move_to(coor_dest)
-        self.dip_z_down(coor_dest, loc_dest.get_dip_distance(volume))
+        if dest:
+            self.move_to(coor_dest)
+            self.dip_z_down(coor_dest, loc_dest.get_dip_distance(volume))
 
         stepper = self.pipette_params.name_pipette_stepper
         speed = self.pipette_params.speed_pipette_down
@@ -1100,15 +1113,20 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 self.pipette_params.speed_pipette_up)
 
         # 2) Optional wiggle
-        if wiggle:
+        if wiggle and dest:
             self.wiggle(coor_dest, loc_dest.get_dip_distance(volume))
 
         # 3) Optional touch (a small single dip)
-        if touch:
+        # TODO find a better way that doesn't use magic numbers
+        if touch and dest:
             touch_depth = loc_dest.get_dip_distance(volume) + 5
-            self.move_to_z(Coordinate(x=coor_dest.x, y=coor_dest.y, z=touch_depth))
+            self.move_to_z(
+                Coordinate(x=coor_dest.x, y=coor_dest.y, z=touch_depth))
             self.gcode_wait(self.pipette_params.wait_movement)
-            self.move_to_z(Coordinate(x=coor_dest.x, y=coor_dest.y, z=loc_dest.get_dip_distance(volume)))
+            self.move_to_z(
+                Coordinate(x=coor_dest.x,
+                           y=coor_dest.y,
+                           z=loc_dest.get_dip_distance(volume)))
             self.gcode_wait(self.pipette_params.wait_movement)
 
         # 3) Settle & retract Z
