@@ -1,2 +1,2 @@
-pipette --keep_tip --prewet 10 V1 V2
+pipette 10 --keep_tip --wiggle V1 V2 --dispense_vol 10 --tipbox tipbox
 move 150 0 0
