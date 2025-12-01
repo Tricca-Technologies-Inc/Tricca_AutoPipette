@@ -156,7 +156,8 @@ class TriccaAutoPipetteShell(Cmd):
             try:
                 server_path = future.result(timeout=30)
                 with self.terminal_lock:
-                    self.async_alert(f"Upload successful. Server path: {server_path}")
+                    self.async_alert(
+                        f"Upload successful. Server path: {server_path}")
                 self.send_rpc(self.mrr.printer_print_start(filename))
                 if delete_file:
                     file_path.unlink()
