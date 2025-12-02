@@ -545,7 +545,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self.gcode_wait(self.pipette_params.wait_movement)
 
     def home_pipette_stepper(self,
-                             speed: float = None) -> str:
+                             speed: Optional[float] = None) -> str:
         """Home the pipette stepper.
 
         Args:
@@ -555,48 +555,27 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             speed = self.pipette_params.speed_pipette_up_slow
         stepper = self.pipette_params.name_pipette_stepper
         # TODO: replace magic number
-        move = 300
+        # Large number guarantees it hits the sensor
+        move = 500
         accel_home = self.pipette_params.accel_pipette_home
         # TODO write a better more class based approach
         if self.pipette_params.model == "verticle":
             move *= 1
+
+        # Go to sensor, then retreat by the minimum amount
         self._buffer_command(
             f"MANUAL_STEPPER STEPPER={stepper} "
-            f"SPEED={speed} "
             f"MOVE={move} "
-            "STOP_ON_ENDSTOP=1 SET_POSITION=0 "
-            f"ACCEL={accel_home}\n"
-            f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0\n")
-
-    def home_pipette_stepper_disp(self,
-                                  volume: float,
-                                  speed: float = None) -> str:
-        """Home the pipette stepper.
-
-        Args:
-            speed (float): The speed to home the pipette.
-
-        TODO remove
-        """
-        if speed is None:
-            speed = self.pipette_params.speed_pipette_up_slow
-        stepper = self.pipette_params.name_pipette_stepper
-
-        total_ul = volume + 10
-        stepsq = self.volume_converter.vol_to_steps(total_ul)
-        accel_home = self.pipette_params.accel_pipette_home
-
-        # TODO write a better more class based approach
-        if self.pipette_params.model == "verticle":
-            stepsq *= 1
-
-        self._buffer_command(
-            f"MANUAL_STEPPER STEPPER={stepper} "
             f"SPEED={speed} "
-            f"MOVE={stepsq} "
-            "STOP_ON_ENDSTOP=1 SET_POSITION=0 "
-            f"ACCEL={accel_home}\n"
-            f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0\n")
+            f"ACCEL={accel_home} "
+            "STOP_ON_ENDSTOP=1 "
+            "SET_POSITION=0\n"
+            f"MANUAL_STEPPER STEPPER={stepper} "
+            f"MOVE=-{move} "
+            f"SPEED={speed} "
+            f"ACCEL={accel_home} "            
+            "STOP_ON_ENDSTOP=-1 "
+            "SET_POSITION=0\n")
 
     def get_gcode(self) -> list[str]:
         """Return the gcode that's been added to the buffer and clear it."""
@@ -742,8 +721,9 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             f"MANUAL_STEPPER STEPPER={stepper} "
             f"SPEED={speed} "
             f"MOVE={distance} "
-            f"ACCEL={accel_move}\n"
-        )
+            f"ACCEL={accel_move} "
+            "SET_POSITION=0 "
+            "STOP_ON_ENDSTOP=2\n")
 
     def gcode_wait(self, mil: float) -> str:
         """Send a gcode command to wait for mil amount of milliseconds.
@@ -927,39 +907,6 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             return self.pooled_tipbox
         raise NoTipboxError()
 
-    def plunge_down(self, vol_ul: float, speed: float = None) -> None:
-        """Move pipette plunger down.
-
-        TODO remove this function or replace it
-        Args:
-            vol_ul (float): The volume in microliters to be pipetted.
-            speed (float): The speed to move the plunger.
-        """
-        if speed is None:
-            speed = self.pipette_params.speed_pipette_up_slow
-        self.move_pipette_stepper(self.volume_converter.vol_to_steps(vol_ul),
-                                  speed)
-
-    def clear_pipette(self,
-                      volume: Optional[float] = None,
-                      speed: float = None) -> None:
-        """Expell any liquid in tip.
-
-        Args:
-            speed (float): The speed to move the plunger.
-        """
-        if speed is None:
-            speed = self.pipette_params.speed_pipette_up_slow
-
-        if volume is None:
-            # original “dump all” distance
-            steps = self.volume_converter.dist_disp
-        else:
-            # exact-volume behavior
-            steps = self.volume_converter.vol_to_steps(volume)
-
-        self.move_pipette_stepper(steps, speed)
-
     def wiggle(
         self,
         curr_coor: Coordinate,
@@ -1008,33 +955,25 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                         source: str = None,
                         src_row: Optional[int] = None,
                         src_col: Optional[int] = None,
-                        prewet: bool = False,
+                        prewet: Optional[int] = None,
                         tipbox_name: str | None = None) -> None:
         """Dip into a well and take in some liquid."""
         if source:
             coor_source = self.get_location_coor(source, src_row, src_col)
             loc_source = self.locations[source]
-        # Pickup a tip
-        if not self.has_tip:
-            self.next_tip(from_box=tipbox_name)
-        # Maybe check if we have liquid in tip already?
-        # No, keep freedom, maybe we aspirate multiple times before dispensing
-        # Pickup liquid
-        if source:
             self.move_to(coor_source)
-
-        self.home_pipette_stepper(self.pipette_params.speed_pipette_up_slow)
-
-        if source:
             self.dip_z_down(coor_source, loc_source.get_dip_distance(volume))
-        self.plunge_down(volume, self.pipette_params.speed_pipette_down)
-        # If True, aspirate small amount of liquid 1 time to wet tip
-        # Use truthiness: change prewet to default 0
-        #   and pass in number otherwise to prewet that many times
+        
+        # Pickup liquid
+        self.move_pipette_stepper(
+            self.volume_converter.vol_to_steps(volume),
+            self.pipette_params.speed_pipette_down)
+        # If True, aspirate small amount of liquid prewet # of times to wet tip
         if prewet and source:
             dip_z = loc_source.get_dip_distance(volume)
-            for _ in range(3):
+            for _ in range(prewet):
                 # Raise Z by 20 mm (absolute move)
+                # TODO add 20 mm magic number to config
                 raise_z = dip_z - 20
                 self.move_to_z(Coordinate(
                     x=coor_source.x,
@@ -1042,25 +981,23 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                     z=raise_z
                 ))
 
-                self.home_pipette_stepper_disp(
-                    volume,
-                    self.pipette_params.speed_pipette_up_slow)
+                self.home_pipette_stepper(self.pipette_params.speed_pipette_up_slow)
 
-                self.move_to_z(Coordinate(
-                    x=coor_source.x,
-                    y=coor_source.y,
-                    z=raise_z + 20
-                ))
+                self.move_to_z(
+                    Coordinate(
+                        x=coor_source.x,
+                        y=coor_source.y,
+                        z=raise_z + 20))
 
                 self.gcode_wait(self.pipette_params.wait_aspirate)
 
                 # Go back down and re-aspirate
-                self.plunge_down(volume,
-                                 self.pipette_params.speed_pipette_down)
+                self.move_pipette_stepper(
+                    self.volume_converter.vol_to_steps(volume),
+                    self.pipette_params.speed_pipette_down)
                 self.gcode_wait(self.pipette_params.wait_aspirate)
 
         # Release plunger to aspirate measured amount
-        # self.home_pipette_stepper(self.pipette_params.speed_pipette_up_slow)
         # Give time for the liquid to enter the tip
         self.gcode_wait(self.pipette_params.wait_aspirate)
         if source:
@@ -1107,15 +1044,25 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             accel_move = self.pipette_params.accel_pipette_move
 
             # TODO find a better class-based approach
+            # TODO Figure out if move_stepper is more appropriate
             if self.pipette_params.model == "verticle":
                 target *= -1
 
+            # Move down until it possibly hits sensor
+            # If it hits sensor, move up just a little
             self._buffer_command(
                 f"MANUAL_STEPPER STEPPER={stepper} "
-                f"SPEED={speed} "
                 f"MOVE={target} "
-                f"ACCEL={accel_move}\n"
-            )
+                f"SPEED={speed} "
+                f"ACCEL={accel_move} "
+                "SET_POSITION=0 "
+                "STOP_ON_ENDSTOP=2\n"
+                f"MANUAL_STEPPER STEPPER={stepper} "
+                f"MOVE=-100 "
+                f"SPEED={speed} "
+                f"ACCEL={accel_move} "            
+                "STOP_ON_ENDSTOP=-1 "
+                "SET_POSITION=0\n")
         if flush:
             self.home_pipette_stepper(self.pipette_params.speed_pipette_down)
 
@@ -1138,7 +1085,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
 
         # 3) Settle & retract Z
         self.gcode_wait(self.pipette_params.wait_aspirate)
-        self.dip_z_return(coor_dest)
+        if dest:
+            self.dip_z_return(coor_dest)
 
         fully_dispensed = (disp_vol_ul is None) or (abs(disp_vol_ul - volume) <= 1e-6)
         self.has_liquid = not fully_dispensed
@@ -1204,7 +1152,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 dest_row: Optional[int] = None,
                 dest_col: Optional[int] = None,
                 keep_tip: bool = False,
-                prewet: bool = False,
+                prewet: Optional[int] = None,
                 wiggle: bool = False,
                 touch: bool = False,
                 flush: bool = False,
@@ -1225,6 +1173,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if vol_ul < 0:
             raise ValueError(f"Invalid volume: {vol_ul}μL")
 
+        # TODO Remove this and replace with explicit skip function. 0 vol illegal
         if vol_ul == 0:
             # Only advance the iterator when no explicit well is specified
             if dest_row is None and dest_col is None:
@@ -1271,6 +1220,12 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if remainder > 1e-6:
             transfer_volumes.append(remainder)
 
+        # Home pipette before aspirating and dispensing
+        self.home_pipette_stepper(self.pipette_params.speed_pipette_down)
+        # Pickup tip
+        if not self.has_tip:
+            self.next_tip(from_box=tipbox_name)
+        
         for pip_vol in transfer_volumes:
             # BUGFIX: use 'pip_vol' (not 'vol_ul') for each chunk
             self.aspirate_volume(
@@ -1302,7 +1257,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         src_row: Optional[int] = None,
         src_col: Optional[int] = None,
         keep_tip: bool = False,
-        prewet: bool = False,
+        prewet: Optional[int] = None,
         wiggle: bool = False,
         touch: bool = False,
         flush: bool = False,

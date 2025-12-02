@@ -46,7 +46,7 @@ class TAPCmdParsers():
     parser_pipette.add_argument("vol_ul", type=float)
     parser_pipette.add_argument("src", type=str)
     parser_pipette.add_argument("dest", type=str)
-    parser_pipette.add_argument("--prewet", action="store_true")
+    parser_pipette.add_argument("--prewet", default=None, type=int)
     parser_pipette.add_argument("--keep_tip", action="store_true")
     parser_pipette.add_argument("--wiggle", action="store_true")
     parser_pipette.add_argument("--touch", action="store_true")
@@ -88,7 +88,7 @@ class TAPCmdParsers():
     parser_aspirate.add_argument("--src", default=None, type=str)
     parser_aspirate.add_argument("--src_row", default=None, type=int)
     parser_aspirate.add_argument("--src_col", default=None, type=int)
-    parser_aspirate.add_argument("--prewet", action="store_true")
+    parser_aspirate.add_argument("--prewet", default=None, type=int)
     parser_aspirate.add_argument(
         "--tipbox",
         dest="tipbox_name",

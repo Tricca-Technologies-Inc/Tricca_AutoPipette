@@ -397,7 +397,7 @@ class TriccaAutoPipetteShell(Cmd):
             )
         self.output_gcode(self._autopipette.get_gcode())
 
-    @with_argparser(tapcmdparsers.parser_dispense)
+    @with_argparser(TAPCmdParsers.parser_dispense)
     def do_dispense(self, args):
         """Dispense a certain amount of liquid."""
         vol_ul: float = args.vol_ul
@@ -413,7 +413,7 @@ class TriccaAutoPipetteShell(Cmd):
             dest=dest,
             dest_row=dest_row,
             dest_col=dest_col,
-            disp_vol_ul=vol_ul,
+            disp_vol_ul=0,
             wiggle=wiggle,
             touch=touch,
             flush=flush
