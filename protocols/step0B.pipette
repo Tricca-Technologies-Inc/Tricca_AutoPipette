@@ -1,35 +1,10 @@
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
-pipette 50 STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air STANS_FULL STANS4 --dispense_vol 50 --tipbox tipbox
