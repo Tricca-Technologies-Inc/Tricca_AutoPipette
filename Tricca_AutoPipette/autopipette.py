@@ -1058,11 +1058,11 @@ class AutoPipette(metaclass=AutoPipetteMeta):
 
         # 3) Optional touch (a small single dip)
         if touch:
-            # touch_depth = loc_dest.get_dip_distance(volume) + 1
-            # self.move_to_z(Coordinate(x=coor_dest.x, y=coor_dest.y, z=touch_depth))
+            touch_depth = loc_dest.get_dip_distance(volume) + 0.2
+            self.move_to_z(Coordinate(x=coor_dest.x, y=coor_dest.y, z=touch_depth))
             self.gcode_wait(1500) # 1.5 second hold
-            # self.move_to_z(Coordinate(x=coor_dest.x, y=coor_dest.y, z=loc_dest.get_dip_distance(volume)))
-            # self.gcode_wait(self.pipette_params.wait_movement)
+            self.move_to_z(Coordinate(x=coor_dest.x, y=coor_dest.y, z=loc_dest.get_dip_distance(volume)))
+            self.gcode_wait(self.pipette_params.wait_movement)
 
         # 3) Settle & retract Z
         self.gcode_wait(self.pipette_params.wait_aspirate)
