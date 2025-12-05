@@ -2,7 +2,7 @@
 """Holds the Well class and the related DipStrategies."""
 from __future__ import annotations
 import math
-from coordinate import Coordinate
+from .coordinate import Coordinate
 from typing import Optional, Callable
 from pydantic import BaseModel, confloat, model_validator
 

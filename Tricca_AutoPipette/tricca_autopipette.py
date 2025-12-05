@@ -2,7 +2,7 @@
 """Holds class and methods for running Tricca AutoPipette Shell."""
 import sys
 import logging
-from tap_shell import TriccaAutoPipetteShell
+from .tap_shell import TriccaAutoPipetteShell
 from cmd2 import Cmd2ArgumentParser
 
 
