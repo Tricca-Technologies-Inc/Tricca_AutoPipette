@@ -3,3 +3,4 @@ task: <Task pending name='Task-14' coro=<WebSocketClient._upload_gcode_file_asyn
 2025-10-17 16:13:01,642 [base_events] ERROR: Task was destroyed but it is pending!
 task: <Task cancelling name='Task-1' coro=<WebSocketClient._main_wrapper() running at C:\Users\gfran\Desktop\Work '25\TAP Master\Tricca_AutoPipette\Tricca_AutoPipette\websocketclient.py:88> wait_for=<Task finished name='Task-6' coro=<_wait_for_close() done, defined at C:\Users\gfran\AppData\Local\Programs\Python\Python313\Lib\site-packages\aiohttp\connector.py:135> result=None>>
 2025-12-11 15:34:27,411 [autopipette] CRITICAL: Missing configuration file: C:\Users\gfran\Desktop\Work '25\TAP Master\Tricca_AutoPipette\conf\vol-test-100-a.conf
+2025-12-12 14:51:16,232 [autopipette] CRITICAL: Missing configuration file: C:\Users\gfran\Desktop\Work '25\TAP Master\Tricca_AutoPipette\conf\profile_p1000.conf
