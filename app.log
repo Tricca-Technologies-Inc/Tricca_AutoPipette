@@ -72,3 +72,5 @@ websockets.exceptions.ConnectionClosedOK: sent 1000 (OK); then received 1000 (OK
 2025-06-05 15:06:15,743 [async_manager] INFO: Connected to ws://triccaautopipette.local/websocket
 2025-06-05 15:06:16,724 [async_manager] INFO: Starting RPC client shutdown
 2025-06-05 15:06:16,740 [async_manager] INFO: RPC client shutdown completed
+2026-01-08 13:20:52,731 [base_events] ERROR: Task was destroyed but it is pending!
+task: <Task pending name='Task-3' coro=<WebSocketClient._upload_gcode_file_async() running at /home/biqu/Tricca_AutoPipette/Tricca_AutoPipette/websocketclient.py:246> wait_for=<Future pending cb=[BaseSelectorEventLoop._sock_write_done(9, handle=<Handle BaseS....0.164', 80))>)(), Task.task_wakeup()]> cb=[_chain_future.<locals>._call_set_state() at /usr/lib/python3.11/asyncio/futures.py:394]>

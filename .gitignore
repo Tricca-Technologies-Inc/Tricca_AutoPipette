@@ -6,9 +6,6 @@ gcode/temp
 docs/_build
 Tricca_AutoPipette/.tap_history
 /.dir-locals.el
-<<<<<<< HEAD
 Tricca_AutoPipette/res/__pycache__/*
-=======
-Tricca_AutoPipette/res/__pycache__/
->>>>>>> wiggle
 /Tricca_AutoPipette/flycheck_autopipette.py
+app.log
