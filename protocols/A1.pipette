@@ -1,4 +1,4 @@
-profile P100
+home all
 
 pipette 0 --wiggle FIS1 96wellplate --dispense_vol 0 --tipbox tipbox 
 pipette 11.4 --keep_tip --wiggle FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --prewet
