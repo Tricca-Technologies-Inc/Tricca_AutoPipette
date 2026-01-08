@@ -1,5 +1,3 @@
-profile P100
-
 pipette 475 --keep_tip --wiggle DFIBUF DFIPLATE --dispense_vol 475 --tipbox tipbox --prewet
 pipette 475 --keep_tip --wiggle DFIBUF DFIPLATE --dispense_vol 475 --tipbox tipbox
 pipette 475 --keep_tip --wiggle DFIBUF DFIPLATE --dispense_vol 475 --tipbox tipbox
