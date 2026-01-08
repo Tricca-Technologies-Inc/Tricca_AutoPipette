@@ -1,5 +1,3 @@
-profile P100
-
 pipette 10.3 --keep_tip --wiggle --src_row 0 --src_col 0 COLPLATE DFIPLATE --dispense_vol 10.3 --tipbox tipbox
 pipette 53.2 --wiggle --src_row 0 --src_col 0 COLPLATE LCPLATE --dispense_vol 53.2 --tipbox tipbox
 
