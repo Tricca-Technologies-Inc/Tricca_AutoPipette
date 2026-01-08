@@ -1,5 +1,3 @@
-profile P1000
-
 pipette 440 --wiggle --keep_tip WATER LCPLATE --dispense_vol 440 --tipbox tipbox --prewet
 pipette 440 --wiggle --keep_tip WATER LCPLATE --dispense_vol 440 --tipbox tipbox
 pipette 440 --wiggle --keep_tip WATER LCPLATE --dispense_vol 440 --tipbox tipbox
