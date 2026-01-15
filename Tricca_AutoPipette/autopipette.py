@@ -1069,6 +1069,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         # 3) Settle & retract Z
         self.gcode_wait(self.pipette_params.wait_aspirate)
         self.dip_z_return(coor_dest)
+        self.gcode_wait(2000)                 
 
         fully_dispensed = (disp_vol_ul is None) or (abs(disp_vol_ul - volume) <= 1e-6)
         self.has_liquid = not fully_dispensed
@@ -1281,4 +1282,5 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
