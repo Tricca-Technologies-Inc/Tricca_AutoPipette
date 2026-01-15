@@ -7,6 +7,7 @@ ensure a single instance controls hardware resources.
 
 TODO Add Logger obj
 """
+
 from __future__ import annotations
 import logging
 from typing import Optional, Sequence, NamedTuple
@@ -60,91 +61,67 @@ class NotADipStrategyError(Exception):
 
     def __init__(self, strategy) -> None:
         """Initialize error."""
-        super().__init__(f"Invalid dip strategy {strategy!r}. " +
-                         f"Valid options: {Well.STRATEGIES}")
+        super().__init__(
+            f"Invalid dip strategy {strategy!r}. " + f"Valid options: {Well.STRATEGIES}"
+        )
 
 
 class PipetteParams(BaseModel):
     """Pipette configuration parameters with validation."""
 
     # Required parameters
-    model: str = Field(
-        ...,
-        min_length=1,
-        description="Pipette model identifier")
+    model: str = Field(..., min_length=1, description="Pipette model identifier")
 
     # Name of servo for tips and name of motor to operate syringes
     name_pipette_servo: str = Field(
-        ...,
-        min_length=1,
-        description="Servo motor identifier")
+        ..., min_length=1, description="Servo motor identifier"
+    )
     name_pipette_stepper: str = Field(
-        ...,
-        min_length=1,
-        description="Stepper motor identifier")
+        ..., min_length=1, description="Stepper motor identifier"
+    )
 
     # Speed parameters (mm/s or steps/s)
-    speed_xy: conint(gt=0) = Field(
-        ...,
-        description="Horizontal movement speed")
-    speed_z: conint(gt=0) = Field(
-        ...,
-        description="Vertical movement speed")
+    speed_xy: conint(gt=0) = Field(..., description="Horizontal movement speed")
+    speed_z: conint(gt=0) = Field(..., description="Vertical movement speed")
     speed_pipette_down: conint(gt=0) = Field(
-        ...,
-        description="Pipette descending speed")
-    speed_pipette_up: conint(gt=0) = Field(
-        ...,
-        description="Pipette ascending speed")
+        ..., description="Pipette descending speed"
+    )
+    speed_pipette_up: conint(gt=0) = Field(..., description="Pipette ascending speed")
     speed_pipette_up_slow: conint(gt=0) = Field(
-        ...,
-        description="Pipette slow ascension speed")
+        ..., description="Pipette slow ascension speed"
+    )
     speed_max: conint(gt=0) = Field(..., description="Maximum system speed")
 
     # Configuration parameters
     speed_factor: conint(ge=1, le=200) = Field(
-        default=100,
-        description="Speed multiplier factor (1-200%)"
+        default=100, description="Speed multiplier factor (1-200%)"
     )
     velocity_max: conint(gt=0) = Field(..., description="Maximum velocity")
     accel_pipette_home: conint(gt=0) = Field(
-        default=800,
-        description="Acceleration of pipette when homing."
+        default=800, description="Acceleration of pipette when homing."
     )
     accel_pipette_move: conint(gt=0) = Field(
-        default=800,
-        description="Acceleration of pipette when moving."
+        default=800, description="Acceleration of pipette when moving."
     )
     accel_gantry_max: conint(gt=0) = Field(
-        ...,
-        description="Maximum acceleration of gantry."
+        ..., description="Maximum acceleration of gantry."
     )
 
     # Servo parameters (degrees)
     servo_angle_retract: conint(ge=20, le=160) = Field(
-        ...,
-        description="Retracted position angle (20-160°)"
+        ..., description="Retracted position angle (20-160°)"
     )
     servo_angle_eject: conint(ge=20, le=160) = Field(
-        ...,
-        description="Ready position angle (20-160°)"
+        ..., description="Ready position angle (20-160°)"
     )
 
     # Timing parameters (milliseconds)
-    wait_eject: conint(ge=0) = Field(
-        ...,
-        description="Ejection dwell time")
-    wait_movement: conint(ge=0) = Field(
-        ...,
-        description="Movement stabilization time")
-    wait_aspirate: conint(ge=0) = Field(
-        ...,
-        description="Aspiration dwell time")
+    wait_eject: conint(ge=0) = Field(..., description="Ejection dwell time")
+    wait_movement: conint(ge=0) = Field(..., description="Movement stabilization time")
+    wait_aspirate: conint(ge=0) = Field(..., description="Aspiration dwell time")
 
     # Capacity parameters
-    max_vol: conint(gt=0) = Field(
-        ...,
-        description="Maximum pipette volume (µL)")
+    max_vol: conint(gt=0) = Field(..., description="Maximum pipette volume (µL)")
 
     class Config:
         """Config class."""
@@ -156,8 +133,7 @@ class PipetteParams(BaseModel):
     def validate_slow_speed(cls, v, values):
         """Ensure slow speed is slower than the regular speed."""
         if "speed_pipette_up" in values and v >= values["speed_pipette_up"]:
-            raise ValueError(
-                "Slow speed must be less than normal ascension speed")
+            raise ValueError("Slow speed must be less than normal ascension speed")
         return v
 
 
@@ -166,7 +142,7 @@ class Split(NamedTuple):
 
     TODO: rename to be specific
     """
-   
+
     dest: str
     vol_ul: float
     dest_row: Optional[int] = None
@@ -211,15 +187,21 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self.pipette_params: PipetteParams | None = None
 
         self.DEFAULT_CONFIG = "autopipette.conf"
-        self.CONFIG_PATH = Path(__file__).parent.parent / 'conf'
+        self.CONFIG_PATH = Path(__file__).parent.parent / "conf"
 
         self.has_tip: bool = False
         self.has_liquid: bool = False
         self.homed: bool = False
 
-        self.NECESSARY_CONFIG_SECTIONS = ["NETWORK", "NAME", "BOUNDARY",
-                                          "SPEED", "SERVO", "WAIT",
-                                          "VOLUME_CONV"]
+        self.NECESSARY_CONFIG_SECTIONS = [
+            "NETWORK",
+            "NAME",
+            "BOUNDARY",
+            "SPEED",
+            "SERVO",
+            "WAIT",
+            "VOLUME_CONV",
+        ]
         # G-code buffers
         self._header_buffer: list[str] = []
         self._gcode_buffer: list[str] = []
@@ -230,8 +212,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
 
     def _buffer_command(self, command: str) -> None:
         """Add command to active buffer."""
-        target = self._header_buffer if self._current_as_header \
-            else self._gcode_buffer
+        target = self._header_buffer if self._current_as_header else self._gcode_buffer
         target.append(command)
 
     def _reset_runtime_state(self) -> None:
@@ -272,7 +253,9 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self._config_file = str(config_path)
 
         # Validate required sections
-        missing = list(set(self.NECESSARY_CONFIG_SECTIONS) - set(self.config.sections()))
+        missing = list(
+            set(self.NECESSARY_CONFIG_SECTIONS) - set(self.config.sections())
+        )
         if missing:
             raise MissingConfigError(missing.pop(), config_path)
 
@@ -322,7 +305,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if filename is None:
             filename = self._config_file + "-test"
         conf_path = self.CONF_PATH / filename
-        with open(conf_path, 'w') as fp:
+        with open(conf_path, "w") as fp:
             self.config.write(fp)
 
     def _parse_config_locations(self) -> None:
@@ -350,7 +333,9 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 return None
             return conv(s)
 
-        for section in set(self.config.sections()) - set(self.NECESSARY_CONFIG_SECTIONS):
+        for section in set(self.config.sections()) - set(
+            self.NECESSARY_CONFIG_SECTIONS
+        ):
             if not (section.startswith("COORDINATE ") or section.startswith("PLATE ")):
                 continue
 
@@ -385,9 +370,11 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                     if v is not None:
                         params[key] = v
 
-            dip_func_str = (params.get("dip_func") or "simple")
+            dip_func_str = params.get("dip_func") or "simple"
             if dip_func_str not in Well.STRATEGIES:
-                raise ValueError(f"Strategy {dip_func_str} is not a valid dip strategy.")
+                raise ValueError(
+                    f"Strategy {dip_func_str} is not a valid dip strategy."
+                )
 
             config_well = WellParams(
                 coor=loc_coor,
@@ -425,10 +412,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
 
     def _init_volume_converter(self) -> None:
         """Generate the VolumeConverter based on passed in values."""
-        volumes = list(map(float,
-                           self.config["VOLUME_CONV"]["volumes"].split(",")))
-        steps = list(map(float,
-                         self.config["VOLUME_CONV"]["steps"].split(",")))
+        volumes = list(map(float, self.config["VOLUME_CONV"]["volumes"].split(",")))
+        steps = list(map(float, self.config["VOLUME_CONV"]["steps"].split(",")))
         self.volume_converter = VolumeConverter(volumes, steps)
 
     def init_pipette(self) -> None:
@@ -478,8 +463,9 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             self._buffer_command("G91\n")
         else:
             raise ValueError(
-                f"Invalid coordinate system mode: '{mode}'." +
-                "Expected 'absolute' or 'incremental'.")
+                f"Invalid coordinate system mode: '{mode}'."
+                + "Expected 'absolute' or 'incremental'."
+            )
 
     def set_speed_factor(self, factor: float) -> str:
         """Set the speed factor using gcode.
@@ -565,7 +551,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             f"MOVE={move} "
             "STOP_ON_ENDSTOP=1 SET_POSITION=0 "
             f"ACCEL={accel_home}\n"
-            f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0\n")
+            f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0\n"
+        )
 
     def home_pipette_stepper_disp(self, volume: float, speed: float = None) -> str:
         """Home the pipette stepper.
@@ -591,7 +578,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             f"MOVE={stepsq} "
             "STOP_ON_ENDSTOP=1 SET_POSITION=0 "
             f"ACCEL={accel_home}\n"
-            f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0\n")
+            f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0\n"
+        )
 
     def get_gcode(self) -> list[str]:
         """Return the gcode that's been added to the buffer and clear it."""
@@ -611,10 +599,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         """
         speed_xy = self.pipette_params.speed_xy
         speed_z = self.pipette_params.speed_z
-        self._buffer_command(
-            f"G1 X{coordinate.x} Y{coordinate.y} F{speed_xy}\n")
-        self._buffer_command(
-            f"G1 Z{coordinate.z} F{speed_z}\n")
+        self._buffer_command(f"G1 X{coordinate.x} Y{coordinate.y} F{speed_xy}\n")
+        self._buffer_command(f"G1 Z{coordinate.z} F{speed_z}\n")
 
     def move_to_x(self, coordinate: Coordinate) -> str:
         """Move the pipette toolhead to the coordinate x position.
@@ -689,9 +675,9 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         else:
             # sensible defaults you can change later in the config
             self.trigger_pins = {
-                "air":   "arduino_trigger_air",
+                "air": "arduino_trigger_air",
                 "shake": "arduino_trigger_shake",
-                "aux":   "arduino_trigger_aux",
+                "aux": "arduino_trigger_aux",
             }
 
     @staticmethod
@@ -700,8 +686,10 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if isinstance(value, (int, float)):
             return 1 if value > 0 else 0
         s = str(value).strip().lower()
-        if s in {"1","on","high","true","t","yes","y"}:  return 1
-        if s in {"0","off","low","false","f","no","n"}:  return 0
+        if s in {"1", "on", "high", "true", "t", "yes", "y"}:
+            return 1
+        if s in {"0", "off", "low", "false", "f", "no", "n"}:
+            return 0
         raise ValueError("state must be one of: on/off/1/0/high/low/true/false")
 
     def set_trigger(self, channel: str, state) -> None:
@@ -757,10 +745,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             curr_coor (Coordinate): The coordinate to move from.
             distance (float): Distance to move in the z axis.
         """
-        coor_dip = Coordinate(
-            x=curr_coor.x,
-            y=curr_coor.y,
-            z=distance)
+        coor_dip = Coordinate(x=curr_coor.x, y=curr_coor.y, z=distance)
         self.move_to_z(coor_dip)
         self.gcode_wait(self.pipette_params.wait_movement)
 
@@ -798,9 +783,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         """
         return name_loc in self.locations.keys()
 
-    def set_location_plate(self,
-                           name_loc: str,
-                           plate_params: PlateParams) -> None:
+    def set_location_plate(self, name_loc: str, plate_params: PlateParams) -> None:
         """Create a plate from an existing location name.
 
         Args:
@@ -823,25 +806,22 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self.config.set(conf_key, "col", str(plate_params.num_col))
         self.config.set(conf_key, "spacing_row", str(plate_params.spacing_row))
         self.config.set(conf_key, "spacing_col", str(plate_params.spacing_col))
-        self.config.set(conf_key,
-                        "dip_top",
-                        str(plate_params.well_template.dip_top))
-        self.config.set(conf_key,
-                        "dip_btm",
-                        str(plate_params.well_template.dip_btm))
-        self.config.set(conf_key,
-                        "dip_func",
-                        str(Well.STRAT_TO_NAME[
-                            plate_params.well_template.dip_func]))
+        self.config.set(conf_key, "dip_top", str(plate_params.well_template.dip_top))
+        self.config.set(conf_key, "dip_btm", str(plate_params.well_template.dip_btm))
+        self.config.set(
+            conf_key,
+            "dip_func",
+            str(Well.STRAT_TO_NAME[plate_params.well_template.dip_func]),
+        )
         # Set waste location if plate type is WasteContainer.
-        if (plate_params.plate_type == "waste_container"):
+        if plate_params.plate_type == "waste_container":
             self.waste_container = self.locations[name_loc]
             self.locations["waste_container"] = self.waste_container
         # Set tip box location if plate type is TipBox
         elif plate_params.plate_type == "tipbox":
-            tb = self.locations[name_loc]           # TipBox created by PlateFactory
+            tb = self.locations[name_loc]  # TipBox created by PlateFactory
             assert isinstance(tb, TipBox)
-            self.tipboxes_map[name_loc] = tb        # keep named box as-is
+            self.tipboxes_map[name_loc] = tb  # keep named box as-is
 
             if self.pooled_tipbox is None:
                 # make an independent pooled copy starting with this box
@@ -858,8 +838,9 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 plates.append(location)
         return plates
 
-    def get_location_coor(self, name_loc: str,
-                          row: int = None, col: int = None) -> Coordinate:
+    def get_location_coor(
+        self, name_loc: str, row: int = None, col: int = None
+    ) -> Coordinate:
         """Return a Coordinate from a location name.
 
         Args:
@@ -868,17 +849,17 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             col (int): A column on a plate.
         """
         # If name_loc doesn't exist as a location, do nothing
-        if (name_loc not in self.locations.keys()):
+        if name_loc not in self.locations.keys():
             raise NotALocationError(name_loc)
         # If the returned location is a coordinate, return it.
         # Otherwise, if it is a plate, next() is called and returned
         loc = self.locations[name_loc]
-        if (isinstance(loc, Plate)):
+        if isinstance(loc, Plate):
             if row is None and col is None:
                 return loc.next()
             else:
                 return loc.get_coor(row, col)
-        elif (isinstance(loc, Coordinate)):
+        elif isinstance(loc, Coordinate):
             return loc
         else:
             raise NotALocationError(name_loc)
@@ -929,12 +910,11 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         """
         if speed is None:
             speed = self.pipette_params.speed_pipette_up_slow
-        self.move_pipette_stepper(self.volume_converter.vol_to_steps(vol_ul),
-                                  speed)
+        self.move_pipette_stepper(self.volume_converter.vol_to_steps(vol_ul), speed)
 
-    def clear_pipette(self,
-                      volume: Optional[float] = None,
-                      speed: float = None) -> None:
+    def clear_pipette(
+        self, volume: Optional[float] = None, speed: float = None
+    ) -> None:
         """Expell any liquid in tip.
 
         Args:
@@ -957,9 +937,9 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         curr_coor: Coordinate,
         dip_distance: float,
         *,
-        shake_offset: float = 2.0,   # mm each way
+        shake_offset: float = 2.0,  # mm each way
         cycles: int = 2,
-        settle_ms: int | None = None
+        settle_ms: int | None = None,
     ) -> None:
         """
         Z-axis shake around the dip depth (higher Z = deeper). Ends at dip Z.
@@ -969,7 +949,9 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if cycles < 1:
             cycles = 1
 
-        wait_ms = self.pipette_params.wait_movement if settle_ms is None else int(settle_ms)
+        wait_ms = (
+            self.pipette_params.wait_movement if settle_ms is None else int(settle_ms)
+        )
 
         # 1) Go to base dip Z
         base = Coordinate(x=curr_coor.x, y=curr_coor.y, z=dip_distance)
@@ -991,13 +973,15 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self.move_to_z(base)
         self.gcode_wait(wait_ms)
 
-    def aspirate_volume(self,
-                        volume: float,
-                        source: str,
-                        src_row: Optional[int] = None,
-                        src_col: Optional[int] = None,
-                        prewet: bool = False,
-                        tipbox_name: str | None = None) -> None:
+    def aspirate_volume(
+        self,
+        volume: float,
+        source: str,
+        src_row: Optional[int] = None,
+        src_col: Optional[int] = None,
+        prewet: bool = False,
+        tipbox_name: str | None = None,
+    ) -> None:
         """Dip into a well and take in some liquid."""
         coor_source = self.get_location_coor(source, src_row, src_col)
         loc_source = self.locations[source]
@@ -1020,27 +1004,20 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             for _ in range(3):
                 # Raise Z by 20 mm (absolute move)
                 raise_z = dip_z - 20
-                self.move_to_z(Coordinate(
-                    x=coor_source.x,
-                    y=coor_source.y,
-                    z=raise_z
-                ))
+                self.move_to_z(Coordinate(x=coor_source.x, y=coor_source.y, z=raise_z))
 
                 self.home_pipette_stepper_disp(
-                    volume,
-                    self.pipette_params.speed_pipette_up_slow)
+                    volume, self.pipette_params.speed_pipette_up_slow
+                )
 
-                self.move_to_z(Coordinate(
-                    x=coor_source.x,
-                    y=coor_source.y,
-                    z=raise_z + 20
-                ))
+                self.move_to_z(
+                    Coordinate(x=coor_source.x, y=coor_source.y, z=raise_z + 20)
+                )
 
                 self.gcode_wait(self.pipette_params.wait_aspirate)
 
                 # Go back down and re-aspirate
-                self.plunge_down(volume,
-                                self.pipette_params.speed_pipette_down)
+                self.plunge_down(volume, self.pipette_params.speed_pipette_down)
                 self.gcode_wait(self.pipette_params.wait_aspirate)
 
         # Release plunger to aspirate measured amount
@@ -1050,14 +1027,16 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self.dip_z_return(coor_source)
         self.has_liquid = True
 
-    def dispense_volume(self,
-                        volume: float,
-                        dest: str,
-                        dest_row: Optional[int] = None,
-                        dest_col: Optional[int] = None,
-                        disp_vol_ul: float | None = None,
-                        wiggle: bool = False,
-                        touch: bool = False) -> None:
+    def dispense_volume(
+        self,
+        volume: float,
+        dest: str,
+        dest_row: Optional[int] = None,
+        dest_col: Optional[int] = None,
+        disp_vol_ul: float | None = None,
+        wiggle: bool = False,
+        touch: bool = False,
+    ) -> None:
         """Dip into a well and expel some liquid."""
         coor_dest = self.get_location_coor(dest, dest_row, dest_col)
         loc_dest = self.locations[dest]
@@ -1077,7 +1056,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 D = 0.0
             if D > A:
                 D = A
-            target = -(A - D)               # ∈ [-A, 0]
+            target = -(A - D)  # ∈ [-A, 0]
             if abs(target) < 1e-9:
                 target = 0.0  # avoid "-0.0"
             accel_move = self.pipette_params.accel_pipette_move
@@ -1095,9 +1074,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             # self._buffer_command("M400\n")  # wait for stepper to finish
         else:
             # ----- Full dump to 0 (legacy) -----
-            self.home_pipette_stepper_disp(
-                volume,
-                self.pipette_params.speed_pipette_up)
+            self.home_pipette_stepper_disp(volume, self.pipette_params.speed_pipette_up)
 
         # 2) Optional wiggle
         if wiggle:
@@ -1108,7 +1085,11 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             touch_depth = loc_dest.get_dip_distance(volume) + 5
             self.move_to_z(Coordinate(x=coor_dest.x, y=coor_dest.y, z=touch_depth))
             self.gcode_wait(self.pipette_params.wait_movement)
-            self.move_to_z(Coordinate(x=coor_dest.x, y=coor_dest.y, z=loc_dest.get_dip_distance(volume)))
+            self.move_to_z(
+                Coordinate(
+                    x=coor_dest.x, y=coor_dest.y, z=loc_dest.get_dip_distance(volume)
+                )
+            )
             self.gcode_wait(self.pipette_params.wait_movement)
 
         # 3) Settle & retract Z
@@ -1169,24 +1150,25 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             raise ValueError("no valid entries in --splits")
         return out
 
-    def pipette(self,
-                vol_ul: float,
-                source: str,
-                dest: str,
-                disp_vol_ul: float | None = None,
-                src_row: Optional[int] = None,
-                src_col: Optional[int] = None,
-                dest_row: Optional[int] = None,
-                dest_col: Optional[int] = None,
-                keep_tip: bool = False,
-                prewet: bool = False,
-                wiggle: bool = False,
-                touch: bool = False,
-                *,
-                splits: Optional[str] = None,           # NEW
-                leftover_action: str = "keep",            # NEW: "keep" or "waste"
-                tipbox_name: Optional[str] = None,
-                ) -> None:
+    def pipette(
+        self,
+        vol_ul: float,
+        source: str,
+        dest: str,
+        disp_vol_ul: float | None = None,
+        src_row: Optional[int] = None,
+        src_col: Optional[int] = None,
+        dest_row: Optional[int] = None,
+        dest_col: Optional[int] = None,
+        keep_tip: bool = False,
+        prewet: bool = False,
+        wiggle: bool = False,
+        touch: bool = False,
+        *,
+        splits: Optional[str] = None,  # NEW
+        leftover_action: str = "keep",  # NEW: "keep" or "waste"
+        tipbox_name: Optional[str] = None,
+    ) -> None:
         """Transfer liquid between locations.
 
         If 'splits' is provided, perform a single aspirate followed by
@@ -1203,13 +1185,14 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             # Only advance the iterator when no explicit well is specified
             if dest_row is None and dest_col is None:
                 try:
-                    _ = self.get_location_coor(dest)   # advances Plate.next()
+                    _ = self.get_location_coor(dest)  # advances Plate.next()
                     self._buffer_command(f"; SKIP: advance 1 well on {dest}\n")
                 except NotALocationError:
                     raise
             else:
                 self._buffer_command(
-                    "; SKIP requested but explicit dest well given; no advance\n")
+                    "; SKIP requested but explicit dest well given; no advance\n"
+                )
             return
 
         # ── New multi-dispense path ─────────────────────────────────────────
@@ -1245,8 +1228,18 @@ class AutoPipette(metaclass=AutoPipetteMeta):
 
         for pip_vol in transfer_volumes:
             # BUGFIX: use 'pip_vol' (not 'vol_ul') for each chunk
-            self.aspirate_volume(pip_vol, source, src_row, src_col, prewet, tipbox_name=tipbox_name)
-            self.dispense_volume(pip_vol, dest, dest_row, dest_col, disp_vol_ul, wiggle=wiggle, touch=touch)
+            self.aspirate_volume(
+                pip_vol, source, src_row, src_col, prewet, tipbox_name=tipbox_name
+            )
+            self.dispense_volume(
+                pip_vol,
+                dest,
+                dest_row,
+                dest_col,
+                disp_vol_ul,
+                wiggle=wiggle,
+                touch=touch,
+            )
 
         if not keep_tip:
             self.dispose_tip()
@@ -1264,11 +1257,11 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         wiggle: bool = False,
         touch: bool = False,
         leftover_action: str = "keep",  # "keep" or "waste"
-        tipbox_name: str | None = None
+        tipbox_name: str | None = None,
     ) -> None:
         """
         Aspirate once and dispene to multiple destinations.
-       
+
         Aspirate 'vol_ul' once from 'source', then dispense to multiple
         destinations in order, using absolute partial-dispense semantics.
 
@@ -1288,7 +1281,9 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             )
 
         # 1) Aspirate once
-        self.aspirate_volume(vol_ul, source, src_row, src_col, prewet, tipbox_name=tipbox_name)
+        self.aspirate_volume(
+            vol_ul, source, src_row, src_col, prewet, tipbox_name=tipbox_name
+        )
 
         # 2) Sequential partial dispenses.
         #    dispense_volume expects 'volume' = the original aspirated amount,
@@ -1303,7 +1298,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 dest_col=s.dest_col,
                 disp_vol_ul=disp_cum,
                 wiggle=wiggle,
-                touch=touch
+                touch=touch,
             )
 
         # 3) Leftover handling
@@ -1316,9 +1311,9 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 self.dispense_volume(
                     volume=vol_ul,
                     dest="waste_container",
-                    disp_vol_ul=vol_ul,   # absolute: empty the tip
+                    disp_vol_ul=vol_ul,  # absolute: empty the tip
                     wiggle=False,
-                    touch=False
+                    touch=False,
                 )
                 self.has_liquid = False
             else:  # "keep"
