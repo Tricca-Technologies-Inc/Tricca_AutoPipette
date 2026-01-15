@@ -1014,6 +1014,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         # Give time for the liquid to enter the tip
         self.gcode_wait(self.pipette_params.wait_aspirate)
         self.dip_z_return(coor_source)
+        self.gcode_wait(2000)
         self.has_liquid = True
 
     def dispense_volume(self,
@@ -1277,4 +1278,5 @@ class AutoPipette(metaclass=AutoPipetteMeta):
 
         # 4) Eject tip if requested and empty
         if not keep_tip and not self.has_liquid:
+
             self.dispose_tip()
