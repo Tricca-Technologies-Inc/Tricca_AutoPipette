@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
 """Holds class and methods for running Tricca AutoPipette Shell."""
-import sys
+
 import logging
-from tap_shell import TriccaAutoPipetteShell
+import sys
+
 from cmd2 import Cmd2ArgumentParser
+from tap_shell import TriccaAutoPipetteShell
 
 
-def main():
+def main() -> None:
     """Entry point for the program."""
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [%(module)s] %(levelname)s: %(message)s",
         handlers=[
-                logging.FileHandler("app.log"),
-            ]
+            logging.FileHandler("app.log"),
+        ],
     )
     argparser = Cmd2ArgumentParser()
     argparser.add_argument("--conf", type=str, help="optional config file")
@@ -23,5 +25,5 @@ def main():
     sys.exit(0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
