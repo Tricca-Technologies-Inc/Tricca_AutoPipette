@@ -948,6 +948,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                         src_col: Optional[int] = None,
                         prewet: bool = False,
                         extra_air: bool = False,
+                        serum_speed: bool = False,
                         tipbox_name: str | None = None) -> None:
         """Dip into a well and take in some liquid."""
         coor_source = self.get_location_coor(source, src_row, src_col)
@@ -1284,6 +1285,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
