@@ -55,6 +55,7 @@ class TAPCmdParsers():
         action="store_true",
         help="Add a 10 µL air cushion before aspirating."
     )
+    parser_pipette.add_argument("--serum_speed", action="store_true")
     parser_pipette.add_argument("--src_row", default=None, type=int)
     parser_pipette.add_argument("--src_col", default=None, type=int)
     parser_pipette.add_argument("--dest_row", default=None, type=int)
