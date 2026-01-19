@@ -1,40 +1,12 @@
 reset_plate 96wellplate
 
-pipette 10.2 --touch --extra_air --dest_row 6 --dest_col 3 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
+pipette 10.2 --touch --serum_speed --extra_air --dest_row 6 --dest_col 3 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
 pipette 10.2 --touch --extra_air --dest_row 7 --dest_col 3 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-pipette 10.2 --touch --extra_air --dest_row 0 --dest_col 4 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
+pipette 10.2 --touch --serum_speed --extra_air --dest_row 0 --dest_col 4 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
 pipette 10.2 --touch --extra_air --dest_row 1 --dest_col 4 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-pipette 10.2 --touch --extra_air --dest_row 2 --dest_col 4 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
+pipette 10.2 --touch --serum_speed --extra_air --dest_row 2 --dest_col 4 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
 pipette 10.2 --touch --extra_air --dest_row 3 --dest_col 4 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-pipette 10.2 --touch --extra_air --dest_row 4 --dest_col 4 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
+pipette 10.2 --touch --serum_speed --extra_air --dest_row 4 --dest_col 4 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
 pipette 10.2 --touch --extra_air --dest_row 5 --dest_col 4 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-
-pipette 10.2 --touch --extra_air --dest_row 6 --dest_col 4 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-pipette 10.2 --touch --extra_air --dest_row 7 --dest_col 4 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-pipette 10.2 --touch --extra_air --dest_row 0 --dest_col 5 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-pipette 10.2 --touch --extra_air --dest_row 1 --dest_col 5 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-pipette 10.2 --touch --extra_air --dest_row 2 --dest_col 5 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-pipette 10.2 --touch --extra_air --dest_row 3 --dest_col 5 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-pipette 10.2 --touch --extra_air --dest_row 4 --dest_col 5 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-pipette 10.2 --touch --extra_air --dest_row 5 --dest_col 5 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-
-pipette 10.2 --touch --extra_air --dest_row 6 --dest_col 5 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-pipette 10.2 --touch --extra_air --dest_row 7 --dest_col 5 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-pipette 10.2 --touch --extra_air --dest_row 0 --dest_col 6 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-pipette 10.2 --touch --extra_air --dest_row 1 --dest_col 6 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-pipette 10.2 --touch --extra_air --dest_row 2 --dest_col 6 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-pipette 10.2 --touch --extra_air --dest_row 3 --dest_col 6 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-pipette 10.2 --touch --extra_air --dest_row 4 --dest_col 6 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-pipette 10.2 --touch --extra_air --dest_row 5 --dest_col 6 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-
-pipette 10.2 --touch --extra_air --dest_row 6 --dest_col 6 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-pipette 10.2 --touch --extra_air --dest_row 7 --dest_col 6 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-pipette 10.2 --touch --extra_air --dest_row 0 --dest_col 7 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-pipette 10.2 --touch --extra_air --dest_row 1 --dest_col 7 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-pipette 10.2 --touch --extra_air --dest_row 2 --dest_col 7 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-pipette 10.2 --touch --extra_air --dest_row 3 --dest_col 7 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-pipette 10.2 --touch --extra_air --dest_row 4 --dest_col 7 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-pipette 10.2 --touch --extra_air --dest_row 5 --dest_col 7 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
-
 
 reset 96wellplateSAMPLE
