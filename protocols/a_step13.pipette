@@ -101,3 +101,5 @@ pipette 295 --keep_tip --wiggle SOLV 96wellplate --dispense_vol 295 --tipbox tip
 pipette 295 --keep_tip --wiggle SOLV 96wellplate --dispense_vol 295 --tipbox tipbox
 pipette 295 --keep_tip --wiggle SOLV 96wellplate --dispense_vol 295 --tipbox tipbox
 pipette 295 --wiggle SOLV 96wellplate --dispense_vol 295 --tipbox tipbox
+
+reset_plate 96wellplate
