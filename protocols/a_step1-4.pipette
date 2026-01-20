@@ -233,3 +233,5 @@ pipette 11.4 --wiggle --keep_tip --dest_row 2 --dest_col 1 FS2 96wellplate --dis
 pipette 11.4 --wiggle --keep_tip --dest_row 3 --dest_col 1 FS2 96wellplate --dispense_vol 11.4 --wiggle --tipbox tipbox
 pipette 11.4 --wiggle --keep_tip --dest_row 4 --dest_col 1 FS2 96wellplate --dispense_vol 11.4 --wiggle --tipbox tipbox
 pipette 11.4 --wiggle --dest_row 5 --dest_col 1 FS2 96wellplate --dispense_vol 11.4 --wiggle --tipbox tipbox
+
+reset_plate 96wellplate
