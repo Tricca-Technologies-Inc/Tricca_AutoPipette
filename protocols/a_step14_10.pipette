@@ -196,3 +196,5 @@ pipette 10.3 --wiggle --src_row 7 --src_col 9 COLPLATE DFIPLATE --dispense_vol 1
 pipette 10.3 --wiggle --src_row 7 --src_col 10 COLPLATE DFIPLATE --dispense_vol 10.3 --tipbox tipbox
 
 pipette 10.3 --wiggle --src_row 7 --src_col 11 COLPLATE DFIPLATE --dispense_vol 10.3 --tipbox tipbox
+
+reset_plate tipbox
