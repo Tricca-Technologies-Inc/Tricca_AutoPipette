@@ -101,3 +101,5 @@ pipette 53.2 --keep_tip --wiggle PITC1 96wellplatePITC --dispense_vol 53.2 --tip
 pipette 53.2 --keep_tip --wiggle PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
 pipette 53.2 --keep_tip --wiggle PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
 pipette 53.2 --wiggle PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+
+reset_plate 96wellplatePITC
