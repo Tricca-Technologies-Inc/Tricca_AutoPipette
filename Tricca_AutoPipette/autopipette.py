@@ -1016,7 +1016,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self.gcode_wait(self.pipette_params.wait_aspirate)
         self.dip_z_return(coor_source)
         # Wait after things are picked up so that we can see if it stays
-        self.gcode_wait(2000)
+        self.gcode_wait(1000)
         self.has_liquid = True
 
     def dispense_volume(self,
@@ -1071,7 +1071,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         # 3) Settle & retract Z
         self.gcode_wait(self.pipette_params.wait_aspirate)
         self.dip_z_return(coor_dest)
-        self.gcode_wait(2000)                 
+        self.gcode_wait(1000)                 
 
         fully_dispensed = (disp_vol_ul is None) or (abs(disp_vol_ul - volume) <= 1e-6)
         self.has_liquid = not fully_dispensed
@@ -1285,6 +1285,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
