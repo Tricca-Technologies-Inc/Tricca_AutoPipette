@@ -1021,7 +1021,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if after_air:
             AIR_UL = 10.0
             self.plunge_down(
-                AIR_UL,
+                aspirate_amount+AIR_UL,
                 self.pipette_params.speed_pipette_up_slow
             )
             self.gcode_wait(self.pipette_params.wait_aspirate)
@@ -1296,6 +1296,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
