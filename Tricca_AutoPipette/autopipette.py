@@ -948,6 +948,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                         src_col: Optional[int] = None,
                         prewet: bool = False,
                         extra_air: bool = False,
+                        after_air: bool = False,
                         serum_speed: bool = False,
                         tipbox_name: str | None = None) -> None:
         """Dip into a well and take in some liquid."""
@@ -1015,6 +1016,15 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         # Give time for the liquid to enter the tip
         self.gcode_wait(self.pipette_params.wait_aspirate)
         self.dip_z_return(coor_source)
+                            
+        # If you want air afterwards to prevent dripping...
+        if after_air:
+            AIR_UL = 10.0
+            self.plunge_down(
+                AIR_UL,
+                self.pipette_params.speed_pipette_up_slow
+            )
+            self.gcode_wait(self.pipette_params.wait_aspirate)
         # Wait after things are picked up so that we can see if it stays
         self.gcode_wait(1000)
         self.has_liquid = True
@@ -1144,6 +1154,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 leftover_action: str = "keep",            # NEW: "keep" or "waste"
                 tipbox_name: Optional[str] = None,
                 extra_air: bool = False,
+                after_air: bool = False,
                 serum_speed: bool = False,
                 ) -> None:
         """Transfer liquid between locations.
@@ -1203,7 +1214,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
 
         for pip_vol in transfer_volumes:
             # BUGFIX: use 'pip_vol' (not 'vol_ul') for each chunk
-            self.aspirate_volume(pip_vol, source, src_row, src_col, prewet, tipbox_name=tipbox_name, extra_air=extra_air, serum_speed=serum_speed)
+            self.aspirate_volume(pip_vol, source, src_row, src_col, prewet, tipbox_name=tipbox_name, extra_air=extra_air, after_air=after_air, serum_speed=serum_speed)
             self.dispense_volume(pip_vol, dest, dest_row, dest_col, disp_vol_ul, wiggle=wiggle, serum_speed=serum_speed, touch=touch)
 
         if not keep_tip:
@@ -1285,6 +1296,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
