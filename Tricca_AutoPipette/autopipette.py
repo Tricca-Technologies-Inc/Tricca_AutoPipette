@@ -967,7 +967,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             AIR_CUSHION_UL = 10.0
             self.plunge_down(
                 AIR_CUSHION_UL,
-                self.pipette_params.speed_pipette_up_slow
+                self.pipette_params.speed_pipette_down
             )
             self.gcode_wait(self.pipette_params.wait_aspirate)
 
@@ -1297,6 +1297,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
