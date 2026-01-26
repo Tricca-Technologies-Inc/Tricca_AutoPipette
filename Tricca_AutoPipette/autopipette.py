@@ -9,18 +9,19 @@ TODO Add Logger obj
 """
 
 from __future__ import annotations
-import logging
-from typing import Optional, Sequence, NamedTuple
-from pathlib import Path
-from configparser import ConfigParser, ExtendedInterpolation
-from pydantic import BaseModel, conint, Field, validator
-
-from coordinate import Coordinate
-from plates import Plate, WasteContainer, TipBox, PlateFactory, PlateParams
-from well import Well, WellParams
-from volume_converter import VolumeConverter
 
 import copy
+import logging
+from configparser import ConfigParser, ExtendedInterpolation
+from pathlib import Path
+from typing import NamedTuple, Optional, Sequence
+
+from pydantic import BaseModel, Field, conint, validator
+
+from coordinate import Coordinate
+from plates import Plate, PlateFactory, PlateParams, TipBox, WasteContainer
+from volume_converter import VolumeConverter
+from well import Well, WellParams
 
 
 class TipAlreadyOnError(Exception):
