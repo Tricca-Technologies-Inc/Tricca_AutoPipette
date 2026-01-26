@@ -1,105 +1,105 @@
-pipette 0 --wiggle --after_air FIS1 96wellplate --dispense_vol 0 --tipbox tipbox 
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --prewet
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 0 --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 0 --tipbox tipbox 
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --prewet
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
 
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
 
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
 
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
 
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
 
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
 
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
 
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --keep_tip --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
-pipette 11.4 --wiggle --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --wiggle --serum_speed --after_air FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox
 
 reset_plate 96wellplate
