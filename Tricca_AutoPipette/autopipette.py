@@ -963,6 +963,33 @@ class AutoPipette(metaclass=AutoPipetteMeta):
 
         self.home_pipette_stepper(self.pipette_params.speed_pipette_up_slow)
 
+
+        if prewet:
+            dip_z = loc_source.get_dip_distance(volume)
+            for _ in range(1):
+                 # Dip into the liquid
+                dip_dist = loc_source.get_dip_distance(volume)
+                self.dip_z_down(coor_source, dip_dist)
+                
+                # Go aspirate
+                self.plunge_down(volume,
+                                (self.pipette_params.speed_pipette_up_slow if serum_speed else self.pipette_params.speed_pipette_down))
+                self.gcode_wait(self.pipette_params.wait_aspirate)
+                
+
+                self.home_pipette_stepper_disp(aspirate_amount,
+                    self.pipette_params.speed_pipette_up_slow)
+
+               # Raise Z by 20 mm (absolute move)
+                raise_z = dip_z - 20
+                self.move_to_z(Coordinate(
+                    x=coor_source.x,
+                    y=coor_source.y,
+                    z=raise_z
+                ))
+                self.gcode_wait(self.pipette_params.wait_aspirate)
+
+                            
         if extra_air:
             AIR_CUSHION_UL = 10.0
             self.plunge_down(
@@ -984,33 +1011,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             (self.pipette_params.speed_pipette_up_slow if serum_speed else self.pipette_params.speed_pipette_down) 
         )
         
-        if prewet:
-            dip_z = loc_source.get_dip_distance(aspirate_amount)
-            for _ in range(1):
-                # Raise Z by 20 mm (absolute move)
-                #raise_z = dip_z - 20
-                #self.move_to_z(Coordinate(
-                #    x=coor_source.x,
-                #    y=coor_source.y,
-                #    z=raise_z
-                #))
-
-                self.home_pipette_stepper_disp(aspirate_amount,
-                    self.pipette_params.speed_pipette_up_slow)
-
-                #self.move_to_z(Coordinate(
-                #    x=coor_source.x,
-                #    y=coor_source.y,
-                #    z=raise_z + 20
-                #))
-
-                self.gcode_wait(self.pipette_params.wait_aspirate)
-
-                # Go back down and re-aspirate
-                self.plunge_down(aspirate_amount,
-                                (self.pipette_params.speed_pipette_up_slow if serum_speed else self.pipette_params.speed_pipette_down))
-                self.gcode_wait(self.pipette_params.wait_aspirate)
-
+        
         # Release plunger to aspirate measured amount
         # self.home_pipette_stepper(self.pipette_params.speed_pipette_up_slow)
         # Give time for the liquid to enter the tip
@@ -1297,6 +1298,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
