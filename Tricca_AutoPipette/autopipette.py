@@ -977,7 +977,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 self.gcode_wait(self.pipette_params.wait_aspirate)
                 
 
-                self.home_pipette_stepper_disp(aspirate_amount,
+                self.home_pipette_stepper_disp(volume,
                     self.pipette_params.speed_pipette_up_slow)
 
                # Raise Z by 20 mm (absolute move)
@@ -1298,6 +1298,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
