@@ -992,7 +992,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                             
         if extra_air:
             self.move_to(coor_source)
-            AIR_CUSHION_UL = 10.0
+            AIR_CUSHION_UL = 20.0
             self.plunge_down(
                 AIR_CUSHION_UL,
                 self.pipette_params.speed_pipette_down
@@ -1300,6 +1300,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
