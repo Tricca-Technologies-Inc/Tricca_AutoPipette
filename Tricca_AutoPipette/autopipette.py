@@ -986,23 +986,23 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         
         if prewet:
             dip_z = loc_source.get_dip_distance(aspirate_amount)
-            for _ in range(1):
+            for _ in range(2):
                 # Raise Z by 20 mm (absolute move)
-                raise_z = dip_z - 20
-                self.move_to_z(Coordinate(
-                    x=coor_source.x,
-                    y=coor_source.y,
-                    z=raise_z
-                ))
+                #raise_z = dip_z - 20
+                #self.move_to_z(Coordinate(
+                #    x=coor_source.x,
+                #    y=coor_source.y,
+                #    z=raise_z
+                #))
 
                 self.home_pipette_stepper_disp(aspirate_amount,
                     self.pipette_params.speed_pipette_up_slow)
 
-                self.move_to_z(Coordinate(
-                    x=coor_source.x,
-                    y=coor_source.y,
-                    z=raise_z + 20
-                ))
+                #self.move_to_z(Coordinate(
+                #    x=coor_source.x,
+                #    y=coor_source.y,
+                #    z=raise_z + 20
+                #))
 
                 self.gcode_wait(self.pipette_params.wait_aspirate)
 
@@ -1297,6 +1297,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
