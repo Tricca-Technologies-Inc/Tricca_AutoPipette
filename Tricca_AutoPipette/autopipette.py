@@ -986,7 +986,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         
         if prewet:
             dip_z = loc_source.get_dip_distance(aspirate_amount)
-            for _ in range(2):
+            for _ in range(1):
                 # Raise Z by 20 mm (absolute move)
                 #raise_z = dip_z - 20
                 #self.move_to_z(Coordinate(
@@ -1297,6 +1297,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
