@@ -981,16 +981,17 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                     self.pipette_params.speed_pipette_up_slow)
 
                # Raise Z by 20 mm (absolute move)
-                raise_z = dip_z - 20
-                self.move_to_z(Coordinate(
-                    x=coor_source.x,
-                    y=coor_source.y,
-                    z=raise_z
-                ))
+                #raise_z = dip_z - 20
+                #self.move_to_z(Coordinate(
+                 #   x=coor_source.x,
+                  #  y=coor_source.y,
+                   # z=raise_z
+                #))
                 self.gcode_wait(self.pipette_params.wait_aspirate)
 
                             
         if extra_air:
+            self.move_to(coor_source)
             AIR_CUSHION_UL = 10.0
             self.plunge_down(
                 AIR_CUSHION_UL,
@@ -1298,6 +1299,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
