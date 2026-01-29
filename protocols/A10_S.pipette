@@ -1,105 +1,105 @@
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2 --prewet
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2 --prewet
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
 
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
 
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
 
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
 
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
 
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
 
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
 
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --keep_tip --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
-pipette 53.2 --wiggle --serum_speed --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --keep_tip --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
+pipette 53.2 --wiggle --serum_speed --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 53.2 --tipbox tipbox2
 
 reset_plate 96wellplatePITC
