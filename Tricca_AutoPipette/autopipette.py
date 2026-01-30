@@ -980,7 +980,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 self.dip_z_down(coor_source, dip_dist)
                 
                 # Go aspirate
-                self.plunge_down(volume,
+                self.plunge_down(volume+self.pipette_params.ext_air if extra_air else volume,
                                 (self.pipette_params.speed_pipette_up_slow if serum_speed else self.pipette_params.speed_pipette_down))
                 self.gcode_wait(self.pipette_params.wait_aspirate)
                 
@@ -1317,6 +1317,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
