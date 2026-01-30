@@ -130,6 +130,9 @@ class PipetteParams(BaseModel):
     aft_air: conint(gt=0) = Field(
         ...,
         description="air pocket added after aspirating (µL)")
+    ext_air: conint(gt=0) = Field(
+        ...,
+        description="air pocket added before aspirating ((µL)")
 
     class Config:
         """Config class."""
@@ -283,6 +286,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             wait_aspirate=self.config["WAIT"].getint("WAIT_ASPIRATE"),
             max_vol=self.config["VOLUME_CONV"].getint("max_vol"),
             aft_air=self.config["WAIT"].getint("aft_air"),
+            ext_air=self.config["WAIT"].getint("ext_air"),
         )
 
         # Re-parse locations/plates and converter
@@ -996,7 +1000,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                             
         if extra_air:
             self.move_to(coor_source)
-            AIR_CUSHION_UL = 20.0
+            AIR_CUSHION_UL = self.pipette_params.ext_air
             self.plunge_down(
                 AIR_CUSHION_UL,
                 self.pipette_params.speed_pipette_down
@@ -1304,6 +1308,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
