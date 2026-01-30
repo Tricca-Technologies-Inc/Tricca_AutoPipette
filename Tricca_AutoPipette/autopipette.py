@@ -999,7 +999,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
 
                             
         if extra_air:
-            if prewet
+            if prewet:
                 # Raise Z by 20 mm (absolute move)
                 raise_z = dip_z - 20
                 self.move_to_z(Coordinate(
@@ -1316,6 +1316,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
