@@ -127,6 +127,9 @@ class PipetteParams(BaseModel):
     max_vol: conint(gt=0) = Field(
         ...,
         description="Maximum pipette volume (µL)")
+    aft_air: conint(gt=0 = Field(
+        ...,
+        description="air pocket added after aspirating (µL)")
 
     class Config:
         """Config class."""
@@ -1301,6 +1304,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
