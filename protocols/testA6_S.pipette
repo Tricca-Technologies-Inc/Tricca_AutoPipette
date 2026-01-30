@@ -1,12 +1,12 @@
 
 reset_plate 96wellplate
 
-pipette 10.2 --touch --extra_air --serum_speed --keep_tip --dest_row 1 --dest_col 0 PBS 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox --prewet
-pipette 10.2 --touch --extra_air --serum_speed --keep_tip --dest_row 2 --dest_col 0 PBS 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox --prewet
-pipette 10.2 --touch --extra_air --serum_speed --dest_row 3 --dest_col 0 PBS 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox --prewet
+pipette 10.2 --touch --serum_speed --keep_tip --dest_row 1 --dest_col 0 PBS 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox --prewet
+pipette 10.2 --touch --serum_speed --keep_tip --dest_row 2 --dest_col 0 PBS 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
+pipette 10.2 --touch --serum_speed --dest_row 3 --dest_col 0 PBS 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox
 
-pipette 10.2 --touch --extra_air --serum_speed --dest_row 2 --dest_col 1 CAL7 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox --prewet
+pipette 10.2 --touch --serum_speed --dest_row 2 --dest_col 1 CAL7 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox --prewet
 
-pipette 10.2 --touch --extra_air --serum_speed --dest_row 5 --dest_col 1 QC3 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox --prewet
+pipette 10.2 --touch --serum_speed --dest_row 5 --dest_col 1 QC3 96wellplateSAMPLE --dispense_vol 10.2 --tipbox tipbox --prewet
 
 reset_plate 96wellplateSAMPLE
