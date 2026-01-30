@@ -1001,6 +1001,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if extra_air:
             if prewet:
                 # Raise Z by 20 mm (absolute move)
+                dip_z = loc_source.get_dip_distance(volume)
                 raise_z = dip_z - 20
                 self.move_to_z(Coordinate(
                     x=coor_source.x,
@@ -1316,6 +1317,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
