@@ -1021,7 +1021,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                             
         # If you want air afterwards to prevent dripping...
         if after_air:
-            AIR_UL = 5.0
+            AIR_UL = 30
+            #5.0
             self.plunge_down(
                 aspirate_amount+AIR_UL,
                 self.pipette_params.speed_pipette_up_slow
@@ -1300,6 +1301,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
