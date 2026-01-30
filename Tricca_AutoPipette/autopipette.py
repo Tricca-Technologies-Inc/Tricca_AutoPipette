@@ -279,7 +279,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             wait_movement=self.config["WAIT"].getint("WAIT_MOVEMENT"),
             wait_aspirate=self.config["WAIT"].getint("WAIT_ASPIRATE"),
             max_vol=self.config["VOLUME_CONV"].getint("max_vol"),
-            aft_air=self.config["VOLUME_CONV"].getint("aft_air"),
+            aft_air=self.config["WAIT"].getint("aft_air"),
         )
 
         # Re-parse locations/plates and converter
@@ -1301,6 +1301,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
