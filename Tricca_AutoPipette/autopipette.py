@@ -970,13 +970,13 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self.move_to(coor_source)
 
         self.home_pipette_stepper(self.pipette_params.speed_pipette_up_slow)
-        
+        aft_vol = self.pipette_params.aft_air if after_air else 0
+        ext_vol = self.pipette_params.ext_air if extra_air else 0
+        tot_vol = volume+aft_vol+ext_vol
 
         if prewet:
             #dip_z = loc_source.get_dip_distance(volume)
-            aft_vol = self.pipette_params.aft_air if after_air else 0
-            ext_vol = self.pipette_params.ext_air if extra_air else 0
-            tot_vol = volume+aft_vol+ext_vol
+            
             for _ in range(1):
                  # Dip into the liquid
                 dip_dist = loc_source.get_dip_distance(volume)
@@ -988,7 +988,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 self.gcode_wait(self.pipette_params.wait_aspirate)
                 
 
-                self.home_pipette_stepper_disp(volume,
+                self.home_pipette_stepper_disp(tot_vol,
                     self.pipette_params.speed_pipette_up_slow)
 
                # Raise Z by 20 mm (absolute move)
@@ -1004,7 +1004,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if extra_air:
             if prewet:
                 # Raise Z by 20 mm (absolute move)
-                dip_z = loc_source.get_dip_distance(volume)
+                dip_z = loc_source.get_dip_distance(tot_vol)
                 raise_z = dip_z - 20
                 self.move_to_z(Coordinate(
                     x=coor_source.x,
@@ -1320,6 +1320,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
