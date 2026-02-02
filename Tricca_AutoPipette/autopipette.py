@@ -989,7 +989,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 
 
                 self.home_pipette_stepper_disp(tot_vol,
-                    self.pipette_params.speed_pipette_up_slow)
+                    (self.pipette_params.speed_pipette_up_slow if serum_speed else self.pipette_params.speed_pipette_down))
 
                # Raise Z by 20 mm (absolute move)
                 #raise_z = dip_z - 20
@@ -1320,6 +1320,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
