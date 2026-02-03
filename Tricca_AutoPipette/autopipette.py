@@ -972,7 +972,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self.home_pipette_stepper(self.pipette_params.speed_pipette_up_slow)
         aft_vol = self.pipette_params.aft_air if after_air else 0
         ext_vol = self.pipette_params.ext_air if extra_air else 0
-        tot_vol = volume+aft_vol+ext_vol
+        tot_vol = volume+aft_vol
 
         if prewet:
             #dip_z = loc_source.get_dip_distance(volume)
@@ -1322,6 +1322,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
