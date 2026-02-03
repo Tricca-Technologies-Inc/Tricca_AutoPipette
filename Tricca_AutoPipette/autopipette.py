@@ -1071,7 +1071,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self.dip_z_down(coor_dest, loc_dest.get_dip_distance(volume))
 
         stepper = self.pipette_params.name_pipette_stepper
-        speed   = (self.pipette_params.speed_pipette_up_slow if serum_speed else self.pipette_params.speed_pipette_up)
+        speed   = (self.pipette_params.speed_pipette_up)
 
         if disp_vol_ul is not None:
             # ----- ABSOLUTE partial-dispense -----
@@ -1322,6 +1322,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
