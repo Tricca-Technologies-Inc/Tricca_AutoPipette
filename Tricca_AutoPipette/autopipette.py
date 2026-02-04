@@ -977,7 +977,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if prewet:
             dip_z = loc_source.get_dip_distance(volume)
             
-            for _ in range(2):
+            for _ in range(1):
                 #grab extra air
                 AIR_CUSHION_UL = self.pipette_params.ext_air
                 self.plunge_down(
@@ -1330,6 +1330,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
