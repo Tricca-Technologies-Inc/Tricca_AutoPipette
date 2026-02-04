@@ -977,14 +977,14 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if prewet:
             #dip_z = loc_source.get_dip_distance(volume)
             
-            for _ in range(2):
+            for _ in range(3):
                  # Dip into the liquid
                 dip_dist = loc_source.get_dip_distance(volume)
                 self.dip_z_down(coor_source, dip_dist)
                 
                 # Go aspirate
                 self.plunge_down(tot_vol,
-                                (self.pipette_params.speed_pipette_up_slow if serum_speed else self.pipette_params.speed_pipette_down))
+                                (self.pipette_params.speed_pipette_down))
                 self.gcode_wait(self.pipette_params.wait_aspirate)
                 
 
@@ -999,7 +999,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 self.gcode_wait(self.pipette_params.wait_aspirate)
                 
                 self.home_pipette_stepper_disp(tot_vol,
-                    (self.pipette_params.speed_pipette_up_slow if serum_speed else self.pipette_params.speed_pipette_down))
+                    (self.pipette_params.speed_pipette_down))
 
 
                             
@@ -1322,6 +1322,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
