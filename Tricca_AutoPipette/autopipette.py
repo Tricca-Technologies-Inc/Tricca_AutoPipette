@@ -996,7 +996,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                     y=coor_source.y,
                     z=raise_z
                 ))
-                self.gcode_wait(self.pipette_params.wait_aspirate)
+                self.gcode_wait(self.pipette_params.wait_aspirate+3000)
                 
                 self.home_pipette_stepper_disp(tot_vol,
                     (self.pipette_params.speed_pipette_down))
@@ -1322,6 +1322,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
