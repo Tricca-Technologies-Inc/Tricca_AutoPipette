@@ -977,7 +977,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if prewet:
             dip_z = loc_source.get_dip_distance(volume)
             
-            for _ in range(2):
+            for _ in range(5):
                  # Dip into the liquid
                 dip_dist = loc_source.get_dip_distance(volume)
                 self.dip_z_down(coor_source, dip_dist)
@@ -1322,6 +1322,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
