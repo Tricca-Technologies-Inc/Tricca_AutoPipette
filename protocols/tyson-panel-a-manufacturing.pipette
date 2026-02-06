@@ -1,102 +1,102 @@
 ; Acetylornithine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1ace end_vial
 ; Asymmetric dimethylarginine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1ace end_vial
 ; Carnosin
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1ace end_vial
 ; Creatinine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1ace end_vial
 ; Dopa
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1ace end_vial
 ; Dopamine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1ace end_vial
 ; Histamine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1ace end_vial
 ; Methioninesulfoxide
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1bd end_vial
 ; Hydroxyproline (t4-OH-Pro)
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1bd end_vial
 ; Hydroxyproline (c4-OH-Pro)
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1bd end_vial
 ; Phenylethylamine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1bd end_vial
 ; Putrescine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1bd end_vial
 ; Sarcosine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1bd end_vial
 ; Serotonin
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1bd end_vial
 ; Spermidine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1ace end_vial
 ; Spermine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1ace end_vial
 ; Diacetylspermine
-pipette 25 start_vials end_vial
+pipette 25 start_vials_1ace end_vial
 ; Taurine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1ace end_vial
 ; Tyramine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1ace end_vial
 ; Alanine
-pipette 100 start_vials end_vial
+pipette 100 start_vials_1ace end_vial
 ; Arginine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1ace end_vial
 ; Asparagine
-pipette 100 start_vials end_vial
+pipette 100 start_vials_1bd end_vial
 ; Aspartate
-pipette 400 start_vials end_vial
+pipette 400 start_vials_1bd end_vial
 ; Citrulline
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1bd end_vial
 ; Glutamate
-pipette 250 start_vials end_vial
+pipette 250 start_vials_1bd end_vial
 ; Glutamine
-pipette 200 start_vials end_vial
+pipette 200 start_vials_1bd end_vial
 ; Glycine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1bd end_vial
 ; Histidine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1bd end_vial
 ; Isoleucine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1ace end_vial
 ; Leucine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1ace end_vial
 ; Lysine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1ace end_vial
 ; Methionine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1ace end_vial
 ; Ornithine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1ace end_vial
 ; Phenylalanine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1ace end_vial
 ; Proline
-pipette 50 start_vials end_vial
+pipette 50 start_vials_1ace end_vial
 ; Serine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_2ace end_vial
 ; Threonine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_2ace end_vial
 ; Tryptophan
-pipette 200 start_vials end_vial
+pipette 200 start_vials_2ace end_vial
 ; Valine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_2ace end_vial
 ; Methylhistidine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_2ace end_vial
 ; Homocysteine
-pipette 100 start_vials end_vial
+pipette 100 start_vials_2ace end_vial
 ; Betaine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_2ace end_vial
 ; TMAO
-pipette 100 start_vials end_vial
+pipette 100 start_vials_2bd end_vial
 ; Choline
-pipette 25 start_vials end_vial
+pipette 25 start_vials_2bd end_vial
 ; Nitrotyrosine
-pipette 160 start_vials end_vial
+pipette 160 start_vials_2bd end_vial
 ; Tyrosine
-pipette 400 start_vials end_vial
+pipette 400 start_vials_2bd end_vial
 ; Kynurenine
-pipette 400 start_vials end_vial
+pipette 400 start_vials_2bd end_vial
 ; Creatine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_2bd end_vial
 ; Phosphocreatine
-pipette 50 start_vials end_vial
+pipette 50 start_vials_2bd end_vial
 ; alpha-Aminoadipicacid
-pipette 160 start_vials end_vial
+pipette 160 start_vials_2ace end_vial
 ; Water
-pipette 5580 start_vials end_vial
+; pipette 5580 start_vials_2ace end_vial

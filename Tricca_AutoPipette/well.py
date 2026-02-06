@@ -16,7 +16,7 @@ class DipStrategies:
     """
 
     @staticmethod
-    def simple(well: Well, volume: float) -> float:
+    def simple(well: Well, _: float) -> float:
         """Return the dip distance without modification."""
         return well.dip_top
 
@@ -25,8 +25,7 @@ class DipStrategies:
         """Return the dip distance of a liquid in a cylinder."""
         # Make sure dip_btm is defined and return just the top if not
         if well.dip_btm is None or well.diameter is None:
-            raise ValueError(
-                "Cylinder strategy requires diameter and dip_btm")
+            raise ValueError("Cylinder strategy requires diameter and dip_btm")
         # Calculate the change in height from taking out liquid
         radius = well.diameter / 2000  # Convert mm to meters
         height_change = (volume * 1e-9) / (math.pi * radius**2)  # m
@@ -43,8 +42,7 @@ class WellParams(BaseModel):
     coor: Coordinate
     dip_top: confloat(gt=0)
     dip_btm: Optional[confloat(gt=0)] = None
-    dip_func: Optional[Callable[[Well, float], float]] = \
-        DipStrategies.simple
+    dip_func: Optional[Callable[[Well, float], float]] = DipStrategies.simple
     well_diameter: Optional[confloat(gt=0)] = None
 
     @model_validator(mode="after")
@@ -54,11 +52,13 @@ class WellParams(BaseModel):
             if self.well_diameter is None:
                 raise ValueError(
                     f"Strategy: {Well.STRAT_TO_NAME[self.dip_func]} "
-                    "is not valid without defining well_diameter.")
+                    "is not valid without defining well_diameter."
+                )
             if self.dip_btm is None:
                 raise ValueError(
                     f"Strategy: {Well.STRAT_TO_NAME[self.dip_func]} "
-                    "is not valid without defining dip_btm.")
+                    "is not valid without defining dip_btm."
+                )
         return self
 
 
@@ -75,13 +75,14 @@ class Well:
         DipStrategies.cylinder: "cylinder",
     }
 
-    def __init__(self,
-                 coor: Coordinate,
-                 dip_top: float,
-                 dip_btm: Optional[float] = None,
-                 dip_func:
-                     Optional[Callable[[Well, float], float]] = None,
-                 diameter: Optional[float] = None):
+    def __init__(
+        self,
+        coor: Coordinate,
+        dip_top: float,
+        dip_btm: Optional[float] = None,
+        dip_func: Optional[Callable[[Well, float], float]] = None,
+        diameter: Optional[float] = None,
+    ):
         """Initialize a well."""
         self.coor = coor
         self.dip_top = dip_top
@@ -91,10 +92,8 @@ class Well:
         self.dip_func = dip_func
         self.diameter = diameter
 
-        if (dip_func == DipStrategies.cylinder
-           and (diameter is None or dip_btm is None)):
-            raise ValueError(
-                "diameter and dip_btm required for cylinder strategy")
+        if dip_func == DipStrategies.cylinder and (diameter is None or dip_btm is None):
+            raise ValueError("diameter and dip_btm required for cylinder strategy")
 
     def get_dip_distance(self, vol: float) -> float:
         """Return the distance needed to dip into a well."""

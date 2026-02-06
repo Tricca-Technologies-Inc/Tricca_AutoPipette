@@ -1,12 +1,18 @@
+[tool.black]
+line-length = 88
+
 [tool.ruff]
 preview = true
+line-length = 88
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "D", "ANN", "DOC"]
-external = ["DOC"]
-
-[tool.ruff.lint.pycodestyle]
-max-line-length = 88
+select = ["E", "F", "W", "I", "D", "ANN"]
+ignore = [
+  "D203",  # one-blank-line-before-class (conflicts with D211)
+  "D212",  # multi-line-summary-first-line (conflicts with D213)
+  "ANN101", # missing-type-self
+  "ANN102", # missing-type-cls
+]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

@@ -1,12 +1,22 @@
 #!/usr/bin/env python3
 """Holds the various plate classes."""
 from __future__ import annotations
-from coordinate import Coordinate
-from typing import List, Optional, Type, Dict, ClassVar
+
 from abc import ABC, abstractmethod
+from typing import ClassVar, Dict, List, Optional, Type
+
+from coordinate import Coordinate
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationInfo,
+    confloat,
+    conint,
+    field_validator,
+    validator,
+)
 from well import Well
-from pydantic import BaseModel, conint, confloat, validator, ConfigDict, \
-                     field_validator, ValidationInfo, Field
 
 
 class NotAPlateTypeError(Exception):
@@ -16,7 +26,8 @@ class NotAPlateTypeError(Exception):
         """Initialize error."""
         super().__init__(
             f"Invalid plate type {plate!r}. "
-            f"Valid types: {PlateFactory.registered()}")
+            f"Valid types: {PlateFactory.registered()}"
+        )
 
 
 class SmartDefaultModel(BaseModel):
@@ -34,8 +45,7 @@ class PlateParams(SmartDefaultModel):
     TODO Implement validators that set good defaults when None is set
     """
 
-    model_config = ConfigDict(arbitrary_types_allowed=True,
-                              populate_by_name=True)
+    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
     plate_type: str
     well_template: Well
     num_row: conint(ge=1) = Field(1, alias="row")
@@ -69,20 +79,26 @@ class Plate(ABC):
         self.num_col = plate_params.num_col
         self.spacing_row = plate_params.spacing_row
         self.spacing_col = plate_params.spacing_col
-        self.wells = self._gen_wells(self.start_coor,
-                                     self.well_template,
-                                     self.num_row,
-                                     self.num_col,
-                                     self.spacing_row,
-                                     self.spacing_col)
+        self.wells = self._gen_wells(
+            self.start_coor,
+            self.well_template,
+            self.num_row,
+            self.num_col,
+            self.spacing_row,
+            self.spacing_col,
+        )
         self.curr = 0
 
     @abstractmethod
-    def _gen_wells(self,
-                   start_coor: Coordinate,
-                   well: Well,
-                   num_row: int, num_col: int,
-                   spacing_row: float, spacing_col: float) -> List[Well]:
+    def _gen_wells(
+        self,
+        start_coor: Coordinate,
+        well: Well,
+        num_row: int,
+        num_col: int,
+        spacing_row: float,
+        spacing_col: float,
+    ) -> List[Well]:
         """Generate all the coordinates for the plate."""
         pass
 
@@ -116,6 +132,7 @@ class PlateFactory:
     @classmethod
     def register(cls, plate_type: str) -> callable:
         """Decorate classes for registering new plate types."""
+
         def decorator(subclass: Type[Plate]) -> Type[Plate]:
             if not issubclass(subclass, Plate):
                 raise TypeError(f"{subclass.__name__} must subclass Plate")
@@ -126,6 +143,7 @@ class PlateFactory:
 
             cls._registry[key] = subclass
             return subclass
+
         return decorator
 
     @classmethod
@@ -158,11 +176,15 @@ class PlateArray(Plate):
         """Initialize by creating all coordinates on the plate."""
         super().__init__(plate_params)
 
-    def _gen_wells(self,
-                   start_coor: Coordinate,
-                   well: Well,
-                   num_row: int, num_col: int,
-                   spacing_row: float, spacing_col: float) -> List[Well]:
+    def _gen_wells(
+        self,
+        start_coor: Coordinate,
+        well: Well,
+        num_row: int,
+        num_col: int,
+        spacing_row: float,
+        spacing_col: float,
+    ) -> List[Well]:
         """Generate all the coordinates for the plate."""
         wells = []
         x_start = start_coor.x
@@ -178,7 +200,8 @@ class PlateArray(Plate):
                     well.dip_top,
                     well.dip_btm,
                     well.dip_func,
-                    diameter=well.diameter)
+                    diameter=well.diameter,
+                )
                 wells.append(new_well)
         return wells
 
@@ -251,17 +274,17 @@ class TipBox(PlateArray):
             raise IndexError("TipBox has no wells")
 
         block = self.num_row * self.num_col
-        box_base = (pos // block) * block          # which box (if append_box used)
-        off      =  pos % block                    # offset within that box
+        box_base = (pos // block) * block  # which box (if append_box used)
+        off = pos % block  # offset within that box
 
         # Offset counted from bottom-right:
-        r_from_bottom = off // self.num_col        # 0,1,2... upward
-        c_from_right  = off %  self.num_col        # 0,1,2... leftward
+        r_from_bottom = off // self.num_col  # 0,1,2... upward
+        c_from_right = off % self.num_col  # 0,1,2... leftward
 
-        r = (self.num_row - 1) - r_from_bottom     # convert to top-based row
-        c = (self.num_col - 1) - c_from_right      # convert to left-based col
+        r = (self.num_row - 1) - r_from_bottom  # convert to top-based row
+        c = (self.num_col - 1) - c_from_right  # convert to left-based col
 
-        return box_base + (c + self.num_col * r)   # row-major index in wells[]
+        return box_base + (c + self.num_col * r)  # row-major index in wells[]
 
     def next(self) -> Coordinate:
         """Return next tip coord in bottom-right → left → up order."""
@@ -278,7 +301,7 @@ class TipBox(PlateArray):
         idx = self._idx_for_position(prev_pos)
         return self.wells[idx].get_dip_distance(vol)
 
-    def append_box(self, tipbox: 'TipBox'):
+    def append_box(self, tipbox: "TipBox"):
         """Append another tip box. Assumes same num_row/num_col."""
         self.wells = self.wells + tipbox.wells
 
