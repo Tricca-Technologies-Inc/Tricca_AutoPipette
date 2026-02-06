@@ -1,122 +1,261 @@
 #!/usr/bin/env python3
 """Holds the various plate classes."""
 from __future__ import annotations
-from coordinate import Coordinate
-from typing import List, Optional, Type, Dict, ClassVar
+
 from abc import ABC, abstractmethod
-from well import Well
-from pydantic import BaseModel, conint, confloat, validator, ConfigDict, \
-                     field_validator, ValidationInfo
+from typing import Callable, ClassVar
+
+from coordinate import Coordinate
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationInfo,
+    field_validator,
+)
+from well import Well, StrategyType
 
 
-class NotAPlateTypeError(Exception):
+class PlateError(Exception):
+    """Base exception for plate-related errors."""
+
+    pass
+
+
+class InvalidPlateTypeError(PlateError):
     """Raised when an invalid plate type is specified."""
 
-    def __init__(self, plate) -> None:
-        """Initialize error."""
-        super().__init__(
-            f"Invalid plate type {plate!r}. "
-            f"Valid types: {PlateFactory.registered()}")
+    def __init__(self, plate_type: str, valid_types: list[str]) -> None:
+        """Initialize error with plate type and valid options.
+
+        Args:
+            plate_type: The invalid plate type that was requested.
+            valid_types: List of valid registered plate types.
+        """
+        valid = ", ".join(valid_types)
+        super().__init__(f"Invalid plate type '{plate_type}'. Valid types: {valid}")
 
 
 class SmartDefaultModel(BaseModel):
     """Base model that uses defaults for explicit `None` values."""
 
     @field_validator("*", mode="before")
-    def _replace_none_with_default(cls, value, info: ValidationInfo):
+    @classmethod
+    def _replace_none_with_default(cls, value: object, info: ValidationInfo) -> object:
+        """Replace None values with field defaults.
+
+        Args:
+            value: The field value to validate.
+            info: Pydantic validation context information.
+
+        Returns:
+            The original value if not None, otherwise the field's default value.
+        """
+        if value is not None:
+            return value
         field = cls.model_fields[info.field_name]
-        return value if value is not None else field.get_default()
+        return field.get_default()
 
 
 class PlateParams(SmartDefaultModel):
-    """A data validation class to hold Plate related variables.
+    """Data validation class for plate configuration.
 
-    TODO Implement validators that set good defaults when None is set
+    Attributes:
+        plate_type: Type of plate to create (must be registered).
+        well_template: Template well to use for creating all wells.
+        num_row: Number of rows in the plate.
+        num_col: Number of columns in the plate.
+        spacing_row: Spacing between rows in mm.
+        spacing_col: Spacing between columns in mm.
     """
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)  # Critical fix
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     plate_type: str
     well_template: Well
-    num_row: conint(ge=1) = 1
-    num_col: conint(ge=1) = 1
-    spacing_row: confloat(ge=0) = 0
-    spacing_col: confloat(ge=0) = 0
+    num_row: int = Field(1, ge=1)
+    num_col: int = Field(1, ge=1)
+    spacing_row: float | None = Field(0.0, ge=0)
+    spacing_col: float | None = Field(0.0, ge=0)
 
-    @validator("plate_type")
-    def validate_plate_type(cls, v, values):
-        """Ensure the plate_type string can be mapped to a Plate type."""
-        if v not in PlateFactory.registered():
-            raise NotAPlateTypeError(v)
-        return v
+    @field_validator("plate_type")
+    @classmethod
+    def validate_plate_type(cls, v: str) -> str:
+        """Ensure plate is a valid registered type.
+
+        Args:
+            v: The plate type string to validate.
+
+        Returns:
+            Normalized (lowercase, stripped) plate type string.
+
+        Raises:
+            ValueError: If plate type is not registered.
+        """
+        normalized = v.strip().lower()
+        if normalized not in PlateFactory.registered():
+            raise ValueError(
+                f"Invalid plate type '{v}'. "
+                f"Valid types: {', '.join(PlateFactory.registered())}"
+            )
+        return normalized
 
 
 class Plate(ABC):
-    """Generate and manage wells to pipette into."""
+    """Base class for plate types that manage wells for pipetting.
 
-    num_row: int
-    num_col: int
-    spacing_row: float
-    spacing_col: float
-    curr: int
-    wells: List[Well]
+    Attributes:
+        start_coor: Starting coordinate for the first well.
+        well_template: Template well used to create all wells.
+        num_row: Number of rows in the plate.
+        num_col: Number of columns in the plate.
+        spacing_row: Spacing between rows in mm.
+        spacing_col: Spacing between columns in mm.
+        curr: Current well index for iteration.
+        wells: List of all wells in the plate.
+    """
 
     def __init__(self, plate_params: PlateParams) -> None:
-        """Initialize by creating all wells on the plate."""
+        """Initialize plate by creating all wells.
+
+        Args:
+            plate_params: Validated plate configuration parameters.
+        """
         self.start_coor = plate_params.well_template.coor
         self.well_template = plate_params.well_template
         self.num_row = plate_params.num_row
         self.num_col = plate_params.num_col
         self.spacing_row = plate_params.spacing_row
         self.spacing_col = plate_params.spacing_col
-        self.wells = self._gen_wells(self.start_coor,
-                                     self.well_template,
-                                     self.num_row,
-                                     self.num_col,
-                                     self.spacing_row,
-                                     self.spacing_col)
         self.curr = 0
 
-    @abstractmethod
-    def _gen_wells(self,
-                   start_coor: Coordinate,
-                   well: Well,
-                   num_row: int, num_col: int,
-                   spacing_row: float, spacing_col: float) -> List[Well]:
-        """Generate all the coordinates for the plate."""
-        pass
+        self.wells = self._gen_wells(
+            self.start_coor,
+            self.well_template,
+            self.num_row,
+            self.num_col,
+            self.spacing_row,
+            self.spacing_col,
+        )
 
     @abstractmethod
-    def get_coor(self, row: int, col: int) -> Optional[Coordinate]:
-        """Return a coordinate at a specific row and column.
+    def _gen_wells(
+        self,
+        start_coor: Coordinate,
+        well_template: Well,
+        num_row: int,
+        num_col: int,
+        spacing_row: float,
+        spacing_col: float,
+    ) -> list[Well]:
+        """Generate all the wells for the plate.
 
-        Zero indexed. If error, return nothing.
+        Args:
+            start_coor: Starting coordinate for the first well.
+            well_template: Template well to copy for each position.
+            num_row: Number of rows to generate.
+            num_col: Number of columns to generate.
+            spacing_row: Spacing between rows in mm.
+            spacing_col: Spacing between columns in mm.
+
+        Returns:
+            List of Well objects positioned according to plate layout.
+
+        Raises:
+            NotImplementedError: Must be implemented by subclasses.
         """
-        pass
+        raise NotImplementedError("Subclasses must implement _gen_wells")
+
+    @abstractmethod
+    def get_coor(self, row: int, col: int) -> Coordinate | None:
+        """Return coordinate at specific row and column.
+
+        Args:
+            row: Zero-indexed row number.
+            col: Zero-indexed column number.
+
+        Returns:
+            Coordinate at the specified position, or None if out of bounds.
+
+        Raises:
+            NotImplementedError: Must be implemented by subclasses.
+        """
+        raise NotImplementedError("Subclasses must implement get_coor")
 
     @abstractmethod
     def get_dip_distance(self, vol: float) -> float:
-        """Return the distance needed to dip into a well."""
-        pass
+        """Return the distance needed to dip into current well.
+
+        Args:
+            vol: Volume of liquid being aspirated/dispensed in microliters.
+
+        Returns:
+            Dip distance in mm from the top of the well.
+
+        Raises:
+            NotImplementedError: Must be implemented by subclasses.
+        """
+        raise NotImplementedError("Subclasses must implement get_dip_distance")
 
     @abstractmethod
     def next(self) -> Coordinate:
-        """Return the next coordinate.
+        """Return the next coordinate, wrapping to start if at end.
 
-        Restart if the last has been returned.
+        Returns:
+            Coordinate of the next well in the iteration sequence.
+
+        Raises:
+            NotImplementedError: Must be implemented by subclasses.
         """
-        pass
+        raise NotImplementedError("Subclasses must implement next")
+
+    @property
+    def total_wells(self) -> int:
+        """Return the total number of wells.
+
+        Returns:
+            Total count of wells in the plate.
+        """
+        return len(self.wells)
+
+    def reset(self) -> None:
+        """Reset the current well index to the beginning."""
+        self.curr = 0
 
 
 class PlateFactory:
-    """Dedicated factory for plate creation and management."""
+    """Factory for creating and managing plate types.
 
-    _registry: ClassVar[Dict[str, Type[Plate]]] = {}
+    This factory uses a registry pattern to allow dynamic registration
+    of plate types and creation of plate instances.
+
+    Attributes:
+        _registry: Class-level registry mapping plate type names to classes.
+    """
+
+    _registry: ClassVar[dict[str, type[Plate]]] = {}
 
     @classmethod
-    def register(cls, plate_type: str) -> callable:
-        """Decorate classes for registering new plate types."""
-        def decorator(subclass: Type[Plate]) -> Type[Plate]:
+    def register(cls, plate_type: str) -> Callable[[type[Plate]], type[Plate]]:
+        """Decorator to register new plate types.
+
+        Args:
+            plate_type: The name to register the plate type under.
+
+        Returns:
+            Decorator function that registers the plate class.
+
+        Raises:
+            TypeError: If decorated class doesn't subclass Plate.
+            ValueError: If plate type is already registered.
+
+        Example:
+            >>> @PlateFactory.register("custom")
+            >>> class CustomPlate(Plate):
+            ...     pass
+        """
+
+        def decorator(subclass: type[Plate]) -> type[Plate]:
             if not issubclass(subclass, Plate):
                 raise TypeError(f"{subclass.__name__} must subclass Plate")
 
@@ -126,136 +265,189 @@ class PlateFactory:
 
             cls._registry[key] = subclass
             return subclass
+
         return decorator
 
     @classmethod
     def create(cls, plate_params: PlateParams) -> Plate:
-        """Create a plate instance with validation."""
+        """Create a plate instance from validated parameters.
+
+        Args:
+            plate_params: Validated plate configuration.
+
+        Returns:
+            Instance of the requested plate type.
+
+        Raises:
+            ValueError: If plate type is invalid or empty.
+            InvalidPlateTypeError: If plate type is not registered.
+        """
         key = plate_params.plate_type.strip().lower()
         if not key:
             raise ValueError("Plate type cannot be empty")
-        try:
-            plate_class = cls._registry[key]
-        except KeyError:
-            available = list(cls._registry.keys())
-            raise ValueError(
-                f"Invalid plate type '{key}'. Registered types: {available}"
-            ) from None
+
+        plate_class = cls._registry.get(key)
+        if plate_class is None:
+            raise InvalidPlateTypeError(key, cls.registered())
 
         return plate_class(plate_params)
 
     @classmethod
-    def registered(cls) -> List:
-        """Return a list of the keys of the registered classes."""
-        return list(cls._registry.keys())
+    def registered(cls) -> list[str]:
+        """Return list of registered plate type names.
+
+        Returns:
+            Sorted list of registered plate type names.
+        """
+        return sorted(cls._registry.keys())
 
 
 @PlateFactory.register("array")
 class PlateArray(Plate):
-    """Generate and manage wells to pipette into."""
+    """Standard rectangular array of wells.
 
-    def __init__(self, plate_params: PlateParams) -> None:
-        """Initialize by creating all coordinates on the plate."""
-        super().__init__(plate_params)
+    Wells are arranged in a grid pattern with configurable spacing.
+    Coordinates are calculated from a starting position with wells
+    arranged left-to-right, top-to-bottom.
+    """
 
-    def _gen_wells(self,
-                   start_coor: Coordinate,
-                   well: Well,
-                   num_row: int, num_col: int,
-                   spacing_row: float, spacing_col: float) -> List[Well]:
-        """Generate all the coordinates for the plate."""
+    def _gen_wells(
+        self,
+        start_coor: Coordinate,
+        well_template: Well,
+        num_row: int,
+        num_col: int,
+        spacing_row: float,
+        spacing_col: float,
+    ) -> list[Well]:
+        """Generate wells in a rectangular grid pattern.
+
+        Args:
+            start_coor: Starting coordinate for the first well.
+            well_template: Template well to copy for each position.
+            num_row: Number of rows to generate.
+            num_col: Number of columns to generate.
+            spacing_row: Spacing between rows in mm.
+            spacing_col: Spacing between columns in mm.
+
+        Returns:
+            List of Well objects positioned in a rectangular grid.
+        """
         wells = []
-        x_start = start_coor.x
-        y_start = start_coor.y
-        z_start = start_coor.z
+
         for row in range(num_row):
             for col in range(num_col):
-                x = x_start - (col * spacing_col)
-                y = y_start + (row * spacing_row)
-                z = z_start
+                x = start_coor.x - (col * spacing_col)
+                y = start_coor.y + (row * spacing_row)
+                z = start_coor.z
+
                 new_well = Well(
-                    Coordinate(x=x, y=y, z=z),
-                    well.dip_top,
-                    well.dip_btm,
-                    well.dip_func,
-                    diameter=well.diameter)
+                    coor=Coordinate(x=x, y=y, z=z),
+                    dip_top=well_template.dip_top,
+                    dip_btm=well_template.dip_btm,
+                    strategy_type=well_template.strategy_name,
+                    well_diameter=well_template.well_diameter,
+                )
                 wells.append(new_well)
+
         return wells
 
-    def get_coor(self, row: int, col: int) -> Optional[Coordinate]:
-        """Return a coordinate at a specific row and column.
+    def get_coor(self, row: int, col: int) -> Coordinate | None:
+        """Return coordinate at specific row and column.
 
-        Zero indexed. If error, return nothing.
+        Args:
+            row: Zero-indexed row number.
+            col: Zero-indexed column number.
+
+        Returns:
+            Coordinate at the specified position, or None if out of bounds.
         """
-        if row >= self.num_row or row < 0:
-            return
-        if col >= self.num_col or col < 0:
-            return
+        if not (0 <= row < self.num_row and 0 <= col < self.num_col):
+            return None
+
         index = col + self.num_col * row
         return self.wells[index].coor
 
     def get_dip_distance(self, vol: float) -> float:
-        """Return the distance needed to dip into a well."""
+        """Return the distance needed to dip into current well.
+
+        Args:
+            vol: Volume of liquid being aspirated/dispensed in microliters.
+
+        Returns:
+            Dip distance in mm from the top of the well.
+        """
         return self.wells[self.curr].get_dip_distance(vol)
 
     def next(self) -> Coordinate:
-        """Return the next coordinate.
+        """Return the next coordinate, wrapping to start if at end.
 
-        Restart if the last has been returned.
+        Returns:
+            Coordinate of the next well in row-major order.
         """
         coor = self.wells[self.curr].coor
-        self.curr += 1
-        if self.curr >= len(self.wells):
-            self.curr = 0
+        self.curr = (self.curr + 1) % len(self.wells)
         return coor
 
 
 @PlateFactory.register("singleton")
 class PlateSingleton(PlateArray):
-    """Generate and manage coordinates to pipette into."""
+    """Single-well plate that always returns the same coordinate.
+
+    This plate type is useful for representing containers with a single
+    access point, such as reagent bottles or bulk containers.
+    """
 
     def __init__(self, plate_params: PlateParams) -> None:
-        """Initialize by creating all coordinates on the plate."""
+        """Initialize with forced single well configuration.
+
+        Args:
+            plate_params: Plate configuration (dimensions will be overridden).
+        """
+        # Override parameters to enforce singleton behavior
         plate_params.num_row = 1
         plate_params.num_col = 1
-        plate_params.spacing_row = 0
-        plate_params.spacing_col = 0
+        plate_params.spacing_row = 0.0
+        plate_params.spacing_col = 0.0
         super().__init__(plate_params)
 
     def next(self) -> Coordinate:
-        """Return the next coordinate.
+        """Return the single coordinate without incrementing.
 
-        Singleton means there is only one coordinate, so return it.
+        Returns:
+            Always returns the same coordinate (the only well).
         """
         return self.wells[0].coor
 
 
 @PlateFactory.register("tipbox")
 class TipBox(PlateArray):
-    """A plate that contains the tips used in pipetting."""
+    """Plate containing disposable pipette tips.
 
-    def __init__(self, plate_params: PlateParams) -> None:
-        """Initialize by creating all coordinates on the plate."""
-        super().__init__(plate_params)
+    TipBoxes can be combined to create larger tip supplies by
+    appending multiple boxes together.
+    """
 
-    def append_box(self, tipbox: 'TipBox'):
-        """Append the coordinates of another TipBox."""
-        self.wells = self.wells + tipbox.wells
+    def append_box(self, tipbox: TipBox) -> None:
+        """Append wells from another TipBox to this one.
 
-    def get_dip_distance(self, vol: float = 0.0) -> float:
-        """Return the distance to dip and grab a tip."""
-        return super().get_dip_distance(vol)
+        This allows multiple tip boxes to be treated as a single
+        continuous supply of tips.
+
+        Args:
+            tipbox: Another TipBox instance to merge with this one.
+        """
+        self.wells.extend(tipbox.wells)
+
+    # get_dip_distance inherited from PlateArray - no override needed
 
 
 @PlateFactory.register("waste_container")
 class WasteContainer(PlateSingleton):
-    """A plate to hold used pipette tips and other waste."""
+    """Single location for disposing used tips and waste.
 
-    def __init__(self, plate_params: PlateParams) -> None:
-        """Initialize by creating by calling super method."""
-        # Can never have variation in how far it dips
-        super().__init__(plate_params)
+    A waste container has a single disposal point and doesn't track
+    volume or liquid levels.
+    """
 
-    def get_dip_distance(self, vol: float = 0.0) -> float:
-        """Return the distance to dip and grab a tip."""
-        return super().get_dip_distance(vol)
+    # get_dip_distance inherited from PlateArray - no override needed
