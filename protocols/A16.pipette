@@ -95,3 +95,4 @@ pipette 475 --keep_tip --wiggle DFIBUF DFIPLATE --dispense_vol 475 --tipbox tipb
 pipette 475 --keep_tip --wiggle DFIBUF DFIPLATE --dispense_vol 475 --tipbox tipbox
 pipette 475 --wiggle DFIBUF DFIPLATE --dispense_vol 475
 
+reset 96wellplate

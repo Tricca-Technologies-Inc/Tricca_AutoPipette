@@ -1,6 +1,6 @@
 ![Logo](https://www.tricca.ca/assets/logos/tricca-6bc01c5f.svg)
 # Tricca AutoPipette
-
+# (OUTDATED!!!)
 Tricca AutoPipette is an automated liquid handling system (ALHS) that uses the Voron 3D printer platform. The system controls a pipette and executes custom lab protocols via command line interface.
 
 ## Table of Contents

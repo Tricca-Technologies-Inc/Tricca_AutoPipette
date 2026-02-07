@@ -21,7 +21,7 @@ class VolumeConverter:
     _poly = Polynomial.fit(list(_consts.keys()), list(_consts.values()), 1)
     _poly = _poly.convert()
     # Number of steps to dispense
-    dist_disp = 46
+    dist_disp = 0
 
     def __init__(self, x: list[float] = None, y: list[float] = None):
         """Initialize the variables to estimate volume."""

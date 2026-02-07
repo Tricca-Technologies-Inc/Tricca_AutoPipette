@@ -1,0 +1,12 @@
+[tool.ruff]
+preview = true
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "D", "ANN", "DOC"]
+external = ["DOC"]
+
+[tool.ruff.lint.pycodestyle]
+max-line-length = 88
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
