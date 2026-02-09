@@ -1000,7 +1000,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
 
                 
                # Raise Z by 20 mm (absolute move)
-            raise_z = dip_z - 20
+            raise_z = dip_z - 30
             self.move_to_z(Coordinate(
                 x=coor_source.x,
                 y=coor_source.y,
@@ -1332,6 +1332,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
