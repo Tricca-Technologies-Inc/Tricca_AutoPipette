@@ -1039,7 +1039,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         # Aspirate from well
         self.plunge_down(
             aspirate_amount,
-            (self.pipette_params.speed_pipette_up_slow if serum_speed else self.pipette_params.speed_pipette_down) 
+            (self.pipette_params.speed_pipette_up_slow) 
         )
         
         
@@ -1096,7 +1096,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             # self._buffer_command("M400\n")  # wait for stepper to finish
         else:
             # ----- Full dump to 0 (legacy) -----
-            self.home_pipette_stepper_disp(volume, self.pipette_params.speed_pipette_up)
+            self.home_pipette_stepper_disp(volume, (self.pipette_params.speed_pipette_up_slow if serum_speed else self.pipette_params.speed_pipette_down))
 
         # 2) Optional wiggle
         if wiggle:
@@ -1330,6 +1330,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
