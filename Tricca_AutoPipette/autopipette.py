@@ -975,7 +975,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         tot_vol = volume+aft_vol+ext_vol
 
         if prewet:
-            dip_z = loc_source.get_dip_distance(volume)
+            #dip_z = loc_source.get_dip_distance(volume)
             #grab extra air
             AIR_CUSHION_UL = self.pipette_params.ext_air
             self.plunge_down(AIR_CUSHION_UL,
@@ -998,22 +998,29 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 
              
             
-                
+              # Raise Z by 20 mm if prewet (absolute move)
+            dip_z = loc_source.get_dip_distance(tot_vol)
+            raise_z = dip_z - 20
+            self.move_to_z(Coordinate(
+                x=coor_source.x,
+                y=coor_source.y,
+                z=raise_z
+            ))    
             self.home_pipette_stepper_disp(tot_vol,
                 (self.pipette_params.speed_pipette_down))
 
 
                             
         if extra_air:
-            if prewet:
+            #if prewet:
                 # Raise Z by 20 mm if prewet (absolute move)
-                dip_z = loc_source.get_dip_distance(tot_vol)
-                raise_z = dip_z - 20
-                self.move_to_z(Coordinate(
-                    x=coor_source.x,
-                    y=coor_source.y,
-                    z=raise_z
-                ))
+                #dip_z = loc_source.get_dip_distance(tot_vol)
+                #raise_z = dip_z - 20
+                #self.move_to_z(Coordinate(
+                    #x=coor_source.x,
+                    #y=coor_source.y,
+                    #z=raise_z
+                #))
                 #self.move_to(coor_source)
             AIR_CUSHION_UL = self.pipette_params.ext_air
             self.plunge_down(
@@ -1323,6 +1330,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
