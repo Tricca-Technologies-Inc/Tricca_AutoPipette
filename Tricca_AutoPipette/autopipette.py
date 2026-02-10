@@ -982,7 +982,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                              self.pipette_params.speed_pipette_down)
             self.gcode_wait(self.pipette_params.wait_aspirate)
             
-            for _ in range(6):
+            for _ in range(5):
                     
                  # Dip into the liquid
                 dip_dist = loc_source.get_dip_distance(volume)
@@ -1330,6 +1330,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
