@@ -105,4 +105,6 @@ pipette 53.2 --extra_air --after_air --dest_row 3 --dest_col 11 SUPER3 96wellpla
 pipette 53.2 --extra_air --after_air --dest_row 4 --dest_col 11 SUPER3 96wellplate --dispense_vol 53.2 --tipbox tipbox 
 pipette 53.2 --extra_air --after_air --dest_row 5 --dest_col 11 SUPER3 96wellplate --dispense_vol 53.2 --tipbox tipbox 
 pipette 53.2 --extra_air --after_air --dest_row 6 --dest_col 11 SUPER3 96wellplate --dispense_vol 53.2 --tipbox tipbox 
-pipette 53.2 --extra_air --after_air --dest_row 7 --dest_col 11 SUPER3 96wellplate --dispense_vol 53.2 --tipbox tipbox 
+pipette 53.2 --extra_air --after_air --dest_row 7 --dest_col 11 SUPER3 96wellplate --dispense_vol 53.2 --tipbox tipbox
+
+reset_plate tipbox
