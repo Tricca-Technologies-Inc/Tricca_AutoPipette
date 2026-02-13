@@ -1,3 +1,5 @@
+reset_plate tipbox
+
 pipette 25 --extra_air --after_air SAMPLEPLATE_DIP COLPLATE --dispense_vol 25 --tipbox tipbox
 pipette 25 --extra_air --after_air SAMPLEPLATE_DIP COLPLATE --dispense_vol 25 --tipbox tipbox
 pipette 25 --extra_air --after_air SAMPLEPLATE_DIP COLPLATE --dispense_vol 25 --tipbox tipbox
