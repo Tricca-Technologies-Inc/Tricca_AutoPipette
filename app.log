@@ -74,3 +74,538 @@ websockets.exceptions.ConnectionClosedOK: sent 1000 (OK); then received 1000 (OK
 2025-06-05 15:06:16,740 [async_manager] INFO: RPC client shutdown completed
 2026-01-08 13:20:52,731 [base_events] ERROR: Task was destroyed but it is pending!
 task: <Task pending name='Task-3' coro=<WebSocketClient._upload_gcode_file_async() running at /home/biqu/Tricca_AutoPipette/Tricca_AutoPipette/websocketclient.py:246> wait_for=<Future pending cb=[BaseSelectorEventLoop._sock_write_done(9, handle=<Handle BaseS....0.164', 80))>)(), Task.task_wakeup()]> cb=[_chain_future.<locals>._call_set_state() at /usr/lib/python3.11/asyncio/futures.py:394]>
+2026-02-09 13:25:20,609 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-09 13:25:20,609 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-09 13:27:20,311 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-09 13:56:43,467 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-09 13:56:43,467 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-09 13:56:43,502 [tricca_autopipette] ERROR: Unexpected error occurred
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/./Tricca_AutoPipette/tricca_autopipette.py", line 135, in main
+    shell = TriccaAutoPipetteShell(conf_autopipette=args.conf)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/tap_shell.py", line 120, in __init__
+    self.register_preloop_hook(self._preloop_hook)
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/cmd2/cmd2.py", line 5632, in register_preloop_hook
+    self._validate_prepostloop_callable(func)
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/cmd2/cmd2.py", line 5628, in _validate_prepostloop_callable
+    raise TypeError(f"{func.__name__} must declare return a return type of 'None'")
+TypeError: _preloop_hook must declare return a return type of 'None'
+2026-02-09 13:58:19,243 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-09 13:58:19,243 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-09 13:58:19,281 [tricca_autopipette] ERROR: Unexpected error occurred
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/./Tricca_AutoPipette/tricca_autopipette.py", line 135, in main
+    shell = TriccaAutoPipetteShell(conf_autopipette=args.conf)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/tap_shell.py", line 120, in __init__
+    self.register_preloop_hook(self._preloop_hook)
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/cmd2/cmd2.py", line 5632, in register_preloop_hook
+    self._validate_prepostloop_callable(func)
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/cmd2/cmd2.py", line 5628, in _validate_prepostloop_callable
+    raise TypeError(f"{func.__name__} must declare return a return type of 'None'")
+TypeError: _preloop_hook must declare return a return type of 'None'
+2026-02-09 13:59:19,503 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-09 13:59:19,504 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-09 13:59:19,543 [tricca_autopipette] ERROR: Unexpected error occurred
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/./Tricca_AutoPipette/tricca_autopipette.py", line 135, in main
+    shell = TriccaAutoPipetteShell(conf_autopipette=args.conf)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/tap_shell.py", line 120, in __init__
+    self.register_preloop_hook(self._preloop_hook)
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/cmd2/cmd2.py", line 5632, in register_preloop_hook
+    self._validate_prepostloop_callable(func)
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/cmd2/cmd2.py", line 5628, in _validate_prepostloop_callable
+    raise TypeError(f"{func.__name__} must declare return a return type of 'None'")
+TypeError: _preloop_hook must declare return a return type of 'None'
+2026-02-09 14:05:36,740 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-09 14:05:36,740 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-09 14:05:36,778 [tricca_autopipette] ERROR: Unexpected error occurred
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/./Tricca_AutoPipette/tricca_autopipette.py", line 135, in main
+    shell = TriccaAutoPipetteShell(conf_autopipette=args.conf)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/tap_shell.py", line 120, in __init__
+    self.register_preloop_hook(self._preloop_hook)
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/cmd2/cmd2.py", line 5632, in register_preloop_hook
+    self._validate_prepostloop_callable(func)
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/cmd2/cmd2.py", line 5628, in _validate_prepostloop_callable
+    raise TypeError(f"{func.__name__} must declare return a return type of 'None'")
+TypeError: _preloop_hook must declare return a return type of 'None'
+2026-02-09 14:06:13,315 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-09 14:06:13,315 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-09 14:06:13,358 [tricca_autopipette] ERROR: Unexpected error occurred
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/./Tricca_AutoPipette/tricca_autopipette.py", line 135, in main
+    shell = TriccaAutoPipetteShell(conf_autopipette=args.conf)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/tap_shell.py", line 121, in __init__
+    self.register_preloop_hook(self._preloop_hook)
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/cmd2/cmd2.py", line 5632, in register_preloop_hook
+    self._validate_prepostloop_callable(func)
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/cmd2/cmd2.py", line 5628, in _validate_prepostloop_callable
+    raise TypeError(f"{func.__name__} must declare return a return type of 'None'")
+TypeError: _preloop_hook must declare return a return type of 'None'
+2026-02-09 14:07:06,661 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-09 14:07:06,661 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-09 14:07:20,508 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-09 14:28:30,854 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-09 14:28:30,854 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-09 16:24:13,092 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-09 16:34:48,684 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-09 16:34:48,684 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-09 16:34:58,734 [tap_shell] ERROR: WebSocket connection failed during startup
+2026-02-09 16:35:02,517 [tap_shell] INFO: Shell shutdown complete
+2026-02-09 16:35:02,518 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-10 13:32:07,680 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-10 13:32:07,680 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-10 13:32:07,719 [autopipette] INFO: Set primary tipbox: tipbox
+2026-02-10 13:32:07,720 [autopipette] INFO: Set waste container: garbage
+2026-02-10 13:32:17,736 [tap_shell] ERROR: WebSocket connection failed during startup
+2026-02-10 13:32:21,964 [tap_shell] INFO: Shell shutdown complete
+2026-02-10 13:32:21,965 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-11 11:05:51,985 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-11 11:05:51,985 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-11 11:05:52,018 [autopipette] INFO: Set waste container: garbage
+2026-02-11 11:05:52,018 [autopipette] INFO: Set primary tipbox: tipbox
+2026-02-11 11:06:02,028 [tap_shell] ERROR: WebSocket connection failed during startup
+2026-02-11 11:06:32,878 [tap_shell] ERROR: Failed to upload and execute 2026-02-11-11-06-02-038921.gcode
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1181, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 73, in start_connection
+    sock = await _connect_sock(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 208, in _connect_sock
+    await loop.sock_connect(sock, address)
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 651, in sock_connect
+    return await fut
+           ^^^^^^^^^
+asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 716, in _connect_and_send_request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 598, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1122, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1494, in _create_direct_connection
+    raise last_exc
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1463, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1178, in _wrap_create_connection
+    async with ceil_timeout(
+  File "/usr/lib/python3.12/asyncio/timeouts.py", line 115, in __aexit__
+    raise TimeoutError from exc_val
+TimeoutError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocketclient.py", line 247, in _upload_gcode_file_async
+    async with session.post(upload_url, data=data) as response:
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 1473, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 761, in _request
+    resp = await handler(req)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 720, in _connect_and_send_request
+    raise ConnectionTimeoutError(
+aiohttp.client_exceptions.ConnectionTimeoutError: Connection timeout to host http://192.168.0.164/server/files/upload
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/tap_shell.py", line 327, in worker
+    server_path = future.result()
+                  ^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocketclient.py", line 272, in _upload_gcode_file_async
+    raise WebSocketClient.UploadError(
+websocketclient.WebSocketClient.UploadError: Unexpected error during upload: Connection timeout to host http://192.168.0.164/server/files/upload
+2026-02-11 11:06:43,882 [tap_shell] ERROR: Failed to upload and execute home_all.gcode
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1181, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 73, in start_connection
+    sock = await _connect_sock(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 208, in _connect_sock
+    await loop.sock_connect(sock, address)
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 651, in sock_connect
+    return await fut
+           ^^^^^^^^^
+asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 716, in _connect_and_send_request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 598, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1122, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1494, in _create_direct_connection
+    raise last_exc
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1463, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1178, in _wrap_create_connection
+    async with ceil_timeout(
+  File "/usr/lib/python3.12/asyncio/timeouts.py", line 115, in __aexit__
+    raise TimeoutError from exc_val
+TimeoutError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocketclient.py", line 247, in _upload_gcode_file_async
+    async with session.post(upload_url, data=data) as response:
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 1473, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 761, in _request
+    resp = await handler(req)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 720, in _connect_and_send_request
+    raise ConnectionTimeoutError(
+aiohttp.client_exceptions.ConnectionTimeoutError: Connection timeout to host http://192.168.0.164/server/files/upload
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/tap_shell.py", line 327, in worker
+    server_path = future.result()
+                  ^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocketclient.py", line 272, in _upload_gcode_file_async
+    raise WebSocketClient.UploadError(
+websocketclient.WebSocketClient.UploadError: Unexpected error during upload: Connection timeout to host http://192.168.0.164/server/files/upload
+2026-02-11 11:06:51,879 [tap_shell] ERROR: Failed to upload and execute 2026-02-11-11-06-21-019958.gcode
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1181, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 73, in start_connection
+    sock = await _connect_sock(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 208, in _connect_sock
+    await loop.sock_connect(sock, address)
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 651, in sock_connect
+    return await fut
+           ^^^^^^^^^
+asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 716, in _connect_and_send_request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 598, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1122, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1494, in _create_direct_connection
+    raise last_exc
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1463, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1178, in _wrap_create_connection
+    async with ceil_timeout(
+  File "/usr/lib/python3.12/asyncio/timeouts.py", line 115, in __aexit__
+    raise TimeoutError from exc_val
+TimeoutError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocketclient.py", line 247, in _upload_gcode_file_async
+    async with session.post(upload_url, data=data) as response:
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 1473, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 761, in _request
+    resp = await handler(req)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 720, in _connect_and_send_request
+    raise ConnectionTimeoutError(
+aiohttp.client_exceptions.ConnectionTimeoutError: Connection timeout to host http://192.168.0.164/server/files/upload
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/tap_shell.py", line 327, in worker
+    server_path = future.result()
+                  ^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocketclient.py", line 272, in _upload_gcode_file_async
+    raise WebSocketClient.UploadError(
+websocketclient.WebSocketClient.UploadError: Unexpected error during upload: Connection timeout to host http://192.168.0.164/server/files/upload
+2026-02-11 13:47:08,986 [tap_shell] INFO: Shell shutdown complete
+2026-02-11 13:47:08,987 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-11 13:47:16,093 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-11 13:47:16,093 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-11 13:47:16,131 [autopipette] INFO: Set primary tipbox: tipbox
+2026-02-11 13:47:16,131 [autopipette] INFO: Set waste container: garbage
+2026-02-11 13:47:26,143 [tap_shell] ERROR: WebSocket connection failed during startup
+2026-02-11 13:47:34,570 [tap_shell] INFO: Shell shutdown complete
+2026-02-11 13:47:34,570 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-11 16:14:22,990 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-11 16:14:22,990 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-11 16:14:23,021 [config_manager] INFO: Loaded configuration from autopipette.conf
+2026-02-11 16:14:23,022 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-11 16:14:23,023 [location_manager] INFO: Set waste container: garbage
+2026-02-11 16:14:23,024 [tricca_autopipette] ERROR: Unexpected error occurred
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/./Tricca_AutoPipette/tricca_autopipette.py", line 135, in main
+    shell = TriccaAutoPipetteShell(conf_autopipette=args.conf)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/tap_shell.py", line 104, in __init__
+    self.hostname = self._get_hostname()
+                    ^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/tap_shell.py", line 130, in _get_hostname
+    if self._autopipette.config.has_option("NETWORK", "IP"):
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'AutoPipette' object has no attribute 'config'
+2026-02-11 16:20:09,965 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-11 16:20:09,965 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-11 16:20:09,997 [config_manager] INFO: Loaded configuration from autopipette.conf
+2026-02-11 16:20:09,998 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-11 16:20:09,999 [location_manager] INFO: Set waste container: garbage
+2026-02-11 16:20:20,009 [tap_shell] ERROR: WebSocket connection failed during startup
+2026-02-11 16:20:50,876 [tap_shell] ERROR: Failed to upload and execute 2026-02-11-16-20-20-014565.gcode
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1181, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 73, in start_connection
+    sock = await _connect_sock(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 208, in _connect_sock
+    await loop.sock_connect(sock, address)
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 651, in sock_connect
+    return await fut
+           ^^^^^^^^^
+asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 716, in _connect_and_send_request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 598, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1122, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1494, in _create_direct_connection
+    raise last_exc
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1463, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1178, in _wrap_create_connection
+    async with ceil_timeout(
+  File "/usr/lib/python3.12/asyncio/timeouts.py", line 115, in __aexit__
+    raise TimeoutError from exc_val
+TimeoutError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocketclient.py", line 247, in _upload_gcode_file_async
+    async with session.post(upload_url, data=data) as response:
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 1473, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 761, in _request
+    resp = await handler(req)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 720, in _connect_and_send_request
+    raise ConnectionTimeoutError(
+aiohttp.client_exceptions.ConnectionTimeoutError: Connection timeout to host http://192.168.0.164/server/files/upload
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/tap_shell.py", line 327, in worker
+    server_path = future.result()
+                  ^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocketclient.py", line 272, in _upload_gcode_file_async
+    raise WebSocketClient.UploadError(
+websocketclient.WebSocketClient.UploadError: Unexpected error during upload: Connection timeout to host http://192.168.0.164/server/files/upload
+2026-02-12 17:21:09,614 [tap_shell] INFO: Shell shutdown complete
+2026-02-12 17:21:09,615 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-12 17:21:37,122 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-12 17:21:37,122 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-12 17:21:37,164 [config_manager] INFO: Loaded configuration from autopipette.conf
+2026-02-12 17:21:37,165 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-12 17:21:37,165 [location_manager] INFO: Set waste container: garbage
+2026-02-12 17:21:37,182 [websocket_client] INFO: Starting WebSocket client for ws://192.168.0.164/websocket
+2026-02-12 17:21:47,184 [tap_shell] ERROR: WebSocket connection failed during startup
+2026-02-12 17:22:07,875 [websocket_client] WARNING: Connection error (will retry in 1.0s): Connection timeout to host ws://192.168.0.164/websocket
+2026-02-12 17:22:17,872 [websocket_client] ERROR: Unexpected upload error: Connection timeout to host http://192.168.0.164/server/files/upload
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1181, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 73, in start_connection
+    sock = await _connect_sock(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 208, in _connect_sock
+    await loop.sock_connect(sock, address)
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 651, in sock_connect
+    return await fut
+           ^^^^^^^^^
+asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 716, in _connect_and_send_request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 598, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1122, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1494, in _create_direct_connection
+    raise last_exc
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1463, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1178, in _wrap_create_connection
+    async with ceil_timeout(
+  File "/usr/lib/python3.12/asyncio/timeouts.py", line 115, in __aexit__
+    raise TimeoutError from exc_val
+TimeoutError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 716, in _upload_gcode_file_async
+    async with self.session.post(upload_url, data=data) as response:
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 1473, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 761, in _request
+    resp = await handler(req)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 720, in _connect_and_send_request
+    raise ConnectionTimeoutError(
+aiohttp.client_exceptions.ConnectionTimeoutError: Connection timeout to host http://192.168.0.164/server/files/upload
+2026-02-12 17:22:17,878 [tap_shell] ERROR: Failed to upload and execute 2026-02-12-17-21-47-190055.gcode
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1181, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 73, in start_connection
+    sock = await _connect_sock(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 208, in _connect_sock
+    await loop.sock_connect(sock, address)
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 651, in sock_connect
+    return await fut
+           ^^^^^^^^^
+asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 716, in _connect_and_send_request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 598, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1122, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1494, in _create_direct_connection
+    raise last_exc
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1463, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1178, in _wrap_create_connection
+    async with ceil_timeout(
+  File "/usr/lib/python3.12/asyncio/timeouts.py", line 115, in __aexit__
+    raise TimeoutError from exc_val
+TimeoutError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 716, in _upload_gcode_file_async
+    async with self.session.post(upload_url, data=data) as response:
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 1473, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 761, in _request
+    resp = await handler(req)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 720, in _connect_and_send_request
+    raise ConnectionTimeoutError(
+aiohttp.client_exceptions.ConnectionTimeoutError: Connection timeout to host http://192.168.0.164/server/files/upload
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/tap_shell.py", line 327, in worker
+    server_path = future.result()
+                  ^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 754, in _upload_gcode_file_async
+    raise WebSocketClient.UploadError(
+websocket_client.WebSocketClient.UploadError: Unexpected error during upload: Connection timeout to host http://192.168.0.164/server/files/upload
+2026-02-12 17:22:39,893 [websocket_client] WARNING: Connection error (will retry in 2.0s): Connection timeout to host ws://192.168.0.164/websocket
+2026-02-12 17:23:12,902 [websocket_client] WARNING: Connection error (will retry in 4.0s): Connection timeout to host ws://192.168.0.164/websocket
+2026-02-12 17:23:22,253 [websocket_client] INFO: Stopping WebSocket client
+2026-02-12 17:23:22,255 [websocket_client] INFO: WebSocket client stopped
+2026-02-12 17:23:22,255 [tap_shell] INFO: Shell shutdown complete
+2026-02-12 17:23:22,256 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-17 15:19:07,449 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-17 15:19:07,449 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-17 15:19:07,483 [config_manager] INFO: Loaded configuration from autopipette.conf
+2026-02-17 15:19:07,485 [tricca_autopipette] ERROR: Configuration error: Missing required config value: [SPEED] ACCEL_PIPETTE_HOME

@@ -48,17 +48,21 @@ def main(conf_path: str = "test.conf") -> None:
         cfg.read_file(f)
 
     vols = parse_float_list(cfg["VOLUME_CONV"]["volumes"])  # uL
-    steps = parse_float_list(cfg["VOLUME_CONV"]["steps"])   # steps
+    steps = parse_float_list(cfg["VOLUME_CONV"]["steps"])  # steps
     max_vol = float(cfg["VOLUME_CONV"].get("max_vol", max(vols)))
 
     if len(vols) != len(steps):
-        raise ValueError(f"volumes and steps must be same length: {len(vols)} vs {len(steps)}")
+        raise ValueError(
+            f"volumes and steps must be same length: {len(vols)} vs {len(steps)}"
+        )
 
     # --- fit using class (degree=2 in __init__) ---
     vc = VolumeConverter(vols, steps)
 
     # Use the fitted polynomial; rewrap with 'uL' symbol for pretty printing
-    P = Polynomial(vc._poly.coef, domain=vc._poly.domain, window=vc._poly.window, symbol="uL")
+    P = Polynomial(
+        vc._poly.coef, domain=vc._poly.domain, window=vc._poly.window, symbol="uL"
+    )
     print("Fitted polynomial (steps = f(uL)):")
     print(P)  # e.g., a0 + a1·uL + a2·uL²
     print("coefficients:", P.coef)
@@ -107,7 +111,7 @@ def main(conf_path: str = "test.conf") -> None:
     # Optional: plot duL/dstep vs steps across the grid
     # Map each s_grid to its corresponding volume v_grid, then du/ds = 1/(ds/dv at v)
     slopes_ds_dv_grid = dP(v_grid)
-    with np.errstate(divide='ignore', invalid='ignore'):
+    with np.errstate(divide="ignore", invalid="ignore"):
         inv_slopes_duL_ds_grid = 1.0 / slopes_ds_dv_grid
 
     plt.figure()

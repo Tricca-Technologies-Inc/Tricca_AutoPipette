@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Callable, ClassVar
+from typing import Callable, ClassVar, Iterator
 
 from coordinate import Coordinate
 from pydantic import (
@@ -13,7 +13,7 @@ from pydantic import (
     ValidationInfo,
     field_validator,
 )
-from well import Well, StrategyType
+from well import Well
 
 
 class PlateError(Exception):
@@ -51,8 +51,9 @@ class SmartDefaultModel(BaseModel):
         Returns:
             The original value if not None, otherwise the field's default value.
         """
-        if value is not None:
+        if value is not None or info.field_name is None:
             return value
+
         field = cls.model_fields[info.field_name]
         return field.get_default()
 
@@ -75,8 +76,8 @@ class PlateParams(SmartDefaultModel):
     well_template: Well
     num_row: int = Field(1, ge=1)
     num_col: int = Field(1, ge=1)
-    spacing_row: float | None = Field(0.0, ge=0)
-    spacing_col: float | None = Field(0.0, ge=0)
+    spacing_row: float = Field(0.0, ge=0)
+    spacing_col: float = Field(0.0, ge=0)
 
     @field_validator("plate_type")
     @classmethod
@@ -138,6 +139,59 @@ class Plate(ABC):
             self.spacing_col,
         )
 
+    def __repr__(self) -> str:
+        """Return string representation for debugging.
+
+        Returns:
+            String showing plate type, dimensions, and well count.
+        """
+        return (
+            f"{self.__class__.__name__}("
+            f"rows={self.num_row}, cols={self.num_col}, "
+            f"wells={self.total_wells})"
+        )
+
+    def __iter__(self) -> Iterator[Well]:
+        """Make plate iterable over wells.
+
+        Returns:
+            Iterator over Well instances in row-major order.
+
+        Example:
+            >>> plate = PlateArray(params)
+            >>> for well in plate:
+            ...     print(well.coor)
+        """
+        return iter(self.wells)
+
+    def __len__(self) -> int:
+        """Return number of wells.
+
+        Returns:
+            Total well count.
+        """
+        return len(self.wells)
+
+    def __getitem__(self, index: int) -> Well:
+        """Get well by index.
+
+        Args:
+            index: Well index (supports negative indexing).
+
+        Returns:
+            Well at the specified index.
+
+        Note:
+            Supports negative indexing like standard Python lists.
+            Index out of range will raise IndexError from the underlying list.
+
+        Example:
+            >>> plate = PlateArray(params)
+            >>> well = plate[0]  # First well
+            >>> well = plate[-1]  # Last well
+        """
+        return self.wells[index]
+
     @abstractmethod
     def _gen_wells(
         self,
@@ -166,6 +220,18 @@ class Plate(ABC):
         """
         raise NotImplementedError("Subclasses must implement _gen_wells")
 
+    def _is_valid_position(self, row: int, col: int) -> bool:
+        """Check if row/col position is within plate bounds.
+
+        Args:
+            row: Zero-indexed row number.
+            col: Zero-indexed column number.
+
+        Returns:
+            True if position is valid, False otherwise.
+        """
+        return 0 <= row < self.num_row and 0 <= col < self.num_col
+
     @abstractmethod
     def get_coor(self, row: int, col: int) -> Coordinate | None:
         """Return coordinate at specific row and column.
@@ -182,8 +248,30 @@ class Plate(ABC):
         """
         raise NotImplementedError("Subclasses must implement get_coor")
 
+    def get_well(self, row: int, col: int) -> Well | None:
+        """Get well at specific row and column.
+
+        Args:
+            row: Zero-indexed row number.
+            col: Zero-indexed column number.
+
+        Returns:
+            Well at the specified position, or None if out of bounds.
+
+        Example:
+            >>> plate = PlateArray(params)
+            >>> well = plate.get_well(0, 0)
+            >>> well.coor
+            Coordinate(x=10.0, y=20.0, z=5.0)
+        """
+        if not self._is_valid_position(row, col):
+            return None
+
+        index = col + self.num_col * row
+        return self.wells[index]
+
     @abstractmethod
-    def get_dip_distance(self, vol: float) -> float:
+    def get_dip_distance(self, vol: float | None) -> float:
         """Return the distance needed to dip into current well.
 
         Args:
@@ -245,9 +333,8 @@ class PlateFactory:
         Returns:
             Decorator function that registers the plate class.
 
-        Raises:
-            TypeError: If decorated class doesn't subclass Plate.
-            ValueError: If plate type is already registered.
+        Note:
+            The decorated class must be a subclass of Plate (enforced by type hints).
 
         Example:
             >>> @PlateFactory.register("custom")
@@ -256,9 +343,6 @@ class PlateFactory:
         """
 
         def decorator(subclass: type[Plate]) -> type[Plate]:
-            if not issubclass(subclass, Plate):
-                raise TypeError(f"{subclass.__name__} must subclass Plate")
-
             key = plate_type.strip().lower()
             if key in cls._registry:
                 raise ValueError(f"Plate type '{key}' already registered")
@@ -279,16 +363,18 @@ class PlateFactory:
             Instance of the requested plate type.
 
         Raises:
-            ValueError: If plate type is invalid or empty.
             InvalidPlateTypeError: If plate type is not registered.
-        """
-        key = plate_params.plate_type.strip().lower()
-        if not key:
-            raise ValueError("Plate type cannot be empty")
 
-        plate_class = cls._registry.get(key)
-        if plate_class is None:
-            raise InvalidPlateTypeError(key, cls.registered())
+        Note:
+            The plate_type is already normalized and validated by PlateParams,
+            so no additional validation is needed here.
+        """
+        key = plate_params.plate_type  # Already normalized by validator
+
+        try:
+            plate_class = cls._registry[key]
+        except KeyError:
+            raise InvalidPlateTypeError(key, cls.registered()) from None
 
         return plate_class(plate_params)
 
@@ -362,13 +448,13 @@ class PlateArray(Plate):
         Returns:
             Coordinate at the specified position, or None if out of bounds.
         """
-        if not (0 <= row < self.num_row and 0 <= col < self.num_col):
+        if not self._is_valid_position(row, col):
             return None
 
         index = col + self.num_col * row
         return self.wells[index].coor
 
-    def get_dip_distance(self, vol: float) -> float:
+    def get_dip_distance(self, vol: float | None) -> float:
         """Return the distance needed to dip into current well.
 
         Args:
@@ -377,6 +463,8 @@ class PlateArray(Plate):
         Returns:
             Dip distance in mm from the top of the well.
         """
+        if vol is None:
+            vol = 0
         return self.wells[self.curr].get_dip_distance(vol)
 
     def next(self) -> Coordinate:
@@ -439,8 +527,6 @@ class TipBox(PlateArray):
         """
         self.wells.extend(tipbox.wells)
 
-    # get_dip_distance inherited from PlateArray - no override needed
-
 
 @PlateFactory.register("waste_container")
 class WasteContainer(PlateSingleton):
@@ -450,4 +536,4 @@ class WasteContainer(PlateSingleton):
     volume or liquid levels.
     """
 
-    # get_dip_distance inherited from PlateArray - no override needed
+    pass
