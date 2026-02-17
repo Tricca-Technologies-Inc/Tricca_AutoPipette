@@ -1,0 +1,52 @@
+,Compounds ,Stock Concentration (mM),Cal7 mix (uL)_1 mL,Cal7 mix (uL)_5 mL,Cal7 mix (uL)_10 mL
+1,Acetylornithine,8,5,25,50
+2,Asymmetric dimethylarginine,4,5,25,50
+3,Carnosine,8,5,25,50
+4,Creatinine,160,5,25,50
+5,Dopa,8,5,25,50
+6,Dopamine,16,5,25,50
+7,Histamine,16,5,25,50
+8,Methioninesulfoxide,16,5,25,50
+9,Hydroxyproline  (t4-OH-Pro),16,5,25,50
+10,Hydroxyproline  (c4-OH-Pro),16,5,25,50
+11,Phenylethylamine,1.6,5,25,50
+12,Putrescine,1.6,5,25,50
+13,Sarcosine,16,5,25,50
+14,Serotonin,1.6,5,25,50
+15,Spermidine,4,5,25,50
+16,Spermine,4,5,25,50
+17,Diacetylspermine,8,2.5,12.5,25
+18,Taurine,40,5,25,50
+19,Tyramine,8,5,25,50
+20,Alanine,160,10,50,100
+21,Arginine,80,5,25,50
+22,Asparagine,40,10,50,100
+23,Aspartate,10,40,200,400
+24,Citrulline,80,5,25,50
+25,Glutamate,32,25,125,250
+26,Glutamine,80,20,100,200
+27,Glycine,400,5,25,50
+28,Histidine,80,5,25,50
+29,Isoleucine,80,5,25,50
+30,Leucine,80,5,25,50
+31,Lysine,160,5,25,50
+32,Methionine,80,5,25,50
+33,Ornithine,80,5,25,50
+34,Phenylalanine,80,5,25,50
+35,Proline,160,5,25,50
+36,Serine,80,5,25,50
+37,Threonine,80,5,25,50
+38,Tryptophan,20,20,100,200
+39,Valine,160,5,25,50
+40,Methylhistidine,16,5,25,50
+41,Homocysteine,8,10,50,100
+42,Betaine,80,5,25,50
+43,TMAO,80,10,50,100
+44,Choline,80,2.5,12.5,25
+45,Nitrotyrosine,5,16,80,160
+46,Tyrosine,10,40,200,400
+47,Kynurenine,2,40,200,400
+48,Creatine,40,5,25,50
+49,Phosphocreatine,40,5,25,50
+50,alpha-Aminoadipicacid,5,16,80,160
+,Water,/,558,2790,5580
