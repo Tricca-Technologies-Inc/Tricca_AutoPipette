@@ -1,4 +1,4 @@
-pipette 435 --extra_air --after_air --keep_tip WATER LCPLATE --dispense_vol 435 --tipbox tipbox --prewet
+pipette 437 --extra_air --after_air --keep_tip WATER LCPLATE --dispense_vol 437 --tipbox tipbox --prewet
 pipette 435 --extra_air --after_air --keep_tip WATER LCPLATE --dispense_vol 435 --tipbox tipbox
 pipette 435 --extra_air --after_air --keep_tip WATER LCPLATE --dispense_vol 435 --tipbox tipbox
 pipette 435 --extra_air --after_air --keep_tip WATER LCPLATE --dispense_vol 435 --tipbox tipbox
