@@ -1,4 +1,4 @@
-pipette 282 --keep_tip --extra_air --after_air SOLV 96wellplate --dispense_vol 282 --tipbox tipbox --prewet
+pipette 283 --keep_tip --extra_air --after_air SOLV 96wellplate --dispense_vol 283 --tipbox tipbox --prewet
 pipette 282 --keep_tip --extra_air --after_air SOLV 96wellplate --dispense_vol 282 --tipbox tipbox
 pipette 282 --keep_tip --extra_air --after_air SOLV 96wellplate --dispense_vol 282 --tipbox tipbox
 pipette 282 --keep_tip --extra_air --after_air SOLV 96wellplate --dispense_vol 282 --tipbox tipbox
