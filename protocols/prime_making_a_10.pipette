@@ -1,154 +1,154 @@
 (* A protocol for making prime panel A 10mL *)
 
 (* Acetylornithine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Asymmetric dimethylarginine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Carnosine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Creatinine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Dopa *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Dopamine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Histamine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Methioninesulfoxide *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Hydroxyproline  (t4-OH-Pro) *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Hydroxyproline  (c4-OH-Pro) *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Phenylethylamine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Putrescine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Sarcosine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Serotonin *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Spermidine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Spermine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Diacetylspermine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Taurine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Tyramine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Alanine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Arginine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Asparagine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Aspartate *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Citrulline *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Glutamate *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Glutamine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Glycine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Histidine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Isoleucine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Leucine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Lysine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Methionine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Ornithine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Phenylalanine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Proline *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Serine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Threonine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Tryptophan *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Valine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Methylhistidine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Homocysteine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Betaine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* TMAO *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Choline *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Nitrotyrosine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Tyrosine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Kynurenine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Creatine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Phosphocreatine *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* alpha-Aminoadipicacid *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
 
 (* Water *)
-pipette 50 --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox --prewet
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
