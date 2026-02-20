@@ -128,6 +128,31 @@ class MoveRelArgs:
 
 
 @dataclass
+class AspirateArgs:
+    """Arguments for the aspirate command."""
+
+    vol_ul: float
+    source: str
+    src_row: int | None
+    src_col: int | None
+    aspirate_air: float
+    prewet: int
+    prewet_vol: float
+
+
+@dataclass
+class DispenseArgs:
+    """Arguments for the dispense command."""
+
+    dest: str
+    dest_row: int | None
+    dest_col: int | None
+    volume: float | None
+    wiggle: bool
+    touch: bool
+
+
+@dataclass
 class PipetteArgs:
     """Arguments for the pipette command.
 
@@ -150,20 +175,20 @@ class PipetteArgs:
     """
 
     vol_ul: float
-    src: str
+    source: str
     dest: str
-    prewet: bool
-    keep_tip: bool
-    wiggle: bool
-    touch: bool
+    disp_vol_ul: float | None
     src_row: int | None
     src_col: int | None
     dest_row: int | None
     dest_col: int | None
-    disp_vol_ul: float | None
-    splits: str | None
-    leftover: str
     tipbox_name: str | None
+    aspirate_air: float
+    prewet: int
+    prewet_vol: float
+    wiggle: bool
+    touch: bool
+    keep_tip: bool
 
 
 @dataclass
@@ -362,66 +387,157 @@ class TAPCmdParsers:
     parser_move_rel.add_argument("--y", default=0, type=float, help="Y-offset in mm")
     parser_move_rel.add_argument("--z", default=0, type=float, help="Z-offset in mm")
 
+    parser_aspirate: Cmd2ArgumentParser = Cmd2ArgumentParser(
+        description="Aspirate liquid from a source location."
+    )
+    parser_aspirate.add_argument(
+        "vol_ul", type=float, help="Volume to aspirate in microliters"
+    )
+    parser_aspirate.add_argument("source", type=str, help="Source location name")
+    parser_aspirate.add_argument(
+        "--src_row",
+        default=None,
+        type=int,
+        help="Source row index",
+    )
+    parser_aspirate.add_argument(
+        "--src_col",
+        default=None,
+        type=int,
+        help="Source column index",
+    )
+    parser_aspirate.add_argument(
+        "--aspirate_air",
+        default=0.0,
+        type=float,
+        help="Volume of air to aspirate after liquid (default: 0.0)",
+    )
+    parser_aspirate.add_argument(
+        "--prewet",
+        default=0,
+        type=int,
+        help="Number of prewet cycles before aspirating (default: 0)",
+    )
+    parser_aspirate.add_argument(
+        "--prewet_vol",
+        default=10.0,
+        type=float,
+        help="Volume to use for prewet cycles in microliters (default: 10.0)",
+    )
+
+    parser_dispense: Cmd2ArgumentParser = Cmd2ArgumentParser(
+        description="Dispense liquid to a destination location."
+    )
+    parser_dispense.add_argument("dest", type=str, help="Destination location name")
+    parser_dispense.add_argument(
+        "--volume",
+        "-v",
+        default=None,
+        type=float,
+        help="Volume to dispense in microliters (default: all remaining liquid)",
+    )
+    parser_dispense.add_argument(
+        "--dest_row",
+        default=None,
+        type=int,
+        help="Destination row index",
+    )
+    parser_dispense.add_argument(
+        "--dest_col",
+        default=None,
+        type=int,
+        help="Destination column index",
+    )
+    parser_dispense.add_argument(
+        "--wiggle",
+        action="store_true",
+        help="Wiggle tip during dispensing",
+    )
+    parser_dispense.add_argument(
+        "--touch",
+        action="store_true",
+        help="Touch tip to well side after dispensing",
+    )
+
     parser_pipette: Cmd2ArgumentParser = Cmd2ArgumentParser(
         description="Transfer liquid from source to destination."
     )
-    parser_pipette.add_argument("vol_ul", type=float, help="Volume in microliters")
-    parser_pipette.add_argument("src", type=str, help="Source location name")
+    parser_pipette.add_argument(
+        "vol_ul", type=float, help="Volume to aspirate in microliters"
+    )
+    parser_pipette.add_argument("source", type=str, help="Source location name")
     parser_pipette.add_argument("dest", type=str, help="Destination location name")
-    parser_pipette.add_argument(
-        "--prewet", action="store_true", help="Prewet tip before aspirating"
-    )
-    parser_pipette.add_argument(
-        "--keep_tip", action="store_true", help="Keep tip after dispensing"
-    )
-    parser_pipette.add_argument(
-        "--wiggle", action="store_true", help="Wiggle during dispensing"
-    )
-    parser_pipette.add_argument(
-        "--touch", action="store_true", help="Touch tip to side after dispensing"
-    )
-    parser_pipette.add_argument(
-        "--src_row", default=None, type=int, help="Source row index"
-    )
-    parser_pipette.add_argument(
-        "--src_col", default=None, type=int, help="Source column index"
-    )
-    parser_pipette.add_argument(
-        "--dest_row", default=None, type=int, help="Destination row index"
-    )
-    parser_pipette.add_argument(
-        "--dest_col", default=None, type=int, help="Destination column index"
-    )
     parser_pipette.add_argument(
         "--dispense_vol",
         "-d",
         dest="disp_vol_ul",
         default=None,
         type=float,
-        help="Volume to dispense (if different from aspirate)",
+        help="Volume to dispense if different from aspirate volume",
     )
     parser_pipette.add_argument(
-        "--splits",
-        type=str,
+        "--src_row",
         default=None,
-        help=(
-            "Semicolon list of partial dispenses. "
-            "Format: DEST:VOL[@ROW,COL];DEST:VOL[@ROW,COL] ... "
-            "Example: '96wellplate:12@1,1;96wellplate:8@1,2'"
-        ),
+        type=int,
+        help="Source row index",
     )
     parser_pipette.add_argument(
-        "--leftover",
-        choices=["keep", "waste"],
-        default="keep",
-        help="What to do if sum(splits) < vol_ul (default: keep in tip)",
+        "--src_col",
+        default=None,
+        type=int,
+        help="Source column index",
+    )
+    parser_pipette.add_argument(
+        "--dest_row",
+        default=None,
+        type=int,
+        help="Destination row index",
+    )
+    parser_pipette.add_argument(
+        "--dest_col",
+        default=None,
+        type=int,
+        help="Destination column index",
     )
     parser_pipette.add_argument(
         "--tipbox",
         dest="tipbox_name",
-        type=str,
         default=None,
-        help="Use this named tipbox (e.g., tipbox or tipbox2)",
+        type=str,
+        help="Named tipbox to use (e.g. tipbox, tipbox2)",
+    )
+    parser_pipette.add_argument(
+        "--aspirate_air",
+        default=0.0,
+        type=float,
+        help="Volume of air to aspirate after liquid (default: 0.0)",
+    )
+    parser_pipette.add_argument(
+        "--prewet",
+        default=0,
+        type=int,
+        help="Number of prewet cycles before aspirating (default: 0)",
+    )
+    parser_pipette.add_argument(
+        "--prewet_vol",
+        default=10.0,
+        type=float,
+        help="Volume to use for prewet cycles in microliters (default: 10.0)",
+    )
+    parser_pipette.add_argument(
+        "--wiggle",
+        action="store_true",
+        help="Wiggle tip during dispensing",
+    )
+    parser_pipette.add_argument(
+        "--touch",
+        action="store_true",
+        help="Touch tip to well side after dispensing",
+    )
+    parser_pipette.add_argument(
+        "--keep_tip",
+        action="store_true",
+        help="Keep tip attached after dispensing (default: eject tip)",
     )
 
     parser_tipbox: Cmd2ArgumentParser = Cmd2ArgumentParser(

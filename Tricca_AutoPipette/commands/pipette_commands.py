@@ -9,7 +9,7 @@ from __future__ import annotations
 from cmd2 import Statement, with_argparser
 from pipette_exceptions import NoTipboxError, NoWasteContainerError, TipAlreadyOnError
 from rich import print as rprint
-from tap_cmd_parsers import PipetteArgs, TAPCmdParsers
+from tap_cmd_parsers import AspirateArgs, DispenseArgs, PipetteArgs, TAPCmdParsers
 
 from commands.base_command_set import TAPCommandSet
 
@@ -35,6 +35,120 @@ class PipetteCommands(TAPCommandSet):
         """Initialize pipette commands."""
         super().__init__()
 
+    @with_argparser(TAPCmdParsers.parser_aspirate)  # type: ignore[arg-type]
+    def do_aspirate(self, args: AspirateArgs) -> None:
+        """Aspirate liquid from a source without dispensing.
+
+        Useful for multi-dispense operations or when you want to
+        manually control dispensing.
+
+        Args:
+            args: Parsed arguments containing source and volume.
+
+        Example:
+            >>> aspirate 100 plate_a
+            >>> dispense 50 plate_b --row 0 --col 0
+            >>> dispense 50 plate_b --row 0 --col 1
+            >>> dispose_tip
+
+        Note:
+            Remember to dispose or eject the tip when done.
+        """
+        autopipette = self.shell._autopipette
+
+        vol_ul: float = args.vol_ul
+        source: str = args.source
+        src_row: int | None = args.src_row
+        src_col: int | None = args.src_col
+        prewet: int = args.prewet
+        prewet_vol: float = args.prewet_vol
+        aspirate_air: float = args.aspirate_air
+
+        # Validate
+        if vol_ul <= 0:
+            rprint("[yellow]Volume must be greater than zero.[/yellow]")
+            return
+
+        if not autopipette.location_manager.has_location(source):
+            rprint(f"[yellow]Source location '{source}' does not exist.[/yellow]")
+            return
+
+        try:
+            autopipette.aspirate_volume(
+                volume=vol_ul,
+                source=source,
+                src_row=src_row,
+                src_col=src_col,
+                aspirate_air=aspirate_air,
+                prewet=prewet,
+                prewet_vol=prewet_vol,
+            )
+
+            self.shell.output_gcode(autopipette.get_gcode())
+            rprint(f"[green]✓ Aspirated {vol_ul} µL from {source}[/green]")
+
+        except Exception as e:
+            rprint(f"[red]Aspiration error: {e}[/red]")
+
+    @with_argparser(TAPCmdParsers.parser_dispense)  # type: ignore[arg-type]
+    def do_dispense(self, args: DispenseArgs) -> None:
+        """Dispense liquid to a destination.
+
+        Dispenses liquid that was previously aspirated. Useful for
+        multi-dispense operations.
+
+        Args:
+            args: Parsed arguments containing destination and options.
+
+        Example:
+            >>> aspirate 100 reservoir
+            >>> dispense 25 plate_a --row 0 --col 0
+            >>> dispense 25 plate_a --row 0 --col 1
+            >>> dispense 25 plate_a --row 0 --col 2
+            >>> dispense 25 plate_a --row 0 --col 3
+            >>> dispose_tip
+
+        Note:
+            If no volume specified, dispenses all remaining liquid.
+        """
+        autopipette = self.shell._autopipette
+
+        dest: str = args.dest
+        dest_row: int | None = args.dest_row
+        dest_col: int | None = args.dest_col
+        volume: float | None = args.volume
+        wiggle: bool = args.wiggle
+        touch: bool = args.touch
+
+        # Validate
+        if not autopipette.location_manager.has_location(dest):
+            rprint(f"[yellow]Destination '{dest}' does not exist.[/yellow]")
+            return
+
+        if not autopipette.state.has_liquid:
+            rprint("[yellow]No liquid in tip. Aspirate first.[/yellow]")
+            return
+
+        try:
+            autopipette.dispense_volume(
+                dest=dest,
+                dest_row=dest_row,
+                dest_col=dest_col,
+                volume=volume,
+                wiggle=wiggle,
+                touch=touch,
+            )
+
+            self.shell.output_gcode(autopipette.get_gcode())
+
+            if volume:
+                rprint(f"[green]✓ Dispensed {volume} µL to {dest}[/green]")
+            else:
+                rprint(f"[green]✓ Dispensed all liquid to {dest}[/green]")
+
+        except Exception as e:
+            rprint(f"[red]Dispense error: {e}[/red]")
+
     @with_argparser(TAPCmdParsers.parser_pipette)  # type: ignore[arg-type]
     def do_pipette(self, args: PipetteArgs) -> None:
         """Transfer liquid from source to destination.
@@ -57,13 +171,14 @@ class PipetteCommands(TAPCommandSet):
             destinations in the splits string: "dest1:vol1,dest2:vol2"
         """
         autopipette = self.shell._autopipette
-
         # Extract arguments
         vol_ul: float = args.vol_ul
-        src: str = args.src
+        source: str = args.source
         dest: str = args.dest
-        prewet: bool = args.prewet
-        disp_vol: float | None = args.disp_vol_ul
+        prewet: int = args.prewet
+        prewet_vol: float = args.prewet_vol
+        disp_vol_ul: float | None = args.disp_vol_ul
+        aspirate_air: float = args.aspirate_air
         keep_tip: bool = args.keep_tip
         wiggle: bool = args.wiggle
         touch: bool = args.touch
@@ -71,8 +186,6 @@ class PipetteCommands(TAPCommandSet):
         src_col: int | None = args.src_col
         dest_row: int | None = args.dest_row
         dest_col: int | None = args.dest_col
-        splits_spec: str | None = args.splits
-        leftover_action: str = args.leftover
         tipbox_name: str | None = args.tipbox_name
 
         # Validate volume
@@ -81,20 +194,10 @@ class PipetteCommands(TAPCommandSet):
             return
 
         # Validate source location
-        if not autopipette.location_manager.has_location(src):
-            rprint(f"[yellow]Source location '{src}' does not exist.[/yellow]")
+        if not autopipette.location_manager.has_location(source):
+            rprint(f"[yellow]Source location '{source}' does not exist.[/yellow]")
             rprint("[dim]Hint: Use 'ls locs' to see defined locations.[/dim]")
             return
-
-        # Validate destination for single-dispense mode
-        if not splits_spec:
-            if not autopipette.location_manager.has_location(dest):
-                rprint(
-                    f"[yellow]Destination location '{dest}' does not exist."
-                    f"[/yellow]"
-                )
-                rprint("[dim]Hint: Use 'ls locs' to see defined locations.[/dim]")
-                return
 
         # Validate waste infrastructure
         if autopipette.location_manager.waste_container is None:
@@ -105,72 +208,27 @@ class PipetteCommands(TAPCommandSet):
             )
             return
 
-        # Validate split destinations and volumes
-        if splits_spec:
-            try:
-                split_list = autopipette._parse_splits_spec(splits_spec)  # type: ignore[attr-defined]
-            except ValueError as e:
-                rprint(f"[yellow]Invalid --splits format: {e}[/yellow]")
-                rprint(
-                    "[dim]Format: 'dest1:vol1,dest2:vol2' "
-                    "(e.g., 'well1:50,well2:50')[/dim]"
-                )
-                return
-            except Exception as e:
-                rprint(f"[red]Error parsing splits: {e}[/red]")
-                return
-
-            # Validate each split destination
-            for split in split_list:
-                if not autopipette.location_manager.has_location(split.dest):
-                    rprint(
-                        f"[yellow]Split destination '{split.dest}' "
-                        f"does not exist.[/yellow]"
-                    )
-                    return
-
-            # Validate total split volume
-            total_split = sum(s.vol_ul for s in split_list)
-            if total_split > vol_ul + 1e-6:  # Allow small floating point error
-                rprint(
-                    f"[yellow]Split volumes total ({total_split:.2f} µL) "
-                    f"exceeds aspirate volume ({vol_ul:.2f} µL).[/yellow]"
-                )
-                return
-
-            # Show split summary
-            rprint(
-                f"[cyan]Split dispensing: {len(split_list)} destinations, "
-                f"{total_split:.2f} µL total[/cyan]"
-            )
-
         # Execute pipetting operation
         try:
             autopipette.pipette(
-                vol_ul,
-                src,
-                dest,
-                disp_vol,
-                src_row,
-                src_col,
-                dest_row,
-                dest_col,
-                keep_tip,
-                prewet,
-                wiggle,
-                splits=splits_spec,
-                leftover_action=leftover_action,
+                vol_ul=vol_ul,
+                source=source,
+                dest=dest,
+                disp_vol_ul=disp_vol_ul,
+                src_row=src_row,
+                src_col=src_col,
+                dest_row=dest_row,
+                dest_col=dest_col,
                 tipbox_name=tipbox_name,
+                aspirate_air=aspirate_air,
+                prewet=prewet,
+                prewet_vol=prewet_vol,
+                wiggle=wiggle,
                 touch=touch,
+                keep_tip=keep_tip,
             )
 
-            # Build descriptive comment
-            if splits_spec:
-                dest_desc = f"{len(split_list)} destinations"
-            else:
-                dest_desc = dest
-
-            comment = f"\n; Pipette {vol_ul} µL from {src} to {dest_desc}\n"
+            comment = f"\n; Pipette {vol_ul} µL from {source} to {dest}\n"
 
             # Add feature flags to comment
             features = []
@@ -289,3 +347,34 @@ class PipetteCommands(TAPCommandSet):
             )
         except Exception as e:
             rprint(f"[red]Error disposing tip: {e}[/red]")
+
+    def do_change_tip(self, _: Statement) -> None:
+        """Dispose current tip and pick up a new one.
+
+        Convenience command that combines dispose_tip and next_tip.
+
+        Example:
+            >>> change_tip
+
+        Note:
+            Requires both tipbox and waste container to be configured.
+        """
+        autopipette = self.shell._autopipette
+
+        try:
+            # Dispose current tip if present
+            if autopipette.state.has_tip:
+                autopipette.dispose_tip()
+
+            # Pick up new tip
+            autopipette.next_tip()
+
+            self.shell.output_gcode(autopipette.get_gcode())
+            rprint("[green]✓ Tip changed successfully[/green]")
+
+        except NoTipboxError as e:
+            rprint(f"[yellow]{e}[/yellow]")
+        except NoWasteContainerError as e:
+            rprint(f"[yellow]{e}[/yellow]")
+        except Exception as e:
+            rprint(f"[red]Error changing tip: {e}[/red]")

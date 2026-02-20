@@ -7,9 +7,11 @@ parameters and runtime state tracking.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from enum import IntEnum
+from typing import Literal
 
 from pydantic import BaseModel, Field
+from pydantic.dataclasses import dataclass
 
 
 class PipetteParams(BaseModel):
@@ -20,19 +22,22 @@ class PipetteParams(BaseModel):
     validation and type checking.
 
     Attributes:
+        model: Type of AutoPipette hardware model.
         name_pipette_servo: Servo motor identifier for tip ejection.
         name_pipette_stepper: Stepper motor identifier for plunger control.
-        speed_xy: Horizontal movement speed in mm/min.
-        speed_z: Vertical movement speed in mm/min.
+        speed_xy: Horizontal movement speed in mm/s.
+        speed_z: Vertical movement speed in mm/s.
         speed_pipette_down: Plunger descending speed in steps/s.
         speed_pipette_up: Plunger ascending speed in steps/s.
         speed_pipette_up_slow: Slow plunger ascension speed in steps/s.
         speed_max: Maximum system speed in mm/s.
         speed_factor: Speed multiplier factor (1-200%).
         velocity_max: Maximum velocity limit in mm/s.
-        accel_max: Maximum acceleration limit in mm/s².
+        accel_pipette_home: Acceleration when homing in mm/s².
+        accel_pipette_move: Acceleration when moving pipette in mm/s².
+        accel_gantry_max: Maximum gantry acceleration in mm/s².
         servo_angle_retract: Retracted servo position in degrees (20-160°).
-        servo_angle_eject: Ready servo position in degrees (20-160°).
+        servo_angle_eject: Eject servo position in degrees (20-160°).
         wait_eject: Ejection dwell time in milliseconds.
         wait_movement: Movement stabilization time in milliseconds.
         wait_aspirate: Aspiration dwell time in milliseconds.
@@ -44,9 +49,11 @@ class PipetteParams(BaseModel):
         ...     name_pipette_stepper="plunger_motor",
         ...     speed_xy=5000,
         ...     speed_z=2000,
-        ...     # ... other required params
+        ...     max_vol=1000
         ... )
     """
+
+    model: str = Field(default="vertical", description="Type of AutoPipette used.")
 
     # Motor identifiers
     name_pipette_servo: str = Field(
@@ -88,13 +95,13 @@ class PipetteParams(BaseModel):
         default=40000, gt=0, description="Maximum velocity limit in mm/s"
     )
     accel_pipette_home: int = Field(
-        default=800, gt=0, description="Acceleration when homing."
+        default=800, gt=0, description="Acceleration when homing in mm/s²"
     )
     accel_pipette_move: int = Field(
-        default=800, gt=0, description="Acceleration when moving the pipette."
+        default=800, gt=0, description="Acceleration when moving the pipette in mm/s²"
     )
     accel_gantry_max: int = Field(
-        default=40000, gt=0, description="Maximum acceleration limit in mm/s²"
+        default=40000, gt=0, description="Maximum gantry acceleration in mm/s²"
     )
 
     # Servo parameters (degrees)
@@ -108,7 +115,7 @@ class PipetteParams(BaseModel):
         default=60,
         ge=20,
         le=160,
-        description="Ready servo position in degrees (20-160°)",
+        description="Eject servo position in degrees (20-160°)",
     )
 
     # Timing parameters (milliseconds)
@@ -149,3 +156,43 @@ class PipetteState:
     has_tip: bool = False
     has_liquid: bool = False
     homed: bool = False
+
+
+class PipetteModel(BaseModel):
+    """Attributes of a specific physical pipette design.
+
+    Configuration variables that govern how a specific model of pipette
+    operates, particularly motor orientation and movement direction.
+
+    Attributes:
+        pipette_motor_orientation: Direction multiplier for the plunger motor.
+                                   1 for normal operation, -1 for reversed.
+
+    Example:
+        >>> model = PipetteModel(pipette_motor_orientation=-1)
+        >>> # Motor will run in reverse
+    """
+
+    pipette_motor_orientation: Literal[1, -1] = Field(
+        default=1,
+        description="Direction of the motor that moves the pipette's syringe plunger. "
+        "Must be 1 (normal) or -1 (reversed).",
+    )
+
+
+class FluidDisplacement(IntEnum):
+    """Direction of fluid flow in pipetting operations.
+
+    Used to indicate whether the pipette is drawing in or expelling liquid.
+
+    Attributes:
+        aspiration: Drawing liquid into the tip (value: 1).
+        dispense: Expelling liquid from the tip (value: -1).
+
+    Example:
+        >>> direction = FluidDisplacement.aspiration
+        >>> print(direction.value)  # 1
+    """
+
+    aspiration = 1
+    dispense = -1

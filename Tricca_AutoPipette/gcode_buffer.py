@@ -9,7 +9,7 @@ from __future__ import annotations
 
 
 class GCodeBuffer:
-    r"""Manages G-code command generation and buffering.
+    """Manages G-code command generation and buffering.
 
     Provides separate buffers for header comments (configuration info)
     and command sequences. Supports batch accumulation and retrieval.
@@ -20,10 +20,10 @@ class GCodeBuffer:
 
     Example:
         >>> buffer = GCodeBuffer()
-        >>> buffer.add("G28\\n")
-        >>> buffer.add("G1 X10 Y10 F5000\\n")
+        >>> buffer.add("G28\n")
+        >>> buffer.add("G1 X10 Y10 F5000\n")
         >>> commands = buffer.get_commands()
-        >>> # commands = ['G28\\n', 'G1 X10 Y10 F5000\\n']
+        >>> # commands = ['G28\n', 'G1 X10 Y10 F5000\n']
     """
 
     def __init__(self) -> None:
@@ -32,31 +32,31 @@ class GCodeBuffer:
         self._header: list[str] = []
 
     def add(self, command: str) -> None:
-        r"""Add a command to the main buffer.
+        """Add a command to the main buffer.
 
         Args:
             command: G-code command string to buffer.
 
         Example:
-            >>> buffer.add("G28\\n")
-            >>> buffer.add("G1 X100 Y50 F5000\\n")
+            >>> buffer.add("G28\n")
+            >>> buffer.add("G1 X100 Y50 F5000\n")
         """
         self._commands.append(command)
 
     def add_header(self, line: str) -> None:
-        r"""Add a line to the configuration header.
+        """Add a line to the configuration header.
 
         Args:
             line: Header comment line (typically starts with ';').
 
         Example:
-            >>> buffer.add_header("; Configuration: autopipette.conf\\n")
-            >>> buffer.add_header("; SPEED_XY = 5000\\n")
+            >>> buffer.add_header("; Configuration: autopipette.conf\n")
+            >>> buffer.add_header("; SPEED_XY = 5000\n")
         """
         self._header.append(line)
 
     def get_commands(self) -> list[str]:
-        r"""Retrieve buffered commands and clear the command buffer.
+        """Retrieve buffered commands and clear the command buffer.
 
         Returns:
             List of G-code command strings.
@@ -66,9 +66,9 @@ class GCodeBuffer:
             The header buffer is NOT cleared.
 
         Example:
-            >>> buffer.add("G28\\n")
+            >>> buffer.add("G28\n")
             >>> commands = buffer.get_commands()
-            >>> # commands = ['G28\\n']
+            >>> # commands = ['G28\n']
             >>> commands2 = buffer.get_commands()
             >>> # commands2 = []  (buffer was cleared)
         """
@@ -94,20 +94,20 @@ class GCodeBuffer:
         return self._header.copy()
 
     def clear_commands(self) -> None:
-        r"""Clear the command buffer without returning contents.
+        """Clear the command buffer without returning contents.
 
         Example:
-            >>> buffer.add("G28\\n")
+            >>> buffer.add("G28\n")
             >>> buffer.clear_commands()
             >>> # Commands discarded
         """
         self._commands.clear()
 
     def clear_header(self) -> None:
-        r"""Clear the header buffer.
+        """Clear the header buffer.
 
         Example:
-            >>> buffer.add_header("; Config\\n")
+            >>> buffer.add_header("; Config\n")
             >>> buffer.clear_header()
             >>> # Header cleared
         """
@@ -124,7 +124,7 @@ class GCodeBuffer:
         self._header.clear()
 
     def has_commands(self) -> bool:
-        r"""Check if the command buffer has any commands.
+        """Check if the command buffer has any commands.
 
         Returns:
             True if commands are buffered, False otherwise.
@@ -132,28 +132,28 @@ class GCodeBuffer:
         Example:
             >>> buffer.has_commands()
             False
-            >>> buffer.add("G28\\n")
+            >>> buffer.add("G28\n")
             >>> buffer.has_commands()
             True
         """
         return len(self._commands) > 0
 
     def command_count(self) -> int:
-        r"""Get the number of buffered commands.
+        """Get the number of buffered commands.
 
         Returns:
             Number of commands in the buffer.
 
         Example:
-            >>> buffer.add("G28\\n")
-            >>> buffer.add("G1 X10\\n")
+            >>> buffer.add("G28\n")
+            >>> buffer.add("G1 X10\n")
             >>> buffer.command_count()
             2
         """
         return len(self._commands)
 
     def peek_commands(self) -> list[str]:
-        r"""View buffered commands without clearing them.
+        """View buffered commands without clearing them.
 
         Returns:
             Copy of buffered commands.
@@ -162,11 +162,11 @@ class GCodeBuffer:
             Unlike get_commands(), this does not clear the buffer.
 
         Example:
-            >>> buffer.add("G28\\n")
+            >>> buffer.add("G28\n")
             >>> peek = buffer.peek_commands()
-            >>> # peek = ['G28\\n']
+            >>> # peek = ['G28\n']
             >>> commands = buffer.get_commands()
-            >>> # commands = ['G28\\n'] (buffer now cleared)
+            >>> # commands = ['G28\n'] (buffer now cleared)
         """
         return self._commands.copy()
 
@@ -199,3 +199,44 @@ class GCodeBuffer:
             self.add_header(f"; [{section_name}]\n")
             for key, value in items.items():
                 self.add_header(f";\t {key} = {value}\n")
+
+    def __len__(self) -> int:
+        """Return the number of buffered commands.
+
+        Allows using len(buffer) instead of buffer.command_count().
+
+        Example:
+            >>> buffer.add("G28\n")
+            >>> len(buffer)
+            1
+        """
+        return len(self._commands)
+
+    def __bool__(self) -> bool:
+        """Return True if buffer has commands.
+
+        Allows using if buffer: instead of if buffer.has_commands().
+
+        Example:
+            >>> buffer = GCodeBuffer()
+            >>> bool(buffer)
+            False
+            >>> buffer.add("G28\n")
+            >>> bool(buffer)
+            True
+        """
+        return len(self._commands) > 0
+
+    def __repr__(self) -> str:
+        """Return string representation of the buffer.
+
+        Example:
+            >>> buffer = GCodeBuffer()
+            >>> buffer.add("G28\n")
+            >>> repr(buffer)
+            'GCodeBuffer(commands=1, header=0)'
+        """
+        return (
+            f"GCodeBuffer(commands={len(self._commands)}, "
+            f"header={len(self._header)})"
+        )

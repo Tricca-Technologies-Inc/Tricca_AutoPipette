@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 
 from cmd2 import Cmd2ArgumentParser
+from pipette_constants import DefaultPaths
 from tap_shell import TriccaAutoPipetteShell
 
 # Constants
@@ -99,7 +100,7 @@ def validate_config_file(config_path: str | None) -> None:
         >>> validate_config_file(None)  # No validation needed
     """
     if config_path is not None:
-        path = Path(config_path)
+        path = DefaultPaths.CONFIG_DIR / Path(config_path)
         if not path.exists():
             raise FileNotFoundError(f"Configuration file not found: {config_path}")
         if not path.is_file():

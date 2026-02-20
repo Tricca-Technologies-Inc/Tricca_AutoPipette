@@ -37,7 +37,7 @@ class ConfigManager:
         >>> manager = ConfigManager()
         >>> manager.load("autopipette.conf")
         >>> params = manager.get_pipette_params()
-        >>> locations = manager.get_locations()
+        >>> locations = manager.parse_locations()
     """
 
     def __init__(
@@ -97,7 +97,7 @@ class ConfigManager:
             raise MissingConfigError(missing[0], str(file_path))
 
         self.config_file = filename
-        logger.info(f"Loaded configuration from {filename}")
+        logger.info("Loaded configuration from %s", filename)
 
     def save(self, filename: str | None = None) -> None:
         """Save current configuration to a file.
@@ -109,7 +109,7 @@ class ConfigManager:
             Saves to the config_path directory.
 
         Raises:
-            RuntimeError: If no config file loaded and no filename provided
+            RuntimeError: If no config file loaded and no filename provided.
 
         Example:
             >>> manager.save("backup.conf")
@@ -124,16 +124,21 @@ class ConfigManager:
         with open(output_path, "w", encoding="utf-8") as f:
             self.config.write(f)
 
-        logger.info(f"Configuration saved to {output_path}")
+        logger.info("Configuration saved to %s", output_path)
 
     def get_default_pipette_params(self) -> PipetteParams:
         """Return default pipette configuration parameters.
 
-        Creates and returns a new `PipetteParams` instance using the model's default
-        field values.
+        Creates and returns a new `PipetteParams` instance using the model's
+        default field values.
 
         Returns:
-            PipetteParams: A `PipetteParams` object populated with default settings.
+            PipetteParams object populated with default settings.
+
+        Example:
+            >>> defaults = manager.get_default_pipette_params()
+            >>> print(defaults.speed_xy)
+            2500
         """
         return PipetteParams()
 
@@ -143,32 +148,24 @@ class ConfigManager:
         Returns:
             Validated PipetteParams object.
 
+        Raises:
+            ValueError: If required configuration values are missing or invalid.
+
         Example:
             >>> params = manager.get_pipette_params()
             >>> print(params.speed_xy)
             5000
         """
 
-        # Helper to get int with error checking
         def get_required_int(section: str, key: str) -> int:
-            """Get required integer config value.
-
-            Args:
-                section: Config section name.
-                key: Config key name.
-
-            Returns:
-                Integer value.
-
-            Raises:
-                ValueError: If value is missing or invalid.
-            """
+            # Get required integer config value, raise ValueError if missing
             value = self.config[section].getint(key)
             if value is None:
                 raise ValueError(f"Missing required config value: [{section}] {key}")
             return value
 
         return PipetteParams(
+            model=self.config.get("MODEL", "model", fallback="vertical"),
             name_pipette_servo=self.config["NAME"]["NAME_PIPETTE_SERVO"],
             name_pipette_stepper=self.config["NAME"]["NAME_PIPETTE_STEPPER"],
             speed_xy=get_required_int("SPEED", "SPEED_XY"),
@@ -181,9 +178,9 @@ class ConfigManager:
             velocity_max=get_required_int("SPEED", "VELOCITY_MAX"),
             accel_pipette_home=get_required_int("SPEED", "ACCEL_PIPETTE_HOME"),
             accel_pipette_move=get_required_int("SPEED", "ACCEL_PIPETTE_MOVE"),
-            accel_gantry_max=get_required_int("SPEED", "ACCEL_MAX"),
+            accel_gantry_max=get_required_int("SPEED", "ACCEL_GANTRY_MAX"),
             servo_angle_retract=get_required_int("SERVO", "SERVO_ANGLE_RETRACT"),
-            servo_angle_eject=get_required_int("SERVO", "SERVO_ANGLE_READY"),
+            servo_angle_eject=get_required_int("SERVO", "SERVO_ANGLE_EJECT"),
             wait_eject=get_required_int("WAIT", "WAIT_EJECT"),
             wait_movement=get_required_int("WAIT", "WAIT_MOVEMENT"),
             wait_aspirate=get_required_int("WAIT", "WAIT_ASPIRATE"),
@@ -213,7 +210,8 @@ class ConfigManager:
             For plates, PlateParams contains plate configuration.
 
         Raises:
-            ValueError: If invalid dipping strategy is specified.
+            ValueError: If invalid dipping strategy is specified or required
+                       coordinate values are missing.
 
         Example:
             >>> locations = manager.parse_locations()
@@ -225,36 +223,24 @@ class ConfigManager:
         """
         locations: dict[str, tuple[Coordinate, PlateParams | None]] = {}
 
-        # Helper to get required float value
         def get_required_float(section_dict: SectionProxy, key: str) -> float:
-            """Get required float config value.
-
-            Args:
-                section_dict: ConfigParser section containing the key.
-                key: Configuration key name.
-
-            Returns:
-                Float value from configuration.
-
-            Raises:
-                ValueError: If the key is missing or value is None.
-            """
+            # Get required float config value
             value = section_dict.getfloat(key)
             if value is None:
                 raise ValueError(f"Missing required coordinate value: {key}")
             return value
 
         # Define expected plate parameters with type converters
-        plate_params_spec = {
-            "type": (str, None),
-            "row": (int, None),
-            "col": (int, None),
-            "spacing_row": (float, None),
-            "spacing_col": (float, None),
-            "dip_top": (float, None),
-            "dip_btm": (float, None),
-            "dip_func": (str, None),
-            "well_diameter": (float, None),
+        plate_params_spec: dict[str, type] = {
+            "type": str,
+            "row": int,
+            "col": int,
+            "spacing_row": float,
+            "spacing_col": float,
+            "dip_top": float,
+            "dip_btm": float,
+            "dip_func": str,
+            "well_diameter": float,
         }
 
         # Required sections to skip
@@ -269,7 +255,7 @@ class ConfigManager:
                 _, name_loc = section.split(maxsplit=1)
                 coord_section = self.config[section]
             except ValueError:
-                logger.warning(f"Skipping malformed section: {section}")
+                logger.warning("Skipping malformed section: %s", section)
                 continue
 
             # Parse base coordinate
@@ -285,13 +271,13 @@ class ConfigManager:
                 continue
 
             # Extract plate parameters
-            params = {}
-            for key, (converter, _) in plate_params_spec.items():
+            params: dict[str, str | int | float] = {}
+            for key, converter in plate_params_spec.items():
                 if key in coord_section:
                     params[key] = converter(coord_section[key])
 
             # Validate dipping strategy
-            dip_func_str: str = params.get("dip_func", "simple")
+            dip_func_str = params.get("dip_func", "simple")
             if dip_func_str not in [strat.value for strat in StrategyType]:
                 raise ValueError(
                     f"Strategy '{dip_func_str}' is not a valid dip strategy. "
@@ -307,7 +293,7 @@ class ConfigManager:
                 well_diameter=params.get("well_diameter", None),
             )
 
-            # Create plate parameters
+            # Create plate parameters with defaults
             plate_params = PlateParams(
                 plate_type=params.get("type", "singleton"),
                 well_template=well,

@@ -609,3 +609,1465 @@ websocket_client.WebSocketClient.UploadError: Unexpected error during upload: Co
 2026-02-17 15:19:07,449 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
 2026-02-17 15:19:07,483 [config_manager] INFO: Loaded configuration from autopipette.conf
 2026-02-17 15:19:07,485 [tricca_autopipette] ERROR: Configuration error: Missing required config value: [SPEED] ACCEL_PIPETTE_HOME
+2026-02-17 15:29:02,291 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-17 15:29:02,291 [tricca_autopipette] ERROR: Configuration error: Configuration file not found: tyson-panel-a-manufacturing.conf
+2026-02-17 15:29:42,782 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-17 15:29:42,782 [tricca_autopipette] ERROR: Configuration error: Configuration file not found: tyson-panel-a-manufacturing.conf
+2026-02-17 15:37:00,015 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-17 15:37:00,015 [tricca_autopipette] ERROR: Configuration error: Configuration file not found: panel-a.conf
+2026-02-17 15:37:58,633 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-17 15:37:58,633 [tricca_autopipette] INFO: Using configuration file: ./conf/tyson-panel-a-manufacturing.conf
+2026-02-17 15:37:58,633 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-17 15:37:58,667 [config_manager] CRITICAL: Missing configuration file: /home/james/Documents/Tricca_AutoPipette/conf/conf/tyson-panel-a-manufacturing.conf
+2026-02-17 15:37:58,667 [tricca_autopipette] ERROR: Unexpected error occurred
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/config_manager.py", line 86, in load
+    with file_path.open("r", encoding="utf-8") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/pathlib.py", line 1015, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/james/Documents/Tricca_AutoPipette/conf/conf/tyson-panel-a-manufacturing.conf'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/./Tricca_AutoPipette/tricca_autopipette.py", line 135, in main
+    shell = TriccaAutoPipetteShell(conf_autopipette=args.conf)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/tap_shell.py", line 100, in __init__
+    AutoPipette() if conf_autopipette is None else AutoPipette(conf_autopipette)
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/autopipette.py", line 99, in __init__
+    self.config_manager = ConfigManager(
+                          ^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/config_manager.py", line 67, in __init__
+    self.load(config_file)
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/config_manager.py", line 90, in load
+    raise RuntimeError(f"Configuration file not found: {file_path}") from e
+RuntimeError: Configuration file not found: /home/james/Documents/Tricca_AutoPipette/conf/conf/tyson-panel-a-manufacturing.conf
+2026-02-17 15:38:14,827 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-17 15:38:14,828 [tricca_autopipette] ERROR: Configuration error: Configuration file not found: ./tyson-panel-a-manufacturing.conf
+2026-02-17 15:38:21,879 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-17 15:38:21,879 [tricca_autopipette] ERROR: Configuration error: Configuration file not found: tyson-panel-a-manufacturing.conf
+2026-02-17 15:51:04,295 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-17 15:51:04,295 [tricca_autopipette] ERROR: Configuration error: Configuration file not found: tyson-panel-a-manufacturing.conf
+2026-02-17 15:51:11,515 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-17 15:51:11,515 [tricca_autopipette] ERROR: Configuration error: Configuration file not found: ./tyson-panel-a-manufacturing.conf
+2026-02-17 15:51:19,331 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-17 15:51:19,331 [tricca_autopipette] INFO: Using configuration file: ./conf/tyson-panel-a-manufacturing.conf
+2026-02-17 15:51:19,331 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-17 15:51:19,366 [config_manager] CRITICAL: Missing configuration file: /home/james/Documents/Tricca_AutoPipette/conf/conf/tyson-panel-a-manufacturing.conf
+2026-02-17 15:51:19,366 [tricca_autopipette] ERROR: Unexpected error occurred
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/config_manager.py", line 86, in load
+    with file_path.open("r", encoding="utf-8") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/pathlib.py", line 1015, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/james/Documents/Tricca_AutoPipette/conf/conf/tyson-panel-a-manufacturing.conf'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/./Tricca_AutoPipette/tricca_autopipette.py", line 135, in main
+    shell = TriccaAutoPipetteShell(conf_autopipette=args.conf)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/tap_shell.py", line 100, in __init__
+    AutoPipette() if conf_autopipette is None else AutoPipette(conf_autopipette)
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/autopipette.py", line 99, in __init__
+    self.config_manager = ConfigManager(
+                          ^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/config_manager.py", line 67, in __init__
+    self.load(config_file)
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/config_manager.py", line 90, in load
+    raise RuntimeError(f"Configuration file not found: {file_path}") from e
+RuntimeError: Configuration file not found: /home/james/Documents/Tricca_AutoPipette/conf/conf/tyson-panel-a-manufacturing.conf
+2026-02-17 16:00:15,515 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-17 16:00:15,515 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-17 16:00:15,515 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-17 16:00:15,548 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-17 16:00:15,549 [tricca_autopipette] ERROR: Configuration error: Missing required config value: [SPEED] ACCEL_MAX
+2026-02-17 16:01:42,851 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-17 16:01:42,852 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-17 16:01:42,852 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-17 16:01:42,887 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-17 16:01:42,888 [tricca_autopipette] ERROR: Configuration error: Missing required config value: [SERVO] SERVO_ANGLE_READY
+2026-02-17 16:01:51,734 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-17 16:01:51,734 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-17 16:01:51,734 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-17 16:01:51,768 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-17 16:01:51,769 [location_manager] INFO: Set waste container: waste_container
+2026-02-17 16:01:51,770 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-17 16:01:51,780 [websocket_client] INFO: Starting WebSocket client for ws://192.168.0.101/websocket
+2026-02-17 16:02:01,781 [tap_shell] ERROR: WebSocket connection failed during startup
+2026-02-17 16:02:04,837 [websocket_client] INFO: Stopping WebSocket client
+2026-02-17 16:02:04,840 [websocket_client] INFO: WebSocket client stopped
+2026-02-17 16:02:04,840 [tap_shell] INFO: Shell shutdown complete
+2026-02-17 16:02:04,841 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-17 16:02:16,857 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-17 16:02:16,857 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-17 16:02:16,857 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-17 16:02:16,892 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-17 16:02:16,894 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-17 16:02:16,894 [location_manager] INFO: Set waste container: waste_container
+2026-02-17 16:02:16,903 [websocket_client] INFO: Starting WebSocket client for ws://192.168.0.101/websocket
+2026-02-17 16:02:16,928 [websocket_client] INFO: WebSocket connected successfully
+2026-02-17 16:02:16,928 [tap_shell] INFO: WebSocket connection established
+2026-02-17 16:02:17,700 [websocket_client] INFO: File uploaded successfully to: 2026-02-17-16-02-16-929609.gcode
+2026-02-17 16:02:17,703 [tap_shell] INFO: Started execution of 2026-02-17-16-02-16-929609.gcode
+2026-02-17 16:02:22,753 [websocket_client] INFO: File uploaded successfully to: home_all.gcode
+2026-02-17 16:02:22,755 [tap_shell] INFO: Started execution of home_all.gcode
+2026-02-17 16:04:44,337 [websocket_client] INFO: File uploaded successfully to: tyson-panel-a-manufacturing.gcode
+2026-02-17 16:04:44,340 [tap_shell] INFO: Started execution of tyson-panel-a-manufacturing.gcode
+2026-02-17 16:06:31,726 [websocket_client] INFO: File uploaded successfully to: tyson-panel-a-manufacturing.gcode
+2026-02-17 16:06:31,728 [tap_shell] INFO: Started execution of tyson-panel-a-manufacturing.gcode
+2026-02-17 16:08:43,009 [websocket_client] INFO: Stopping WebSocket client
+2026-02-17 16:08:43,009 [websocket_client] INFO: WebSocket client stopped
+2026-02-17 16:08:43,010 [tap_shell] INFO: Shell shutdown complete
+2026-02-17 16:08:43,010 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-17 16:08:43,978 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-17 16:08:43,979 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-17 16:08:43,979 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-17 16:08:44,012 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-17 16:08:44,014 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-17 16:08:44,014 [location_manager] INFO: Set waste container: waste_container
+2026-02-17 16:08:44,025 [websocket_client] INFO: Starting WebSocket client for ws://192.168.0.101/websocket
+2026-02-17 16:08:44,046 [websocket_client] INFO: WebSocket connected successfully
+2026-02-17 16:08:44,046 [tap_shell] INFO: WebSocket connection established
+2026-02-17 16:08:44,995 [websocket_client] INFO: File uploaded successfully to: 2026-02-17-16-08-44-048128.gcode
+2026-02-17 16:08:44,996 [tap_shell] INFO: Started execution of 2026-02-17-16-08-44-048128.gcode
+2026-02-17 16:08:51,525 [tap_shell] WARNING: Command 'run' blocked - pipette not homed
+2026-02-17 16:09:11,604 [websocket_client] INFO: File uploaded successfully to: home_all.gcode
+2026-02-17 16:09:11,606 [tap_shell] INFO: Started execution of home_all.gcode
+2026-02-17 16:09:42,427 [websocket_client] INFO: File uploaded successfully to: tyson-panel-a-manufacturing.gcode
+2026-02-17 16:09:42,429 [tap_shell] INFO: Started execution of tyson-panel-a-manufacturing.gcode
+2026-02-17 16:11:13,832 [websocket_client] INFO: Stopping WebSocket client
+2026-02-17 16:11:13,834 [websocket_client] INFO: WebSocket client stopped
+2026-02-17 16:11:13,835 [tap_shell] INFO: Shell shutdown complete
+2026-02-17 16:11:13,835 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-17 16:11:14,876 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-17 16:11:14,876 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-17 16:11:14,876 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-17 16:11:14,912 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-17 16:11:14,914 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-17 16:11:14,914 [location_manager] INFO: Set waste container: waste_container
+2026-02-17 16:11:14,925 [websocket_client] INFO: Starting WebSocket client for ws://192.168.0.101/websocket
+2026-02-17 16:11:14,942 [websocket_client] INFO: WebSocket connected successfully
+2026-02-17 16:11:14,942 [tap_shell] INFO: WebSocket connection established
+2026-02-17 16:11:15,596 [websocket_client] INFO: File uploaded successfully to: 2026-02-17-16-11-14-944184.gcode
+2026-02-17 16:11:15,598 [tap_shell] INFO: Started execution of 2026-02-17-16-11-14-944184.gcode
+2026-02-17 16:11:19,058 [websocket_client] INFO: File uploaded successfully to: home_all.gcode
+2026-02-17 16:11:19,060 [tap_shell] INFO: Started execution of home_all.gcode
+2026-02-17 16:11:57,324 [websocket_client] INFO: File uploaded successfully to: home_pipette.gcode
+2026-02-17 16:11:57,326 [tap_shell] INFO: Started execution of home_pipette.gcode
+2026-02-17 16:12:02,146 [websocket_client] INFO: File uploaded successfully to: home_pipette.gcode
+2026-02-17 16:12:02,148 [tap_shell] INFO: Started execution of home_pipette.gcode
+2026-02-17 16:12:26,619 [websocket_client] INFO: File uploaded successfully to: tyson-panel-a-manufacturing.gcode
+2026-02-17 16:12:26,621 [tap_shell] INFO: Started execution of tyson-panel-a-manufacturing.gcode
+2026-02-17 16:15:52,167 [websocket_client] INFO: Stopping WebSocket client
+2026-02-17 16:15:52,168 [websocket_client] INFO: WebSocket client stopped
+2026-02-17 16:15:52,168 [tap_shell] INFO: Shell shutdown complete
+2026-02-17 16:15:52,169 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-17 16:15:53,240 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-17 16:15:53,240 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-17 16:15:53,240 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-17 16:15:53,276 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-17 16:15:53,278 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-17 16:15:53,278 [location_manager] INFO: Set waste container: waste_container
+2026-02-17 16:15:53,288 [websocket_client] INFO: Starting WebSocket client for ws://192.168.0.101/websocket
+2026-02-17 16:15:53,299 [websocket_client] INFO: WebSocket connected successfully
+2026-02-17 16:15:53,299 [tap_shell] INFO: WebSocket connection established
+2026-02-17 16:15:54,040 [websocket_client] INFO: File uploaded successfully to: 2026-02-17-16-15-53-300753.gcode
+2026-02-17 16:15:54,043 [tap_shell] INFO: Started execution of 2026-02-17-16-15-53-300753.gcode
+2026-02-17 16:16:00,184 [websocket_client] INFO: File uploaded successfully to: home_all.gcode
+2026-02-17 16:16:00,187 [tap_shell] INFO: Started execution of home_all.gcode
+2026-02-17 16:16:34,593 [websocket_client] INFO: File uploaded successfully to: tyson-panel-a-manufacturing.gcode
+2026-02-17 16:16:34,595 [tap_shell] INFO: Started execution of tyson-panel-a-manufacturing.gcode
+2026-02-17 17:05:27,868 [websocket_client] INFO: File uploaded successfully to: tyson-panel-a-manufacturing.gcode
+2026-02-17 17:05:27,869 [tap_shell] INFO: Started execution of tyson-panel-a-manufacturing.gcode
+2026-02-17 17:05:32,875 [websocket_client] WARNING: Request timeout for method 'printer.print.start'
+2026-02-17 17:05:32,890 [tap_shell] ERROR: Unexpected error during RPC call
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/tap_shell.py", line 260, in worker
+    response = self.client.send_jsonrpc(payload)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 589, in send_jsonrpc
+    raise TimeoutError(
+TimeoutError: Timed out waiting for response to method 'printer.print.start'
+2026-02-17 17:05:34,526 [websocket_client] INFO: Stopping WebSocket client
+2026-02-17 17:05:34,537 [websocket_client] INFO: WebSocket client stopped
+2026-02-17 17:05:34,537 [tap_shell] INFO: Shell shutdown complete
+2026-02-17 17:05:34,537 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-17 17:05:35,676 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-17 17:05:35,676 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-17 17:05:35,676 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-17 17:05:35,711 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-17 17:05:35,712 [location_manager] INFO: Set waste container: waste_container
+2026-02-17 17:05:35,713 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-17 17:05:35,723 [websocket_client] INFO: Starting WebSocket client for ws://192.168.0.101/websocket
+2026-02-17 17:05:35,742 [websocket_client] INFO: WebSocket connected successfully
+2026-02-17 17:05:35,742 [tap_shell] INFO: WebSocket connection established
+2026-02-17 17:05:36,465 [websocket_client] INFO: File uploaded successfully to: 2026-02-17-17-05-35-744868.gcode
+2026-02-17 17:05:36,467 [tap_shell] INFO: Started execution of 2026-02-17-17-05-35-744868.gcode
+2026-02-17 17:05:38,518 [websocket_client] INFO: File uploaded successfully to: home_all.gcode
+2026-02-17 17:05:38,521 [tap_shell] INFO: Started execution of home_all.gcode
+2026-02-17 17:06:10,979 [websocket_client] INFO: File uploaded successfully to: tyson-panel-a-manufacturing.gcode
+2026-02-17 17:06:10,982 [tap_shell] INFO: Started execution of tyson-panel-a-manufacturing.gcode
+2026-02-17 17:08:30,299 [websocket_client] INFO: Stopping WebSocket client
+2026-02-17 17:08:30,302 [websocket_client] INFO: WebSocket client stopped
+2026-02-17 17:08:30,302 [tap_shell] INFO: Shell shutdown complete
+2026-02-17 17:08:30,303 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-17 17:08:31,458 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-17 17:08:31,458 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-17 17:08:31,458 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-17 17:08:31,499 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-17 17:08:31,502 [location_manager] INFO: Set waste container: waste_container
+2026-02-17 17:08:31,503 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-17 17:08:31,519 [websocket_client] INFO: Starting WebSocket client for ws://192.168.0.101/websocket
+2026-02-17 17:08:31,561 [websocket_client] INFO: WebSocket connected successfully
+2026-02-17 17:08:31,561 [tap_shell] INFO: WebSocket connection established
+2026-02-17 17:08:32,600 [websocket_client] INFO: File uploaded successfully to: 2026-02-17-17-08-31-564227.gcode
+2026-02-17 17:08:32,602 [tap_shell] INFO: Started execution of 2026-02-17-17-08-31-564227.gcode
+2026-02-17 17:08:35,725 [websocket_client] INFO: File uploaded successfully to: home_all.gcode
+2026-02-17 17:08:35,728 [tap_shell] INFO: Started execution of home_all.gcode
+2026-02-17 17:09:04,856 [websocket_client] INFO: File uploaded successfully to: tyson-panel-a-manufacturing.gcode
+2026-02-17 17:09:04,858 [tap_shell] INFO: Started execution of tyson-panel-a-manufacturing.gcode
+2026-02-18 16:38:17,621 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-18 16:38:17,621 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-18 16:38:17,621 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-18 16:38:17,658 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-18 16:38:17,660 [location_manager] INFO: Set waste container: waste_container
+2026-02-18 16:38:17,660 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-18 16:38:17,670 [websocket_client] INFO: Starting WebSocket client for ws://192.168.0.101/websocket
+2026-02-18 16:38:17,878 [websocket_client] INFO: WebSocket connected successfully
+2026-02-18 16:38:17,879 [tap_shell] INFO: WebSocket connection established
+2026-02-18 16:38:18,950 [websocket_client] INFO: File uploaded successfully to: 2026-02-18-16-38-17-884864.gcode
+2026-02-18 16:38:18,952 [tap_shell] INFO: Started execution of 2026-02-18-16-38-17-884864.gcode
+2026-02-18 16:38:22,055 [websocket_client] INFO: File uploaded successfully to: home_all.gcode
+2026-02-18 16:38:22,057 [tap_shell] INFO: Started execution of home_all.gcode
+2026-02-19 11:11:47,732 [websocket_client] INFO: Stopping WebSocket client
+2026-02-19 11:11:47,735 [websocket_client] INFO: WebSocket client stopped
+2026-02-19 11:11:47,735 [tap_shell] INFO: Shell shutdown complete
+2026-02-19 11:11:47,736 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-19 11:11:49,844 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-19 11:11:49,844 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-19 11:11:49,845 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-19 11:11:49,882 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-19 11:11:49,883 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-19 11:11:49,884 [location_manager] INFO: Set waste container: waste_container
+2026-02-19 11:11:49,893 [websocket_client] INFO: Starting WebSocket client for ws://192.168.0.101/websocket
+2026-02-19 11:11:49,908 [websocket_client] INFO: WebSocket connected successfully
+2026-02-19 11:11:49,908 [tap_shell] INFO: WebSocket connection established
+2026-02-19 11:11:52,005 [websocket_client] INFO: File uploaded successfully to: 2026-02-19-11-11-49-910361.gcode
+2026-02-19 11:11:52,007 [tap_shell] INFO: Started execution of 2026-02-19-11-11-49-910361.gcode
+2026-02-19 11:11:59,850 [websocket_client] INFO: File uploaded successfully to: home_all.gcode
+2026-02-19 11:11:59,852 [tap_shell] INFO: Started execution of home_all.gcode
+2026-02-19 11:18:59,722 [websocket_client] INFO: Stopping WebSocket client
+2026-02-19 11:18:59,725 [websocket_client] INFO: WebSocket client stopped
+2026-02-19 11:18:59,725 [tap_shell] INFO: Shell shutdown complete
+2026-02-19 11:18:59,726 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-19 11:19:00,822 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-19 11:19:00,823 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-19 11:19:00,823 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-19 11:19:00,856 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-19 11:19:00,858 [location_manager] INFO: Set waste container: waste_container
+2026-02-19 11:19:00,858 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-19 11:19:00,869 [websocket_client] INFO: Starting WebSocket client for ws://192.168.0.101/websocket
+2026-02-19 11:19:10,869 [tap_shell] ERROR: WebSocket connection failed during startup
+2026-02-19 11:19:31,873 [websocket_client] WARNING: Connection error (will retry in 1.0s): Connection timeout to host ws://192.168.0.101/websocket
+2026-02-19 11:19:32,890 [websocket_client] INFO: WebSocket connected successfully
+2026-02-19 11:19:35,161 [websocket_client] INFO: Stopping WebSocket client
+2026-02-19 11:19:35,164 [websocket_client] INFO: WebSocket client stopped
+2026-02-19 11:19:35,165 [tap_shell] INFO: Shell shutdown complete
+2026-02-19 11:19:35,165 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-19 11:19:36,269 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-19 11:19:36,269 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-19 11:19:36,269 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-19 11:19:36,302 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-19 11:19:36,304 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-19 11:19:36,304 [location_manager] INFO: Set waste container: waste_container
+2026-02-19 11:19:36,314 [websocket_client] INFO: Starting WebSocket client for ws://192.168.0.101/websocket
+2026-02-19 11:19:36,330 [websocket_client] INFO: WebSocket connected successfully
+2026-02-19 11:19:36,330 [tap_shell] INFO: WebSocket connection established
+2026-02-19 11:19:37,041 [websocket_client] INFO: File uploaded successfully to: 2026-02-19-11-19-36-331812.gcode
+2026-02-19 11:19:37,043 [tap_shell] INFO: Started execution of 2026-02-19-11-19-36-331812.gcode
+2026-02-19 11:19:41,194 [websocket_client] INFO: File uploaded successfully to: home_all.gcode
+2026-02-19 11:19:41,197 [tap_shell] INFO: Started execution of home_all.gcode
+2026-02-19 12:00:48,419 [websocket_client] INFO: Stopping WebSocket client
+2026-02-19 12:00:48,422 [websocket_client] INFO: WebSocket client stopped
+2026-02-19 12:00:48,423 [tap_shell] INFO: Shell shutdown complete
+2026-02-19 12:00:48,423 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-19 12:00:49,462 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-19 12:00:49,462 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-19 12:00:49,462 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-19 12:00:49,501 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-19 12:00:49,502 [location_manager] INFO: Set waste container: waste_container
+2026-02-19 12:00:49,503 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-19 12:00:49,514 [websocket_client] INFO: Starting WebSocket client for ws://192.168.0.101/websocket
+2026-02-19 12:00:59,515 [tap_shell] ERROR: WebSocket connection failed during startup
+2026-02-19 12:01:06,947 [websocket_client] INFO: Stopping WebSocket client
+2026-02-19 12:01:06,950 [websocket_client] INFO: WebSocket client stopped
+2026-02-19 12:01:06,951 [tap_shell] INFO: Shell shutdown complete
+2026-02-19 12:01:06,951 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-19 12:02:34,365 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-19 12:02:34,366 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-19 12:02:34,366 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-19 12:02:34,400 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-19 12:02:34,402 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-19 12:02:34,403 [location_manager] INFO: Set waste container: waste_container
+2026-02-19 12:02:34,413 [websocket_client] INFO: Starting WebSocket client for ws://192.168.0.101/websocket
+2026-02-19 12:02:36,361 [websocket_client] WARNING: Connection error (will retry in 1.0s): Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:02:39,432 [websocket_client] WARNING: Connection error (will retry in 2.0s): Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:02:42,505 [websocket_client] WARNING: Connection error (will retry in 4.0s): Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:02:44,414 [tap_shell] ERROR: WebSocket connection failed during startup
+2026-02-19 12:02:45,577 [websocket_client] ERROR: Unexpected upload error: Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1181, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 122, in start_connection
+    raise first_exception
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 73, in start_connection
+    sock = await _connect_sock(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 208, in _connect_sock
+    await loop.sock_connect(sock, address)
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 651, in sock_connect
+    return await fut
+           ^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 691, in _sock_connect_cb
+    raise OSError(err, f'Connect call failed {address}')
+OSError: [Errno 113] Connect call failed ('192.168.0.101', 80)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 716, in _upload_gcode_file_async
+    async with self.session.post(upload_url, data=data) as response:
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 1473, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 761, in _request
+    resp = await handler(req)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 716, in _connect_and_send_request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 598, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1122, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1494, in _create_direct_connection
+    raise last_exc
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1463, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1204, in _wrap_create_connection
+    raise client_error(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:02:45,590 [tap_shell] ERROR: Failed to upload and execute 2026-02-19-12-02-44-419439.gcode
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1181, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 122, in start_connection
+    raise first_exception
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 73, in start_connection
+    sock = await _connect_sock(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 208, in _connect_sock
+    await loop.sock_connect(sock, address)
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 651, in sock_connect
+    return await fut
+           ^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 691, in _sock_connect_cb
+    raise OSError(err, f'Connect call failed {address}')
+OSError: [Errno 113] Connect call failed ('192.168.0.101', 80)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 716, in _upload_gcode_file_async
+    async with self.session.post(upload_url, data=data) as response:
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 1473, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 761, in _request
+    resp = await handler(req)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 716, in _connect_and_send_request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 598, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1122, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1494, in _create_direct_connection
+    raise last_exc
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1463, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1204, in _wrap_create_connection
+    raise client_error(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/tap_shell.py", line 327, in worker
+    server_path = future.result()
+                  ^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 754, in _upload_gcode_file_async
+    raise WebSocketClient.UploadError(
+websocket_client.WebSocketClient.UploadError: Unexpected error during upload: Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:02:47,683 [websocket_client] INFO: Stopping WebSocket client
+2026-02-19 12:02:47,685 [websocket_client] INFO: WebSocket client stopped
+2026-02-19 12:02:47,686 [tap_shell] INFO: Shell shutdown complete
+2026-02-19 12:02:47,686 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-19 12:02:48,787 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-19 12:02:48,787 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-19 12:02:48,787 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-19 12:02:48,821 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-19 12:02:48,823 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-19 12:02:48,824 [location_manager] INFO: Set waste container: waste_container
+2026-02-19 12:02:48,833 [websocket_client] INFO: Starting WebSocket client for ws://192.168.0.101/websocket
+2026-02-19 12:02:51,721 [websocket_client] WARNING: Connection error (will retry in 1.0s): Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:02:54,792 [websocket_client] WARNING: Connection error (will retry in 2.0s): Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:02:57,864 [websocket_client] WARNING: Connection error (will retry in 4.0s): Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:02:58,834 [tap_shell] ERROR: WebSocket connection failed during startup
+2026-02-19 12:03:00,936 [websocket_client] ERROR: Unexpected upload error: Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1181, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 122, in start_connection
+    raise first_exception
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 73, in start_connection
+    sock = await _connect_sock(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 208, in _connect_sock
+    await loop.sock_connect(sock, address)
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 651, in sock_connect
+    return await fut
+           ^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 691, in _sock_connect_cb
+    raise OSError(err, f'Connect call failed {address}')
+OSError: [Errno 113] Connect call failed ('192.168.0.101', 80)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 716, in _upload_gcode_file_async
+    async with self.session.post(upload_url, data=data) as response:
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 1473, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 761, in _request
+    resp = await handler(req)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 716, in _connect_and_send_request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 598, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1122, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1494, in _create_direct_connection
+    raise last_exc
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1463, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1204, in _wrap_create_connection
+    raise client_error(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:03:00,947 [tap_shell] ERROR: Failed to upload and execute 2026-02-19-12-02-58-842326.gcode
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1181, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 122, in start_connection
+    raise first_exception
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 73, in start_connection
+    sock = await _connect_sock(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 208, in _connect_sock
+    await loop.sock_connect(sock, address)
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 651, in sock_connect
+    return await fut
+           ^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 691, in _sock_connect_cb
+    raise OSError(err, f'Connect call failed {address}')
+OSError: [Errno 113] Connect call failed ('192.168.0.101', 80)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 716, in _upload_gcode_file_async
+    async with self.session.post(upload_url, data=data) as response:
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 1473, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 761, in _request
+    resp = await handler(req)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 716, in _connect_and_send_request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 598, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1122, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1494, in _create_direct_connection
+    raise last_exc
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1463, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1204, in _wrap_create_connection
+    raise client_error(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/tap_shell.py", line 327, in worker
+    server_path = future.result()
+                  ^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 754, in _upload_gcode_file_async
+    raise WebSocketClient.UploadError(
+websocket_client.WebSocketClient.UploadError: Unexpected error during upload: Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:03:04,009 [websocket_client] WARNING: Connection error (will retry in 8.0s): Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:03:13,224 [websocket_client] WARNING: Connection error (will retry in 16.0s): Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:03:31,657 [websocket_client] WARNING: Connection error (will retry in 32.0s): Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:04:05,448 [websocket_client] WARNING: Connection error (will retry in 60.0s): Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:04:47,438 [websocket_client] INFO: Stopping WebSocket client
+2026-02-19 12:04:47,439 [websocket_client] INFO: WebSocket client stopped
+2026-02-19 12:04:47,439 [tap_shell] INFO: Shell shutdown complete
+2026-02-19 12:04:47,439 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-19 12:04:48,597 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-19 12:04:48,597 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-19 12:04:48,597 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-19 12:04:48,633 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-19 12:04:48,634 [location_manager] INFO: Set waste container: waste_container
+2026-02-19 12:04:48,635 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-19 12:04:48,644 [websocket_client] INFO: Starting WebSocket client for ws://192.168.0.101/websocket
+2026-02-19 12:04:48,645 [websocket_client] WARNING: Connection error (will retry in 1.0s): Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:04:49,649 [websocket_client] WARNING: Connection error (will retry in 2.0s): Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:04:51,653 [websocket_client] WARNING: Connection error (will retry in 4.0s): Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:04:55,659 [websocket_client] WARNING: Connection error (will retry in 8.0s): Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:04:58,645 [tap_shell] ERROR: WebSocket connection failed during startup
+2026-02-19 12:04:58,652 [websocket_client] ERROR: Unexpected upload error: Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1181, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 122, in start_connection
+    raise first_exception
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 73, in start_connection
+    sock = await _connect_sock(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 208, in _connect_sock
+    await loop.sock_connect(sock, address)
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 651, in sock_connect
+    return await fut
+           ^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 691, in _sock_connect_cb
+    raise OSError(err, f'Connect call failed {address}')
+ConnectionRefusedError: [Errno 111] Connect call failed ('192.168.0.101', 80)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 716, in _upload_gcode_file_async
+    async with self.session.post(upload_url, data=data) as response:
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 1473, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 761, in _request
+    resp = await handler(req)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 716, in _connect_and_send_request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 598, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1122, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1494, in _create_direct_connection
+    raise last_exc
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1463, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1204, in _wrap_create_connection
+    raise client_error(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:04:58,657 [tap_shell] ERROR: Failed to upload and execute 2026-02-19-12-04-58-648403.gcode
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1181, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 122, in start_connection
+    raise first_exception
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 73, in start_connection
+    sock = await _connect_sock(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 208, in _connect_sock
+    await loop.sock_connect(sock, address)
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 651, in sock_connect
+    return await fut
+           ^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 691, in _sock_connect_cb
+    raise OSError(err, f'Connect call failed {address}')
+ConnectionRefusedError: [Errno 111] Connect call failed ('192.168.0.101', 80)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 716, in _upload_gcode_file_async
+    async with self.session.post(upload_url, data=data) as response:
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 1473, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 761, in _request
+    resp = await handler(req)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 716, in _connect_and_send_request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 598, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1122, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1494, in _create_direct_connection
+    raise last_exc
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1463, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1204, in _wrap_create_connection
+    raise client_error(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/tap_shell.py", line 327, in worker
+    server_path = future.result()
+                  ^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 754, in _upload_gcode_file_async
+    raise WebSocketClient.UploadError(
+websocket_client.WebSocketClient.UploadError: Unexpected error during upload: Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:05:03,668 [websocket_client] WARNING: Connection error (will retry in 16.0s): Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:05:19,686 [websocket_client] WARNING: Connection error (will retry in 32.0s): Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:05:33,795 [websocket_client] INFO: Stopping WebSocket client
+2026-02-19 12:05:33,797 [websocket_client] INFO: WebSocket client stopped
+2026-02-19 12:05:33,801 [tap_shell] INFO: Shell shutdown complete
+2026-02-19 12:05:33,801 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-19 12:05:34,920 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-19 12:05:34,920 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-19 12:05:34,920 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-19 12:05:34,952 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-19 12:05:34,954 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-19 12:05:34,954 [location_manager] INFO: Set waste container: waste_container
+2026-02-19 12:05:34,964 [websocket_client] INFO: Starting WebSocket client for ws://192.168.0.101/websocket
+2026-02-19 12:05:34,965 [websocket_client] WARNING: Connection error (will retry in 1.0s): Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:05:35,968 [websocket_client] WARNING: Connection error (will retry in 2.0s): Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:05:37,972 [websocket_client] WARNING: Connection error (will retry in 4.0s): Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:05:41,978 [websocket_client] WARNING: Connection error (will retry in 8.0s): Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:05:44,965 [tap_shell] ERROR: WebSocket connection failed during startup
+2026-02-19 12:05:44,976 [websocket_client] ERROR: Unexpected upload error: Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1181, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 122, in start_connection
+    raise first_exception
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 73, in start_connection
+    sock = await _connect_sock(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 208, in _connect_sock
+    await loop.sock_connect(sock, address)
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 651, in sock_connect
+    return await fut
+           ^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 691, in _sock_connect_cb
+    raise OSError(err, f'Connect call failed {address}')
+ConnectionRefusedError: [Errno 111] Connect call failed ('192.168.0.101', 80)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 716, in _upload_gcode_file_async
+    async with self.session.post(upload_url, data=data) as response:
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 1473, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 761, in _request
+    resp = await handler(req)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 716, in _connect_and_send_request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 598, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1122, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1494, in _create_direct_connection
+    raise last_exc
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1463, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1204, in _wrap_create_connection
+    raise client_error(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:05:44,979 [tap_shell] ERROR: Failed to upload and execute 2026-02-19-12-05-44-971968.gcode
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1181, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 122, in start_connection
+    raise first_exception
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 73, in start_connection
+    sock = await _connect_sock(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohappyeyeballs/impl.py", line 208, in _connect_sock
+    await loop.sock_connect(sock, address)
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 651, in sock_connect
+    return await fut
+           ^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/selector_events.py", line 691, in _sock_connect_cb
+    raise OSError(err, f'Connect call failed {address}')
+ConnectionRefusedError: [Errno 111] Connect call failed ('192.168.0.101', 80)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 716, in _upload_gcode_file_async
+    async with self.session.post(upload_url, data=data) as response:
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 1473, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 761, in _request
+    resp = await handler(req)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 716, in _connect_and_send_request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 598, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1122, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1494, in _create_direct_connection
+    raise last_exc
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1463, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1204, in _wrap_create_connection
+    raise client_error(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/tap_shell.py", line 327, in worker
+    server_path = future.result()
+                  ^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 754, in _upload_gcode_file_async
+    raise WebSocketClient.UploadError(
+websocket_client.WebSocketClient.UploadError: Unexpected error during upload: Cannot connect to host 192.168.0.101:80 ssl:default [Connect call failed ('192.168.0.101', 80)]
+2026-02-19 12:05:44,983 [websocket_client] INFO: Stopping WebSocket client
+2026-02-19 12:05:44,984 [websocket_client] INFO: WebSocket client stopped
+2026-02-19 12:05:44,984 [tap_shell] INFO: Shell shutdown complete
+2026-02-19 12:05:44,984 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-19 12:06:03,676 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-19 12:06:03,676 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-19 12:06:03,676 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-19 12:06:03,710 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-19 12:06:03,716 [location_manager] INFO: Set waste container: waste_container
+2026-02-19 12:06:03,717 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-19 12:06:03,727 [websocket_client] INFO: Starting WebSocket client for ws://tap-tyson.local/websocket
+2026-02-19 12:06:03,936 [websocket_client] INFO: WebSocket connected successfully
+2026-02-19 12:06:03,936 [tap_shell] INFO: WebSocket connection established
+2026-02-19 12:06:05,026 [websocket_client] INFO: File uploaded successfully to: 2026-02-19-12-06-03-943662.gcode
+2026-02-19 12:06:05,028 [tap_shell] INFO: Started execution of 2026-02-19-12-06-03-943662.gcode
+2026-02-19 12:06:08,949 [websocket_client] INFO: File uploaded successfully to: home_all.gcode
+2026-02-19 12:06:08,951 [tap_shell] INFO: Started execution of home_all.gcode
+2026-02-19 12:07:23,422 [websocket_client] INFO: Stopping WebSocket client
+2026-02-19 12:07:23,423 [websocket_client] INFO: WebSocket client stopped
+2026-02-19 12:07:23,423 [tap_shell] INFO: Shell shutdown complete
+2026-02-19 12:07:23,423 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-19 12:07:24,839 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-19 12:07:24,839 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-19 12:07:24,839 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-19 12:07:24,879 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-19 12:07:24,881 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-19 12:07:24,882 [location_manager] INFO: Set waste container: waste_container
+2026-02-19 12:07:24,899 [websocket_client] INFO: Starting WebSocket client for ws://tap-tyson.local/websocket
+2026-02-19 12:07:29,906 [websocket_client] WARNING: Connection error (will retry in 1.0s): Cannot connect to host tap-tyson.local:80 ssl:default [Name or service not known]
+2026-02-19 12:07:34,900 [tap_shell] ERROR: WebSocket connection failed during startup
+2026-02-19 12:07:34,912 [websocket_client] INFO: Stopping WebSocket client
+2026-02-19 12:07:34,913 [tap_shell] ERROR: Failed to upload and execute 2026-02-19-12-07-34-906781.gcode
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/tap_shell.py", line 327, in worker
+    server_path = future.result()
+                  ^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 454, in result
+    raise CancelledError()
+concurrent.futures._base.CancelledError
+2026-02-19 12:07:34,913 [websocket_client] INFO: WebSocket client stopped
+2026-02-19 12:07:34,914 [tap_shell] INFO: Shell shutdown complete
+2026-02-19 12:07:34,914 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-19 13:55:56,008 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-19 13:55:56,008 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-19 13:55:56,008 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-19 13:55:56,046 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-19 13:55:56,049 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-19 13:55:56,050 [location_manager] INFO: Set waste container: waste_container
+2026-02-19 13:55:56,065 [websocket_client] INFO: Starting WebSocket client for ws://tap-tyson.local/websocket
+2026-02-19 13:55:56,425 [websocket_client] INFO: WebSocket connected successfully
+2026-02-19 13:55:56,425 [tap_shell] INFO: WebSocket connection established
+2026-02-19 13:55:57,520 [websocket_client] INFO: File uploaded successfully to: 2026-02-19-13-55-56-431607.gcode
+2026-02-19 13:55:57,523 [tap_shell] INFO: Started execution of 2026-02-19-13-55-56-431607.gcode
+2026-02-19 13:56:01,309 [websocket_client] INFO: File uploaded successfully to: home_all.gcode
+2026-02-19 13:56:01,311 [tap_shell] INFO: Started execution of home_all.gcode
+2026-02-19 14:10:11,388 [websocket_client] INFO: Stopping WebSocket client
+2026-02-19 14:10:11,391 [websocket_client] INFO: WebSocket client stopped
+2026-02-19 14:10:11,392 [tap_shell] INFO: Shell shutdown complete
+2026-02-19 14:10:11,393 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-19 14:10:12,434 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-19 14:10:12,435 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-19 14:10:12,435 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-19 14:10:12,471 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-19 14:10:12,473 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-19 14:10:12,473 [location_manager] INFO: Set waste container: waste_container
+2026-02-19 14:10:12,483 [websocket_client] INFO: Starting WebSocket client for ws://tap-tyson.local/websocket
+2026-02-19 14:10:17,499 [websocket_client] WARNING: Connection error (will retry in 1.0s): Cannot connect to host tap-tyson.local:80 ssl:default [Name or service not known]
+2026-02-19 14:10:22,484 [tap_shell] ERROR: WebSocket connection failed during startup
+2026-02-19 14:10:23,116 [websocket_client] INFO: Stopping WebSocket client
+2026-02-19 14:10:23,119 [tap_shell] ERROR: Failed to upload and execute 2026-02-19-14-10-22-492248.gcode
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/tap_shell.py", line 327, in worker
+    server_path = future.result()
+                  ^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 454, in result
+    raise CancelledError()
+concurrent.futures._base.CancelledError
+2026-02-19 14:10:23,120 [websocket_client] INFO: WebSocket client stopped
+2026-02-19 14:10:23,123 [tap_shell] INFO: Shell shutdown complete
+2026-02-19 14:10:23,124 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-19 14:10:23,631 [base_events] ERROR: Task was destroyed but it is pending!
+task: <Task cancelling name='Task-1' coro=<WebSocketClient._main_wrapper() running at /home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py:357> wait_for=<Task pending name='Task-6' coro=<_wait_for_close() running at /home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py:137> wait_for=<_GatheringFuture finished result=[None, CancelledError('')]> cb=[Task.task_wakeup()]>>
+2026-02-19 14:10:23,631 [base_events] ERROR: Task was destroyed but it is pending!
+task: <Task pending name='Task-6' coro=<_wait_for_close() running at /home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py:137> wait_for=<_GatheringFuture finished result=[None, CancelledError('')]> cb=[Task.task_wakeup()]>
+2026-02-19 14:13:27,515 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-19 14:13:27,515 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-19 14:13:27,515 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-19 14:13:27,552 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-19 14:13:27,553 [location_manager] INFO: Set waste container: waste_container
+2026-02-19 14:13:27,554 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-19 14:13:27,565 [websocket_client] INFO: Starting WebSocket client for ws://tap-tyson.local/websocket
+2026-02-19 14:13:27,710 [websocket_client] INFO: WebSocket connected successfully
+2026-02-19 14:13:27,711 [tap_shell] INFO: WebSocket connection established
+2026-02-19 14:13:28,477 [websocket_client] INFO: File uploaded successfully to: 2026-02-19-14-13-27-718451.gcode
+2026-02-19 14:13:28,481 [tap_shell] INFO: Started execution of 2026-02-19-14-13-27-718451.gcode
+2026-02-19 14:14:15,677 [tap_shell] WARNING: Command 'run' blocked - pipette not homed
+2026-02-19 14:14:22,642 [websocket_client] INFO: File uploaded successfully to: home_all.gcode
+2026-02-19 14:14:22,645 [tap_shell] INFO: Started execution of home_all.gcode
+2026-02-19 14:14:38,170 [websocket_client] INFO: File uploaded successfully to: tyson-panel-a-manufacturing.gcode
+2026-02-19 14:14:38,173 [tap_shell] INFO: Started execution of tyson-panel-a-manufacturing.gcode
+2026-02-19 14:25:12,902 [websocket_client] INFO: Stopping WebSocket client
+2026-02-19 14:25:12,905 [websocket_client] INFO: WebSocket client stopped
+2026-02-19 14:25:12,905 [tap_shell] INFO: Shell shutdown complete
+2026-02-19 14:25:12,906 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-19 14:25:22,628 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-19 14:25:22,628 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-19 14:25:22,628 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-19 14:25:22,663 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-19 14:25:22,665 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-19 14:25:22,665 [location_manager] INFO: Set waste container: waste_container
+2026-02-19 14:25:22,675 [websocket_client] INFO: Starting WebSocket client for ws://tap-tyson.local/websocket
+2026-02-19 14:25:22,834 [websocket_client] INFO: WebSocket connected successfully
+2026-02-19 14:25:22,834 [tap_shell] INFO: WebSocket connection established
+2026-02-19 14:25:23,504 [websocket_client] INFO: File uploaded successfully to: 2026-02-19-14-25-22-837294.gcode
+2026-02-19 14:25:23,507 [tap_shell] INFO: Started execution of 2026-02-19-14-25-22-837294.gcode
+2026-02-19 14:25:28,072 [websocket_client] INFO: File uploaded successfully to: home_all.gcode
+2026-02-19 14:25:28,075 [tap_shell] INFO: Started execution of home_all.gcode
+2026-02-19 14:25:49,041 [websocket_client] INFO: File uploaded successfully to: tyson-panel-a-manufacturing.gcode
+2026-02-19 14:25:49,044 [tap_shell] INFO: Started execution of tyson-panel-a-manufacturing.gcode
+2026-02-19 14:32:48,906 [websocket_client] INFO: Stopping WebSocket client
+2026-02-19 14:32:48,909 [websocket_client] INFO: WebSocket client stopped
+2026-02-19 14:32:48,910 [tap_shell] INFO: Shell shutdown complete
+2026-02-19 14:32:48,911 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-19 14:32:50,075 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-19 14:32:50,075 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-19 14:32:50,075 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-19 14:32:50,113 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-19 14:32:50,114 [location_manager] INFO: Set waste container: waste_container
+2026-02-19 14:32:50,115 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-19 14:32:50,125 [websocket_client] INFO: Starting WebSocket client for ws://tap-tyson.local/websocket
+2026-02-19 14:32:50,252 [websocket_client] INFO: WebSocket connected successfully
+2026-02-19 14:32:50,253 [tap_shell] INFO: WebSocket connection established
+2026-02-19 14:32:51,045 [websocket_client] INFO: File uploaded successfully to: 2026-02-19-14-32-50-256879.gcode
+2026-02-19 14:32:51,048 [tap_shell] INFO: Started execution of 2026-02-19-14-32-50-256879.gcode
+2026-02-19 14:32:54,727 [websocket_client] INFO: File uploaded successfully to: home_all.gcode
+2026-02-19 14:32:54,730 [tap_shell] INFO: Started execution of home_all.gcode
+2026-02-19 14:33:08,945 [websocket_client] INFO: File uploaded successfully to: tyson-panel-a-manufacturing.gcode
+2026-02-19 14:33:08,948 [tap_shell] INFO: Started execution of tyson-panel-a-manufacturing.gcode
+2026-02-19 14:33:32,059 [websocket_client] INFO: Stopping WebSocket client
+2026-02-19 14:33:32,063 [websocket_client] INFO: WebSocket client stopped
+2026-02-19 14:33:32,063 [tap_shell] INFO: Shell shutdown complete
+2026-02-19 14:33:32,064 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-19 14:33:32,175 [base_events] ERROR: Task was destroyed but it is pending!
+task: <Task cancelling name='Task-1' coro=<WebSocketClient._main_wrapper() running at /home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py:357> wait_for=<Task pending name='Task-13' coro=<_wait_for_close() running at /home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py:137> wait_for=<_GatheringFuture finished result=[None]> cb=[Task.task_wakeup()]>>
+2026-02-19 14:33:32,175 [base_events] ERROR: Task was destroyed but it is pending!
+task: <Task pending name='Task-13' coro=<_wait_for_close() running at /home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py:137> wait_for=<_GatheringFuture finished result=[None]> cb=[Task.task_wakeup()]>
+2026-02-19 14:33:45,615 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-19 14:33:45,615 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-19 14:33:45,615 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-19 14:33:45,649 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-19 14:33:45,651 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-19 14:33:45,651 [location_manager] INFO: Set waste container: waste_container
+2026-02-19 14:33:45,662 [websocket_client] INFO: Starting WebSocket client for ws://tap-tyson.local/websocket
+2026-02-19 14:33:45,721 [websocket_client] INFO: WebSocket connected successfully
+2026-02-19 14:33:45,721 [tap_shell] INFO: WebSocket connection established
+2026-02-19 14:33:46,542 [websocket_client] INFO: File uploaded successfully to: 2026-02-19-14-33-45-724122.gcode
+2026-02-19 14:33:46,545 [tap_shell] INFO: Started execution of 2026-02-19-14-33-45-724122.gcode
+2026-02-19 14:33:49,854 [websocket_client] INFO: File uploaded successfully to: home_all.gcode
+2026-02-19 14:33:49,857 [tap_shell] INFO: Started execution of home_all.gcode
+2026-02-19 14:34:04,462 [websocket_client] INFO: File uploaded successfully to: 2026-02-19-14-34-03-640039.gcode
+2026-02-19 14:34:04,465 [tap_shell] INFO: Started execution of 2026-02-19-14-34-03-640039.gcode
+2026-02-19 14:34:13,575 [websocket_client] INFO: File uploaded successfully to: tyson-panel-a-manufacturing.gcode
+2026-02-19 14:34:13,576 [tap_shell] INFO: Started execution of tyson-panel-a-manufacturing.gcode
+2026-02-19 14:34:23,643 [websocket_client] INFO: Stopping WebSocket client
+2026-02-19 14:34:23,646 [websocket_client] INFO: WebSocket client stopped
+2026-02-19 14:34:23,647 [tap_shell] INFO: Shell shutdown complete
+2026-02-19 14:34:23,648 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-19 14:35:58,094 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-19 14:35:58,094 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-19 14:35:58,094 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-19 14:35:58,130 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-19 14:35:58,132 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-19 14:35:58,132 [location_manager] INFO: Set waste container: waste_container
+2026-02-19 14:35:58,142 [websocket_client] INFO: Starting WebSocket client for ws://tap-tyson.local/websocket
+2026-02-19 14:35:58,460 [websocket_client] INFO: WebSocket connected successfully
+2026-02-19 14:35:58,461 [tap_shell] INFO: WebSocket connection established
+2026-02-19 14:35:59,255 [websocket_client] INFO: File uploaded successfully to: 2026-02-19-14-35-58-470411.gcode
+2026-02-19 14:35:59,258 [tap_shell] INFO: Started execution of 2026-02-19-14-35-58-470411.gcode
+2026-02-19 14:36:03,866 [websocket_client] INFO: File uploaded successfully to: home_all.gcode
+2026-02-19 14:36:03,870 [tap_shell] INFO: Started execution of home_all.gcode
+2026-02-19 14:36:20,276 [websocket_client] INFO: File uploaded successfully to: tyson-panel-a-manufacturing.gcode
+2026-02-19 14:36:20,279 [tap_shell] INFO: Started execution of tyson-panel-a-manufacturing.gcode
+2026-02-19 14:52:55,671 [websocket_client] INFO: Stopping WebSocket client
+2026-02-19 14:52:55,674 [websocket_client] INFO: WebSocket client stopped
+2026-02-19 14:52:55,675 [tap_shell] INFO: Shell shutdown complete
+2026-02-19 14:52:55,675 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-19 14:52:56,660 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-19 14:52:56,660 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-19 14:52:56,660 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-19 14:52:56,697 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-19 14:52:56,698 [location_manager] INFO: Set waste container: waste_container
+2026-02-19 14:52:56,699 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-19 14:52:56,709 [websocket_client] INFO: Starting WebSocket client for ws://tap-tyson.local/websocket
+2026-02-19 14:52:57,051 [websocket_client] INFO: WebSocket connected successfully
+2026-02-19 14:52:57,051 [tap_shell] INFO: WebSocket connection established
+2026-02-19 14:52:58,052 [websocket_client] INFO: File uploaded successfully to: 2026-02-19-14-52-57-058633.gcode
+2026-02-19 14:52:58,055 [tap_shell] INFO: Started execution of 2026-02-19-14-52-57-058633.gcode
+2026-02-19 14:53:01,636 [websocket_client] INFO: File uploaded successfully to: home_all.gcode
+2026-02-19 14:53:01,640 [tap_shell] INFO: Started execution of home_all.gcode
+2026-02-19 14:53:28,977 [websocket_client] INFO: File uploaded successfully to: tyson-panel-a-manufacturing.gcode
+2026-02-19 14:53:28,980 [tap_shell] INFO: Started execution of tyson-panel-a-manufacturing.gcode
+2026-02-19 14:54:18,743 [websocket_client] INFO: Stopping WebSocket client
+2026-02-19 14:54:18,746 [websocket_client] INFO: WebSocket client stopped
+2026-02-19 14:54:18,746 [tap_shell] INFO: Shell shutdown complete
+2026-02-19 14:54:18,747 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-19 16:03:22,581 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-19 16:03:22,581 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-19 16:03:22,581 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-19 16:03:22,616 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-19 16:03:22,618 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-19 16:03:22,618 [location_manager] INFO: Set waste container: waste_container
+2026-02-19 16:03:22,628 [websocket_client] INFO: Starting WebSocket client for ws://tap-tyson.local/websocket
+2026-02-19 16:03:22,852 [websocket_client] INFO: WebSocket connected successfully
+2026-02-19 16:03:22,853 [tap_shell] INFO: WebSocket connection established
+2026-02-19 16:03:23,872 [websocket_client] INFO: File uploaded successfully to: 2026-02-19-16-03-22-859669.gcode
+2026-02-19 16:03:23,875 [tap_shell] INFO: Started execution of 2026-02-19-16-03-22-859669.gcode
+2026-02-19 16:03:25,716 [websocket_client] INFO: File uploaded successfully to: home_all.gcode
+2026-02-19 16:03:25,719 [tap_shell] INFO: Started execution of home_all.gcode
+2026-02-19 16:03:42,613 [websocket_client] INFO: File uploaded successfully to: tyson-panel-a-manufacturing.gcode
+2026-02-19 16:03:42,615 [tap_shell] INFO: Started execution of tyson-panel-a-manufacturing.gcode
+2026-02-19 16:03:45,070 [websocket_client] WARNING: Server error for request 59f4f66b-324c-4737-9b8a-ba8718e5ef38: {'code': 400, 'message': 'SD busy'}
+2026-02-19 16:03:45,071 [websocket_client] ERROR: Error sending JSON-RPC: Server error: {'code': 400, 'message': 'SD busy'}
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 584, in send_jsonrpc
+    return concurrent_future.result(timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 544, in _send_and_receive
+    result = await asyncio.wait_for(fut, timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/tasks.py", line 520, in wait_for
+    return await fut
+           ^^^^^^^^^
+RuntimeError: Server error: {'code': 400, 'message': 'SD busy'}
+2026-02-19 16:03:45,081 [tap_shell] ERROR: Unexpected error during RPC call
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 584, in send_jsonrpc
+    return concurrent_future.result(timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 544, in _send_and_receive
+    result = await asyncio.wait_for(fut, timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/tasks.py", line 520, in wait_for
+    return await fut
+           ^^^^^^^^^
+RuntimeError: Server error: {'code': 400, 'message': 'SD busy'}
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/tap_shell.py", line 260, in worker
+    response = self.client.send_jsonrpc(payload)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 595, in send_jsonrpc
+    raise RuntimeError(f"Unexpected error sending JSON-RPC: {e}") from e
+RuntimeError: Unexpected error sending JSON-RPC: Server error: {'code': 400, 'message': 'SD busy'}
+2026-02-19 16:03:53,063 [websocket_client] INFO: File uploaded successfully to: tyson-panel-a-manufacturing.gcode
+2026-02-19 16:03:53,066 [tap_shell] INFO: Started execution of tyson-panel-a-manufacturing.gcode
+2026-02-19 16:09:46,643 [websocket_client] INFO: Stopping WebSocket client
+2026-02-19 16:09:46,646 [websocket_client] INFO: WebSocket client stopped
+2026-02-19 16:09:46,646 [tap_shell] INFO: Shell shutdown complete
+2026-02-19 16:09:46,647 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-19 16:10:16,811 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-19 16:10:16,811 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-19 16:10:16,811 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-19 16:10:16,846 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-19 16:10:16,848 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-19 16:10:16,848 [location_manager] INFO: Set waste container: waste_container
+2026-02-19 16:10:16,858 [websocket_client] INFO: Starting WebSocket client for ws://tap-tyson.local/websocket
+2026-02-19 16:10:21,871 [websocket_client] WARNING: Connection error (will retry in 1.0s): Cannot connect to host tap-tyson.local:80 ssl:default [Name or service not known]
+2026-02-19 16:10:26,860 [tap_shell] ERROR: WebSocket connection failed during startup
+2026-02-19 16:10:27,891 [websocket_client] ERROR: Unexpected upload error: Cannot connect to host tap-tyson.local:80 ssl:default [Name or service not known]
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1445, in _create_direct_connection
+    hosts = await self._resolve_host(host, port, traces=traces)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1036, in _resolve_host
+    await future
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1092, in _resolve_host_with_throttle
+    addrs = await self._resolver.resolve(host, port, family=self._family)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/resolver.py", line 40, in resolve
+    infos = await self._loop.getaddrinfo(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/base_events.py", line 901, in getaddrinfo
+    return await self.run_in_executor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/socket.py", line 963, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+socket.gaierror: [Errno -2] Name or service not known
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 716, in _upload_gcode_file_async
+    async with self.session.post(upload_url, data=data) as response:
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 1473, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 761, in _request
+    resp = await handler(req)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 716, in _connect_and_send_request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 598, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1122, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1451, in _create_direct_connection
+    raise ClientConnectorDNSError(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorDNSError: Cannot connect to host tap-tyson.local:80 ssl:default [Name or service not known]
+2026-02-19 16:10:27,911 [websocket_client] ERROR: Unexpected upload error: Cannot connect to host tap-tyson.local:80 ssl:default [Name or service not known]
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1445, in _create_direct_connection
+    hosts = await self._resolve_host(host, port, traces=traces)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1036, in _resolve_host
+    await future
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1092, in _resolve_host_with_throttle
+    addrs = await self._resolver.resolve(host, port, family=self._family)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/resolver.py", line 40, in resolve
+    infos = await self._loop.getaddrinfo(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/base_events.py", line 901, in getaddrinfo
+    return await self.run_in_executor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/socket.py", line 963, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+socket.gaierror: [Errno -2] Name or service not known
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 716, in _upload_gcode_file_async
+    async with self.session.post(upload_url, data=data) as response:
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 1473, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 761, in _request
+    resp = await handler(req)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 716, in _connect_and_send_request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 598, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1122, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1451, in _create_direct_connection
+    raise ClientConnectorDNSError(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorDNSError: Cannot connect to host tap-tyson.local:80 ssl:default [Name or service not known]
+2026-02-19 16:10:27,918 [websocket_client] WARNING: Connection error (will retry in 2.0s): Cannot connect to host tap-tyson.local:80 ssl:default [Name or service not known]
+2026-02-19 16:10:27,919 [tap_shell] ERROR: Failed to upload and execute 2026-02-19-16-10-26-867145.gcode
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1445, in _create_direct_connection
+    hosts = await self._resolve_host(host, port, traces=traces)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1061, in _resolve_host
+    return await asyncio.shield(resolved_host_task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1445, in _create_direct_connection
+    hosts = await self._resolve_host(host, port, traces=traces)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1036, in _resolve_host
+    await future
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1092, in _resolve_host_with_throttle
+    addrs = await self._resolver.resolve(host, port, family=self._family)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/resolver.py", line 40, in resolve
+    infos = await self._loop.getaddrinfo(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/base_events.py", line 901, in getaddrinfo
+    return await self.run_in_executor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/socket.py", line 963, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+socket.gaierror: [Errno -2] Name or service not known
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 716, in _upload_gcode_file_async
+    async with self.session.post(upload_url, data=data) as response:
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 1473, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 761, in _request
+    resp = await handler(req)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 716, in _connect_and_send_request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 598, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1122, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1451, in _create_direct_connection
+    raise ClientConnectorDNSError(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorDNSError: Cannot connect to host tap-tyson.local:80 ssl:default [Name or service not known]
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/tap_shell.py", line 327, in worker
+    server_path = future.result()
+                  ^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 754, in _upload_gcode_file_async
+    raise WebSocketClient.UploadError(
+websocket_client.WebSocketClient.UploadError: Unexpected error during upload: Cannot connect to host tap-tyson.local:80 ssl:default [Name or service not known]
+2026-02-19 16:10:27,920 [tap_shell] ERROR: Failed to upload and execute home_all.gcode
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1445, in _create_direct_connection
+    hosts = await self._resolve_host(host, port, traces=traces)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1061, in _resolve_host
+    return await asyncio.shield(resolved_host_task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1445, in _create_direct_connection
+    hosts = await self._resolve_host(host, port, traces=traces)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1036, in _resolve_host
+    await future
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1092, in _resolve_host_with_throttle
+    addrs = await self._resolver.resolve(host, port, family=self._family)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/resolver.py", line 40, in resolve
+    infos = await self._loop.getaddrinfo(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/base_events.py", line 901, in getaddrinfo
+    return await self.run_in_executor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/socket.py", line 963, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+socket.gaierror: [Errno -2] Name or service not known
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 716, in _upload_gcode_file_async
+    async with self.session.post(upload_url, data=data) as response:
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 1473, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 761, in _request
+    resp = await handler(req)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 716, in _connect_and_send_request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 598, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1122, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1451, in _create_direct_connection
+    raise ClientConnectorDNSError(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorDNSError: Cannot connect to host tap-tyson.local:80 ssl:default [Name or service not known]
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/tap_shell.py", line 327, in worker
+    server_path = future.result()
+                  ^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 754, in _upload_gcode_file_async
+    raise WebSocketClient.UploadError(
+websocket_client.WebSocketClient.UploadError: Unexpected error during upload: Cannot connect to host tap-tyson.local:80 ssl:default [Name or service not known]
+2026-02-19 16:10:30,437 [websocket_client] INFO: Stopping WebSocket client
+2026-02-19 16:10:30,439 [websocket_client] INFO: WebSocket client stopped
+2026-02-19 16:10:30,440 [tap_shell] INFO: Shell shutdown complete
+2026-02-19 16:10:30,440 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-19 16:10:38,228 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-19 16:10:38,229 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-19 16:10:38,229 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-19 16:10:38,264 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-19 16:10:38,266 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-19 16:10:38,266 [location_manager] INFO: Set waste container: waste_container
+2026-02-19 16:10:38,276 [websocket_client] INFO: Starting WebSocket client for ws://tap-tyson.local/websocket
+2026-02-19 16:10:43,294 [websocket_client] WARNING: Connection error (will retry in 1.0s): Cannot connect to host tap-tyson.local:80 ssl:default [Name or service not known]
+2026-02-19 16:10:48,278 [tap_shell] ERROR: WebSocket connection failed during startup
+2026-02-19 16:10:49,310 [websocket_client] ERROR: Unexpected upload error: Cannot connect to host tap-tyson.local:80 ssl:default [Name or service not known]
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1445, in _create_direct_connection
+    hosts = await self._resolve_host(host, port, traces=traces)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1036, in _resolve_host
+    await future
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1092, in _resolve_host_with_throttle
+    addrs = await self._resolver.resolve(host, port, family=self._family)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/resolver.py", line 40, in resolve
+    infos = await self._loop.getaddrinfo(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/base_events.py", line 901, in getaddrinfo
+    return await self.run_in_executor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/socket.py", line 963, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+socket.gaierror: [Errno -2] Name or service not known
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 716, in _upload_gcode_file_async
+    async with self.session.post(upload_url, data=data) as response:
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 1473, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 761, in _request
+    resp = await handler(req)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 716, in _connect_and_send_request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 598, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1122, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1451, in _create_direct_connection
+    raise ClientConnectorDNSError(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorDNSError: Cannot connect to host tap-tyson.local:80 ssl:default [Name or service not known]
+2026-02-19 16:10:49,322 [websocket_client] WARNING: Connection error (will retry in 2.0s): Cannot connect to host tap-tyson.local:80 ssl:default [Name or service not known]
+2026-02-19 16:10:49,323 [tap_shell] ERROR: Failed to upload and execute 2026-02-19-16-10-48-285510.gcode
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1445, in _create_direct_connection
+    hosts = await self._resolve_host(host, port, traces=traces)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1061, in _resolve_host
+    return await asyncio.shield(resolved_host_task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1445, in _create_direct_connection
+    hosts = await self._resolve_host(host, port, traces=traces)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1036, in _resolve_host
+    await future
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1092, in _resolve_host_with_throttle
+    addrs = await self._resolver.resolve(host, port, family=self._family)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/resolver.py", line 40, in resolve
+    infos = await self._loop.getaddrinfo(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/base_events.py", line 901, in getaddrinfo
+    return await self.run_in_executor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/socket.py", line 963, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+socket.gaierror: [Errno -2] Name or service not known
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 716, in _upload_gcode_file_async
+    async with self.session.post(upload_url, data=data) as response:
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 1473, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 761, in _request
+    resp = await handler(req)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/client.py", line 716, in _connect_and_send_request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 598, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1122, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/james/Documents/Tricca_AutoPipette/.venv/lib/python3.12/site-packages/aiohttp/connector.py", line 1451, in _create_direct_connection
+    raise ClientConnectorDNSError(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorDNSError: Cannot connect to host tap-tyson.local:80 ssl:default [Name or service not known]
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/tap_shell.py", line 327, in worker
+    server_path = future.result()
+                  ^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/home/james/Documents/Tricca_AutoPipette/Tricca_AutoPipette/websocket_client.py", line 754, in _upload_gcode_file_async
+    raise WebSocketClient.UploadError(
+websocket_client.WebSocketClient.UploadError: Unexpected error during upload: Cannot connect to host tap-tyson.local:80 ssl:default [Name or service not known]
+2026-02-19 16:10:50,663 [websocket_client] INFO: Stopping WebSocket client
+2026-02-19 16:10:50,666 [websocket_client] INFO: WebSocket client stopped
+2026-02-19 16:10:50,667 [tap_shell] INFO: Shell shutdown complete
+2026-02-19 16:10:50,668 [tricca_autopipette] INFO: Tricca AutoPipette Shell terminated successfully
+2026-02-19 16:11:02,246 [tricca_autopipette] INFO: Logging initialized: app.log
+2026-02-19 16:11:02,246 [tricca_autopipette] INFO: Using configuration file: tyson-panel-a-manufacturing.conf
+2026-02-19 16:11:02,246 [tricca_autopipette] INFO: Starting Tricca AutoPipette Shell
+2026-02-19 16:11:02,280 [config_manager] INFO: Loaded configuration from tyson-panel-a-manufacturing.conf
+2026-02-19 16:11:02,282 [location_manager] INFO: Set primary tipbox: tipbox
+2026-02-19 16:11:02,282 [location_manager] INFO: Set waste container: waste_container
+2026-02-19 16:11:02,292 [websocket_client] INFO: Starting WebSocket client for ws://tap-tyson.local/websocket
+2026-02-19 16:11:02,430 [websocket_client] INFO: WebSocket connected successfully
+2026-02-19 16:11:02,431 [tap_shell] INFO: WebSocket connection established
+2026-02-19 16:11:03,395 [websocket_client] INFO: File uploaded successfully to: 2026-02-19-16-11-02-437350.gcode
+2026-02-19 16:11:03,398 [tap_shell] INFO: Started execution of 2026-02-19-16-11-02-437350.gcode
+2026-02-19 16:11:05,748 [websocket_client] INFO: File uploaded successfully to: home_all.gcode
+2026-02-19 16:11:05,751 [tap_shell] INFO: Started execution of home_all.gcode
+2026-02-19 16:11:53,118 [websocket_client] INFO: File uploaded successfully to: tyson-panel-a-manufacturing.gcode
+2026-02-19 16:11:53,120 [tap_shell] INFO: Started execution of tyson-panel-a-manufacturing.gcode

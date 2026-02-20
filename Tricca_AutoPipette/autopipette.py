@@ -35,8 +35,8 @@ from pipette_exceptions import (
     NoTipboxError,
     TipAlreadyOnError,
 )
-from pipette_models import PipetteParams, PipetteState
-from plates import Plate, PlateParams
+from pipette_models import FluidDisplacement, PipetteModel, PipetteParams, PipetteState
+from plates import Plate
 from volume_converter import VolumeConverter
 
 
@@ -112,8 +112,11 @@ class AutoPipette:
         # State tracking
         self.state = PipetteState()
 
+        # Physical design parameters
+        self.model = PipetteModel()
+
         # G-code management
-        self._gcode = GCodeBuffer()
+        self.gcode_buffers = GCodeBuffer()
 
         # Initialize from loaded config
         self._initialize_from_config()
@@ -133,6 +136,9 @@ class AutoPipette:
         # Initialize volume converter
         self._init_volume_converter()
 
+        # Initialize model dependent variables
+        self._init_model_params()
+
         # Build G-code header
         self._build_header()
 
@@ -146,7 +152,7 @@ class AutoPipette:
             Clears any existing header before rebuilding.
         """
         sections = self.config_manager.get_all_sections_as_dict()
-        self._gcode.build_header_from_config(
+        self.gcode_buffers.build_header_from_config(
             self.config_manager.config_file or "unknown", sections
         )
 
@@ -212,6 +218,21 @@ class AutoPipette:
         self.logger.debug(
             f"Initialized volume converter: {len(volumes)} calibration points"
         )
+
+    def _init_model_params(self) -> None:
+        """Initialize autopipette model dependent variables.
+
+        TODO Load a JSON file that contains the relevant variables for every physical
+        parameter that affects the functioning of the pipette.
+        """
+        if self.pipette_params.model == "verticle":
+            self.model.pipette_motor_orientation = -1
+            if self.location_manager.tipboxes is not None:
+                self.location_manager.tipboxes.wells.reverse()
+        elif self.pipette_params.model == "horizontal":
+            self.model.pipette_motor_orientation = 1
+        else:
+            self.model.pipette_motor_orientation = 1
 
     def init_pipette(self) -> None:
         """Initialize all pipette systems and perform homing sequence.
@@ -286,12 +307,12 @@ class AutoPipette:
             mode_str = mode.lower()
 
         if mode_str == CoordinateSystem.ABSOLUTE.value:
-            self._gcode.add(f"{GCodeCommand.ABSOLUTE_MODE}\n")
+            self.gcode_buffers.add(f"{GCodeCommand.ABSOLUTE_MODE}\n")
         elif mode_str in (
             CoordinateSystem.RELATIVE.value,
             CoordinateSystem.INCREMENTAL.value,
         ):
-            self._gcode.add(f"{GCodeCommand.RELATIVE_MODE}\n")
+            self.gcode_buffers.add(f"{GCodeCommand.RELATIVE_MODE}\n")
         else:
             raise ValueError(
                 f"Invalid coordinate system mode: '{mode}'. "
@@ -313,7 +334,7 @@ class AutoPipette:
         """
         self.config_manager.update_value("SPEED", "SPEED_FACTOR", str(factor))
         self.pipette_params.speed_factor = int(factor)
-        self._gcode.add(f"{GCodeCommand.SPEED_FACTOR} S{factor}\n")
+        self.gcode_buffers.add(f"{GCodeCommand.SPEED_FACTOR} S{factor}\n")
 
     def set_max_velocity(self, velocity: float) -> None:
         """Set the maximum velocity limit.
@@ -329,7 +350,7 @@ class AutoPipette:
         """
         self.config_manager.update_value("SPEED", "VELOCITY_MAX", str(velocity))
         self.pipette_params.velocity_max = int(velocity)
-        self._gcode.add(f"SET_VELOCITY_LIMIT VELOCITY={velocity}\n")
+        self.gcode_buffers.add(f"SET_VELOCITY_LIMIT VELOCITY={velocity}\n")
 
     def set_max_accel(self, accel: float) -> None:
         """Set the maximum acceleration limit.
@@ -343,9 +364,9 @@ class AutoPipette:
         Example:
             >>> pipette.set_max_accel(3000)  # 3000 mm/s² max
         """
-        self.config_manager.update_value("SPEED", "ACCEL_MAX", str(accel))
+        self.config_manager.update_value("SPEED", "ACCEL_GANTRY_MAX", str(accel))
         self.pipette_params.accel_gantry_max = int(accel)
-        self._gcode.add(f"SET_VELOCITY_LIMIT ACCEL={accel}\n")
+        self.gcode_buffers.add(f"SET_VELOCITY_LIMIT ACCEL={accel}\n")
 
     def home_axis(self) -> None:
         """Home all axes (X, Y, and Z).
@@ -361,7 +382,7 @@ class AutoPipette:
             >>> pipette.home_axis()
             >>> # All axes are now at home position
         """
-        self._gcode.add(f"{GCodeCommand.HOME_ALL}\n")
+        self.gcode_buffers.add(f"{GCodeCommand.HOME_ALL}\n")
 
     def home_x(self) -> None:
         """Home X axis only.
@@ -369,7 +390,7 @@ class AutoPipette:
         Example:
             >>> pipette.home_x()
         """
-        self._gcode.add(f"{GCodeCommand.HOME_X}\n")
+        self.gcode_buffers.add(f"{GCodeCommand.HOME_X}\n")
 
     def home_y(self) -> None:
         """Home Y axis only.
@@ -377,7 +398,7 @@ class AutoPipette:
         Example:
             >>> pipette.home_y()
         """
-        self._gcode.add(f"{GCodeCommand.HOME_Y}\n")
+        self.gcode_buffers.add(f"{GCodeCommand.HOME_Y}\n")
 
     def home_z(self) -> None:
         """Home Z axis only.
@@ -389,7 +410,7 @@ class AutoPipette:
         Example:
             >>> pipette.home_z()
         """
-        self._gcode.add(f"{GCodeCommand.HOME_Z}\n")
+        self.gcode_buffers.add(f"{GCodeCommand.HOME_Z}\n")
 
     def home_pipette_motors(self) -> None:
         """Home all pipette-specific motors.
@@ -420,31 +441,56 @@ class AutoPipette:
         self.set_servo_angle(self.pipette_params.servo_angle_retract)
         self.gcode_wait(self.pipette_params.wait_movement)
 
-    def home_pipette_stepper(self, speed: float | None = None) -> None:
+    def home_pipette_stepper(
+        self,
+        stepper: str | None = None,
+        speed: float | None = None,
+        accel: float | None = None,
+    ) -> None:
         """Home the pipette plunger stepper motor.
 
         Moves the stepper until it hits the endstop, then sets that position
         as zero. This establishes the reference point for volume measurements.
 
         Args:
+            stepper: Name of the stepper motor to home, or None to use configured
+                     stepper.
             speed: Homing speed in steps/s, or None to use configured slow speed.
+            accel: Homing acceleration in mm/min, or None to use configured homing
+                   acceleration.
 
         Note:
-            Uses slow speed by default to prevent damage when hitting endstop.
+            Uses slow speed and homing acceleration by default to prevent damage when
+            hitting endstop.
+            Function also used to clear pipette of fluid.
 
         Example:
             >>> pipette.home_pipette_stepper()
             >>> # Or with custom speed:
             >>> pipette.home_pipette_stepper(speed=100)
         """
+        if stepper is None:
+            stepper = self.pipette_params.name_pipette_stepper
         if speed is None:
             speed = self.pipette_params.speed_pipette_up_slow
+        if accel is None:
+            accel = self.pipette_params.accel_pipette_home
+        # Twice the max distance means the pipette is guaranteed to home
+        distance = self.volume_converter.vol_to_steps(2 * self.pipette_params.max_vol)
+        # Assume stepper moves in the dispensing direction
+        distance *= FluidDisplacement.dispense
+        # Ensure motor move in the correct direction despite its orientation
+        distance *= self.model.pipette_motor_orientation
+        # Create a distance with flipped direction to move motor beyond triggering home
+        opposite_distance = distance * -1
 
-        stepper = self.pipette_params.name_pipette_stepper
-        accel = self.pipette_params.accel_pipette_home
-        self._gcode.add(
-            f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} "
-            f"MOVE=50 STOP_ON_ENDSTOP=1 SET_POSITION=0 ACCEL={accel}\n"
+        self.gcode_buffers.add(
+            f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0 "
+            f"MOVE={distance} SPEED={speed} ACCEL={accel} "
+            f"STOP_ON_ENDSTOP=1\n"
+            f"MANUAL_STEPPER STEPPER={stepper} "
+            f"MOVE={opposite_distance} SPEED={speed} ACCEL={accel} "
+            f"STOP_ON_ENDSTOP=-1\n"
             f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0\n"
         )
 
@@ -466,10 +512,12 @@ class AutoPipette:
         """
         speed_xy = self.pipette_params.speed_xy
         speed_z = self.pipette_params.speed_z
-        self._gcode.add(
+        self.gcode_buffers.add(
             f"{GCodeCommand.LINEAR_MOVE} X{coordinate.x} Y{coordinate.y} F{speed_xy}\n"
         )
-        self._gcode.add(f"{GCodeCommand.LINEAR_MOVE} Z{coordinate.z} F{speed_z}\n")
+        self.gcode_buffers.add(
+            f"{GCodeCommand.LINEAR_MOVE} Z{coordinate.z} F{speed_z}\n"
+        )
 
     def move_to_x(self, coordinate: Coordinate) -> None:
         """Move only in the X direction to coordinate's X position.
@@ -485,7 +533,7 @@ class AutoPipette:
             >>> # Only X moves to 100, Y and Z stay at current position
         """
         speed = self.pipette_params.speed_xy
-        self._gcode.add(f"{GCodeCommand.LINEAR_MOVE} X{coordinate.x} F{speed}\n")
+        self.gcode_buffers.add(f"{GCodeCommand.LINEAR_MOVE} X{coordinate.x} F{speed}\n")
 
     def move_to_y(self, coordinate: Coordinate) -> None:
         """Move only in the Y direction to coordinate's Y position.
@@ -501,7 +549,7 @@ class AutoPipette:
             >>> # Only Y moves to 50, X and Z stay at current position
         """
         speed = self.pipette_params.speed_xy
-        self._gcode.add(f"{GCodeCommand.LINEAR_MOVE} Y{coordinate.y} F{speed}\n")
+        self.gcode_buffers.add(f"{GCodeCommand.LINEAR_MOVE} Y{coordinate.y} F{speed}\n")
 
     def move_to_z(self, coordinate: Coordinate) -> None:
         """Move only in the Z direction to coordinate's Z position.
@@ -517,7 +565,7 @@ class AutoPipette:
             >>> # Only Z moves to 10, X and Y stay at current position
         """
         speed = self.pipette_params.speed_z
-        self._gcode.add(f"{GCodeCommand.LINEAR_MOVE} Z{coordinate.z} F{speed}\n")
+        self.gcode_buffers.add(f"{GCodeCommand.LINEAR_MOVE} Z{coordinate.z} F{speed}\n")
 
     def set_servo_angle(self, angle: float) -> None:
         """Set the tip ejection servo to a specific angle.
@@ -535,14 +583,22 @@ class AutoPipette:
             >>> pipette.set_servo_angle(160)  # Retracted position
         """
         servo = self.pipette_params.name_pipette_servo
-        self._gcode.add(f"SET_SERVO SERVO={servo} ANGLE={angle}\n")
+        self.gcode_buffers.add(f"SET_SERVO SERVO={servo} ANGLE={angle}\n")
 
-    def move_pipette_stepper(self, distance: float, speed: float | None = None) -> None:
+    def move_pipette_stepper(
+        self,
+        distance: float,
+        stepper: str | None = None,
+        speed: float | None = None,
+        accel: float | None = None,
+    ) -> None:
         """Move the plunger stepper motor a specific distance.
 
         Args:
             distance: Distance to move in motor steps (positive values).
+            stepper: Name of the stepper to move, or None for configured stepper.
             speed: Movement speed in steps/s, or None for configured slow speed.
+            accel: Movement acceleration in mm/min, or None for configured acceleration.
 
         Note:
             Distance is converted to negative in G-code (plunger convention).
@@ -555,14 +611,17 @@ class AutoPipette:
             >>> # With custom speed
             >>> pipette.move_pipette_stepper(100, speed=500)
         """
+        if stepper is None:
+            stepper = self.pipette_params.name_pipette_stepper
         if speed is None:
             speed = self.pipette_params.speed_pipette_up_slow
-
-        stepper = self.pipette_params.name_pipette_stepper
-        accel = self.pipette_params.accel_pipette_move
-        self._gcode.add(
-            f"MANUAL_STEPPER STEPPER={stepper} "
-            f"SPEED={speed} MOVE=-{distance} ACCEL={accel}\n"
+        if accel is None:
+            accel = self.pipette_params.accel_pipette_move
+        self.gcode_buffers.add(
+            f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0 "
+            f"SPEED={speed} MOVE={distance} ACCEL={accel} "
+            f"STOP_ON_ENDSTOP=2 \n"
+            f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0\n"
         )
 
     def gcode_wait(self, milliseconds: float) -> None:
@@ -580,7 +639,7 @@ class AutoPipette:
         Example:
             >>> pipette.gcode_wait(500)  # Wait 0.5 seconds
         """
-        self._gcode.add(f"{GCodeCommand.DWELL} P{milliseconds}\n")
+        self.gcode_buffers.add(f"{GCodeCommand.DWELL} P{milliseconds}\n")
 
     def gcode_print(self, msg: str) -> None:
         """Send a message to be displayed on the printer/controller screen.
@@ -596,7 +655,7 @@ class AutoPipette:
             >>> pipette.gcode_print("Starting protocol...")
             >>> pipette.gcode_print("Aspirating from plate A")
         """
-        self._gcode.add(f"{GCodeCommand.DISPLAY_MESSAGE} {msg}\n")
+        self.gcode_buffers.add(f"{GCodeCommand.DISPLAY_MESSAGE} {msg}\n")
 
     def get_gcode(self) -> list[str]:
         r"""Retrieve buffered G-code commands and clear the buffer.
@@ -615,7 +674,7 @@ class AutoPipette:
             >>> commands = pipette.get_gcode()
             >>> # commands = ['G28\\n', 'G1 X10 Y10 F5000\\n', ...]
         """
-        return self._gcode.get_commands()
+        return self.gcode_buffers.get_commands()
 
     def get_header(self) -> list[str]:
         r"""Retrieve the configuration header.
@@ -631,38 +690,7 @@ class AutoPipette:
             >>> header = pipette.get_header()
             >>> # header = ['; Configuration: autopipette.conf\\n', ...]
         """
-        return self._gcode.get_header()
-
-    def eject_tip(self) -> None:
-        """Eject the current pipette tip.
-
-        Performs a servo sequence to mechanically eject the tip:
-        1. Retract servo (pushes ejector sleeve down)
-        2. Return to ready position
-        3. Wait for ejection to complete
-        4. Return to retracted position
-
-        Note:
-            Updates has_tip state to False.
-            Tip should be positioned over waste or tip disposal location.
-
-        Example:
-            >>> pipette.next_tip()  # Pick up tip
-            >>> # ... perform operations ...
-            >>> pipette.eject_tip()  # Drop tip in place
-        """
-        angle_retract = self.pipette_params.servo_angle_retract
-        angle_ready = self.pipette_params.servo_angle_eject
-        wait_eject = self.pipette_params.wait_eject
-        wait_movement = self.pipette_params.wait_movement
-
-        self.set_servo_angle(angle_retract)
-        self.set_servo_angle(angle_ready)
-        self.gcode_wait(wait_eject)
-        self.set_servo_angle(angle_retract)
-        self.gcode_wait(wait_movement)
-
-        self.state.has_tip = False
+        return self.gcode_buffers.get_header()
 
     def next_tip(self) -> None:
         """Pick up the next available tip from the configured tipbox.
@@ -698,6 +726,37 @@ class AutoPipette:
         self.dip_z_return(loc_tip)
 
         self.state.has_tip = True
+
+    def eject_tip(self) -> None:
+        """Eject the current pipette tip.
+
+        Performs a servo sequence to mechanically eject the tip:
+        1. Retract servo (pushes ejector sleeve down)
+        2. Return to ready position
+        3. Wait for ejection to complete
+        4. Return to retracted position
+
+        Note:
+            Updates has_tip state to False.
+            Tip should be positioned over waste or tip disposal location.
+
+        Example:
+            >>> pipette.next_tip()  # Pick up tip
+            >>> # ... perform operations ...
+            >>> pipette.eject_tip()  # Drop tip in place
+        """
+        angle_retract = self.pipette_params.servo_angle_retract
+        angle_ready = self.pipette_params.servo_angle_eject
+        wait_eject = self.pipette_params.wait_eject
+        wait_movement = self.pipette_params.wait_movement
+
+        self.set_servo_angle(angle_retract)
+        self.set_servo_angle(angle_ready)
+        self.gcode_wait(wait_eject)
+        self.set_servo_angle(angle_retract)
+        self.gcode_wait(wait_movement)
+
+        self.state.has_tip = False
 
     def dispose_tip(self) -> None:
         """Eject the current tip into the waste container.
@@ -767,51 +826,90 @@ class AutoPipette:
         self.move_to_z(curr_coor)
         self.gcode_wait(self.pipette_params.wait_movement)
 
-    def plunge_down(self, vol_ul: float, speed: float | None = None) -> None:
-        """Move plunger down to create space for liquid aspiration.
+    def operate_syringe(
+        self,
+        direction: FluidDisplacement,
+        vol_ul: float,
+        stepper: str | None = None,
+        speed: float | None = None,
+        accel: float | None = None,
+    ) -> None:
+        """Move syringe to aspirate or dispense a volume.
 
         Args:
-            vol_ul: Volume to aspirate in microliters.
+            direction: Direction to move the syringe plunger.
+            vol_ul: Volume to aspirate or dispense in microliters.
+            stepper: Name of the stepper to move, or None for configured stepper.
             speed: Plunger movement speed in steps/s, or None for configured speed.
+            accel: Plunger movement acceleration in mm/min, or None for configured
+                   acceleration.
 
         Note:
             Converts volume to motor steps using the volume converter.
-            Plunger is moved down (creating vacuum) before aspirating.
 
         Example:
-            >>> pipette.plunge_down(100)  # Prepare for 100µL aspiration
+            >>> # Pull syringe for 100µL aspiration
+            >>> pipette.operate_syringe(FluidDisplacement.aspirate, 100)
         """
+        if stepper is None:
+            stepper = self.pipette_params.name_pipette_stepper
         if speed is None:
             speed = self.pipette_params.speed_pipette_up_slow
-
+        if accel is None:
+            accel = self.pipette_params.accel_pipette_move
         steps = self.volume_converter.vol_to_steps(vol_ul)
-        self.move_pipette_stepper(steps, speed)
+        # Make sure the syringe moves in either the aspirate or dispense direction
+        steps *= direction
+        # Make sure the syringe moves in the assumed orientation of the motor
+        steps *= self.model.pipette_motor_orientation
+        self.move_pipette_stepper(steps, stepper, speed, accel)
 
-    def clear_pipette(self, volume: float | None, speed: float | None = None) -> None:
-        """Expel any liquid remaining in the tip.
+    def clear_syringe(
+        self,
+        stepper: str | None = None,
+        speed: float | None = None,
+        accel: float | None = None,
+    ) -> None:
+        """Move the pipette syringe to the endstop.
+
+        Moves the stepper until it hits the endstop, then sets that position
+        as zero. This clears the pipette of any fluid.
 
         Args:
-            volume: Volume to displace in uL.
-            speed: Plunger movement speed in steps/s, or None for configured speed.
+            stepper: Name of the stepper motor to home, or None to use configured
+                     stepper.
+            speed: Homing speed in steps/s, or None to use configured slow speed.
+            accel: Homing acceleration in mm/min, or None to use configured homing
+                   acceleration.
 
         Note:
-            Moves plunger to fully dispense position.
-            Used after dispensing to ensure complete liquid transfer.
+            Uses slow speed and homing acceleration by default to prevent damage when
+            hitting endstop.
+            Function also used to clear pipette of fluid.
 
         Example:
-            >>> pipette.clear_pipette()
-            >>> # All liquid expelled from tip
+            >>> pipette.clear_syringe()
+            >>> # Or with custom speed:
+            >>> pipette.clear_syringe(speed=100)
         """
+        if stepper is None:
+            stepper = self.pipette_params.name_pipette_stepper
         if speed is None:
             speed = self.pipette_params.speed_pipette_up_slow
-        if volume is None:
-            # original “dump all” distance
-            steps = self.volume_converter.vol_to_steps(self.pipette_params.max_vol)
-        else:
-            # exact-volume behavior
-            steps = self.volume_converter.vol_to_steps(volume)
-
-        self.move_pipette_stepper(steps, speed)
+        if accel is None:
+            accel = self.pipette_params.accel_pipette_home
+        # Twice the max distance means the pipette is guaranteed to hit the endstop
+        distance = self.volume_converter.vol_to_steps(2 * self.pipette_params.max_vol)
+        # Assume stepper moves in the dispensing direction
+        distance *= FluidDisplacement.dispense
+        # Ensure motor move in the correct direction despite its orientation
+        distance *= self.model.pipette_motor_orientation
+        self.gcode_buffers.add(
+            f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0 "
+            f"MOVE={distance} SPEED={speed} ACCEL={accel} "
+            f"STOP_ON_ENDSTOP=1\n"
+            f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0\n"
+        )
 
     def wiggle(self, curr_coor: Coordinate, dip_distance: float) -> None:
         """Shake the pipette tip to dislodge residual liquid droplets.
@@ -853,88 +951,15 @@ class AutoPipette:
             target = base_coor.generate_offset(dx, dy, 0)
             self.move_to(target)
 
-    def set_location_coordinate(self, name_loc: str, coor: Coordinate) -> None:
-        """Create or update a named coordinate location.
-
-        Args:
-            name_loc: Name to assign to this coordinate.
-            coor: Coordinate object representing the position.
-
-        Example:
-            >>> coord = Coordinate(x=100, y=50, z=10)
-            >>> pipette.set_location_coordinate("home_position", coord)
-        """
-        self.location_manager.set_coordinate(name_loc, coor)
-
-    def is_location(self, name_loc: str) -> bool:
-        """Check if a named location exists.
-
-        Args:
-            name_loc: Name of the location to check.
-
-        Returns:
-            True if the location exists, False otherwise.
-
-        Example:
-            >>> pipette.is_location("plate_a")
-            True
-        """
-        return self.location_manager.has_location(name_loc)
-
-    def set_location_plate(self, name_loc: str, plate_params: PlateParams) -> None:
-        """Create or update a plate at a named location.
-
-        Args:
-            name_loc: Name to assign to this plate.
-            plate_params: Validated plate parameters.
-
-        Example:
-            >>> # See LocationManager.set_plate() for full example
-            >>> pipette.set_location_plate("96_well_plate", params)
-        """
-        self.location_manager.set_plate(name_loc, plate_params)
-
-    def get_plate_locations(self) -> list[str]:
-        """Get names of all locations that are plates.
-
-        Returns:
-            List of location names that contain Plate objects.
-
-        Example:
-            >>> plates = pipette.get_plate_locations()
-            >>> # plates = ['96_well_plate', 'tipbox', 'waste']
-        """
-        return self.location_manager.get_plate_names()
-
-    def get_location_coor(
-        self,
-        name_loc: str,
-        row: int | None = None,
-        col: int | None = None,
-    ) -> Coordinate:
-        """Retrieve a coordinate from a named location.
-
-        Args:
-            name_loc: Name of the location.
-            row: Row index for plate wells, or None for next well.
-            col: Column index for plate wells, or None for next well.
-
-        Returns:
-            Coordinate object representing the position.
-
-        Example:
-            >>> coord = pipette.get_location_coor("home")
-            >>> well = pipette.get_location_coor("plate_a", row=1, col=1)
-        """
-        return self.location_manager.get_coordinate(name_loc, row, col)
-
     def aspirate_volume(
         self,
         volume: float,
         source: str,
         src_row: int | None = None,
         src_col: int | None = None,
-        prewet: bool = False,
+        aspirate_air: float = 0.0,
+        prewet: int = 0,
+        prewet_vol: float = 10.0,
     ) -> None:
         """Aspirate liquid from a source location into the pipette tip.
 
@@ -953,7 +978,11 @@ class AutoPipette:
             source: Name of source location or plate.
             src_row: Row index for plate wells, or None for next well.
             src_col: Column index for plate wells, or None for next well.
-            prewet: If True, perform prewetting cycle before aspiration.
+            aspirate_air: If non-zero, aspirate this amount of uL of air before
+                          aspirating from a well.
+            prewet: If non-zero, perform prewetting a prewet number of cycles before
+                    aspiration.
+            prewet_vol: If prewet-ing, prewet with this volume.
 
         Raises:
             ValueError: If source is a simple coordinate (not a plate with
@@ -975,11 +1004,8 @@ class AutoPipette:
             >>> pipette.aspirate_volume(100, "reservoir", prewet=True)
             >>> # Prewets tip then aspirates 100µL
         """
-        from coordinate import Coordinate
-        from plates import Plate
-
         # Get source coordinate and location object
-        coor_source = self.get_location_coor(source, src_row, src_col)
+        coor_source = self.location_manager.get_coordinate(source, src_row, src_col)
         loc_source = self.location_manager.locations[source]
 
         # Validate that source is a plate (not a simple coordinate)
@@ -996,37 +1022,35 @@ class AutoPipette:
                 f"Expected Plate, got {type(loc_source).__name__}."
             )
 
-        # Pick up tip if needed
-        if not self.state.has_tip:
-            self.next_tip()
-
-        # Move to source and prepare plunger
+        # Move to source, clear plunger, and aspirate air if needed
         self.move_to(coor_source)
-        self.plunge_down(volume, self.pipette_params.speed_pipette_down)
+        self.home_pipette_stepper()
+        if aspirate_air:
+            self.operate_syringe(FluidDisplacement.aspiration, aspirate_air)
         self.dip_z_down(coor_source, loc_source.get_dip_distance(volume))
 
         # Prewetting cycle (if requested)
         if prewet:
-            for _ in range(1):
-                self.home_pipette_stepper(self.pipette_params.speed_pipette_up_slow)
+            for _ in range(prewet):
+                self.operate_syringe(FluidDisplacement.aspiration, prewet_vol)
                 self.gcode_wait(self.pipette_params.wait_aspirate)
-                self.plunge_down(volume, self.pipette_params.speed_pipette_down)
+                self.operate_syringe(FluidDisplacement.dispense, prewet_vol)
                 self.gcode_wait(self.pipette_params.wait_aspirate)
 
         # Aspirate liquid
-        self.home_pipette_stepper(self.pipette_params.speed_pipette_up_slow)
+        self.operate_syringe(FluidDisplacement.aspiration, volume)
+        self.state.has_liquid = True
         self.gcode_wait(self.pipette_params.wait_aspirate)
 
         # Return to safe height
         self.dip_z_return(coor_source)
-        self.state.has_liquid = True
 
     def dispense_volume(
         self,
-        volume: float,
         dest: str,
         dest_row: int | None = None,
         dest_col: int | None = None,
+        volume: float | None = None,
         wiggle: bool = False,
         touch: bool = False,
     ) -> None:
@@ -1070,7 +1094,7 @@ class AutoPipette:
             >>> # Dispenses with wiggle and touch for better accuracy
         """
         # Get destination coordinate and location object
-        coor_dest = self.get_location_coor(dest, dest_row, dest_col)
+        coor_dest = self.location_manager.get_coordinate(dest, dest_row, dest_col)
         loc_dest = self.location_manager.locations[dest]
 
         # Validate that destination is a plate (not a simple coordinate)
@@ -1090,7 +1114,11 @@ class AutoPipette:
         # Move to destination and dispense
         self.move_to(coor_dest)
         self.dip_z_down(coor_dest, loc_dest.get_dip_distance(volume))
-        self.clear_pipette(self.pipette_params.speed_pipette_down)
+        if volume:
+            self.operate_syringe(FluidDisplacement.dispense, volume)
+        else:
+            self.clear_syringe()
+        self.gcode_wait(self.pipette_params.wait_aspirate)  # TODO Add wait_dispense
 
         # Optional wiggle to dislodge droplets
         if wiggle:
@@ -1102,31 +1130,32 @@ class AutoPipette:
             # Currently not implemented in the codebase
             pass
 
-        # Wait and return to safe height
-        self.gcode_wait(self.pipette_params.wait_aspirate)
-        self.dip_z_return(coor_dest)
-
-        # Home plunger to ready position
-        self.home_pipette_stepper(self.pipette_params.speed_pipette_up)
         self.state.has_liquid = False
+
+        # Return to safe height, and return syringe to homed position if no volume
+        # Homing done to ensure most accurate pipetting, but can't be done everytime if
+        # we want to do mulitple dispenses
+        self.dip_z_return(coor_dest)
+        if not volume:
+            self.home_pipette_stepper()
 
     def pipette(
         self,
         vol_ul: float,
         source: str,
         dest: str,
-        disp_vol: float | None = None,
+        disp_vol_ul: float | None = None,
         src_row: int | None = None,
         src_col: int | None = None,
         dest_row: int | None = None,
         dest_col: int | None = None,
-        keep_tip: bool = False,
-        prewet: bool = False,
-        wiggle: bool = False,
-        splits: str | None = None,
-        leftover_action: str = "keep",
         tipbox_name: str | None = None,
+        aspirate_air: float = 0.0,
+        prewet: int = 0,
+        prewet_vol: float = 10.0,
+        wiggle: bool = False,
         touch: bool = False,
+        keep_tip: bool = False,
     ) -> None:
         """Transfer liquid between locations.
 
@@ -1141,18 +1170,18 @@ class AutoPipette:
             vol_ul: Volume to transfer in microliters (must be positive).
             source: Name of source location/plate.
             dest: Name of destination location/plate.
-            disp_vol: Volume to dispense (if different from aspirate).
+            disp_vol_ul: Volume to dispense (if different from aspirate).
             src_row: Source plate row index (0-based).
             src_col: Source plate column index (0-based).
             dest_row: Destination plate row index (0-based).
             dest_col: Destination plate column index (0-based).
-            keep_tip: If True, retain tip after operation.
-            prewet: If True, perform pre-wetting cycle.
-            wiggle: If True, shake tip during dispensing.
-            splits: Semicolon-separated split dispense specification.
-            leftover_action: What to do with leftover volume ("keep" or "waste").
             tipbox_name: Name of specific tipbox to use.
+            aspirate_air: How much air to aspirate before aspirating.
+            prewet: If True, perform pre-wetting cycle.
+            prewet_vol: Volume in uL to prewet the tip with.
+            wiggle: If True, shake tip during dispensing.
             touch: If True, touch tip to side after dispensing.
+            keep_tip: If True, retain tip after operation.
 
         Raises:
             ValueError: If requested volume is negative.
@@ -1188,6 +1217,11 @@ class AutoPipette:
         if vol_ul < 0:
             raise ValueError(f"Invalid volume: {vol_ul}µL. Volume must be positive.")
 
+        # Pick up tip if needed
+        if not self.state.has_tip:
+            _ = tipbox_name
+            self.next_tip()  # TODO pass in preffered tipbox
+
         # Calculate transfer chunks based on max pipette capacity
         max_vol = self.pipette_params.max_vol
         chunks = int(vol_ul // max_vol)
@@ -1200,8 +1234,35 @@ class AutoPipette:
 
         # Execute transfer sequence using calculated volumes
         for pip_vol in transfer_volumes:
-            self.aspirate_volume(pip_vol, source, src_row, src_col, prewet)
-            self.dispense_volume(pip_vol, dest, dest_row, dest_col, wiggle, touch)
+            self.aspirate_volume(
+                pip_vol,
+                source,
+                src_row=src_row,
+                src_col=src_col,
+                aspirate_air=aspirate_air,
+                prewet=prewet,
+                prewet_vol=prewet_vol,
+            )
+            # Only dispense the passed in amount if present
+            if disp_vol_ul:
+                self.dispense_volume(
+                    dest,
+                    dest_row=dest_row,
+                    dest_col=dest_col,
+                    volume=disp_vol_ul,
+                    wiggle=wiggle,
+                    touch=touch,
+                )
+                break
+            else:
+                self.dispense_volume(
+                    dest,
+                    dest_row=dest_row,
+                    dest_col=dest_col,
+                    volume=pip_vol,
+                    wiggle=wiggle,
+                    touch=touch,
+                )
 
         # Dispose of tip unless explicitly keeping it
         if not keep_tip:

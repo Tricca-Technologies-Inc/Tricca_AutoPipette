@@ -138,4 +138,4 @@ class NoWasteContainerError(AutoPipetteError):
 
     def __init__(self) -> None:
         """Initialize the error with a descriptive message."""
-        super().__init__("No waste container configured")
+        super().__init__("No waste container configured.")

@@ -5,8 +5,20 @@ This module defines all constant values, magic numbers, and enumerations
 used throughout the pipette control system.
 """
 
+from __future__ import annotations
+
 from enum import Enum
 from pathlib import Path
+
+__all__ = [
+    "CoordinateSystem",
+    "ConfigSection",
+    "PlateType",
+    "GCodeCommand",
+    "PhysicalConstants",
+    "DefaultPaths",
+    "ConfigKey",
+]
 
 
 class CoordinateSystem(str, Enum):
@@ -15,11 +27,14 @@ class CoordinateSystem(str, Enum):
     Attributes:
         ABSOLUTE: Coordinates are absolute positions (G90).
         RELATIVE: Coordinates are offsets from current position (G91).
+
+    Example:
+        >>> mode = CoordinateSystem.ABSOLUTE
+        >>> print(mode.value)  # "absolute"
     """
 
     ABSOLUTE = "absolute"
     RELATIVE = "relative"
-    INCREMENTAL = "incremental"  # Alias for RELATIVE
 
 
 class ConfigSection(str, Enum):
@@ -27,6 +42,15 @@ class ConfigSection(str, Enum):
 
     These sections must be present in the configuration file for
     the pipette to initialize properly.
+
+    Attributes:
+        NETWORK: Network configuration (IP, hostname).
+        NAME: Motor identifiers.
+        BOUNDARY: Movement boundaries.
+        SPEED: Speed and acceleration parameters.
+        SERVO: Servo motor settings.
+        WAIT: Timing parameters.
+        VOLUME_CONV: Volume to steps conversion data.
     """
 
     NETWORK = "NETWORK"
@@ -42,6 +66,11 @@ class PlateType(str, Enum):
     """Special plate type identifiers.
 
     These types receive special handling during configuration.
+
+    Attributes:
+        WASTE_CONTAINER: Waste disposal location for used tips.
+        TIPBOX: Tip storage for automatic tip pickup.
+        ARRAY: Standard well plate or array.
     """
 
     WASTE_CONTAINER = "waste_container"
@@ -49,11 +78,15 @@ class PlateType(str, Enum):
     ARRAY = "array"
 
 
-# G-code Commands
 class GCodeCommand:
     """G-code command constants.
 
     Standard G-code commands used for pipette control.
+
+    Example:
+        >>> from pipette_constants import GCodeCommand
+        >>> home_cmd = GCodeCommand.HOME_ALL
+        >>> print(home_cmd)  # "G28"
     """
 
     # Coordinate systems
@@ -79,18 +112,20 @@ class GCodeCommand:
     SPEED_FACTOR = "M220"
 
 
-# Physical Constants
 class PhysicalConstants:
     """Physical measurement constants.
 
     Default values for movements and tolerances.
+
+    Attributes:
+        WIGGLE_OFFSET_MM: Offset for wiggle motion in millimeters.
+        VOLUME_TOLERANCE_UL: Minimum significant volume in microliters.
     """
 
     WIGGLE_OFFSET_MM = 1.0  # Offset for wiggle motion in millimeters
     VOLUME_TOLERANCE_UL = 1e-6  # Minimum significant volume in microliters
 
 
-# File Paths
 class DefaultPaths:
     """Default file paths for configuration and data.
 
@@ -103,11 +138,16 @@ class DefaultPaths:
     DEFAULT_CONFIG = "autopipette.conf"
 
 
-# Configuration Keys
 class ConfigKey:
     """Configuration file key names.
 
-    Organized by section for easy reference.
+    Organized by section for easy reference. Use these constants
+    instead of hardcoding configuration key strings.
+
+    Example:
+        >>> from pipette_constants import ConfigKey
+        >>> speed_key = ConfigKey.Speed.XY
+        >>> print(speed_key)  # "SPEED_XY"
     """
 
     class Network:
@@ -139,7 +179,7 @@ class ConfigKey:
         """Servo configuration keys."""
 
         ANGLE_RETRACT = "SERVO_ANGLE_RETRACT"
-        ANGLE_READY = "SERVO_ANGLE_READY"
+        ANGLE_EJECT = "SERVO_ANGLE_EJECT"
 
     class Wait:
         """Timing configuration keys."""
