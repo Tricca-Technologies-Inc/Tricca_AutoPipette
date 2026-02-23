@@ -1,13 +1,12 @@
 /Tricca_AutoPipette/__pycache__/
 /Tricca_AutoPipette/res/__pycache__/
+Tricca_AutoPipette/res/__pycache__/
+Tricca_AutoPipette/commands/__pycache__/
 .venv/
 temp/
 gcode/temp
 docs/_build
 Tricca_AutoPipette/.tap_history
 /.dir-locals.el
-Tricca_AutoPipette/res/__pycache__/*
 /Tricca_AutoPipette/flycheck_autopipette.py
-app.log
-app.log
-./commands/__pycache__/*
+/Tricca_AutoPipette/app.log
