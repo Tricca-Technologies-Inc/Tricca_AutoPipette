@@ -562,8 +562,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
 
         self._buffer_command(
             f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} "
-            # accel was 800
-            f"MOVE={stepsq} STOP_ON_ENDSTOP=1 SET_POSITION=0 ACCEL=2500\n"
+            f"MOVE={stepsq} STOP_ON_ENDSTOP=1 SET_POSITION=0 ACCEL=800\n"
             f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0\n")
 
     def get_gcode(self) -> list[str]:
@@ -1334,6 +1333,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
