@@ -1,0 +1,190 @@
+(* A protocol for making prime panel A 10mL *)
+
+(* Acetylornithine *)
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Asymmetric dimethylarginine *)
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Carnosine *)
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Creatinine *)
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Dopa *)
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Dopamine *)
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Histamine *)
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Methioninesulfoxide *)
+pipette 50 --extra_air --after_air manu2 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Hydroxyproline  (t4-OH-Pro) *)
+pipette 50 --extra_air --after_air manu2 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Hydroxyproline  (c4-OH-Pro) *)
+pipette 50 --extra_air --after_air manu2 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Phenylethylamine *)
+pipette 50 --extra_air --after_air manu2 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Putrescine *)
+pipette 50 --extra_air --after_air manu2 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Sarcosine *)
+pipette 50 --extra_air --after_air manu2 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Serotonin *)
+pipette 50 --extra_air --after_air manu2 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Spermidine *)
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Spermine *)
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Diacetylspermine *)
+pipette 25 --extra_air --after_air manu1 PITC1 --dispense_vol 25 --tipbox tipbox 
+
+(* Taurine *)
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Tyramine *)
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Alanine *)
+pipette 50 --extra_air --after_air --keep_tip manu1 PITC1 --dispense_vol 50 --tipbox tipbox 
+pipette 50 --extra_air --after_air --src_row 2 --src_col 6 manu1 PITC1 --dispense_vol 50 --tipbox tipbox
+
+(* Arginine *)
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Asparagine *)
+pipette 50 --extra_air --after_air --keep_tip manu2 PITC1 --dispense_vol 50 --tipbox tipbox 
+pipette 50 --extra_air --after_air --src_row 1 --src_col 0 manu2 PITC1 --dispense_vol 50 --tipbox tipbox
+
+(* Aspartate *)
+pipette 50 --extra_air --after_air --keep_tip manu2 PITC1 --dispense_vol 50 --tipbox tipbox 
+pipette 50 --extra_air --after_air --keep_tip --src_row 1 --src_col 1 manu2 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --keep_tip --src_row 1 --src_col 1 manu2 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --keep_tip --src_row 1 --src_col 1 manu2 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --keep_tip --src_row 1 --src_col 1 manu2 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --keep_tip --src_row 1 --src_col 1 manu2 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --keep_tip --src_row 1 --src_col 1 manu2 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --src_row 1 --src_col 1 manu2 PITC1 --dispense_vol 50 --tipbox tipbox
+
+(* Citrulline *)
+pipette 50 --extra_air --after_air manu2 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Glutamate *)
+pipette 50 --extra_air --after_air --keep_tip manu2 PITC1 --dispense_vol 50 --tipbox tipbox 
+pipette 50 --extra_air --after_air --keep_tip --src_row 1 --src_col 3 manu2 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --keep_tip --src_row 1 --src_col 3 manu2 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --keep_tip --src_row 1 --src_col 3 manu2 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --src_row 1 --src_col 3 manu2 PITC1 --dispense_vol 50 --tipbox tipbox
+
+(* Glutamine *)
+pipette 50 --extra_air --after_air --keep_tip manu2 PITC1 --dispense_vol 50 --tipbox tipbox 
+pipette 50 --extra_air --after_air --keep_tip --src_row 1 --src_col 4 manu2 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --keep_tip --src_row 1 --src_col 4 manu2 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --src_row 1 --src_col 4 manu2 PITC1 --dispense_vol 50 --tipbox tipbox
+
+(* Glycine *)
+pipette 50 --extra_air --after_air manu2 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Histidine *)
+pipette 50 --extra_air --after_air manu2 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Isoleucine *)
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Leucine *)
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Lysine *)
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Methionine *)
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Ornithine *)
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Phenylalanine *)
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Proline *)
+pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Serine *)
+pipette 50 --extra_air --after_air manu3 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Threonine *)
+pipette 50 --extra_air --after_air manu3 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Tryptophan *)
+pipette 50 --extra_air --after_air --keep_tip manu3 PITC1 --dispense_vol 50 --tipbox tipbox 
+pipette 50 --extra_air --after_air --keep_tip --src_row 0 --src_col 2 manu3 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --keep_tip --src_row 0 --src_col 2 manu3 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --src_row 0 --src_col 2 manu3 PITC1 --dispense_vol 50 --tipbox tipbox
+
+(* Valine *)
+pipette 50 --extra_air --after_air manu3 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Methylhistidine *)
+pipette 50 --extra_air --after_air manu3 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Homocysteine *)
+pipette 50 --extra_air --after_air --keep_tip manu3 PITC1 --dispense_vol 50 --tipbox tipbox 
+pipette 50 --extra_air --after_air --src_row 0 --src_col 5 manu3 PITC1 --dispense_vol 50 --tipbox tipbox
+
+(* Betaine *)
+pipette 50 --extra_air --after_air manu3 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* TMAO *)
+pipette 50 --extra_air --after_air --keep_tip manu4 PITC1 --dispense_vol 50 --tipbox tipbox 
+pipette 50 --extra_air --after_air --src_row 0 --src_col 0 manu4 PITC1 --dispense_vol 50 --tipbox tipbox
+
+(* Choline *)
+pipette 25 --extra_air --after_air manu4 PITC1 --dispense_vol 25 --tipbox tipbox 
+
+(* Nitrotyrosine *)
+pipette 60 --extra_air --after_air --keep_tip manu4 PITC1 --dispense_vol 60 --tipbox tipbox 
+pipette 50 --extra_air --after_air --keep_tip --src_row 0 --src_col 2 manu4 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --src_row 0 --src_col 2 manu4 PITC1 --dispense_vol 50 --tipbox tipbox
+
+(* Tyrosine *)
+pipette 50 --extra_air --after_air --keep_tip manu4 PITC1 --dispense_vol 50 --tipbox tipbox 
+pipette 50 --extra_air --after_air --keep_tip --src_row 0 --src_col 3 manu4 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --keep_tip --src_row 0 --src_col 3 manu4 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --keep_tip --src_row 0 --src_col 3 manu4 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --keep_tip --src_row 0 --src_col 3 manu4 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --keep_tip --src_row 0 --src_col 3 manu4 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --keep_tip --src_row 0 --src_col 3 manu4 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --src_row 0 --src_col 3 manu4 PITC1 --dispense_vol 50 --tipbox tipbox
+
+(* Kynurenine *)
+pipette 50 --extra_air --after_air --keep_tip manu4 PITC1 --dispense_vol 50 --tipbox tipbox 
+pipette 50 --extra_air --after_air --keep_tip --src_row 0 --src_col 4 manu4 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --keep_tip --src_row 0 --src_col 4 manu4 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --keep_tip --src_row 0 --src_col 4 manu4 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --keep_tip --src_row 0 --src_col 4 manu4 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --keep_tip --src_row 0 --src_col 4 manu4 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --keep_tip --src_row 0 --src_col 4 manu4 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --src_row 0 --src_col 4 manu4 PITC1 --dispense_vol 50 --tipbox tipbox
+
+(* Creatine *)
+pipette 50 --extra_air --after_air manu4 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* Phosphocreatine *)
+pipette 50 --extra_air --after_air manu4 PITC1 --dispense_vol 50 --tipbox tipbox 
+
+(* alpha-Aminoadipicacid *)
+pipette 60 --extra_air --after_air --keep_tip manu3 PITC1 --dispense_vol 60 --tipbox tipbox 
+pipette 50 --extra_air --after_air --keep_tip --src_row 1 --src_col 0 manu3 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --src_row 1 --src_col 0 manu3 PITC1 --dispense_vol 50 --tipbox tipbox
