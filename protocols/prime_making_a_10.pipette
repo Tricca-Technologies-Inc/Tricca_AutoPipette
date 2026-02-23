@@ -59,7 +59,7 @@ pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox
 
 (* Alanine *)
 pipette 50 --extra_air --after_air --keep_tip manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
-pipette 50 --extra_air --after_air --src_row 2 --src_col 6 manu1 PITC1 --dispense_vol 50 --tipbox tipbox
+pipette 50 --extra_air --after_air --src_row 1 --src_col 5 manu1 PITC1 --dispense_vol 50 --tipbox tipbox
 
 (* Arginine *)
 pipette 50 --extra_air --after_air manu1 PITC1 --dispense_vol 50 --tipbox tipbox --prewet
