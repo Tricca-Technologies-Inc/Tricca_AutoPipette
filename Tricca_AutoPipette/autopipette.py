@@ -854,7 +854,12 @@ class AutoPipette:
         if stepper is None:
             stepper = self.pipette_params.name_pipette_stepper
         if speed is None:
-            speed = self.pipette_params.speed_pipette_up_slow
+            if direction is FluidDisplacement.aspiration:
+                speed = self.pipette_params.speed_pipette_up
+            elif direction is FluidDisplacement.dispense:
+                speed = self.pipette_params.speed_pipette_down
+            else:
+                speed = self.pipette_params.speed_pipette_up
         if accel is None:
             accel = self.pipette_params.accel_pipette_move
         steps = self.volume_converter.vol_to_steps(vol_ul)
@@ -895,7 +900,7 @@ class AutoPipette:
         if stepper is None:
             stepper = self.pipette_params.name_pipette_stepper
         if speed is None:
-            speed = self.pipette_params.speed_pipette_up_slow
+            speed = self.pipette_params.speed_pipette_down
         if accel is None:
             accel = self.pipette_params.accel_pipette_home
         # Twice the max distance means the pipette is guaranteed to hit the endstop

@@ -10,3 +10,4 @@ Tricca_AutoPipette/res/__pycache__/*
 /Tricca_AutoPipette/flycheck_autopipette.py
 app.log
 app.log
+./commands/__pycache__/*
