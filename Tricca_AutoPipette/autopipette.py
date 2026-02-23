@@ -1264,7 +1264,6 @@ class AutoPipette:
                     dest,
                     dest_row=dest_row,
                     dest_col=dest_col,
-                    volume=pip_vol,
                     wiggle=wiggle,
                     touch=touch,
                 )
