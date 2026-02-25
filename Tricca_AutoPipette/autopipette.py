@@ -1109,6 +1109,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if touch:
             touch_depth = loc_dest.get_dip_distance(volume) + 1
             self.gcode_wait(1500) # 1.5 second hold
+            home_z(self)
             #self.move_to_z(Coordinate(x=coor_dest.x, y=coor_dest.y, z=touch_depth))
             #self.gcode_wait(2000) # 2 second hold
             #self.move_to_z(Coordinate(x=coor_dest.x, y=coor_dest.y, z=loc_dest.get_dip_distance(volume)))
@@ -1333,6 +1334,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
