@@ -308,10 +308,7 @@ class AutoPipette:
 
         if mode_str == CoordinateSystem.ABSOLUTE.value:
             self.gcode_buffers.add(f"{GCodeCommand.ABSOLUTE_MODE}\n")
-        elif mode_str in (
-            CoordinateSystem.RELATIVE.value,
-            CoordinateSystem.INCREMENTAL.value,
-        ):
+        elif mode_str == CoordinateSystem.RELATIVE.value:
             self.gcode_buffers.add(f"{GCodeCommand.RELATIVE_MODE}\n")
         else:
             raise ValueError(
@@ -856,10 +853,8 @@ class AutoPipette:
         if speed is None:
             if direction is FluidDisplacement.aspiration:
                 speed = self.pipette_params.speed_pipette_up
-            elif direction is FluidDisplacement.dispense:
+            else:  # direction is FluidDisplacement.dispense:
                 speed = self.pipette_params.speed_pipette_down
-            else:
-                speed = self.pipette_params.speed_pipette_up
         if accel is None:
             accel = self.pipette_params.accel_pipette_move
         steps = self.volume_converter.vol_to_steps(vol_ul)
