@@ -148,9 +148,6 @@ class ConfigManager:
         Returns:
             Validated PipetteParams object.
 
-        Raises:
-            ValueError: If required configuration values are missing or invalid.
-
         Example:
             >>> params = manager.get_pipette_params()
             >>> print(params.speed_xy)
@@ -285,22 +282,32 @@ class ConfigManager:
                 )
 
             # Create well template
+            dip_top: float = float(params.get("dip_top", 0.0))
+            dip_btm = params.get("dip_btm", None)
+            dip_btm = float(dip_btm) if dip_btm is not None else None
+            well_diameter = params.get("well_diameter")
+            well_diameter = float(well_diameter) if well_diameter is not None else None
             well = Well(
                 coor=coord,
-                dip_top=params.get("dip_top", 0),
-                dip_btm=params.get("dip_btm", None),
+                dip_top=dip_top,
+                dip_btm=dip_btm,
                 strategy_type=StrategyType(dip_func_str),
-                well_diameter=params.get("well_diameter", None),
+                well_diameter=well_diameter,
             )
 
             # Create plate parameters with defaults
+            plate_type = str(params.get("type", "singleton"))
+            num_row = int(params.get("row", 1))
+            num_col = int(params.get("col", 1))
+            spacing_row = float(params.get("spacing_row", 0.0))
+            spacing_col = float(params.get("spacing_col", 0.0))
             plate_params = PlateParams(
-                plate_type=params.get("type", "singleton"),
+                plate_type=plate_type,
                 well_template=well,
-                num_row=params.get("row", 1),
-                num_col=params.get("col", 1),
-                spacing_row=params.get("spacing_row", 0.0),
-                spacing_col=params.get("spacing_col", 0.0),
+                num_row=num_row,
+                num_col=num_col,
+                spacing_row=spacing_row,
+                spacing_col=spacing_col,
             )
 
             locations[name_loc] = (coord, plate_params)
