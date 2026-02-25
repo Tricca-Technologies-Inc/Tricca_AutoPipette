@@ -9,7 +9,7 @@ from __future__ import annotations
 
 
 class GCodeBuffer:
-    """Manages G-code command generation and buffering.
+    r"""Manages G-code command generation and buffering.
 
     Provides separate buffers for header comments (configuration info)
     and command sequences. Supports batch accumulation and retrieval.
@@ -32,7 +32,7 @@ class GCodeBuffer:
         self._header: list[str] = []
 
     def add(self, command: str) -> None:
-        """Add a command to the main buffer.
+        r"""Add a command to the main buffer.
 
         Args:
             command: G-code command string to buffer.
@@ -44,7 +44,7 @@ class GCodeBuffer:
         self._commands.append(command)
 
     def add_header(self, line: str) -> None:
-        """Add a line to the configuration header.
+        r"""Add a line to the configuration header.
 
         Args:
             line: Header comment line (typically starts with ';').
@@ -56,7 +56,7 @@ class GCodeBuffer:
         self._header.append(line)
 
     def get_commands(self) -> list[str]:
-        """Retrieve buffered commands and clear the command buffer.
+        r"""Retrieve buffered commands and clear the command buffer.
 
         Returns:
             List of G-code command strings.
@@ -94,7 +94,7 @@ class GCodeBuffer:
         return self._header.copy()
 
     def clear_commands(self) -> None:
-        """Clear the command buffer without returning contents.
+        r"""Clear the command buffer without returning contents.
 
         Example:
             >>> buffer.add("G28\n")
@@ -104,7 +104,7 @@ class GCodeBuffer:
         self._commands.clear()
 
     def clear_header(self) -> None:
-        """Clear the header buffer.
+        r"""Clear the header buffer.
 
         Example:
             >>> buffer.add_header("; Config\n")
@@ -124,7 +124,7 @@ class GCodeBuffer:
         self._header.clear()
 
     def has_commands(self) -> bool:
-        """Check if the command buffer has any commands.
+        r"""Check if the command buffer has any commands.
 
         Returns:
             True if commands are buffered, False otherwise.
@@ -139,7 +139,7 @@ class GCodeBuffer:
         return len(self._commands) > 0
 
     def command_count(self) -> int:
-        """Get the number of buffered commands.
+        r"""Get the number of buffered commands.
 
         Returns:
             Number of commands in the buffer.
@@ -153,7 +153,7 @@ class GCodeBuffer:
         return len(self._commands)
 
     def peek_commands(self) -> list[str]:
-        """View buffered commands without clearing them.
+        r"""View buffered commands without clearing them.
 
         Returns:
             Copy of buffered commands.
@@ -201,7 +201,7 @@ class GCodeBuffer:
                 self.add_header(f";\t {key} = {value}\n")
 
     def __len__(self) -> int:
-        """Return the number of buffered commands.
+        r"""Return the number of buffered commands.
 
         Allows using len(buffer) instead of buffer.command_count().
 
@@ -213,7 +213,7 @@ class GCodeBuffer:
         return len(self._commands)
 
     def __bool__(self) -> bool:
-        """Return True if buffer has commands.
+        r"""Return True if buffer has commands.
 
         Allows using if buffer: instead of if buffer.has_commands().
 
@@ -228,7 +228,7 @@ class GCodeBuffer:
         return len(self._commands) > 0
 
     def __repr__(self) -> str:
-        """Return string representation of the buffer.
+        r"""Return string representation of the buffer.
 
         Example:
             >>> buffer = GCodeBuffer()
