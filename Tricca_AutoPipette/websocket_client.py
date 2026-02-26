@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""WebSocket client for real-time communication with the AutoPipette server.
+r"""WebSocket client for real-time communication with the AutoPipette server.
 
 This module provides an asynchronous WebSocket client that runs in a background
 thread, handling JSON-RPC requests, file uploads, and message dispatching.
@@ -34,7 +34,7 @@ from concurrent.futures import Future
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from queue import Queue
+from queue import Empty, Queue
 from types import TracebackType
 from typing import Any, Callable
 from urllib.parse import urlparse
@@ -190,18 +190,25 @@ class WebSocketClient:
         Args:
             url: WebSocket server URL (e.g., "ws://192.168.1.100:7125/websocket").
 
+        Raises:
+            ValueError: If URL is empty or invalid.
+
         Note:
             The client is not connected until start() is called.
 
         Example:
             >>> client = WebSocketClient("ws://localhost:7125/websocket")
         """
+        # Validate URL
+        if not url or not url.strip():
+            raise ValueError("WebSocket URL cannot be empty")
+
         # Logging
         self.logger = logging.getLogger(__name__)
 
         # Connection state
         self._connected = threading.Event()
-        self.url = url
+        self.url = url.strip()
         self._reconnect_delay = self.INITIAL_RECONNECT_DELAY
 
         # Async runtime
@@ -218,6 +225,29 @@ class WebSocketClient:
         self.message_queue: Queue[QueuedMessage] = Queue()
         self._pending: dict[str, asyncio.Future[dict[str, Any]]] = {}
         self._handlers: dict[str, Callable[[Any], None]] = {}
+
+    def __repr__(self) -> str:
+        """Return string representation of WebSocketClient.
+
+        Example:
+            >>> client = WebSocketClient("ws://localhost:7125/websocket")
+            >>> repr(client)
+            'WebSocketClient(url=ws://localhost:7125/websocket, connected=False)'
+        """
+        return f"WebSocketClient(url={self.url}, " f"connected={self.is_connected()})"
+
+    def __len__(self) -> int:
+        """Return number of queued messages.
+
+        Returns:
+            Number of unhandled messages in the queue.
+
+        Example:
+            >>> client = WebSocketClient(url)
+            >>> len(client)
+            3  # 3 unhandled messages
+        """
+        return self.message_queue.qsize()
 
     def __enter__(self) -> WebSocketClient:
         """Enter context manager and start the client.
@@ -246,6 +276,9 @@ class WebSocketClient:
             exc_val: Exception instance if an exception occurred, None otherwise.
             exc_tb: Exception traceback if an exception occurred, None otherwise.
         """
+        _ = exc_type
+        _ = exc_val
+        _ = exc_tb
         self.stop()
 
     def start(self) -> None:
@@ -263,21 +296,7 @@ class WebSocketClient:
         self.thread.start()
 
     def stop(self) -> None:
-        """Stop the client and clean up all resources.
-
-        Performs graceful shutdown:
-        1. Signals shutdown to background tasks
-        2. Cancels pending requests
-        3. Closes WebSocket and HTTP connections
-        4. Stops event loop
-        5. Joins background thread
-
-        Blocks until shutdown is complete or timeout (5 seconds).
-
-        Example:
-            >>> client.stop()
-            >>> # All resources cleaned up
-        """
+        """Stop the client and clean up all resources."""
         self.logger.info("Stopping WebSocket client")
         self._shutdown_event.set()
         self._connected.clear()
@@ -290,13 +309,18 @@ class WebSocketClient:
         cleanup_future = asyncio.run_coroutine_threadsafe(self._cleanup(), self.loop)
         try:
             cleanup_future.result(timeout=5)
+        except TimeoutError:
+            self.logger.warning("Cleanup timed out after 5 seconds")
         except Exception as e:
             self.logger.error("Error during cleanup: %s", e, exc_info=True)
 
         # Stop event loop and join thread
         self.loop.call_soon_threadsafe(self.loop.stop)
-        self.thread.join()
-        self.logger.info("WebSocket client stopped")
+        self.thread.join(timeout=5)
+        if self.thread.is_alive():
+            self.logger.warning("Background thread did not terminate cleanly")
+        else:
+            self.logger.info("WebSocket client stopped")
 
     def wait_for_connection(self, timeout: float = 10.0) -> bool:
         """Wait for WebSocket connection to be established.
@@ -508,7 +532,9 @@ class WebSocketClient:
             Called before sending any data to ensure connection is ready.
         """
         if not self._connected.is_set():
-            raise RuntimeError("WebSocket handshake not complete.")
+            raise RuntimeError(
+                "WebSocket not connected. Call start() and wait_for_connection() first."
+            )
 
     async def _send_and_receive(
         self,
@@ -698,49 +724,52 @@ class WebSocketClient:
 
             self.logger.debug(f"Uploading file {file_name} to {upload_url}")
 
-            # Read file in executor to avoid blocking
+            # Read file content (using async context manager for safety)
             loop = asyncio.get_running_loop()
-            file_content = await loop.run_in_executor(None, file_path.open, "rb")
 
-            try:
-                # Prepare multipart form data
-                data = FormData()
-                data.add_field(
-                    "file",
-                    file_content,
-                    filename=file_name,
-                    content_type="application/octet-stream",
-                )
+            # Read file in executor
+            def read_file() -> bytes:
+                with file_path.open("rb") as f:  # ✅ Use context manager
+                    return f.read()
 
-                # Upload file via HTTP POST using shared session
-                async with self.session.post(upload_url, data=data) as response:
-                    if response.status != 201:
-                        text = await response.text()
-                        self.logger.error(
-                            f"Upload failed with status {response.status}: {text}"
-                        )
-                        raise WebSocketClient.UploadError(
-                            f"Upload failed (status {response.status}): {text}"
-                        )
+            file_content = await loop.run_in_executor(None, read_file)
 
-                    # Parse response to get server path
-                    try:
-                        payload = await response.json()
-                    except Exception as e:
-                        raise WebSocketClient.UploadError(
-                            "Upload response was not valid JSON."
-                        ) from e
+            # Prepare multipart form data
+            data = FormData()
+            data.add_field(
+                "file",
+                file_content,
+                filename=file_name,
+                content_type="application/octet-stream",
+            )
 
-                    server_fp = payload.get("item", {}).get("path")
-                    if not server_fp:
-                        raise WebSocketClient.UploadError(
-                            "Upload succeeded but no 'item.path' returned."
-                        )
+            # Upload file via HTTP POST using shared session
+            async with self.session.post(upload_url, data=data) as response:
+                if response.status != 201:
+                    text = await response.text()
+                    self.logger.error(
+                        f"Upload failed with status {response.status}: {text}"
+                    )
+                    raise WebSocketClient.UploadError(
+                        f"Upload failed (status {response.status}): {text}"
+                    )
 
-                    self.logger.info(f"File uploaded successfully to: {server_fp}")
-                    return server_fp
-            finally:
-                file_content.close()
+                # Parse response to get server path
+                try:
+                    payload = await response.json()
+                except Exception as e:
+                    raise WebSocketClient.UploadError(
+                        "Upload response was not valid JSON."
+                    ) from e
+
+                server_fp = payload.get("item", {}).get("path")
+                if not server_fp:
+                    raise WebSocketClient.UploadError(
+                        "Upload succeeded but no 'item.path' returned."
+                    )
+
+                self.logger.info(f"File uploaded successfully to: {server_fp}")
+                return server_fp
 
         except FileNotFoundError as e:
             self.logger.error(f"File not found: {file_path}")
@@ -755,9 +784,7 @@ class WebSocketClient:
                 f"Unexpected error during upload: {e}"
             ) from e
 
-    def upload_gcode_file(
-        self, file_name: str, file_path: str | Path
-    ) -> Future[str]:  # ✅ Changed from asyncio.Future[str]
+    def upload_gcode_file(self, file_name: str, file_path: str | Path) -> Future[str]:
         """Upload G-code file to server and return Future.
 
         Schedules the upload to run in the background event loop and
@@ -805,3 +832,22 @@ class WebSocketClient:
         while not self.message_queue.empty():
             messages.append(self.message_queue.get_nowait())
         return messages
+
+    def clear_queue(self) -> int:
+        """Clear all queued messages.
+
+        Returns:
+            Number of messages that were cleared.
+
+        Example:
+            >>> count = client.clear_queue()
+            >>> print(f"Cleared {count} messages")
+        """
+        count = 0
+        while not self.message_queue.empty():
+            try:
+                self.message_queue.get_nowait()
+                count += 1
+            except Empty:
+                break
+        return count
