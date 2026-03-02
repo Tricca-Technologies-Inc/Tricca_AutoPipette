@@ -1,4 +1,3 @@
-Home all
 
 pipette 52.5 --extra_air --serum_speed 96wellplatePCR STANS1_FULL --dispense_vol 52.5 --tipbox tipbox
 pipette 52.5 --extra_air --serum_speed 96wellplatePCR STANS1_FULL --dispense_vol 52.5 --tipbox tipbox
