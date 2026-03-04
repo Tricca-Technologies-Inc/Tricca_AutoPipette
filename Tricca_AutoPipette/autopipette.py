@@ -1105,14 +1105,14 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if wiggle:
             self.wiggle(coor_dest, loc_dest.get_dip_distance(volume))
 
-        # 3) Optional touch (a small single dip)
+        # 3) Optional touch (a small single dip) then home z
         if touch:
             touch_depth = loc_dest.get_dip_distance(volume) + 1
             self.gcode_wait(1500) # 1.5 second hold
-            #self._buffer_command("G28 Z\n") #trying to home z
+            self.move_to_z(Coordinate(x=coor_dest.x, y=coor_dest.y, z=5)))
+            self.home_axis(z) # home z
             #self.move_to_z(Coordinate(x=coor_dest.x, y=coor_dest.y, z=touch_depth))
             #self.gcode_wait(2000) # 2 second hold
-            #self.move_to_z(Coordinate(x=coor_dest.x, y=coor_dest.y, z=loc_dest.get_dip_distance(volume)))
             #self.gcode_wait(self.pipette_params.wait_movement)
 
         # 3) Settle & retract Z
@@ -1334,6 +1334,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
