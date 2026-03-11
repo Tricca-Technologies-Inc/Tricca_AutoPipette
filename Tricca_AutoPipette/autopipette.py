@@ -422,7 +422,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                          self.config["VOLUME_CONV"]["steps"].split(",")))
         self.volume_converter = VolumeConverter(volumes, steps)
 
-     def _init_model_params(self) -> None:
+    def _init_model_params(self) -> None:
         """Initialize autopipette model dependent variables.
 
         TODO Load a JSON file that contains the relevant variables for every physical
@@ -1354,6 +1354,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
