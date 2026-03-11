@@ -294,9 +294,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self._init_volume_converter()
         self._build_header()
         self._init_triggers()
-        # Initialize model dependent variables
-        self._init_model_params()
-
+        
     def save_config_file(self, filename: str = None) -> None:
         """Save a the config to a file.
 
@@ -421,21 +419,6 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         steps = list(map(float,
                          self.config["VOLUME_CONV"]["steps"].split(",")))
         self.volume_converter = VolumeConverter(volumes, steps)
-
-    def _init_model_params(self) -> None:
-        """Initialize autopipette model dependent variables.
-
-        TODO Load a JSON file that contains the relevant variables for every physical
-        parameter that affects the functioning of the pipette.
-        """
-        if self.pipette_params.model == "verticle":
-            self.model.pipette_motor_orientation = -1
-            if self.location_manager.tipboxes is not None:
-                self.location_manager.tipboxes.wells.reverse()
-        elif self.pipette_params.model == "horizontal":
-            self.model.pipette_motor_orientation = 1
-        else:
-            self.model.pipette_motor_orientation = 1
 
     def init_pipette(self) -> None:
         """Initialize all relevant aspects of the pipette.
@@ -1354,6 +1337,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         if not keep_tip and not self.has_liquid:
 
             self.dispose_tip()
+
 
 
 
