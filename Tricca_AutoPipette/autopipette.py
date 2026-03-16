@@ -854,7 +854,9 @@ class AutoPipette:
             if direction is FluidDisplacement.aspiration:
                 speed = self.pipette_params.speed_pipette_up
             else:  # direction is FluidDisplacement.dispense:
-                speed = self.pipette_params.speed_pipette_down
+                speed = (self.pipette_params.speed_pipette_up if serum_speed else self.pipette_params.speed_pipette_down)
+                
+                #self.pipette_params.speed_pipette_down
         if accel is None:
             accel = self.pipette_params.accel_pipette_move
         steps = self.volume_converter.vol_to_steps(vol_ul)
@@ -957,6 +959,9 @@ class AutoPipette:
         source: str,
         src_row: int | None = None,
         src_col: int | None = None,
+        extra_air: bool = False,
+        after_air: bool = False,
+        serum_speed: bool = False,
         aspirate_air: float = 0.0,
         prewet: int = 0,
         prewet_vol: float = 10.0,
@@ -1025,18 +1030,46 @@ class AutoPipette:
         # Move to source, clear plunger, and aspirate air if needed
         self.move_to(coor_source)
         self.home_pipette_stepper()
+        aft_vol = self.pipette_params.aft_air if after_air else 0
+        if (self.pipette_params.ext_air+volume+aft_vol >= self.pipette_params.max_vol):
+            ext_vol = self.pipette_params.max_vol - (volume+aft_vol+2)
+        else:
+            ext_vol = self.pipette_params.ext_air
+        tot_vol = volume+aft_vol+ext_vol
+        
         if aspirate_air:
             self.operate_syringe(FluidDisplacement.aspiration, aspirate_air)
-        self.dip_z_down(coor_source, loc_source.get_dip_distance(volume))
+      
 
         # Prewetting cycle (if requested)
         if prewet:
+            AIR_CUSHION_UL = ext_vol
+            self.operate_syringe(FluidDisplacement.aspiration, AIR_CUSHION_UL)
+            self.gcode_wait(self.pipette_params.wait_aspirate)
+            
             for _ in range(prewet):
                 self.operate_syringe(FluidDisplacement.aspiration, prewet_vol)
                 self.gcode_wait(self.pipette_params.wait_aspirate)
                 self.operate_syringe(FluidDisplacement.dispense, prewet_vol)
                 self.gcode_wait(self.pipette_params.wait_aspirate)
 
+            dip_z = loc_source.get_dip_distance(tot_vol)
+            raise_z = dip_z - 30
+            self.move_to_z(Coordinate(
+                x=coor_source.x,
+                y=coor_source.y,
+                z=raise_z
+            ))    
+            self.operate_syringe(FluidDisplacement.dispense, AIR_CUSHION_UL)
+              
+        if extra_air:
+            AIR_CUSHION_UL = ext_vol
+            self.operate_syringe(FluidDisplacement.aspiration, AIR_CUSHION_UL)
+            self.gcode_wait(self.pipette_params.wait_aspirate)
+
+        # dip down into the liquid
+        self.dip_z_down(coor_source, loc_source.get_dip_distance(volume))    
+        
         # Aspirate liquid
         self.operate_syringe(FluidDisplacement.aspiration, volume)
         self.state.has_liquid = True
@@ -1045,6 +1078,14 @@ class AutoPipette:
         # Return to safe height
         self.dip_z_return(coor_source)
 
+        # If you want air afterwards to prevent dripping...
+        if after_air:
+            
+            self.operate_syringe(FluidDisplacement.aspiration, aft_vol)
+            self.gcode_wait(self.pipette_params.wait_aspirate)
+        # Wait after things are picked up so that we can see if it stays
+        self.gcode_wait(500)
+    
     def dispense_volume(
         self,
         dest: str,
@@ -1052,6 +1093,7 @@ class AutoPipette:
         dest_col: int | None = None,
         volume: float | None = None,
         wiggle: bool = False,
+        serum_speed = False,
         touch: bool = False,
     ) -> None:
         """Dispense liquid from the pipette tip into a destination.
@@ -1126,9 +1168,11 @@ class AutoPipette:
 
         # Optional touch tip to side
         if touch:
-            # Touch implementation would go here
-            # Currently not implemented in the codebase
-            pass
+            self.gcode_wait(1500) # 1.5 second hold
+            self.move_to_z(Coordinate(x=coor_dest.x, y=coor_dest.y, z=5))
+            self.move_to(Coordinate(x=150, y=150, z=5))
+            # home z
+            self.home_z()
 
         self.state.has_liquid = False
 
@@ -1266,3 +1310,4 @@ class AutoPipette:
         # Dispose of tip unless explicitly keeping it
         if not keep_tip:
             self.dispose_tip()
+
