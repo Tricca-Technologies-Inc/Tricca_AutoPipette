@@ -42,6 +42,8 @@ class PipetteParams(BaseModel):
         wait_movement: Movement stabilization time in milliseconds.
         wait_aspirate: Aspiration dwell time in milliseconds.
         max_vol: Maximum pipette volume capacity in microliters.
+        aft_air: amount of extra air to be added after picking up liquid
+        ext_air: amount of extra air to be added before picking up or prewet
 
     Example:
         >>> params = PipetteParams(
@@ -134,6 +136,13 @@ class PipetteParams(BaseModel):
         default=100, gt=0, description="Maximum pipette volume capacity in microliters"
     )
 
+    aft_air: int = Field(
+        default=2, gt=0, description="amount of air picked up after aspirate in microliters"
+    )
+
+    ext_air: int = Field(
+        default=30, gt=0, description="amount of air picked up before aspirate in microliters"
+    )
 
 @dataclass
 class PipetteState:
