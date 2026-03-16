@@ -138,6 +138,9 @@ class AspirateArgs:
     aspirate_air: float
     prewet: int
     prewet_vol: float
+    extra_air: bool
+    after_air: bool
+    serum_speed: bool
 
 
 @dataclass
@@ -150,6 +153,7 @@ class DispenseArgs:
     volume: float | None
     wiggle: bool
     touch: bool
+    serum_speed: bool
 
 
 @dataclass
@@ -189,6 +193,9 @@ class PipetteArgs:
     wiggle: bool
     touch: bool
     keep_tip: bool
+    extra_air: bool
+    after_air: bool
+    serum_speed: bool
 
 
 @dataclass
