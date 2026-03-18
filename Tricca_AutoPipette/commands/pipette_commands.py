@@ -9,9 +9,10 @@ from __future__ import annotations
 from cmd2 import Statement, with_argparser
 from pipette_exceptions import NoTipboxError, NoWasteContainerError, TipAlreadyOnError
 from rich import print as rprint
-from tap_cmd_parsers import AspirateArgs, DispenseArgs, PipetteArgs, TAPCmdParsers
 
 from commands.base_command_set import TAPCommandSet
+
+from .tap_cmd_parsers import AspirateArgs, DispenseArgs, PipetteArgs, TAPCmdParsers
 
 
 class PipetteCommands(TAPCommandSet):

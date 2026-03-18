@@ -1,0 +1,16 @@
+{
+  "name": "water",
+  "description": "Aqueous solutions (default liquid profile)",
+  "viscosity_cP": 1.0,
+  "density_g_ml": 1.0,
+  "speed_aspirate": null,
+  "speed_dispense": null,
+  "wait_aspirate_ms": null,
+  "wait_dispense_ms": null,
+  "prewet_recommended": false,
+  "prewet_cycles": 0,
+  "air_gap_ul": 0.0,
+  "blowout_recommended": false,
+  "calibration_volumes": null,
+  "calibration_steps": null
+}

@@ -301,8 +301,8 @@ class StrategyRegistry:
         return cls._strategies[strategy_type]
 
     @classmethod
-    def get_strategy_name(cls, strategy: DipStrategy) -> StrategyType:
-        """Get the name of a strategy instance.
+    def get_strategy_type(cls, strategy: DipStrategy) -> StrategyType:
+        """Get the type of a strategy instance.
 
         Performs reverse lookup to find the StrategyType enum corresponding
         to a given strategy instance by comparing instance types.
@@ -482,7 +482,7 @@ class Well:
         return self._strategy.calculate_dip_distance(self, volume)
 
     @property
-    def strategy_name(self) -> StrategyType:
+    def strategy_type(self) -> StrategyType:
         """Get the name of the current strategy.
 
         Returns:
@@ -499,7 +499,7 @@ class Well:
             >>> well.strategy_name
             <StrategyType.CYLINDER: 'cylinder'>
         """
-        return StrategyRegistry.get_strategy_name(self._strategy)
+        return StrategyRegistry.get_strategy_type(self._strategy)
 
 
 # Rebuild WellParams after Well is defined to resolve forward references

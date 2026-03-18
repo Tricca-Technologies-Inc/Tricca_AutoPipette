@@ -12,7 +12,6 @@ from pathlib import Path
 
 __all__ = [
     "CoordinateSystem",
-    "ConfigSection",
     "PlateType",
     "GCodeCommand",
     "PhysicalConstants",
@@ -35,31 +34,6 @@ class CoordinateSystem(str, Enum):
 
     ABSOLUTE = "absolute"
     RELATIVE = "relative"
-
-
-class ConfigSection(str, Enum):
-    """Required configuration file sections.
-
-    These sections must be present in the configuration file for
-    the pipette to initialize properly.
-
-    Attributes:
-        NETWORK: Network configuration (IP, hostname).
-        NAME: Motor identifiers.
-        BOUNDARY: Movement boundaries.
-        SPEED: Speed and acceleration parameters.
-        SERVO: Servo motor settings.
-        WAIT: Timing parameters.
-        VOLUME_CONV: Volume to steps conversion data.
-    """
-
-    NETWORK = "NETWORK"
-    NAME = "NAME"
-    BOUNDARY = "BOUNDARY"
-    SPEED = "SPEED"
-    SERVO = "SERVO"
-    WAIT = "WAIT"
-    VOLUME_CONV = "VOLUME_CONV"
 
 
 class PlateType(str, Enum):
@@ -126,6 +100,27 @@ class PhysicalConstants:
     VOLUME_TOLERANCE_UL = 1e-6  # Minimum significant volume in microliters
 
 
+class DefaultFilenames:
+    """Default filenames for configuration files.
+
+    These are the default names for configuration files if not specified
+    by the user.
+
+    Attributes:
+        CONFIG_SYSTEM: Default system configuration filename.
+        CONFIG_GANTRY: Default gantry configuration filename.
+        CONFIG_PIPETTE: Default pipette configuration filename.
+        CONFIG_LOCATIONS: Default locations configuration filename.
+        CONFIG_LIQUIDS: Default liquids configuration filename.
+    """
+
+    CONFIG_SYSTEM = "default_system.json"
+    CONFIG_GANTRY = "default_gantry.json"
+    CONFIG_PIPETTE = "default_pipette.json"
+    CONFIG_LOCATIONS = "default_locations.json"
+    CONFIG_LIQUIDS = "default_liquids.json"
+
+
 class DefaultPaths:
     """Default file paths for configuration and data.
 
@@ -134,8 +129,16 @@ class DefaultPaths:
         DEFAULT_CONFIG: Default configuration filename.
     """
 
-    CONFIG_DIR = Path(__file__).parent.parent / "conf"
-    DEFAULT_CONFIG = "autopipette.conf"
+    DIR_SHELL: Path = Path(__file__).parent
+    DIR_GCODE: Path = Path(__file__).parent.parent / "gcode"
+    DIR_PROTOCOL: Path = Path(__file__).parent.parent / "protocols"
+    DIR_CONFIG: Path = Path(__file__).parent.parent / "config/"
+    DIR_CONFIG_SYSTEM: Path = DIR_CONFIG / "system/"
+    DIR_CONFIG_GANTRY: Path = DIR_CONFIG / "gantry/"
+    DIR_CONFIG_PIPETTE: Path = DIR_CONFIG / "pipettes/"
+    DIR_CONFIG_LOCATIONS: Path = DIR_CONFIG / "locations/"
+    DIR_CONFIG_LIQUIDS: Path = DIR_CONFIG / "liquids/"
+    DIR_CONFIG_PLATES: Path = DIR_CONFIG / "plates/"
 
 
 class ConfigKey:

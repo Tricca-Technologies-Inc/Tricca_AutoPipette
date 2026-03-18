@@ -10,9 +10,10 @@ from pathlib import Path
 
 from cmd2 import Statement, with_argparser
 from rich import print as rprint
-from tap_cmd_parsers import RunArgs, TAPCmdParsers
 
 from commands.base_command_set import TAPCommandSet
+
+from .tap_cmd_parsers import RunArgs, TAPCmdParsers
 
 
 class ProtocolCommands(TAPCommandSet):

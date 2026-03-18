@@ -232,8 +232,50 @@ class Plate(ABC):
         """
         return 0 <= row < self.num_row and 0 <= col < self.num_col
 
+    @property
+    def current_row(self) -> int:
+        """Get the current row index based on current well position.
+
+        Returns:
+            Zero-indexed row number of the current well.
+
+        Example:
+            >>> plate = PlateArray(params)  # 8x12 plate
+            >>> plate.curr = 0
+            >>> plate.current_row
+            0
+            >>> plate.curr = 12  # Second row, first column
+            >>> plate.current_row
+            1
+            >>> plate.curr = 95  # Last well (H12)
+            >>> plate.current_row
+            7
+        """
+        return self.curr // self.num_col
+
+    @property
+    def current_col(self) -> int:
+        """Get the current column index based on current well position.
+
+        Returns:
+            Zero-indexed column number of the current well.
+
+        Example:
+            >>> plate = PlateArray(params)  # 8x12 plate
+            >>> plate.curr = 0
+            >>> plate.current_col
+            0
+            >>> plate.curr = 12  # Second row, first column
+            >>> plate.current_col
+            0
+            >>> plate.curr = 95  # Last well (H12)
+            >>> plate.current_col
+            11
+        """
+        return self.curr % self.num_col
+
     @abstractmethod
-    def get_coor(self, row: int, col: int) -> Coordinate | None:
+    def get_coor(self, row: int, col: int) -> Coordinate:
         """Return coordinate at specific row and column.
 
         Args:
@@ -431,25 +473,28 @@ class PlateArray(Plate):
                     coor=Coordinate(x=x, y=y, z=z),
                     dip_top=well_template.dip_top,
                     dip_btm=well_template.dip_btm,
-                    strategy_type=well_template.strategy_name,
+                    strategy_type=well_template.strategy_type,
                     well_diameter=well_template.well_diameter,
                 )
                 wells.append(new_well)
 
         return wells
 
-    def get_coor(self, row: int, col: int) -> Coordinate | None:
+    def get_coor(self, row: int, col: int) -> Coordinate:
         """Return coordinate at specific row and column.
 
         Args:
             row: Zero-indexed row number.
             col: Zero-indexed column number.
 
+        Raises:
+            ValueError: If row and/or col is invalid
+
         Returns:
             Coordinate at the specified position, or None if out of bounds.
         """
         if not self._is_valid_position(row, col):
-            return None
+            raise ValueError(f"row:{row} and col:{col} is invalid.")
 
         index = col + self.num_col * row
         return self.wells[index].coor
@@ -492,12 +537,16 @@ class PlateSingleton(PlateArray):
         Args:
             plate_params: Plate configuration (dimensions will be overridden).
         """
-        # Override parameters to enforce singleton behavior
-        plate_params.num_row = 1
-        plate_params.num_col = 1
-        plate_params.spacing_row = 0.0
-        plate_params.spacing_col = 0.0
-        super().__init__(plate_params)
+        # Create a copy with singleton dimensions to avoid mutating the caller's object
+        singleton_params = plate_params.model_copy(
+            update={
+                "num_row": 1,
+                "num_col": 1,
+                "spacing_row": 0.0,
+                "spacing_col": 0.0,
+            }
+        )
+        super().__init__(singleton_params)
 
     def next(self) -> Coordinate:
         """Return the single coordinate without incrementing.

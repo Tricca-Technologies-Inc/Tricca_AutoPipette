@@ -8,17 +8,18 @@ from __future__ import annotations
 
 from cmd2 import with_argparser
 from coordinate import Coordinate
-from pipette_constants import CoordinateSystem  # ✅ Use constants
+from pipette_constants import CoordinateSystem
 from rich import print as rprint
-from tap_cmd_parsers import (
+
+from commands.base_command_set import TAPCommandSet
+
+from .tap_cmd_parsers import (
     HomeArgs,
     MoveArgs,
     MoveLocArgs,
     MoveRelArgs,
     TAPCmdParsers,
 )
-
-from commands.base_command_set import TAPCommandSet
 
 
 class MovementCommands(TAPCommandSet):

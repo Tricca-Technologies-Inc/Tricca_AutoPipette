@@ -1,0 +1,29 @@
+{
+  "name": "P100_Vertical",
+  "manufacturer": "Tricca",
+  "description": "100µL vertical displacement pipette for TAP-Tyson",
+  "design_type": "vertical",
+  "syringe": {
+    "syringe_model": "Hamilton 100µL",
+    "stepper_name": "pipette_stepper",
+    "motor_orientation": -1,
+    "max_volume_ul": 100.0,
+    "min_volume_ul": 1.0,
+    "calibration_volumes": [9.6, 7.5, 9.4, 8.2, 9.2, 18.5, 21.0, 21.5, 21.7, 22.6, 47.6, 47.4, 47.0, 47.2, 46.1, 86.6, 72.5, 72.6, 72.6, 71.9],
+    "calibration_steps": [28.558, 28.558, 28.558, 28.558, 28.558, 66.58, 66.58, 66.58, 66.58, 66.58, 130.231, 130.231, 130.231, 130.231, 130.231, 194.231, 194.231, 194.231, 194.231, 194.231],
+    "speed_aspirate": 100.0,
+    "speed_dispense": 200.0,
+    "speed_blowout": 50.0,
+    "accel_home": 800.0,
+    "accel_move": 800.0,
+    "wait_aspirate_ms": 200,
+    "wait_dispense_ms": 200
+  },
+  "servo": {
+    "name": "pipette_servo",
+    "angle_retract": 100,
+    "angle_eject": 130,
+    "wait_ms": 850
+  },
+  "compatible_tips": ["100µL_standard"]
+}

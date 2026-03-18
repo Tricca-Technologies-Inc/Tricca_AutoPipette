@@ -1,0 +1,16 @@
+{
+  "name": "methanol",
+  "description": "Methanol - organic solvent, volatile",
+  "viscosity_cP": 0.59,
+  "density_g_ml": 0.79,
+  "speed_aspirate": 80.0,
+  "speed_dispense": 150.0,
+  "wait_aspirate_ms": 300,
+  "wait_dispense_ms": 200,
+  "prewet_recommended": true,
+  "prewet_cycles": 2,
+  "air_gap_ul": 5.0,
+  "blowout_recommended": false,
+  "calibration_volumes": null,
+  "calibration_steps": null
+}

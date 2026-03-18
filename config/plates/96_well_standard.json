@@ -1,0 +1,16 @@
+{
+  "name": "96-Well Standard Plate",
+  "description": "Standard 96-well microplate (SBS format)",
+  "type": "array",
+  "num_row": 8,
+  "num_col": 12,
+  "spacing_row": 9.0,
+  "spacing_col": 9.0,
+  "dip_top": 0.0,
+  "dip_btm": 11.0,
+  "dip_func": "simple",
+  "well_diameter": 6.86,
+  "well_depth": 11.0,
+  "total_volume_ul": 360.0,
+  "working_volume_ul": 300.0
+}

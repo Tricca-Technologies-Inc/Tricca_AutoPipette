@@ -72,6 +72,7 @@ class VolumeConverter:
         if y is None:
             y = list(self._consts.values())
 
+        # TODO Change to degree 1?
         self._poly = Polynomial.fit(x, y, deg=2).convert()
 
     def vol_to_steps(self, vol_ul: float) -> float:

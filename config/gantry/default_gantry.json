@@ -1,0 +1,8 @@
+{
+  "speed_xy": 38000.0,
+  "speed_z": 12000.0,
+  "speed_max": 99999.0,
+  "accel_xy": 40000.0,
+  "accel_z": 40000.0,
+  "accel_max": 40000.0
+}

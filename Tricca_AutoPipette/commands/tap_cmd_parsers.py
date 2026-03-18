@@ -59,7 +59,7 @@ class CoorArgs:
         z: Z-coordinate in millimeters.
     """
 
-    name_loc: str
+    name: str
     x: float
     y: float
     z: float

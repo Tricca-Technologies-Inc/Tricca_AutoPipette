@@ -23,7 +23,10 @@ from commands import (
     WebSocketCommands,
 )
 from gcode_manager import GCodeManager
+from json_config_manager import JsonConfigManager
+from location_manager import LocationManager
 from moonraker_requests import MoonrakerRequests
+from pipette_constants import DefaultFilenames, DefaultPaths
 from res.string_constants import TAP_CLR_BANNER
 from rich import print as rprint
 from rich.console import Console
@@ -64,26 +67,32 @@ class TriccaAutoPipetteShell(Cmd):
         gcode_manager: Manager for G-code generation and buffering.
     """
 
-    # Path constants
-    GCODE_PATH: Path = Path(__file__).parent.parent / "gcode"
-    PROTOCOL_PATH: Path = Path(__file__).parent.parent / "protocols"
-
-    def __init__(self, conf_autopipette: str | None = None) -> None:
+    def __init__(
+        self,
+        config_system: Path,
+        config_gantry: Path | None,
+        config_pipette: Path | None,
+        config_locations: Path | None,
+        config_liquids: Path | None,
+    ) -> None:
         """Initialize the AutoPipette shell and WebSocket connection.
 
         Sets up the command interface, loads configuration, establishes
         connection to the pipette hardware, and registers all command sets.
 
         Args:
-            conf_autopipette: Path to configuration file, or None for default.
+            config_system: Path to master configuration file.
+            config_gantry: Path to gantry configuration file (optional).
+            config_pipette: Path to pipette model configuration file (optional).
+            config_locations: Path to named locations configuration file (optional).
+            config_liquids: Path to liquids configuration file (optional).
 
         Example:
             >>> shell = TriccaAutoPipetteShell()  # Use default config
             >>> shell = TriccaAutoPipetteShell("custom_config.ini")  # Custom config
         """
-        shell_dir = Path(__file__).parent
-        history_file = str(shell_dir / ".tap_history")
-        startup_script = str(shell_dir / ".init_pipette")
+        history_file = str(DefaultPaths.DIR_SHELL / ".tap_history")
+        startup_script = str(DefaultPaths.DIR_SHELL / ".init_pipette")
         super().__init__(
             allow_cli_args=False,
             persistent_history_file=history_file,
@@ -96,9 +105,35 @@ class TriccaAutoPipetteShell(Cmd):
         self.prompt: str = "autopipette >> "
 
         # Initialize AutoPipette with config
-        self._autopipette = (
-            AutoPipette() if conf_autopipette is None else AutoPipette(conf_autopipette)
+        json_config_manager = JsonConfigManager()
+        fn_system = (
+            config_system.name if config_system else DefaultFilenames.CONFIG_SYSTEM
         )
+        if config_gantry is None:
+            fn_gantry = DefaultFilenames.CONFIG_GANTRY
+        else:
+            fn_gantry = config_gantry.name
+        if config_pipette is None:
+            fn_pipette = DefaultFilenames.CONFIG_PIPETTE
+        else:
+            fn_pipette = config_pipette.name
+        if config_locations is None:
+            fn_locations = DefaultFilenames.CONFIG_LOCATIONS
+        else:
+            fn_locations = config_locations.name
+        if config_liquids is None:
+            fn_liquids = DefaultFilenames.CONFIG_LIQUIDS
+        else:
+            fn_liquids = config_liquids.name
+        json_config_manager.load_configs(
+            fn_system,
+            fn_gantry,
+            fn_pipette,
+            fn_liquids,
+        )
+        location_manager = LocationManager()
+        location_manager.load_from_json(fn_locations)
+        self._autopipette = AutoPipette(json_config_manager, location_manager)
 
         # Network configuration
         self.hostname = self._get_hostname()
@@ -110,7 +145,7 @@ class TriccaAutoPipetteShell(Cmd):
         self.client = WebSocketClient(self.uri)
 
         # G-code management
-        self.gcode_manager = GCodeManager(self.GCODE_PATH, self._autopipette)
+        self.gcode_manager = GCodeManager(DefaultPaths.DIR_GCODE, self._autopipette)
 
         # Remove default set command (we provide our own via ConfigurationCommands)
         delattr(Cmd, "do_set")
@@ -126,10 +161,26 @@ class TriccaAutoPipetteShell(Cmd):
 
         Returns:
             Hostname or IP address from configuration.
+
+        Raises:
+            RuntimeError: If no hostname or IP configured.
+
+        Example:
+            >>> hostname = self._get_hostname()
+            >>> # Returns 'tap-tyson.local' or '192.168.1.100'
         """
-        if self._autopipette.config_manager.config.has_option("NETWORK", "IP"):
-            return self._autopipette.config_manager.config["NETWORK"]["IP"]
-        return self._autopipette.config_manager.config["NETWORK"]["HOSTNAME"]
+        network = self._autopipette.system_config.network
+
+        # Try IP first, then hostname, then error
+        hostname = network.get("ip") or network.get("hostname")
+
+        if not hostname:
+            raise RuntimeError(
+                "No hostname or IP configured in system.network. "
+                "Please set 'hostname' or 'ip' in config/system/system.json"
+            )
+
+        return hostname
 
     def _register_command_sets(self) -> None:
         """Register all command sets with the shell.

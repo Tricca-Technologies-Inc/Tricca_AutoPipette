@@ -2,36 +2,44 @@
 """Location and plate management for the AutoPipette system.
 
 This module handles storage, retrieval, and management of named locations
-and plates used in pipetting operations.
+and plates used in pipetting operations using JSON configuration.
 """
 
 from __future__ import annotations
 
+import json
 import logging
-from typing import TYPE_CHECKING
+from pathlib import Path
 
 from coordinate import Coordinate
-from pipette_constants import PlateType
+from pipette_constants import (
+    DefaultFilenames,
+    DefaultPaths,
+    PlateType,
+)
 from pipette_exceptions import NotALocationError
 from plates import Plate, PlateFactory, PlateParams, TipBox, WasteContainer
-
-if TYPE_CHECKING:
-    from config_manager import ConfigManager
+from well import StrategyType, Well
 
 logger = logging.getLogger(__name__)
+
+CONFIG_LOCATIONS = DefaultFilenames.CONFIG_LOCATIONS
+DIR_CONFIG_LOCATIONS = DefaultPaths.DIR_CONFIG_LOCATIONS
+DIR_CONFIG_PLATES = DefaultPaths.DIR_CONFIG_PLATES
 
 
 class LocationManager:
     """Manages named locations and plates for the pipette system.
 
     Handles storage and retrieval of coordinates and plates, including
-    special handling for tipboxes and waste containers.
+    special handling for tipboxes and waste containers. Uses JSON
+    configuration for persistence.
 
     Attributes:
         locations: Dictionary mapping location names to Coordinates or Plates.
         waste_container: The designated waste container (if configured).
         tipboxes: The primary tipbox or linked tipboxes (if configured).
-        _config_manager: Optional config manager for persistence.
+        config_dir: Path to configuration directory for loading/saving.
 
     Example:
         >>> manager = LocationManager()
@@ -40,25 +48,19 @@ class LocationManager:
         >>> position = manager.get_coordinate("home")
     """
 
-    def __init__(self, config_manager: ConfigManager | None = None) -> None:
+    def __init__(self) -> None:
         """Initialize the location manager.
 
-        Args:
-            config_manager: Optional config manager for saving changes.
-
         Example:
-            >>> # Without persistence
+            >>> # Use default config directory
             >>> manager = LocationManager()
 
-            >>> # With persistence
-            >>> from config_manager import ConfigManager
-            >>> config = ConfigManager()
-            >>> manager = LocationManager(config)
+            >>> # Use custom config directory
+            >>> manager = LocationManager(Path("/custom/config"))
         """
         self.locations: dict[str, Coordinate | Plate] = {}
         self.waste_container: WasteContainer | None = None
         self.tipboxes: TipBox | None = None
-        self._config_manager = config_manager
 
     def clear(self) -> None:
         """Clear all locations, tipboxes, and waste container.
@@ -80,24 +82,12 @@ class LocationManager:
 
         Note:
             If a location with this name already exists, it will be overwritten.
-            Updates configuration if config_manager is available.
 
         Example:
             >>> coord = Coordinate(x=100, y=50, z=10)
             >>> manager.set_coordinate("home_position", coord)
         """
         self.locations[name] = coord
-
-        # Update configuration if available
-        if self._config_manager is not None:
-            conf_key = f"COORDINATE {name}"
-
-            if not self._config_manager.config.has_section(conf_key):
-                self._config_manager.config.add_section(conf_key)
-
-            self._config_manager.update_value(conf_key, "x", str(coord.x))
-            self._config_manager.update_value(conf_key, "y", str(coord.y))
-            self._config_manager.update_value(conf_key, "z", str(coord.z))
 
     def set_plate(self, name: str, plate_params: PlateParams) -> None:
         """Create or update a plate at a named location.
@@ -110,15 +100,13 @@ class LocationManager:
             plate_params: Validated plate parameters including type and dimensions.
 
         Raises:
-            TypeError: If the plate factory creates an incorrect plate type for
-                       the specified plate_type (e.g., plate_type is 'waste_container'
-                       but factory doesn't create a WasteContainer instance).
+            TypeError: If the plate factory creates an incorrect plate type.
+            RuntimeError: If appending to the tipbox and it is not a tipbox
 
         Note:
             - Removes any existing location with the same name
             - Waste containers are automatically set as the default waste location
             - Tipboxes are added to the tipbox pool
-            - Updates configuration if config_manager is available
 
         Example:
             >>> from well import Well
@@ -138,53 +126,8 @@ class LocationManager:
         plate = PlateFactory.create(plate_params)
         self.locations[name] = plate
 
-        # Update configuration if available
-        if self._config_manager is not None:
-            # Remove any existing COORDINATE section with the same name
-            self._config_manager.config.remove_section(f"COORDINATE {name}")
-
-            conf_key = f"PLATE {name}"
-            if not self._config_manager.config.has_section(conf_key):
-                self._config_manager.config.add_section(conf_key)
-
-            # Save all plate parameters
-            self._config_manager.update_value(
-                conf_key, "x", str(plate_params.well_template.coor.x)
-            )
-            self._config_manager.update_value(
-                conf_key, "y", str(plate_params.well_template.coor.y)
-            )
-            self._config_manager.update_value(
-                conf_key, "z", str(plate_params.well_template.coor.z)
-            )
-            self._config_manager.update_value(
-                conf_key, "type", str(plate_params.plate_type)
-            )
-            self._config_manager.update_value(
-                conf_key, "row", str(plate_params.num_row)
-            )
-            self._config_manager.update_value(
-                conf_key, "col", str(plate_params.num_col)
-            )
-            self._config_manager.update_value(
-                conf_key, "spacing_row", str(plate_params.spacing_row)
-            )
-            self._config_manager.update_value(
-                conf_key, "spacing_col", str(plate_params.spacing_col)
-            )
-            self._config_manager.update_value(
-                conf_key, "dip_top", str(plate_params.well_template.dip_top)
-            )
-            self._config_manager.update_value(
-                conf_key, "dip_btm", str(plate_params.well_template.dip_btm)
-            )
-            self._config_manager.update_value(
-                conf_key, "dip_func", str(plate_params.well_template.strategy_name)
-            )
-
         # Handle special plate types with type checking
         if plate_params.plate_type == PlateType.WASTE_CONTAINER.value:
-            # Type check and assert
             if not isinstance(plate, WasteContainer):
                 raise TypeError(
                     f"Plate type is '{PlateType.WASTE_CONTAINER.value}' but "
@@ -194,7 +137,6 @@ class LocationManager:
             self.locations["waste_container"] = self.waste_container
             logger.info(f"Set waste container: {name}")
         elif plate_params.plate_type == PlateType.TIPBOX.value:
-            # Type check and assert
             if not isinstance(plate, TipBox):
                 raise TypeError(
                     f"Plate type is '{PlateType.TIPBOX.value}' but "
@@ -204,9 +146,9 @@ class LocationManager:
                 self.tipboxes = plate
                 logger.info(f"Set primary tipbox: {name}")
             else:
-                # Type checker can't infer tipboxes is TipBox in else branch
-                existing_tipbox: TipBox = self.tipboxes
-                existing_tipbox.append_box(plate)  # type: ignore[attr-defined]
+                if not isinstance(self.tipboxes, TipBox):
+                    raise RuntimeError("Existing tipboxes is not a TipBox instance")
+                self.tipboxes.append_box(plate)  # type: ignore[attr-defined]
                 logger.info(f"Added additional tipbox: {name}")
 
     def has_location(self, name: str) -> bool:
@@ -247,13 +189,7 @@ class LocationManager:
 
         Raises:
             NotALocationError: If the location name doesn't exist.
-            ValueError: If only one of row/col is provided (both required or both None).
-
-        Note:
-            For plates:
-            - If row and col are None, returns the next sequential well
-            - If row and col are specified, returns that specific well
-            - Plate automatically tracks current position for sequential access
+            ValueError: If only one of row/col is provided.
 
         Example:
             >>> # Get simple coordinate
@@ -262,7 +198,7 @@ class LocationManager:
             >>> # Get next well from plate
             >>> well1 = manager.get_coordinate("plate_a")
 
-            >>> # Get specific well from plate (row 1, col 1 = B2)
+            >>> # Get specific well (row 1, col 1 = B2)
             >>> well_b2 = manager.get_coordinate("plate_a", row=1, col=1)
         """
         if name not in self.locations:
@@ -272,21 +208,20 @@ class LocationManager:
 
         if isinstance(location, Plate):
             if row is None and col is None:
-                # Get next sequential well
                 return location.next()
             elif row is not None and col is not None:
-                # Get specific well (both provided)
-                # Type checker can't infer that row and col are not None
-                return location.get_coor(row, col)  # type: ignore[attr-defined]
+                coor = location.get_coor(row, col)
+                if coor is not None:
+                    return coor
+                else:
+                    raise ValueError("Coordinate returned from location is None.")
             else:
-                # Only one of row/col provided - invalid
                 raise ValueError(
                     "Both row and col must be provided together, or both must be None"
                 )
         elif isinstance(location, Coordinate):
             return location
         else:
-            # Shouldn't happen, but handle gracefully
             raise NotALocationError(name)
 
     def get_plate_names(self) -> list[str]:
@@ -298,8 +233,6 @@ class LocationManager:
         Example:
             >>> plates = manager.get_plate_names()
             >>> # plates = ['96_well_plate', 'tipbox', 'waste']
-            >>> for plate_name in plates:
-            ...     print(f"Plate: {plate_name}")
         """
         return [
             name
@@ -364,38 +297,189 @@ class LocationManager:
         # Remove from locations
         self.locations.pop(name)
 
-        # Remove from config if available
-        if self._config_manager is not None:
-            self._config_manager.config.remove_section(f"COORDINATE {name}")
-            self._config_manager.config.remove_section(f"PLATE {name}")
+    def load_from_json(self, filename: str = CONFIG_LOCATIONS) -> None:
+        """Load all locations from a JSON configuration file.
 
-    def load_from_config(self, config_manager: ConfigManager) -> None:
-        """Load all locations from a configuration manager.
+        Loads locations from config_dir/locations/filename.
 
         Args:
-            config_manager: ConfigManager with loaded configuration.
+            filename: Name of locations JSON file. Defaults to
+                     'default_locations.json'.
+
+        Raises:
+            FileNotFoundError: If locations file doesn't exist.
+            ValueError: If JSON is invalid.
 
         Note:
             Clears existing locations before loading.
 
         Example:
-            >>> from config_manager import ConfigManager
-            >>> config = ConfigManager()
-            >>> config.load("autopipette.conf")
-            >>> manager.load_from_config(config)
+            >>> manager = LocationManager(Path("config"))
+            >>> manager.load_from_json("my_locations.json")
         """
         self.clear()
-        self._config_manager = config_manager
 
-        # Parse locations from config
-        parsed_locations = config_manager.parse_locations()
+        locations_file = DIR_CONFIG_LOCATIONS / filename
 
-        # Add each location
-        for name, (coord, plate_params) in parsed_locations.items():
+        if not locations_file.exists():
+            logger.warning(f"Locations file not found: {locations_file}")
+            raise FileNotFoundError(f"Locations file not found: {locations_file}")
+
+        try:
+            with locations_file.open("r", encoding="utf-8") as f:
+                locations_data = json.load(f)
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid JSON in locations file: {e}")
+            raise ValueError(f"Invalid JSON in {filename}: {e}") from e
+
+        # Load coordinates
+        for coord_data in locations_data.get("coordinates", []):
+            name = coord_data["name"]
+            coord = Coordinate(x=coord_data["x"], y=coord_data["y"], z=coord_data["z"])
             self.set_coordinate(name, coord)
+            logger.debug(f"Loaded coordinate: {name}")
 
-            if plate_params is not None:
-                self.set_plate(name, plate_params)
+        # Load plates
+        for plate_data in locations_data.get("plates", []):
+            name = plate_data["name"]
+
+            # Load plate definition from separate file if referenced
+            if "plate_file" in plate_data:
+                plate_def = self._load_plate_definition(
+                    DIR_CONFIG_PLATES / plate_data["plate_file"]
+                )
+                # Override coordinate from locations file
+                plate_def["x"] = plate_data["x"]
+                plate_def["y"] = plate_data["y"]
+                plate_def["z"] = plate_data["z"]
+            else:
+                plate_def = plate_data
+
+            # Create well template
+            well = Well(
+                coor=Coordinate(x=plate_def["x"], y=plate_def["y"], z=plate_def["z"]),
+                dip_top=float(plate_def.get("dip_top", 0)),
+                dip_btm=(
+                    float(plate_def["dip_btm"]) if plate_def.get("dip_btm") else None
+                ),
+                strategy_type=StrategyType(plate_def.get("dip_func", "simple")),
+                well_diameter=(
+                    float(plate_def["well_diameter"])
+                    if plate_def.get("well_diameter")
+                    else None
+                ),
+            )
+
+            # Create plate parameters
+            plate_params = PlateParams(
+                plate_type=plate_def.get("type", "array"),
+                well_template=well,
+                num_row=int(plate_def.get("num_row", 1)),
+                num_col=int(plate_def.get("num_col", 1)),
+                spacing_row=float(plate_def.get("spacing_row", 0)),
+                spacing_col=float(plate_def.get("spacing_col", 0)),
+            )
+
+            self.set_plate(name, plate_params)
+            logger.debug(f"Loaded plate: {name}")
+
+        logger.info(
+            f"Loaded {len(self.locations)} location(s) from {filename}: "
+            f"{len(self.get_coordinate_names())} coordinates, "
+            f"{len(self.get_plate_names())} plates"
+        )
+
+    def save_to_json(self, filename: str = "custom_locations.json") -> None:
+        """Save all locations to a JSON configuration file.
+
+        Saves to config_dir/locations/filename.
+
+        Args:
+            filename: Name of output JSON file. Defaults to
+                     'custom_locations.json'.
+
+        Note:
+            Creates the locations directory if it doesn't exist.
+
+        Example:
+            >>> manager.save_to_json("backup_locations.json")
+        """
+        locations_dir = DIR_CONFIG_LOCATIONS
+        locations_dir.mkdir(parents=True, exist_ok=True)
+
+        locations_file = locations_dir / filename
+
+        # Build JSON structure
+        data = {"coordinates": [], "plates": []}
+
+        # Save coordinates
+        for name in self.get_coordinate_names():
+            location = self.locations[name]
+            if isinstance(location, Coordinate):
+                data["coordinates"].append(
+                    {"name": name, "x": location.x, "y": location.y, "z": location.z}
+                )
+
+        # Save plates
+        for name in self.get_plate_names():
+            location = self.locations[name]
+            if isinstance(location, Plate):
+                plate_data = {
+                    "name": name,
+                    "type": location.__class__.__name__.lower(),
+                    "x": location.wells[0].coor.x if location.wells else 0,
+                    "y": location.wells[0].coor.y if location.wells else 0,
+                    "z": location.wells[0].coor.z if location.wells else 0,
+                    "num_row": location.num_row,
+                    "num_col": location.num_col,
+                }
+
+                # Add plate-specific attributes if they exist
+                if hasattr(location, "spacing_row"):
+                    plate_data["spacing_row"] = location.spacing_row
+                if hasattr(location, "spacing_col"):
+                    plate_data["spacing_col"] = location.spacing_col
+
+                # Add well template info
+                if location.wells:
+                    first_well = location.wells[0]
+                    plate_data["dip_top"] = first_well.dip_top
+                    if first_well.dip_btm is not None:
+                        plate_data["dip_btm"] = first_well.dip_btm
+                    plate_data["dip_func"] = first_well.strategy_type.value
+                    if first_well.well_diameter is not None:
+                        plate_data["well_diameter"] = first_well.well_diameter
+
+                data["plates"].append(plate_data)
+
+        # Write to file
+        with locations_file.open("w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+
+        logger.info(f"Saved {len(self.locations)} location(s) to {filename}")
+
+    def _load_plate_definition(self, plate_file: Path) -> dict:
+        """Load plate definition from JSON file.
+
+        Args:
+            plate_file: Path to plate definition JSON file.
+
+        Returns:
+            Dictionary containing plate definition.
+
+        Raises:
+            FileNotFoundError: If plate file doesn't exist.
+            ValueError: If JSON is invalid.
+        """
+        try:
+            with plate_file.open("r", encoding="utf-8") as f:
+                return json.load(f)
+        except FileNotFoundError as e:
+            logger.error(f"Plate definition file not found: {plate_file}")
+            raise FileNotFoundError(f"Plate definition not found: {plate_file}") from e
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid JSON in plate definition: {e}")
+            raise ValueError(f"Invalid plate definition JSON: {e}") from e
 
     def get_location_info(self, name: str) -> dict[str, str]:
         """Get information about a location.
@@ -431,11 +515,27 @@ class LocationManager:
                 "rows": str(location.num_row),
                 "cols": str(location.num_col),
             }
-            # Only add current position if attributes exist
             if hasattr(location, "current_row") and hasattr(location, "current_col"):
-                # Type checker can't infer tipboxes is TipBox in else branch
-                info["current_row"] = str(location.current_row)  # type: ignore[attr-defined]
-                info["current_col"] = str(location.current_col)  # type: ignore[attr-defined]
+                info["current_row"] = str(location.current_row)
+                info["current_col"] = str(location.current_col)
             return info
         else:
             return {"type": "unknown"}
+
+    def __repr__(self) -> str:
+        """Return string representation of LocationManager.
+
+        Returns:
+            String showing number of locations and special plates.
+
+        Example:
+            >>> manager = LocationManager()
+            >>> repr(manager)
+            'LocationManager(locations=5, tipboxes=yes, waste=yes)'
+        """
+        return (
+            f"LocationManager("
+            f"locations={len(self.locations)}, "
+            f"tipboxes={'yes' if self.tipboxes else 'no'}, "
+            f"waste={'yes' if self.waste_container else 'no'})"
+        )
