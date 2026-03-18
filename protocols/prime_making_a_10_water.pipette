@@ -1,12 +1,12 @@
-pipette 465 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465 --tipbox tipbox --prewet
-pipette 465 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465 --tipbox tipbox
-pipette 465 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465 --tipbox tipbox
-pipette 465 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465 --tipbox tipbox
-pipette 465 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465 --tipbox tipbox
-pipette 465 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465 --tipbox tipbox
-pipette 465 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465 --tipbox tipbox
-pipette 465 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465 --tipbox tipbox
-pipette 465 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465 --tipbox tipbox
-pipette 465 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465 --tipbox tipbox
-pipette 465 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465 --tipbox tipbox
-pipette 465 --extra_air --after_air WATER dest --dispense_vol 465 --tipbox tipbox
+pipette 444.8 --extra_air --after_air --keep_tip WATER dest --dispense_vol 444.8 --tipbox tipbox --prewet
+pipette 444.8 --extra_air --after_air --keep_tip WATER dest --dispense_vol 444.8 --tipbox tipbox
+pipette 444.8 --extra_air --after_air --keep_tip WATER dest --dispense_vol 444.8 --tipbox tipbox
+pipette 444.8 --extra_air --after_air --keep_tip WATER dest --dispense_vol 444.8 --tipbox tipbox
+pipette 444.8 --extra_air --after_air --keep_tip WATER dest --dispense_vol 444.8 --tipbox tipbox
+pipette 444.8 --extra_air --after_air --keep_tip WATER dest --dispense_vol 444.8 --tipbox tipbox
+pipette 444.8 --extra_air --after_air --keep_tip WATER dest --dispense_vol 444.8 --tipbox tipbox
+pipette 444.8 --extra_air --after_air --keep_tip WATER dest --dispense_vol 444.8 --tipbox tipbox
+pipette 444.8 --extra_air --after_air --keep_tip WATER dest --dispense_vol 444.8 --tipbox tipbox
+pipette 444.8 --extra_air --after_air --keep_tip WATER dest --dispense_vol 444.8 --tipbox tipbox
+pipette 444.8 --extra_air --after_air --keep_tip WATER dest --dispense_vol 444.8 --tipbox tipbox
+pipette 444.8 --extra_air --after_air WATER dest --dispense_vol 444.8 --tipbox tipbox
