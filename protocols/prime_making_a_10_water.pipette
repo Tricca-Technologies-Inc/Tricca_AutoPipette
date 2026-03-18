@@ -9,4 +9,4 @@ pipette 465 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465 --t
 pipette 465 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465 --tipbox tipbox
 pipette 465 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465 --tipbox tipbox
 pipette 465 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465 --tipbox tipbox
-pipette 465 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465 --tipbox tipbox
+pipette 465 --extra_air --after_air WATER dest --dispense_vol 465 --tipbox tipbox
