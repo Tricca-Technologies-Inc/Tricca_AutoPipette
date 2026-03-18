@@ -2765,3 +2765,8 @@ websocket_client.WebSocketClient.UploadError: Unexpected error during upload: Ca
 2026-03-18 11:48:55,275 [websocket_client] WARNING: Connection error (will retry in 60.0s): Cannot connect to host tap-tyson.local:80 ssl:default [Name or service not known]
 2026-03-18 11:50:00,340 [websocket_client] WARNING: Connection error (will retry in 60.0s): Cannot connect to host tap-tyson.local:80 ssl:default [Name or service not known]
 2026-03-18 11:51:05,412 [websocket_client] WARNING: Connection error (will retry in 60.0s): Cannot connect to host tap-tyson.local:80 ssl:default [Name or service not known]
+2026-03-18 11:52:10,483 [websocket_client] WARNING: Connection error (will retry in 60.0s): Cannot connect to host tap-tyson.local:80 ssl:default [Name or service not known]
+2026-03-18 11:53:15,556 [websocket_client] WARNING: Connection error (will retry in 60.0s): Cannot connect to host tap-tyson.local:80 ssl:default [Name or service not known]
+2026-03-18 11:54:20,614 [websocket_client] WARNING: Connection error (will retry in 60.0s): Cannot connect to host tap-tyson.local:80 ssl:default [Name or service not known]
+2026-03-18 11:55:25,688 [websocket_client] WARNING: Connection error (will retry in 60.0s): Cannot connect to host tap-tyson.local:80 ssl:default [Name or service not known]
+2026-03-18 11:56:30,762 [websocket_client] WARNING: Connection error (will retry in 60.0s): Cannot connect to host tap-tyson.local:80 ssl:default [Name or service not known]
