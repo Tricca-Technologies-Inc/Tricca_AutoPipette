@@ -352,6 +352,34 @@ class WebSocketClient:
         """
         return self._connected.is_set()
 
+    @property
+    def handlers(self) -> dict[str, Callable[[Any], None]]:
+        """Read-only snapshot of registered notification handlers.
+
+        Returns a shallow copy so callers cannot mutate the internal dict.
+
+        Returns:
+            Dictionary mapping method names to their handler callbacks.
+
+        Example:
+            >>> for method in client.handlers:
+            ...     print(f"Handling: {method}")
+        """
+        return dict(self._handlers)
+
+    @property
+    def pending_count(self) -> int:
+        """Number of JSON-RPC requests currently awaiting a response.
+
+        Returns:
+            Count of in-flight requests.
+
+        Example:
+            >>> if client.pending_count > 0:
+            ...     print("Waiting for responses...")
+        """
+        return len(self._pending)
+
     def _run_loop(self) -> None:
         """Run the asyncio event loop in the background thread.
 
@@ -851,3 +879,22 @@ class WebSocketClient:
             except Empty:
                 break
         return count
+
+    def pop_message(self) -> QueuedMessage | None:
+        """Remove and return the next queued message, or None if empty.
+
+        Unlike ``get_queued_messages()``, this removes only a single message
+        so the rest of the queue is undisturbed.
+
+        Returns:
+            The next QueuedMessage, or None if the queue is empty.
+
+        Example:
+            >>> msg = client.pop_message()
+            >>> if msg is not None:
+            ...     print(msg.type, msg.data)
+        """
+        try:
+            return self.message_queue.get_nowait()
+        except Empty:
+            return None

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from cmd2 import Statement, with_argparser
 from coordinate import Coordinate
-from plates import PlateParams
+from plates import Plate, PlateParams
 from rich import print as rprint
 from rich.table import Table
 from well import StrategyType, Well
@@ -18,6 +18,7 @@ from commands.base_command_set import TAPCommandSet
 
 from .tap_cmd_parsers import (
     CoorArgs,
+    DelLocArgs,
     LsArgs,
     PlateArgs,
     ResetPlateArgs,
@@ -34,6 +35,7 @@ class ConfigurationCommands(TAPCommandSet):
     - Setting configuration variables (speed, acceleration, etc.)
     - Defining coordinate locations
     - Creating and managing plates
+    - Deleting and clearing locations
     - Loading and saving configuration files
     - Listing configuration state
 
@@ -41,20 +43,18 @@ class ConfigurationCommands(TAPCommandSet):
         >>> switch_liquid glycerol
         >>> list_liquids
         >>> coor home 0 0 50
-        >>> plate my_plate array 8 12
+        >>> plate my_plate array 8 12 100 200 10
         >>> ls locs
+        >>> del_loc old_plate
     """
-
-    # Special config variables that generate G-code
-    GCODE_GENERATING_VARS = {"SPEED_FACTOR", "VELOCITY_MAX", "ACCEL_MAX"}
 
     def __init__(self) -> None:
         """Initialize configuration commands."""
         super().__init__()
 
-    # ========================================================================
+    # =========================================================================
     # LIQUID PROFILE COMMANDS
-    # ========================================================================
+    # =========================================================================
 
     def do_switch_liquid(self, statement: Statement) -> None:
         """Switch to a different liquid profile.
@@ -73,14 +73,13 @@ class ConfigurationCommands(TAPCommandSet):
         liquid_name = statement.arg_list[0] if statement.arg_list else None
 
         if not liquid_name:
-            rprint("[red]Error: Please specify a liquid name[/red]")
+            rprint("[red]Error: Please specify a liquid name.[/red]")
             rprint("[cyan]Usage: switch_liquid <liquid_name>[/cyan]")
             return
 
         try:
             self.shell._autopipette.switch_liquid(liquid_name)
 
-            # Get liquid info for display
             liquid = self.shell._autopipette.system_config.liquids[liquid_name]
 
             rprint(f"[green]✓ Switched to liquid: {liquid_name}[/green]")
@@ -90,7 +89,8 @@ class ConfigurationCommands(TAPCommandSet):
                 rprint(f"  Aspirate speed: {liquid.speed_aspirate} steps/s")
             if liquid.prewet_recommended:
                 rprint(
-                    f"  [yellow]⚠ Prewet recommended ({liquid.prewet_cycles} cycles)[/yellow]"
+                    f"  [yellow]⚠ Prewet recommended "
+                    f"({liquid.prewet_cycles} cycles)[/yellow]"
                 )
 
         except ValueError as e:
@@ -106,40 +106,16 @@ class ConfigurationCommands(TAPCommandSet):
         Example:
             >>> list_liquids
         """
-        liquids = self.shell._autopipette.system_config.liquids
-        active = self.shell._autopipette.active_liquid
-
-        if not liquids:
-            rprint("[yellow]No liquid profiles loaded[/yellow]")
+        table = self._build_liquids_table()
+        if table is None:
             return
-
-        table = Table(title="Available Liquid Profiles", show_header=True)
-        table.add_column("Name", style="cyan")
-        table.add_column("Active", style="green")
-        table.add_column("Viscosity (cP)", justify="right")
-        table.add_column("Custom Speed", justify="center")
-        table.add_column("Prewet", justify="center")
-
-        for name, liquid in sorted(liquids.items()):
-            is_active = "●" if name == active else ""
-            has_custom_speed = "✓" if liquid.speed_aspirate else ""
-            prewet = f"{liquid.prewet_cycles}×" if liquid.prewet_recommended else ""
-
-            table.add_row(
-                name,
-                is_active,
-                f"{liquid.viscosity_cP:.2f}" if liquid.viscosity_cP else "—",
-                has_custom_speed,
-                prewet,
-            )
-
         rprint(table)
-        rprint(f"\n[dim]Active liquid: {active}[/dim]")
+        rprint(f"\n[dim]Active liquid: {self.shell._autopipette.active_liquid}[/dim]")
 
     def do_load_liquid(self, statement: Statement) -> None:
-        """Load a new liquid profile from JSON file.
+        """Load a new liquid profile from a JSON file.
 
-        Dynamically loads a liquid profile and adds it to available liquids.
+        Dynamically loads a liquid profile and adds it to the available liquids.
 
         Args:
             statement: Command statement containing filename.
@@ -151,7 +127,7 @@ class ConfigurationCommands(TAPCommandSet):
         filename = statement.arg_list[0] if statement.arg_list else None
 
         if not filename:
-            rprint("[red]Error: Please specify a liquid file[/red]")
+            rprint("[red]Error: Please specify a liquid file.[/red]")
             rprint("[cyan]Usage: load_liquid <filename.json>[/cyan]")
             return
 
@@ -160,15 +136,15 @@ class ConfigurationCommands(TAPCommandSet):
             rprint(f"[green]✓ Loaded liquid profile: {liquid.name}[/green]")
             rprint(f"  Viscosity: {liquid.viscosity_cP} cP")
             rprint(f"  File: {filename}")
-            rprint(f"\n[cyan]Use 'switch_liquid {liquid.name}' to activate[/cyan]")
+            rprint(f"\n[cyan]Use 'switch_liquid {liquid.name}' to activate.[/cyan]")
         except FileNotFoundError as e:
             rprint(f"[red]Error: {e}[/red]")
         except ValueError as e:
-            rprint(f"[red]Error: Invalid liquid configuration - {e}[/red]")
+            rprint(f"[red]Error: Invalid liquid configuration — {e}[/red]")
 
-    # ========================================================================
+    # =========================================================================
     # CONFIGURATION VARIABLES
-    # ========================================================================
+    # =========================================================================
 
     @with_argparser(TAPCmdParsers.parser_set)  # type: ignore[arg-type]
     def do_set(self, args: SetArgs) -> None:
@@ -186,30 +162,27 @@ class ConfigurationCommands(TAPCommandSet):
             >>> set ACCEL_MAX 3000
         """
         var_name = args.var.upper()
+        value: float = args.value
 
-        try:
-            value = float(args.value)
-        except ValueError:
-            rprint(f"[red]Error: Invalid value '{args.value}' (must be numeric)[/red]")
-            return
-
-        # Map variable names to autopipette methods
         if var_name == "SPEED_FACTOR":
             self.shell._autopipette.set_speed_factor(value)
+            self.shell.output_gcode(self.shell._autopipette.get_gcode())
             rprint(f"[green]✓ Set {var_name} = {value}[/green]")
         elif var_name == "VELOCITY_MAX":
             self.shell._autopipette.set_max_velocity(value)
+            self.shell.output_gcode(self.shell._autopipette.get_gcode())
             rprint(f"[green]✓ Set {var_name} = {value} mm/s[/green]")
         elif var_name == "ACCEL_MAX":
             self.shell._autopipette.set_max_accel(value)
+            self.shell.output_gcode(self.shell._autopipette.get_gcode())
             rprint(f"[green]✓ Set {var_name} = {value} mm/s²[/green]")
         else:
-            rprint(f"[yellow]Warning: Unknown variable '{var_name}'[/yellow]")
+            rprint(f"[yellow]Unknown variable '{var_name}'.[/yellow]")
             rprint("[cyan]Available: SPEED_FACTOR, VELOCITY_MAX, ACCEL_MAX[/cyan]")
 
-    # ========================================================================
+    # =========================================================================
     # LOCATION MANAGEMENT
-    # ========================================================================
+    # =========================================================================
 
     @with_argparser(TAPCmdParsers.parser_coor)  # type: ignore[arg-type]
     def do_coor(self, args: CoorArgs) -> None:
@@ -241,45 +214,45 @@ class ConfigurationCommands(TAPCommandSet):
             args: Parsed arguments containing plate configuration.
 
         Example:
-            >>> plate my_96well array 8 12 x=100 y=200 z=10
-            >>> plate tipbox1 tipbox 8 12 x=50 y=50 z=10
+            >>> plate my_96well array 8 12 100 200 10
+            >>> plate tipbox1 tipbox 8 12 50 50 10
+            >>> plate reservoir singleton 1 1 30 30 5 --dip_top 2 --dip_btm 8
         """
-        # Create well template
         well = Well(
             coor=Coordinate(x=args.x, y=args.y, z=args.z),
             dip_top=args.dip_top,
-            dip_btm=args.dip_btm if hasattr(args, "dip_btm") else None,
-            strategy_type=StrategyType(
-                args.dip_func if hasattr(args, "dip_func") else "simple"
-            ),
-            well_diameter=(
-                args.well_diameter if hasattr(args, "well_diameter") else None
-            ),
+            dip_btm=args.dip_btm,
+            strategy_type=StrategyType(args.dip_func),
+            well_diameter=args.well_diameter,
         )
 
-        # Create plate parameters
         plate_params = PlateParams(
             plate_type=args.plate_type,
             well_template=well,
             num_row=args.num_row,
             num_col=args.num_col,
-            spacing_row=args.spacing_row if hasattr(args, "spacing_row") else 9.0,
-            spacing_col=args.spacing_col if hasattr(args, "spacing_col") else 9.0,
+            spacing_row=args.spacing_row,
+            spacing_col=args.spacing_col,
         )
 
-        # Set the plate
-        self.shell._autopipette.location_manager.set_plate(args.name, plate_params)
+        try:
+            self.shell._autopipette.location_manager.set_plate(args.name, plate_params)
+        except (TypeError, RuntimeError) as e:
+            rprint(f"[red]Error creating plate: {e}[/red]")
+            return
 
         rprint(f"[green]✓ Created plate '{args.name}'[/green]")
         rprint(f"  Type: {args.plate_type}")
         rprint(
-            f"  Dimensions: {args.num_row}×{args.num_col} ({args.num_row * args.num_col} wells)"
+            f"  Dimensions: {args.num_row}×{args.num_col} "
+            f"({args.num_row * args.num_col} wells)"
         )
         rprint(f"  Position: X={args.x}, Y={args.y}, Z={args.z}")
+        rprint(f"  Spacing: row={args.spacing_row} mm, col={args.spacing_col} mm")
 
     @with_argparser(TAPCmdParsers.parser_reset_plate)  # type: ignore[arg-type]
     def do_reset_plate(self, args: ResetPlateArgs) -> None:
-        """Reset a specific plate's position to origin.
+        """Reset a specific plate's current position to the origin well.
 
         Args:
             args: Parsed arguments containing plate name.
@@ -290,20 +263,21 @@ class ConfigurationCommands(TAPCommandSet):
         loc_mgr = self.shell._autopipette.location_manager
 
         if not loc_mgr.has_location(args.name):
-            rprint(f"[red]Error: Location '{args.name}' not found[/red]")
+            rprint(f"[red]Error: Location '{args.name}' not found.[/red]")
+            rprint("[dim]Hint: Use 'ls locs' to see defined locations.[/dim]")
             return
 
         location = loc_mgr.locations[args.name]
 
         if not isinstance(location, Plate):
-            rprint(f"[red]Error: '{args.name}' is not a plate[/red]")
+            rprint(f"[red]Error: '{args.name}' is not a plate.[/red]")
             return
 
         location.reset()
         rprint(f"[green]✓ Reset plate '{args.name}' to position 0[/green]")
 
     def do_reset_plates(self, _: Statement) -> None:
-        """Reset all plates to origin position.
+        """Reset all plates to the origin well.
 
         Example:
             >>> reset_plates
@@ -312,20 +286,66 @@ class ConfigurationCommands(TAPCommandSet):
         plate_names = loc_mgr.get_plate_names()
 
         if not plate_names:
-            rprint("[yellow]No plates to reset[/yellow]")
+            rprint("[yellow]No plates to reset.[/yellow]")
             return
 
         for name in plate_names:
-            loc_mgr.locations[name].reset()
+            plate = loc_mgr.locations[name]
+            if isinstance(plate, Plate):
+                plate.reset()
 
-        rprint(f"[green]✓ Reset {len(plate_names)} plate(s) to origin[/green]")
+        rprint(f"[green]✓ Reset {len(plate_names)} plate(s) to origin.[/green]")
 
-    # ========================================================================
+    @with_argparser(TAPCmdParsers.parser_del_loc)  # type: ignore[arg-type]
+    def do_del_loc(self, args: DelLocArgs) -> None:
+        """Delete a named location or plate.
+
+        Removes the location from the manager. If the location is a
+        waste container or tipbox, those references are cleared too.
+
+        Args:
+            args: Parsed arguments containing location name.
+
+        Example:
+            >>> del_loc old_plate
+            >>> del_loc spare_coor
+        """
+        loc_mgr = self.shell._autopipette.location_manager
+
+        if not loc_mgr.has_location(args.name):
+            rprint(f"[red]Error: Location '{args.name}' not found.[/red]")
+            rprint("[dim]Hint: Use 'ls locs' to see defined locations.[/dim]")
+            return
+
+        loc_mgr.remove_location(args.name)
+        rprint(f"[green]✓ Deleted location '{args.name}'.[/green]")
+
+    def do_clear_locs(self, _: Statement) -> None:
+        """Delete all locations and plates.
+
+        Clears all coordinates, plates, tipbox references, and the waste
+        container. Use with caution — this cannot be undone without
+        reloading from a file.
+
+        Example:
+            >>> clear_locs
+        """
+        loc_mgr = self.shell._autopipette.location_manager
+        count = len(loc_mgr.locations)
+
+        if count == 0:
+            rprint("[yellow]No locations to clear.[/yellow]")
+            return
+
+        loc_mgr.clear()
+        rprint(f"[green]✓ Cleared {count} location(s).[/green]")
+
+    # =========================================================================
     # CONFIGURATION FILE MANAGEMENT
-    # ========================================================================
+    # =========================================================================
 
     def do_save_locations(self, statement: Statement) -> None:
-        """Save current locations to JSON file.
+        """Save current locations to a JSON file.
 
         Args:
             statement: Optional filename (defaults to 'custom_locations.json').
@@ -345,7 +365,9 @@ class ConfigurationCommands(TAPCommandSet):
             rprint(f"[red]Error saving locations: {e}[/red]")
 
     def do_load_locations(self, statement: Statement) -> None:
-        """Load locations from JSON file.
+        """Load locations from a JSON file.
+
+        Clears all existing locations before loading.
 
         Args:
             statement: Filename to load.
@@ -356,34 +378,32 @@ class ConfigurationCommands(TAPCommandSet):
         filename = statement.arg_list[0] if statement.arg_list else None
 
         if not filename:
-            rprint("[red]Error: Please specify a filename[/red]")
+            rprint("[red]Error: Please specify a filename.[/red]")
             rprint("[cyan]Usage: load_locations <filename.json>[/cyan]")
             return
 
         try:
             self.shell._autopipette.location_manager.load_from_json(filename)
-            rprint(f"[green]✓ Loaded locations from {filename}[/green]")
 
-            # Show summary
             coords = self.shell._autopipette.location_manager.get_coordinate_names()
             plates = self.shell._autopipette.location_manager.get_plate_names()
+
+            rprint(f"[green]✓ Loaded locations from {filename}[/green]")
             rprint(f"  Coordinates: {len(coords)}")
             rprint(f"  Plates: {len(plates)}")
 
         except FileNotFoundError as e:
             rprint(f"[red]Error: {e}[/red]")
         except ValueError as e:
-            rprint(f"[red]Error: Invalid locations file - {e}[/red]")
+            rprint(f"[red]Error: Invalid locations file — {e}[/red]")
 
-    # ========================================================================
+    # =========================================================================
     # LISTING COMMANDS
-    # ========================================================================
+    # =========================================================================
 
     @with_argparser(TAPCmdParsers.parser_ls)  # type: ignore[arg-type]
     def do_ls(self, args: LsArgs) -> None:
-        """List configuration variables.
-
-        Categories: locs, locations, plates, liquids, system
+        """List configuration state by category.
 
         Args:
             args: Parsed arguments containing category to list.
@@ -408,43 +428,57 @@ class ConfigurationCommands(TAPCommandSet):
         if var in ls_commands:
             ls_commands[var]()
         else:
-            rprint(f"[yellow]Unknown category '{var}'[/yellow]")
+            rprint(f"[yellow]Unknown category '{var}'.[/yellow]")
             rprint("[cyan]Valid categories: locs, plates, liquids, system[/cyan]")
 
     def _ls_locs(self) -> None:
-        """Display all defined locations."""
+        """Display all defined locations (coordinates and plates)."""
         loc_mgr = self.shell._autopipette.location_manager
-        coord_names = loc_mgr.get_coordinate_names()
+        all_names = loc_mgr.get_all_names()
 
-        if not coord_names:
-            rprint("[yellow]No coordinates defined[/yellow]")
+        if not all_names:
+            rprint("[yellow]No locations defined.[/yellow]")
             return
 
-        table = Table(title="Defined Coordinates", show_header=True)
+        table = Table(title="All Locations", show_header=True)
         table.add_column("Name", style="cyan")
+        table.add_column("Type", style="magenta")
         table.add_column("X", justify="right")
         table.add_column("Y", justify="right")
         table.add_column("Z", justify="right")
+        table.add_column("Details", style="dim")
 
-        for name in sorted(coord_names):
+        for name in sorted(all_names):
             location = loc_mgr.locations[name]
-            if isinstance(location, Coordinate):
+            if isinstance(location, Plate):
+                origin = location.wells[0].coor if location.wells else None
+                x = f"{origin.x:.2f}" if origin else "—"
+                y = f"{origin.y:.2f}" if origin else "—"
+                z = f"{origin.z:.2f}" if origin else "—"
+                details = (
+                    f"{location.num_row}×{location.num_col} "
+                    f"[{location.current_row},{location.current_col}]"
+                )
+                table.add_row(name, location.__class__.__name__, x, y, z, details)
+            elif isinstance(location, Coordinate):
                 table.add_row(
                     name,
+                    "Coordinate",
                     f"{location.x:.2f}",
                     f"{location.y:.2f}",
                     f"{location.z:.2f}",
+                    "",
                 )
 
         rprint(table)
 
     def _ls_plates(self) -> None:
-        """Display all defined plates."""
+        """Display all defined plates with full detail."""
         loc_mgr = self.shell._autopipette.location_manager
         plate_names = loc_mgr.get_plate_names()
 
         if not plate_names:
-            rprint("[yellow]No plates defined[/yellow]")
+            rprint("[yellow]No plates defined.[/yellow]")
             return
 
         table = Table(title="Defined Plates", show_header=True)
@@ -456,6 +490,8 @@ class ConfigurationCommands(TAPCommandSet):
 
         for name in sorted(plate_names):
             plate = loc_mgr.locations[name]
+            if not isinstance(plate, Plate):
+                continue
             dims = f"{plate.num_row}×{plate.num_col}"
             current = f"{plate.current_row},{plate.current_col}"
             total = plate.num_row * plate.num_col
@@ -471,12 +507,17 @@ class ConfigurationCommands(TAPCommandSet):
         rprint(table)
 
     def _ls_liquids(self) -> None:
-        """Display liquid profiles."""
-        self.do_list_liquids(Statement(""))
+        """Display all liquid profiles."""
+        table = self._build_liquids_table()
+        if table is None:
+            return
+        rprint(table)
+        rprint(f"\n[dim]Active liquid: {self.shell._autopipette.active_liquid}[/dim]")
 
     def _ls_system(self) -> None:
         """Display system configuration summary."""
-        config = self.shell._autopipette.system_config
+        ap = self.shell._autopipette
+        config = ap.system_config
 
         table = Table(title="System Configuration", show_header=True)
         table.add_column("Setting", style="cyan")
@@ -487,28 +528,61 @@ class ConfigurationCommands(TAPCommandSet):
         table.add_row("", "")
 
         table.add_row("[bold]Pipette[/bold]", "")
-        table.add_row("  Model", self.shell._autopipette.pipette_model.name)
-        table.add_row("  Design", self.shell._autopipette.pipette_model.design_type)
-        table.add_row(
-            "  Max Volume", f"{self.shell._autopipette.syringe.max_volume_ul} µL"
-        )
+        table.add_row("  Model", ap.pipette_model.name)
+        table.add_row("  Design", ap.pipette_model.design_type)
+        table.add_row("  Max Volume", f"{ap.syringe.max_volume_ul} µL")
         table.add_row("", "")
 
-        table.add_row(
-            "[bold]Active Liquid[/bold]", self.shell._autopipette.active_liquid
-        )
+        table.add_row("[bold]Active Liquid[/bold]", ap.active_liquid)
         table.add_row("", "")
 
         table.add_row("[bold]Gantry[/bold]", "")
-        table.add_row("  Speed XY", f"{self.shell._autopipette.gantry.speed_xy} mm/min")
-        table.add_row("  Speed Z", f"{self.shell._autopipette.gantry.speed_z} mm/min")
-        table.add_row(
-            "  Accel Max", f"{self.shell._autopipette.gantry.accel_max} mm/s²"
-        )
+        table.add_row("  Speed XY", f"{ap.gantry.speed_xy} mm/min")
+        table.add_row("  Speed Z", f"{ap.gantry.speed_z} mm/min")
+        table.add_row("  Accel Max", f"{ap.gantry.accel_max} mm/s²")
         table.add_row("", "")
 
         table.add_row("[bold]Network[/bold]", "")
-        table.add_row("  Hostname", config.network.get("hostname", "—"))
-        table.add_row("  Port", config.network.get("port", "—"))
+        table.add_row("  Hostname", config.network.get("hostname") or "—")
+        table.add_row("  Port", str(config.network.get("port") or "—"))
 
         rprint(table)
+
+    # =========================================================================
+    # INTERNAL HELPERS
+    # =========================================================================
+
+    def _build_liquids_table(self) -> Table | None:
+        """Build a Rich table of all liquid profiles.
+
+        Returns:
+            A populated Table, or None if no profiles are loaded.
+        """
+        liquids = self.shell._autopipette.system_config.liquids
+        active = self.shell._autopipette.active_liquid
+
+        if not liquids:
+            rprint("[yellow]No liquid profiles loaded.[/yellow]")
+            return None
+
+        table = Table(title="Available Liquid Profiles", show_header=True)
+        table.add_column("Name", style="cyan")
+        table.add_column("Active", style="green", justify="center")
+        table.add_column("Viscosity (cP)", justify="right")
+        table.add_column("Custom Speed", justify="center")
+        table.add_column("Prewet", justify="center")
+
+        for name, liquid in sorted(liquids.items()):
+            is_active = "●" if name == active else ""
+            has_custom_speed = "✓" if liquid.speed_aspirate else ""
+            prewet = f"{liquid.prewet_cycles}×" if liquid.prewet_recommended else ""
+
+            table.add_row(
+                name,
+                is_active,
+                f"{liquid.viscosity_cP:.2f}" if liquid.viscosity_cP else "—",
+                has_custom_speed,
+                prewet,
+            )
+
+        return table
