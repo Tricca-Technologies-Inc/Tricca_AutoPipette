@@ -138,7 +138,7 @@ def parse_arguments() -> argparse.Namespace:
         "--local-connect",
         default=False,
         action="store_true",
-        help="Start the shell and connect to a local websocket server (ws://localhost:8765)",
+        help="Start the shell and connect to a local websocket server (ws://localhost:7125)",
     )
     return parser.parse_args()
 
@@ -196,7 +196,7 @@ def validate_config_files(
     config_liquids_path: Path | None
 
     if config_system is not None:
-        config_system_path: Path = DIR_CONFIG_SYSTEM / Path(config_system)
+        config_system_path = DIR_CONFIG_SYSTEM / Path(config_system)
     else:
         config_system_path = DIR_CONFIG_SYSTEM / CONFIG_SYSTEM
 
