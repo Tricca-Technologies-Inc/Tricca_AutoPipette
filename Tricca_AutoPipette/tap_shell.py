@@ -26,7 +26,7 @@ from gcode_manager import GCodeManager
 from json_config_manager import JsonConfigManager
 from location_manager import LocationManager
 from moonraker_requests import MoonrakerRequests
-from pipette_constants import DefaultFilenames, DefaultPaths
+from pipette_constants import ConfigKey, DefaultFilenames, DefaultPaths
 from res.string_constants import TAP_CLR_BANNER
 from rich import print as rprint
 from rich.console import Console
@@ -67,6 +67,13 @@ class TriccaAutoPipetteShell(Cmd):
         gcode_manager: Manager for G-code generation and buffering.
     """
 
+    GCODE_PATH: Path = DefaultPaths.DIR_GCODE
+    PROTOCOL_PATH: Path = DefaultPaths.DIR_PROTOCOL
+
+    # Remove the built-in do_set so ConfigurationCommands can register its own.
+    # Per cmd2 docs, this must be done at class definition time.
+    del Cmd.do_set
+
     def __init__(
         self,
         config_system: Path,
@@ -74,6 +81,8 @@ class TriccaAutoPipetteShell(Cmd):
         config_pipette: Path | None,
         config_locations: Path | None,
         config_liquids: Path | None,
+        connect_websocket: bool = True,
+        connect_local_websocket: bool = False,
     ) -> None:
         """Initialize the AutoPipette shell and WebSocket connection.
 
@@ -86,10 +95,19 @@ class TriccaAutoPipetteShell(Cmd):
             config_pipette: Path to pipette model configuration file (optional).
             config_locations: Path to named locations configuration file (optional).
             config_liquids: Path to liquids configuration file (optional).
+            connect_websocket: Whether to connect to WebSocket on startup
+                               (default: True).
+            connect_local_websocket: Whether to connect to local WebSocket for testing
+                                     (default: False).
 
         Example:
-            >>> shell = TriccaAutoPipetteShell()  # Use default config
-            >>> shell = TriccaAutoPipetteShell("custom_config.ini")  # Custom config
+            >>> shell = TriccaAutoPipetteShell(
+            ...     config_system=Path("config/system/system.json"),
+            ...     config_gantry=None,
+            ...     config_pipette=None,
+            ...     config_locations=None,
+            ...     config_liquids=None,
+            ... )
         """
         history_file = str(DefaultPaths.DIR_SHELL / ".tap_history")
         startup_script = str(DefaultPaths.DIR_SHELL / ".init_pipette")
@@ -141,14 +159,17 @@ class TriccaAutoPipetteShell(Cmd):
 
         # WebSocket setup
         self.mrr = MoonrakerRequests()
-        self.uri = f"ws://{self.hostname}/websocket"
-        self.client = WebSocketClient(self.uri)
+        if connect_local_websocket:
+            self.uri = "ws://localhost/websocket"
+        else:
+            self.uri = f"ws://{self.hostname}/websocket"
+        if connect_websocket:
+            self.client = WebSocketClient(self.uri)
+        else:
+            self.client = None
 
         # G-code management
         self.gcode_manager = GCodeManager(DefaultPaths.DIR_GCODE, self._autopipette)
-
-        # Remove default set command (we provide our own via ConfigurationCommands)
-        delattr(Cmd, "do_set")
 
         # Register all command sets
         self._register_command_sets()
@@ -171,13 +192,17 @@ class TriccaAutoPipetteShell(Cmd):
         """
         network = self._autopipette.system_config.network
 
-        # Try IP first, then hostname, then error
-        hostname = network.get("ip") or network.get("hostname")
+        # Try IP first, then hostname. Keys are lowercase to match JSON convention;
+        # ConfigKey.Network defines the canonical names for reference.
+        ip_key = ConfigKey.Network.IP.lower()  # "ip"
+        hostname_key = ConfigKey.Network.HOSTNAME.lower()  # "hostname"
+        hostname = network.get(ip_key) or network.get(hostname_key)
 
         if not hostname:
             raise RuntimeError(
-                "No hostname or IP configured in system.network. "
-                "Please set 'hostname' or 'ip' in config/system/system.json"
+                f"No hostname or IP configured in system.network. "
+                f"Please set '{hostname_key}' or '{ip_key}' in "
+                f"config/system/system.json"
             )
 
         return hostname
@@ -217,15 +242,18 @@ class TriccaAutoPipetteShell(Cmd):
         self.console.print(TAP_CLR_BANNER)
         self.console.print("[green]Connecting to Pipette...[/]")
 
-        self.client.start()
-        connected = self.client._connected.wait(timeout=WEBSOCKET_TIMEOUT_SECONDS)
+        if self.client is not None:
+            self.client.start()
+            connected = self.client.wait_for_connection(
+                timeout=WEBSOCKET_TIMEOUT_SECONDS
+            )
 
-        if not connected or not self.client.ws or self.client.ws.closed:
-            self.perror("Failed to connect to WebSocket.")
-            self.prompt = "autopipette (disconnected) >> "
-            logger.error("WebSocket connection failed during startup")
-        else:
-            logger.info("WebSocket connection established")
+            if not connected:
+                self.perror("Failed to connect to WebSocket.")
+                self.prompt = "autopipette (disconnected) >> "
+                logger.error("WebSocket connection failed during startup")
+            else:
+                logger.info("WebSocket connection established")
 
         self.console.print("[green]Initializing Pipette...[/]")
         self.console.print("[green]Loading commands...[/]")
@@ -238,7 +266,8 @@ class TriccaAutoPipetteShell(Cmd):
         """
         self.poutput("Shutting down...")
         self.poutput("Closing WebSocket client...")
-        self.client.stop()
+        if self.client is not None:
+            self.client.stop()
         self.poutput("WebSocket client closed.")
         self.poutput("Exited.")
         logger.info("Shell shutdown complete")
@@ -255,13 +284,23 @@ class TriccaAutoPipetteShell(Cmd):
         Returns:
             Modified pre-command data, potentially with stop flag set.
         """
-        # Commands that require the pipette to be homed
+        # Commands that require the pipette to be homed.
+        # Note: "home", "init", "home_x/y/z" etc. are intentionally excluded
+        # as they are the commands used to perform homing.
         movement_commands = {
-            "pipette",
+            # Movement
             "move",
             "move_loc",
             "move_rel",
+            # Pipetting
+            "pipette",
+            "aspirate",
+            "dispense",
             "next_tip",
+            "eject_tip",
+            "dispose_tip",
+            "change_tip",
+            # Protocol execution
             "run",
         }
 
@@ -269,7 +308,7 @@ class TriccaAutoPipetteShell(Cmd):
             return data
 
         if not self._autopipette.state.homed:
-            rprint("[red]Pipette not homed. Run the 'home all' command.[/]")
+            rprint("[red]Pipette not homed. Run 'init' or 'home all' first.[/]")
             logger.warning(
                 f"Command '{data.statement.command}' blocked - pipette not homed"
             )
@@ -308,7 +347,8 @@ class TriccaAutoPipetteShell(Cmd):
 
         def worker() -> None:
             try:
-                response = self.client.send_jsonrpc(payload)
+                # Can't run if self.client is None
+                response = self.client.send_jsonrpc(payload)  # type: ignore[union-attr]
                 with self.terminal_lock:
                     self.async_alert(f"Response: {response}")
                 logger.debug(f"RPC response: {response}")
@@ -321,6 +361,10 @@ class TriccaAutoPipetteShell(Cmd):
                 self.perror(error_msg)
                 logger.exception("Unexpected error during RPC call")
 
+        if self.client is None:
+            self.perror("WebSocket client not initialized. Cannot send RPC.")
+            logger.error("Attempted to send RPC without WebSocket client")
+            return
         threading.Thread(target=worker, daemon=True).start()
 
     # ==================== G-code File Management ====================
@@ -340,18 +384,22 @@ class TriccaAutoPipetteShell(Cmd):
         """
 
         def worker() -> None:
-            future = self.client.upload_gcode_file(filename, str(file_path))
+            # Can't run if self.client is None
+            future = self.client.upload_gcode_file(filename, str(file_path))  # type: ignore[union-attr]
             try:
                 server_path = future.result()
                 with self.terminal_lock:
                     self.async_alert(f"Upload successful. Server path: {server_path}")
-                self.poutput(f"Upload successful. Server path: {server_path}")
                 logger.info(f"Uploaded {filename} to {server_path}")
             except Exception as e:
                 error_msg = f"Upload failed: {e}"
                 self.perror(error_msg)
                 logger.exception(f"Failed to upload {filename}")
 
+        if self.client is None:
+            self.perror("WebSocket client not initialized. Cannot upload G-code.")
+            logger.error("Attempted to upload G-code without WebSocket client")
+            return
         threading.Thread(target=worker, daemon=True).start()
 
     def upload_and_execute_gcode(
@@ -373,7 +421,8 @@ class TriccaAutoPipetteShell(Cmd):
         """
 
         def worker() -> None:
-            future = self.client.upload_gcode_file(filename, str(file_path))
+            # Can't run if self.client is None
+            future = self.client.upload_gcode_file(filename, str(file_path))  # type: ignore[union-attr]
             try:
                 server_path = future.result()
                 with self.terminal_lock:
@@ -390,6 +439,12 @@ class TriccaAutoPipetteShell(Cmd):
                 self.perror(error_msg)
                 logger.exception(f"Failed to upload and execute {filename}")
 
+        if self.client is None:
+            self.perror("WebSocket client not initialized. Cannot upload G-code.")
+            logger.error(
+                "Attempted to upload and execute G-code without WebSocket client"
+            )
+            return
         threading.Thread(target=worker, daemon=True).start()
 
     def output_gcode(

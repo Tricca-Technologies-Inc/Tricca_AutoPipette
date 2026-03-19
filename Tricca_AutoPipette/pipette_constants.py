@@ -15,6 +15,7 @@ __all__ = [
     "PlateType",
     "GCodeCommand",
     "PhysicalConstants",
+    "DefaultFilenames",
     "DefaultPaths",
     "ConfigKey",
 ]

@@ -76,6 +76,7 @@ def parse_arguments() -> argparse.Namespace:
     parser = Cmd2ArgumentParser(
         description="Tricca AutoPipette Shell - Automated pipetting control interface"
     )
+    # --------------------------- Configuration arguments --------------------------- #
     parser.add_argument(
         "--config",
         type=str,
@@ -111,6 +112,7 @@ def parse_arguments() -> argparse.Namespace:
         metavar="FILE",
         help="Path to optional location configurations file (JSON format)",
     )
+    # ----------------------------- Logging arguments ----------------------------- #
     parser.add_argument(
         "--log-file",
         type=str,
@@ -125,7 +127,19 @@ def parse_arguments() -> argparse.Namespace:
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
         help="Logging level (default: INFO)",
     )
-
+    # ----------------------------- Connection arguments ----------------------------- #
+    parser.add_argument(
+        "--no-connect",
+        default=False,
+        action="store_true",
+        help="Start the shell without attempting to connect to websocket",
+    )
+    parser.add_argument(
+        "--local-connect",
+        default=False,
+        action="store_true",
+        help="Start the shell and connect to a local websocket server (ws://localhost:8765)",
+    )
     return parser.parse_args()
 
 
@@ -273,7 +287,6 @@ def main() -> int:
         if args.config_pipette is not None:
             config_pipette_path = DIR_CONFIG_PIPETTE / Path(args.config_pipette)
         else:
-            # config_pipette_path = DIR_CONFIG_PIPETTE / DEFAULT_CONFIG_PIPETTE
             config_pipette_path = (
                 None  # Pipette config is optional, use None to skip validation
             )
@@ -281,7 +294,6 @@ def main() -> int:
         if args.config_locations is not None:
             config_locations_path = DIR_CONFIG_LOCATIONS / Path(args.config_locations)
         else:
-            # config_locations_path = DIR_CONFIG_LOCATIONS / DEFAULT_CONFIG_LOCATIONS
             config_locations_path = (
                 None  # Locations config is optional, use None to skip validation
             )
@@ -289,7 +301,6 @@ def main() -> int:
         if args.config_liquids is not None:
             config_liquids_path = DIR_CONFIG_LIQUIDS / Path(args.config_liquids)
         else:
-            # config_liquids_path = DIR_CONFIG_LIQUIDS / DEFAULT_CONFIG_LIQUIDS
             config_liquids_path = (
                 None  # Liquids config is optional, use None to skip validation
             )
@@ -301,6 +312,7 @@ def main() -> int:
             config_pipette=config_pipette_path,
             config_locations=config_locations_path,
             config_liquids=config_liquids_path,
+            connect_websocket=not args.no_connect,
         )
         shell.cmdloop()
 
