@@ -1093,7 +1093,7 @@ class AutoPipette:
         dest_col: int | None = None,
         volume: float | None = None,
         wiggle: bool = False,
-        serum_speed = False,
+        serum_speed: bool = False,
         touch: bool = False,
     ) -> None:
         """Dispense liquid from the pipette tip into a destination.
@@ -1198,6 +1198,9 @@ class AutoPipette:
         prewet: int = 0,
         prewet_vol: float = 10.0,
         wiggle: bool = False,
+        serum_speed: bool = False,
+        extra_air: bool = False,
+        after_air: bool = False,
         touch: bool = False,
         keep_tip: bool = False,
     ) -> None:
@@ -1310,4 +1313,5 @@ class AutoPipette:
         # Dispose of tip unless explicitly keeping it
         if not keep_tip:
             self.dispose_tip()
+
 
