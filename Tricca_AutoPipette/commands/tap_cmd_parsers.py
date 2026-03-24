@@ -92,7 +92,8 @@ class AspirateArgs:
         source: Source location name.
         src_row: Source row index for plate locations.
         src_col: Source column index for plate locations.
-        aspirate_air: Volume of air to aspirate before liquid (µL).
+        pre_aspirate_air: Volume of air to aspirate before liquid (µL).
+        post_aspirate_air: Volume of air to aspirate after liquid (µL).
         prewet: Number of prewet cycles before aspirating.
         prewet_vol: Volume to use for each prewet cycle (µL).
     """
@@ -101,7 +102,8 @@ class AspirateArgs:
     source: str
     src_row: int | None
     src_col: int | None
-    aspirate_air: float
+    pre_aspirate_air: float
+    post_aspirate_air: float
     prewet: int
     prewet_vol: float
 
@@ -158,7 +160,8 @@ class PipetteArgs:
     dest_row: int | None
     dest_col: int | None
     tipbox_name: str | None
-    aspirate_air: float
+    pre_aspirate_air: float
+    post_aspirate_air: float
     prewet: int
     prewet_vol: float
     wiggle: bool
@@ -499,7 +502,13 @@ class TAPCmdParsers:
         help="Source column index (for plate locations)",
     )
     parser_aspirate.add_argument(
-        "--aspirate_air",
+        "--pre_aspirate_air",
+        default=0.0,
+        type=float,
+        help="Volume of air to aspirate before liquid in µL (default: 0.0)",
+    )
+    parser_aspirate.add_argument(
+        "--post_aspirate_air",
         default=0.0,
         type=float,
         help="Volume of air to aspirate before liquid in µL (default: 0.0)",
@@ -599,10 +608,16 @@ class TAPCmdParsers:
         help="Name of the tipbox to draw from (e.g. tipbox, tipbox2)",
     )
     parser_pipette.add_argument(
-        "--aspirate_air",
+        "--pre_aspirate_air",
         default=0.0,
         type=float,
         help="Volume of air to aspirate before liquid in µL (default: 0.0)",
+    )
+    parser_pipette.add_argument(
+        "--post_aspirate_air",
+        default=0.0,
+        type=float,
+        help="Volume of air to aspirate after liquid in µL (default: 0.0)",
     )
     parser_pipette.add_argument(
         "--prewet",

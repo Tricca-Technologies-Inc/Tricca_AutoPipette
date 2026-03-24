@@ -707,7 +707,8 @@ class AutoPipette:
         source: str,
         src_row: int | None = None,
         src_col: int | None = None,
-        aspirate_air: float = 0.0,
+        pre_aspirate_air: float = 0.0,
+        post_aspirate_air: float = 0.0,
         prewet: int = 0,
         prewet_vol: float = 10.0,
     ) -> None:
@@ -718,7 +719,8 @@ class AutoPipette:
             source: Name of source location or plate.
             src_row: Row index for plate wells, or None for next well.
             src_col: Column index for plate wells, or None for next well.
-            aspirate_air: Volume of air to aspirate before liquid.
+            pre_aspirate_air: Volume of air to aspirate before liquid.
+            post_aspirate_air: Volume of air to aspirate after liquid.
             prewet: Number of prewet cycles before aspiration.
             prewet_vol: Volume to use for prewet cycles.
 
@@ -743,8 +745,8 @@ class AutoPipette:
         self.move_to(coor_source)
         self.home_pipette_stepper()
 
-        if aspirate_air:
-            self.operate_syringe(FluidDisplacement.aspiration, aspirate_air)
+        if pre_aspirate_air:
+            self.operate_syringe(FluidDisplacement.aspiration, pre_aspirate_air)
 
         self.dip_z_down(coor_source, loc_source.get_dip_distance(volume))
 
@@ -762,6 +764,9 @@ class AutoPipette:
         self.gcode_wait(self.syringe.wait_aspirate_ms)
 
         self.dip_z_return(coor_source)
+
+        if post_aspirate_air:
+            self.operate_syringe(FluidDisplacement.aspiration, post_aspirate_air)
 
     def dispense_volume(
         self,
@@ -833,7 +838,8 @@ class AutoPipette:
         dest_row: int | None = None,
         dest_col: int | None = None,
         tipbox_name: str | None = None,
-        aspirate_air: float = 0.0,
+        pre_aspirate_air: float = 0.0,
+        post_aspirate_air: float = 0.0,
         prewet: int = 0,
         prewet_vol: float = 10.0,
         wiggle: bool = False,
@@ -858,7 +864,8 @@ class AutoPipette:
             dest_row: Destination plate row index (0-based).
             dest_col: Destination plate column index (0-based).
             tipbox_name: Name of specific tipbox to use.
-            aspirate_air: Volume of air to aspirate before liquid.
+            pre_aspirate_air: Volume of air to aspirate before liquid.
+            post_aspirate_air: Volume of air to aspirate after liquid.
             prewet: Number of prewet cycles.
             prewet_vol: Volume in µL to prewet the tip with.
             wiggle: If True, shake tip during dispensing.
@@ -907,7 +914,8 @@ class AutoPipette:
                 source,
                 src_row=src_row,
                 src_col=src_col,
-                aspirate_air=aspirate_air,
+                pre_aspirate_air=pre_aspirate_air,
+                post_aspirate_air=post_aspirate_air,
                 prewet=prewet,
                 prewet_vol=prewet_vol,
             )
