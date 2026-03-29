@@ -160,23 +160,23 @@ pipette 56.4 --extra_air --after_air --src_row 0 --src_col 2 --dest_row 3 --dest
 
 # Tyrosine *)
 pipette 56.4 --extra_air --after_air --keep_tip manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox 
-pipette 56.4 --extra_air --after_air --keep_tip --src_row 0 --src_col 3 --dest_row 4 --dest_col 0 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
-pipette 56.4 --extra_air --after_air --keep_tip --src_row 0 --src_col 3 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
-pipette 56.4 --extra_air --after_air --keep_tip --src_row 0 --src_col 3 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
-pipette 56.4 --extra_air --after_air --keep_tip --src_row 0 --src_col 3 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
-pipette 56.4 --extra_air --after_air --keep_tip --src_row 0 --src_col 3 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
-pipette 56.4 --extra_air --after_air --keep_tip --src_row 0 --src_col 3 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
-pipette 56.4 --extra_air --after_air --src_row 0 --src_col 3 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
+pipette 56.4 --extra_air --after_air --keep_tip --src_row 0 --src_col 3 --dest_row 3 --dest_col 9 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
+pipette 56.4 --extra_air --after_air --keep_tip --src_row 0 --src_col 3 --dest_row 3 --dest_col 9 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
+pipette 56.4 --extra_air --after_air --keep_tip --src_row 0 --src_col 3 --dest_row 3 --dest_col 9 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
+pipette 56.4 --extra_air --after_air --keep_tip --src_row 0 --src_col 3 --dest_row 3 --dest_col 9 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
+pipette 56.4 --extra_air --after_air --keep_tip --src_row 0 --src_col 3 --dest_row 3 --dest_col 9 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
+pipette 56.4 --extra_air --after_air --keep_tip --src_row 0 --src_col 3 --dest_row 3 --dest_col 9 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
+pipette 56.4 --extra_air --after_air --src_row 0 --src_col 3 --dest_row 3 --dest_col 9 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
 
 # Kynurenine *)
 pipette 56.4 --extra_air --after_air --keep_tip manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox 
-pipette 56.4 --extra_air --after_air --keep_tip --src_row 0 --src_col 4 --dest_row 4 --dest_col 0 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
-pipette 56.4 --extra_air --after_air --keep_tip --src_row 0 --src_col 4 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
-pipette 56.4 --extra_air --after_air --keep_tip --src_row 0 --src_col 4 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
-pipette 56.4 --extra_air --after_air --keep_tip --src_row 0 --src_col 4 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
-pipette 56.4 --extra_air --after_air --keep_tip --src_row 0 --src_col 4 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
-pipette 56.4 --extra_air --after_air --keep_tip --src_row 0 --src_col 4 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
-pipette 56.4 --extra_air --after_air --src_row 0 --src_col 4 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
+pipette 56.4 --extra_air --after_air --keep_tip --src_row 0 --src_col 4 --dest_row 3 --dest_col 10 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
+pipette 56.4 --extra_air --after_air --keep_tip --src_row 0 --src_col 4 --dest_row 3 --dest_col 10 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
+pipette 56.4 --extra_air --after_air --keep_tip --src_row 0 --src_col 4 --dest_row 3 --dest_col 10 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
+pipette 56.4 --extra_air --after_air --keep_tip --src_row 0 --src_col 4 --dest_row 3 --dest_col 10 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
+pipette 56.4 --extra_air --after_air --keep_tip --src_row 0 --src_col 4 --dest_row 3 --dest_col 10 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
+pipette 56.4 --extra_air --after_air --keep_tip --src_row 0 --src_col 4 --dest_row 3 --dest_col 10 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
+pipette 56.4 --extra_air --after_air --src_row 0 --src_col 4 --dest_row 3 --dest_col 10 manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox
 
 # Creatine *)
 pipette 56.4 --extra_air --after_air manu4 96wellplate --dispense_vol 56.4 --tipbox tipbox 
@@ -186,5 +186,5 @@ pipette 56.4 --extra_air --after_air manu4 96wellplate --dispense_vol 56.4 --tip
 
 # alpha-Aminoadipicacid *)
 pipette 67.5 --extra_air --after_air --keep_tip manu3 96wellplate --dispense_vol 67.5 --tipbox tipbox 
-pipette 56.4 --extra_air --after_air --keep_tip --src_row 1 --src_col 0 --dest_row 4 --dest_col 0 manu3 96wellplate --dispense_vol 56.4 --tipbox tipbox
-pipette 56.4 --extra_air --after_air --src_row 1 --src_col 0 manu3 96wellplate --dispense_vol 56.4 --tipbox tipbox
+pipette 56.4 --extra_air --after_air --keep_tip --src_row 1 --src_col 0 --dest_row 4 --dest_col 1 manu3 96wellplate --dispense_vol 56.4 --tipbox tipbox
+pipette 56.4 --extra_air --after_air --src_row 1 --src_col 0 --dest_row 4 --dest_col 1 manu3 96wellplate --dispense_vol 56.4 --tipbox tipbox
