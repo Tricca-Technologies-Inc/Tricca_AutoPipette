@@ -432,7 +432,7 @@ class TAPCmdParsers:
         help="Volume to use for prewet cycles in microliters (default: 10.0)",
     )
     parser_aspirate.add_argument(
-        "--ext_air",
+        "--extra_air",
         action="store_true",
         help="add extra air before pipetting",
     )
@@ -567,7 +567,7 @@ class TAPCmdParsers:
         help="Keep tip attached after dispensing (default: eject tip)",
     )
     parser_aspirate.add_argument(
-        "--ext_air",
+        "--extra_air",
         action="store_true",
         help="add extra air before pipetting",
     )
