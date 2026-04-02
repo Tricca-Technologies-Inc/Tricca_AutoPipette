@@ -480,7 +480,7 @@ class TAPCmdParsers:
         action="store_true",
         help="Touch tip to well side after dispensing",
     )
-    parser_aspirate.add_argument(
+    parser_dispense.add_argument(
         "--serum_speed",
         action="store_true",
         help="slow down all actions",
@@ -566,17 +566,17 @@ class TAPCmdParsers:
         action="store_true",
         help="Keep tip attached after dispensing (default: eject tip)",
     )
-    parser_aspirate.add_argument(
+    parser_pipette.add_argument(
         "--extra_air",
         action="store_true",
         help="add extra air before pipetting",
     )
-    parser_aspirate.add_argument(
+    parser_pipette.add_argument(
         "--after_air",
         action="store_true",
         help="add extra air after aspirating",
     )
-    parser_aspirate.add_argument(
+    parser_pipette.add_argument(
         "--serum_speed",
         action="store_true",
         help="slow down all actions",
