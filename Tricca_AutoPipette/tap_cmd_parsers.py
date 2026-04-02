@@ -437,7 +437,7 @@ class TAPCmdParsers:
         help="add extra air before pipetting",
     )
     parser_aspirate.add_argument(
-        "--aft_air",
+        "--after_air",
         action="store_true",
         help="add extra air after aspirating",
     )
@@ -572,7 +572,7 @@ class TAPCmdParsers:
         help="add extra air before pipetting",
     )
     parser_aspirate.add_argument(
-        "--aft_air",
+        "--after_air",
         action="store_true",
         help="add extra air after aspirating",
     )
