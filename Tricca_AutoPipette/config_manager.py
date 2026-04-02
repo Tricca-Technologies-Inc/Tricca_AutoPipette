@@ -182,6 +182,8 @@ class ConfigManager:
             wait_movement=get_required_int("WAIT", "WAIT_MOVEMENT"),
             wait_aspirate=get_required_int("WAIT", "WAIT_ASPIRATE"),
             max_vol=get_required_int("VOLUME_CONV", "max_vol"),
+            aft_air=get_required_int("WAIT", "aft_air"),
+            ext_air=get_required_int("WAIT", "ext_air"),
         )
 
     def get_volume_calibration(self) -> tuple[list[float], list[float]]:
