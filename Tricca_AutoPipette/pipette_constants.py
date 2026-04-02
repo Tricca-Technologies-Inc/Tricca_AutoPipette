@@ -187,6 +187,8 @@ class ConfigKey:
         EJECT = "WAIT_EJECT"
         MOVEMENT = "WAIT_MOVEMENT"
         ASPIRATE = "WAIT_ASPIRATE"
+        AFT_AIR = "AFT_AIR"
+        EXT_AIR = "EXT_AIR"
 
     class VolumeConv:
         """Volume conversion configuration keys."""
