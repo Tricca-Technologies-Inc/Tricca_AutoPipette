@@ -225,7 +225,7 @@ class AutoPipette:
         TODO Load a JSON file that contains the relevant variables for every physical
         parameter that affects the functioning of the pipette.
         """
-        if self.pipette_params.model == "verticle":
+        if self.pipette_params.model == "vertical":
             self.model.pipette_motor_orientation = -1
             if self.location_manager.tipboxes is not None:
                 self.location_manager.tipboxes.wells.reverse()
