@@ -44,6 +44,7 @@ class PipetteParams(BaseModel):
         max_vol: Maximum pipette volume capacity in microliters.
         aft_air: amount of extra air to be added after picking up liquid
         ext_air: amount of extra air to be added before picking up or prewet
+        serum_speed: slow down ejecting liquid.
 
     Example:
         >>> params = PipetteParams(
