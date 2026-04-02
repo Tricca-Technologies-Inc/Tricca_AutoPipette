@@ -854,7 +854,8 @@ class AutoPipette:
             if direction is FluidDisplacement.aspiration:
                 speed = self.pipette_params.speed_pipette_up
             else:  # direction is FluidDisplacement.dispense:
-                speed = (self.pipette_params.speed_pipette_up if serum_speed else self.pipette_params.speed_pipette_down)
+                speed = (self.pipette_params.speed_pipette_up) 
+                         #if serum_speed else self.pipette_params.speed_pipette_down)
                 
                 #self.pipette_params.speed_pipette_down
         if accel is None:
