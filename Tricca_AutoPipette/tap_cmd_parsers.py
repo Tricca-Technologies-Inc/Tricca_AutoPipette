@@ -431,6 +431,21 @@ class TAPCmdParsers:
         type=float,
         help="Volume to use for prewet cycles in microliters (default: 10.0)",
     )
+    parser_aspirate.add_argument(
+        "--ext_air",
+        action="store_true",
+        help="add extra air before pipetting",
+    )
+    parser_aspirate.add_argument(
+        "--aft_air",
+        action="store_true",
+        help="add extra air after aspirating",
+    )
+    parser_aspirate.add_argument(
+        "--serum_speed",
+        action="store_true",
+        help="slow down all actions",
+    )
 
     parser_dispense: Cmd2ArgumentParser = Cmd2ArgumentParser(
         description="Dispense liquid to a destination location."
@@ -464,6 +479,11 @@ class TAPCmdParsers:
         "--touch",
         action="store_true",
         help="Touch tip to well side after dispensing",
+    )
+    parser_aspirate.add_argument(
+        "--serum_speed",
+        action="store_true",
+        help="slow down all actions",
     )
 
     parser_pipette: Cmd2ArgumentParser = Cmd2ArgumentParser(
@@ -545,6 +565,21 @@ class TAPCmdParsers:
         "--keep_tip",
         action="store_true",
         help="Keep tip attached after dispensing (default: eject tip)",
+    )
+    parser_aspirate.add_argument(
+        "--ext_air",
+        action="store_true",
+        help="add extra air before pipetting",
+    )
+    parser_aspirate.add_argument(
+        "--aft_air",
+        action="store_true",
+        help="add extra air after aspirating",
+    )
+    parser_aspirate.add_argument(
+        "--serum_speed",
+        action="store_true",
+        help="slow down all actions",
     )
 
     parser_tipbox: Cmd2ArgumentParser = Cmd2ArgumentParser(
