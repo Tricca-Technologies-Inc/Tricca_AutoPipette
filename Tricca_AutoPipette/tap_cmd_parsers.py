@@ -166,6 +166,8 @@ class PipetteArgs:
         dest: Destination location name.
         prewet: Whether to prewet the tip before aspirating.
         keep_tip: Whether to keep the tip after dispensing.
+        extra_air: add extra air before aspirating.
+        after_air: add extra air after aspirating
         wiggle: Whether to wiggle during dispensing.
         touch: Whether to touch the tip to the side after dispensing.
         src_row: Source row index for plate locations.
