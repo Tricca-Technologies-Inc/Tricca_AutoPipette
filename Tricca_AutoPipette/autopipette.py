@@ -1290,6 +1290,9 @@ class AutoPipette:
                 aspirate_air=aspirate_air,
                 prewet=prewet,
                 prewet_vol=prewet_vol,
+                extra_air=extra_air,
+                after_air=after_air,
+                serum_speed=serum_speed,
             )
             # Only dispense the passed in amount if present
             if disp_vol_ul:
@@ -1300,6 +1303,7 @@ class AutoPipette:
                     volume=disp_vol_ul,
                     wiggle=wiggle,
                     touch=touch,
+                    serum_speed=serum_speed,
                 )
                 break
             else:
@@ -1309,6 +1313,7 @@ class AutoPipette:
                     dest_col=dest_col,
                     wiggle=wiggle,
                     touch=touch,
+                    serum_speed=serum_speed,
                 )
 
         # Dispose of tip unless explicitly keeping it
