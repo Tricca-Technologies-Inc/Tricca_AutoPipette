@@ -989,6 +989,8 @@ class AutoPipette:
             prewet: If non-zero, perform prewetting a prewet number of cycles before
                     aspiration.
             prewet_vol: If prewet-ing, prewet with this volume.
+            extra_air: adds a pre-set amount of extra air before aspirating
+            after_air: adds a pre-set amount of air after aspirating
 
         Raises:
             ValueError: If source is a simple coordinate (not a plate with
