@@ -187,6 +187,8 @@ class PipetteCommands(TAPCommandSet):
         dest_row: int | None = args.dest_row
         dest_col: int | None = args.dest_col
         tipbox_name: str | None = args.tipbox_name
+        after_air: bool = args.after_air
+        extra_air: bool = args.extra_air
 
         # Validate volume
         if vol_ul <= 0:
@@ -226,6 +228,8 @@ class PipetteCommands(TAPCommandSet):
                 wiggle=wiggle,
                 touch=touch,
                 keep_tip=keep_tip,
+                after_air=after_air,
+                extra_air=extra_air,
             )
 
             comment = f"\n; Pipette {vol_ul} µL from {source} to {dest}\n"
