@@ -1278,7 +1278,7 @@ class AutoPipette:
         #calculate total volume for splitting
         aft_vol = self.pipette_params.aft_air if after_air else 0
         if extra_air:
-            if (self.pipette_params.ext_air+volume+aft_vol >= self.pipette_params.max_vol):
+            if (self.pipette_params.ext_air+vol_ul+aft_vol >= self.pipette_params.max_vol):
                 ext_vol = self.pipette_params.max_vol - (vol_ul+aft_vol+2)
             else:
                 ext_vol = self.pipette_params.ext_air
