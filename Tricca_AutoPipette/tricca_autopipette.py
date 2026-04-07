@@ -15,6 +15,8 @@ from pathlib import Path
 
 from cmd2 import Cmd2ArgumentParser
 from pipette_constants import DefaultFilenames, DefaultPaths
+from PyQt6.QtWidgets import QApplication
+from tap_gui import MainWindow
 from tap_shell import TriccaAutoPipetteShell
 
 # Constants
@@ -139,6 +141,13 @@ def parse_arguments() -> argparse.Namespace:
         default=False,
         action="store_true",
         help="Start the shell and connect to a local websocket server (ws://localhost:7125)",
+    )
+    # ----------------------------- GUI Arguments ------------------------------------ #
+    parser.add_argument(
+        "--gui",
+        default=False,
+        action="store_true",
+        help="Start with the graphical user interface (GUI)",
     )
     return parser.parse_args()
 
@@ -304,20 +313,28 @@ def main() -> int:
             config_liquids_path = (
                 None  # Liquids config is optional, use None to skip validation
             )
-        # Launch the shell
-        logging.info("Starting Tricca AutoPipette Shell")
-        shell = TriccaAutoPipetteShell(
-            config_system=config_system_path,
-            config_gantry=config_gantry_path,
-            config_pipette=config_pipette_path,
-            config_locations=config_locations_path,
-            config_liquids=config_liquids_path,
-            connect_websocket=not args.no_connect,
-        )
-        shell.cmdloop()
+        if args.gui:
+            # Launch the GUI
+            logging.info("Starting Tricca AutoPipette GUI")
+            app = QApplication(sys.argv)
+            window = MainWindow()
+            window.show()
+            sys.exit(app.exec())
+        else:
+            # Launch the shell
+            logging.info("Starting Tricca AutoPipette Shell")
+            shell = TriccaAutoPipetteShell(
+                config_system=config_system_path,
+                config_gantry=config_gantry_path,
+                config_pipette=config_pipette_path,
+                config_locations=config_locations_path,
+                config_liquids=config_liquids_path,
+                connect_websocket=not args.no_connect,
+            )
+            shell.cmdloop()
 
-        logging.info("Tricca AutoPipette Shell terminated successfully")
-        return 0
+            logging.info("Tricca AutoPipette Shell terminated successfully")
+            return 0
 
     except (FileNotFoundError, ValueError) as e:
         logging.error("Configuration error: %s", e)
