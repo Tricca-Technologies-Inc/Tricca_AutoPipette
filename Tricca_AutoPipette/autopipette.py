@@ -1064,7 +1064,8 @@ class AutoPipette:
             self.operate_syringe(FluidDisplacement.dispense, AIR_CUSHION_UL)
               
         if extra_air:
-            AIR_CUSHION_UL = ext_vol
+            AIR_CUSHION_UL = 20
+            #ext_vol
             self.operate_syringe(FluidDisplacement.aspiration, AIR_CUSHION_UL)
             self.gcode_wait(self.pipette_params.wait_aspirate)
 
@@ -1081,8 +1082,8 @@ class AutoPipette:
 
         # If you want air afterwards to prevent dripping...
         if after_air:
-            
-            self.operate_syringe(FluidDisplacement.aspiration, aft_vol)
+            self.operate_syringe(FluidDisplacement.aspiration, 5)
+            #aft_vol)
             self.gcode_wait(self.pipette_params.wait_aspirate)
         # Wait after things are picked up so that we can see if it stays
         self.gcode_wait(500)
