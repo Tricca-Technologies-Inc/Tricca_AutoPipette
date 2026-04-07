@@ -1294,51 +1294,51 @@ class AutoPipette:
             self.next_tip()  # TODO pass in preffered tipbox
 
         # Calculate transfer chunks based on max pipette capacity
-        max_vol = self.pipette_params.max_vol
-        chunks = int(tot_vol // max_vol)
-        remainder = tot_vol - (chunks * max_vol)
-        transfer_volumes: list[float] = [float(max_vol)] * chunks
+        #max_vol = self.pipette_params.max_vol
+        #chunks = int(tot_vol // max_vol)
+        #remainder = tot_vol - (chunks * max_vol)
+        #transfer_volumes: list[float] = [float(max_vol)] * chunks
 
         # Add remainder if significant (> 0.000001 µL)
-        if remainder > PhysicalConstants.VOLUME_TOLERANCE_UL:
-            transfer_volumes.append(remainder)
+        #if remainder > PhysicalConstants.VOLUME_TOLERANCE_UL:
+        #    transfer_volumes.append(remainder)
 
         # Execute transfer sequence using calculated volumes
-        for pip_vol in transfer_volumes:
-            self.aspirate_volume(
-                pip_vol,
-                source,
-                src_row=src_row,
-                src_col=src_col,
-                aspirate_air=aspirate_air,
-                prewet=prewet,
-                prewet_vol=prewet_vol,
-                extra_air=extra_air,
-                after_air=after_air,
+       
+        self.aspirate_volume(
+            vol_ul,
+            source,
+            src_row=src_row,
+            src_col=src_col,
+            aspirate_air=aspirate_air,
+            prewet=prewet,
+            prewet_vol=prewet_vol,
+            extra_air=extra_air,
+            after_air=after_air,
+            serum_speed=serum_speed,
+        )
+            # Only dispense the passed in amount if present
+        if disp_vol_ul:
+            self.dispense_volume(
+                dest,
+                dest_row=dest_row,
+                dest_col=dest_col,
+                volume=disp_tot_vol,
+                wiggle=wiggle,
+                touch=touch,
                 serum_speed=serum_speed,
             )
-            # Only dispense the passed in amount if present
-            if disp_vol_ul:
-                self.dispense_volume(
-                    dest,
-                    dest_row=dest_row,
-                    dest_col=dest_col,
-                    volume=disp_tot_vol,
-                    wiggle=wiggle,
-                    touch=touch,
-                    serum_speed=serum_speed,
-                )
-                break
-            else:
-                self.dispense_volume(
-                    dest,
-                    dest_row=dest_row,
-                    dest_col=dest_col,
-                    volume=tot_vol,
-                    wiggle=wiggle,
-                    touch=touch,
-                    serum_speed=serum_speed,
-                )
+            
+        else:
+            self.dispense_volume(
+                dest,
+                dest_row=dest_row,
+                dest_col=dest_col,
+                volume=tot_vol,
+                wiggle=wiggle,
+                touch=touch,
+                serum_speed=serum_speed,
+            )
 
         # Dispose of tip unless explicitly keeping it
         if not keep_tip:
