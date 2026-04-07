@@ -1134,7 +1134,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self.dip_z_down(curr_coor, self.waste_container.get_dip_distance())
         self.eject_tip()
         self.dip_z_return(curr_coor)
-        self.move_to_z(Coordinate(x=coor_dest.x, y=coor_dest.y, z=5))
+        #self.move_to_z(Coordinate(x=coor_dest.x, y=coor_dest.y, z=5))
         self.move_to(Coordinate(x=150, y=150, z=5))
         self.home_z() # home z
 
