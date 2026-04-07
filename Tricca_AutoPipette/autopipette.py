@@ -1034,10 +1034,13 @@ class AutoPipette:
         self.move_to(coor_source)
         self.home_pipette_stepper()
         aft_vol = self.pipette_params.aft_air if after_air else 0
-        if (self.pipette_params.ext_air+volume+aft_vol >= self.pipette_params.max_vol):
-            ext_vol = self.pipette_params.max_vol - (volume+aft_vol+2)
+        if extra_air
+            if (self.pipette_params.ext_air+volume+aft_vol >= self.pipette_params.max_vol):
+                ext_vol = self.pipette_params.max_vol - (volume+aft_vol+2)
+            else:
+                ext_vol = self.pipette_params.ext_air
         else:
-            ext_vol = self.pipette_params.ext_air
+            ext_vol = 0
         tot_vol = volume+aft_vol+ext_vol
         
         if aspirate_air:
@@ -1270,7 +1273,23 @@ class AutoPipette:
         """
         if vol_ul < 0:
             raise ValueError(f"Invalid volume: {vol_ul}µL. Volume must be positive.")
+        
+        
+        #calculate total volume for splitting
+        aft_vol = self.pipette_params.aft_air if after_air else 0
+        if extra_air
+            if (self.pipette_params.ext_air+volume+aft_vol >= self.pipette_params.max_vol):
+                ext_vol = self.pipette_params.max_vol - (vol_ul+aft_vol+2)
+            else:
+                ext_vol = self.pipette_params.ext_air
+        else:
+            ext_vol = 0
+        tot_vol = vol_ul+aft_vol+ext_vol
 
+        #calculate total volume for dispensing
+        disp_tot_vol = disp_vol_ul+aft_vol+ext_vol
+
+        
         # Pick up tip if needed
         if not self.state.has_tip:
             _ = tipbox_name
@@ -1278,8 +1297,8 @@ class AutoPipette:
 
         # Calculate transfer chunks based on max pipette capacity
         max_vol = self.pipette_params.max_vol
-        chunks = int(vol_ul // max_vol)
-        remainder = vol_ul - (chunks * max_vol)
+        chunks = int(tot_vol // max_vol)
+        remainder = tot_vol - (chunks * max_vol)
         transfer_volumes: list[float] = [float(max_vol)] * chunks
 
         # Add remainder if significant (> 0.000001 µL)
@@ -1306,7 +1325,7 @@ class AutoPipette:
                     dest,
                     dest_row=dest_row,
                     dest_col=dest_col,
-                    volume=disp_vol_ul,
+                    volume=disp_tot_vol,
                     wiggle=wiggle,
                     touch=touch,
                     serum_speed=serum_speed,
@@ -1317,6 +1336,7 @@ class AutoPipette:
                     dest,
                     dest_row=dest_row,
                     dest_col=dest_col,
+                    volume=tot_vol,
                     wiggle=wiggle,
                     touch=touch,
                     serum_speed=serum_speed,
