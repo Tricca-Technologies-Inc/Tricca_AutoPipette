@@ -1231,6 +1231,9 @@ class AutoPipette:
             prewet: If True, perform pre-wetting cycle.
             prewet_vol: Volume in uL to prewet the tip with.
             wiggle: If True, shake tip during dispensing.
+            serum_speed: If True, slow down dispensing.
+            extra_air: If True, add extra air before aspirating.
+            after_air: If True, add extra air after aspirating.
             touch: If True, touch tip to side after dispensing.
             keep_tip: If True, retain tip after operation.
 
