@@ -984,8 +984,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             self.plunge_down(AIR_CUSHION_UL,
                              self.pipette_params.speed_pipette_down)
             self.gcode_wait(self.pipette_params.wait_aspirate)
-            
-            for _ in range(5):
+            #was 5
+            for _ in range(1):
                     
                  # Dip into the liquid
                 dip_dist = loc_source.get_dip_distance(volume)
