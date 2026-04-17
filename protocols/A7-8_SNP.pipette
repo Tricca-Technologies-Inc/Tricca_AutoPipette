@@ -1,4 +1,4 @@
-pipette 12.4 --touch --after_air --extra_air --keep_tip --dest_row 1 --dest_col 0 PBS 96wellplateSAMPLE --dispense_vol 12.4 --tipbox tipbox --prewet
+pipette 12.4 --touch --after_air --extra_air --keep_tip --dest_row 1 --dest_col 0 PBS 96wellplateSAMPLE --dispense_vol 12.4 --tipbox tipbox --prewet 5
 pipette 12.4 --touch --after_air --extra_air --keep_tip --dest_row 2 --dest_col 0 PBS 96wellplateSAMPLE --dispense_vol 12.4 --tipbox tipbox
 pipette 12.4 --touch --after_air --extra_air --dest_row 3 --dest_col 0 PBS 96wellplateSAMPLE --dispense_vol 12.4 --tipbox tipbox
 
