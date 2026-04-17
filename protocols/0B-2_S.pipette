@@ -1,4 +1,4 @@
-pipette 142 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 142 --tipbox tipbox --prewet
+pipette 142 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 142 --tipbox tipbox --prewet 5
 pipette 142 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 142 --tipbox tipbox
 pipette 142 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 142 --tipbox tipbox
 pipette 142 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 142 --tipbox tipbox
