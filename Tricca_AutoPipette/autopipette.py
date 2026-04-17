@@ -954,7 +954,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                         source: str,
                         src_row: Optional[int] = None,
                         src_col: Optional[int] = None,
-                        prewet: bool = False,
+                        prewet: int = 0,
                         extra_air: bool = False,
                         after_air: bool = False,
                         serum_speed: bool = False,
@@ -977,7 +977,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             ext_vol = self.pipette_params.ext_air
         tot_vol = volume+aft_vol+ext_vol
 
-        if prewet:
+        if prewet != 0:
             #dip_z = loc_source.get_dip_distance(volume)
             #grab extra air
             AIR_CUSHION_UL = ext_vol
@@ -985,7 +985,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                              self.pipette_params.speed_pipette_down)
             self.gcode_wait(self.pipette_params.wait_aspirate)
             #was 5
-            for _ in range(1):
+            for _ in range(prewet):
                     
                  # Dip into the liquid
                 dip_dist = loc_source.get_dip_distance(volume)
@@ -1190,7 +1190,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 dest_row: Optional[int] = None,
                 dest_col: Optional[int] = None,
                 keep_tip: bool = False,
-                prewet: bool = False,
+                prewet: int = 0,
                 wiggle: bool = False,
                 touch: bool = False,
                 *,
@@ -1273,7 +1273,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         src_row: Optional[int] = None,
         src_col: Optional[int] = None,
         keep_tip: bool = False,
-        prewet: bool = False,
+        prewet: int = 0,
         wiggle: bool = False,
         touch: bool = False,
         leftover_action: str = "keep",  # "keep" or "waste"
