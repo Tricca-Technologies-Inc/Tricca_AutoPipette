@@ -1285,7 +1285,7 @@ class AutoPipette:
         tot_vol = vol_ul+aft_vol+ext_vol
 
         #calculate total volume for dispensing
-        disp_tot_vol = disp_vol_ul+aft_vol+ext_vol
+        disp_tot_vol = tot_vol
 
         
         # Pick up tip if needed
