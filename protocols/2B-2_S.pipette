@@ -1,4 +1,4 @@
-pipette 26 --extra_air --after_air --keep_tip RGNT_D SAMPLEPLATE --dispense_vol 26 --tipbox tipbox --prewet
+pipette 26 --extra_air --after_air --keep_tip RGNT_D SAMPLEPLATE --dispense_vol 26 --tipbox tipbox --prewet 5
 pipette 26 --extra_air --after_air --keep_tip RGNT_D SAMPLEPLATE --dispense_vol 26 --tipbox tipbox
 pipette 26 --extra_air --after_air --keep_tip RGNT_D SAMPLEPLATE --dispense_vol 26 --tipbox tipbox
 pipette 26 --extra_air --after_air --keep_tip RGNT_D SAMPLEPLATE --dispense_vol 26 --tipbox tipbox
