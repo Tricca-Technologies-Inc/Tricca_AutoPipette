@@ -308,7 +308,7 @@ class TriccaAutoPipetteShell(Cmd):
         vol_ul: float = args.vol_ul
         src: str = args.src
         dest: str = args.dest
-        prewet: bool = args.prewet
+        prewet: int = args.prewet
         disp_vol = args.disp_vol_ul
         keep_tip: bool = args.keep_tip
         wiggle: bool = args.wiggle
