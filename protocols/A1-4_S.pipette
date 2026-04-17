@@ -1,5 +1,5 @@
 pipette 0  --extra_air --after_air FIS1 96wellplate --dispense_vol 0 --tipbox tipbox 
-pipette 11 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 11 --tipbox tipbox --prewet
+pipette 11 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 11 --tipbox tipbox --prewet 5
 pipette 11 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 11 --tipbox tipbox
 pipette 11 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 11 --tipbox tipbox
 pipette 11 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 11 --tipbox tipbox
@@ -105,7 +105,7 @@ pipette 11  --extra_air --after_air FIS1 96wellplate --dispense_vol 11 --tipbox 
 reset_plate 96wellplate
 
 pipette 0 --keep_tip FIS2 96wellplate --dispense_vol 11 --tipbox tipbox
-pipette 11  --extra_air --after_air --keep_tip FIS2 96wellplate --dispense_vol 11 --tipbox tipbox --prewet
+pipette 11  --extra_air --after_air --keep_tip FIS2 96wellplate --dispense_vol 11 --tipbox tipbox --prewet 5
 pipette 11  --extra_air --after_air --keep_tip FIS2 96wellplate --dispense_vol 11 --tipbox tipbox
 pipette 11  --extra_air --after_air --keep_tip FIS2 96wellplate --dispense_vol 11 --tipbox tipbox
 pipette 11  --extra_air --after_air --keep_tip FIS2 96wellplate --dispense_vol 11 --tipbox tipbox
@@ -210,7 +210,7 @@ pipette 11  --extra_air --after_air FIS2 96wellplate --dispense_vol 11 --tipbox 
 
 reset_plate 96wellplate
 
-pipette 11  --extra_air --after_air --keep_tip --dest_row 4 --dest_col 0 FS1 96wellplate --dispense_vol 11 --tipbox tipbox --prewet
+pipette 11  --extra_air --after_air --keep_tip --dest_row 4 --dest_col 0 FS1 96wellplate --dispense_vol 11 --tipbox tipbox --prewet 5
 pipette 11  --extra_air --after_air --keep_tip --dest_row 5 --dest_col 0 FS1 96wellplate --dispense_vol 11 --tipbox tipbox
 pipette 11  --extra_air --after_air --keep_tip --dest_row 6 --dest_col 0 FS1 96wellplate --dispense_vol 11 --tipbox tipbox
 pipette 11  --extra_air --after_air --keep_tip --dest_row 7 --dest_col 0 FS1 96wellplate --dispense_vol 11 --tipbox tipbox
@@ -223,7 +223,7 @@ pipette 11  --extra_air --after_air --dest_row 5 --dest_col 1 FS1 96wellplate --
 
 reset_plate 96wellplate
 
-pipette 11  --extra_air --after_air --keep_tip --dest_row 4 --dest_col 0 FS2 96wellplate --dispense_vol 11  --extra_air --after_air --tipbox tipbox --prewet
+pipette 11  --extra_air --after_air --keep_tip --dest_row 4 --dest_col 0 FS2 96wellplate --dispense_vol 11  --extra_air --after_air --tipbox tipbox --prewet 5
 pipette 11  --extra_air --after_air --keep_tip --dest_row 5 --dest_col 0 FS2 96wellplate --dispense_vol 11  --extra_air --after_air --tipbox tipbox
 pipette 11  --extra_air --after_air --keep_tip --dest_row 6 --dest_col 0 FS2 96wellplate --dispense_vol 11  --extra_air --after_air --tipbox tipbox
 pipette 11  --extra_air --after_air --keep_tip --dest_row 7 --dest_col 0 FS2 96wellplate --dispense_vol 11  --extra_air --after_air --tipbox tipbox
