@@ -1054,6 +1054,11 @@ class AutoPipette:
             self.gcode_wait(self.pipette_params.wait_aspirate)
 
             dip_z = loc_source.get_dip_distance(tot_vol)
+            self.move_to_z(Coordinate(
+                x=coor_source.x,
+                y=coor_source.y,
+                z=dip_z
+            ))
             
             for _ in range(prewet):
                 self.operate_syringe(FluidDisplacement.aspiration, volume)
