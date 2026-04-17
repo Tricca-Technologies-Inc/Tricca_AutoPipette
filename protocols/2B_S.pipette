@@ -1,4 +1,4 @@
-pipette 333 --extra_air --after_air --keep_tip WATER SAMPLEPLATE --dispense_vol 333 --tipbox tipbox --prewet
+pipette 333 --extra_air --after_air --keep_tip WATER SAMPLEPLATE --dispense_vol 333 --tipbox tipbox --prewet 5
 pipette 333 --extra_air --after_air --keep_tip WATER SAMPLEPLATE --dispense_vol 333 --tipbox tipbox
 pipette 333 --extra_air --after_air --keep_tip WATER SAMPLEPLATE --dispense_vol 333 --tipbox tipbox
 pipette 333 --extra_air --after_air --keep_tip WATER SAMPLEPLATE --dispense_vol 333 --tipbox tipbox
