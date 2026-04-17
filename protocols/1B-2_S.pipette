@@ -1,4 +1,4 @@
-pipette 75 --keep_tip --extra_air --after_air --serum_speed RGNT_ABC SAMPLEPLATE --dispense_vol 75 --tipbox tipbox --prewet
+pipette 75 --keep_tip --extra_air --after_air --serum_speed RGNT_ABC SAMPLEPLATE --dispense_vol 75 --tipbox tipbox --prewet 5
 pipette 75 --keep_tip --extra_air --after_air --serum_speed RGNT_ABC SAMPLEPLATE --dispense_vol 75 --tipbox tipbox
 pipette 75 --keep_tip --extra_air --after_air --serum_speed RGNT_ABC SAMPLEPLATE --dispense_vol 75 --tipbox tipbox
 pipette 75 --keep_tip --extra_air --after_air --serum_speed RGNT_ABC SAMPLEPLATE --dispense_vol 75 --tipbox tipbox
