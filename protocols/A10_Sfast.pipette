@@ -1,4 +1,4 @@
-pipette 50 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --prewet
+pipette 50 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --prewet 5
 pipette 50 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
 pipette 50 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
 pipette 50 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2
