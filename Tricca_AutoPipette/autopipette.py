@@ -965,7 +965,7 @@ class AutoPipette:
         serum_speed: bool = False,
         aspirate_air: float = 0.0,
         prewet: int = 0,
-        prewet_vol: float = 10.0,
+        prewet_vol: float = volume,
     ) -> None:
         """Aspirate liquid from a source location into the pipette tip.
 
@@ -1052,6 +1052,8 @@ class AutoPipette:
             AIR_CUSHION_UL = ext_vol
             self.operate_syringe(FluidDisplacement.aspiration, AIR_CUSHION_UL)
             self.gcode_wait(self.pipette_params.wait_aspirate)
+
+            dip_z = loc_source.get_dip_distance(tot_vol)
             
             for _ in range(prewet):
                 self.operate_syringe(FluidDisplacement.aspiration, prewet_vol)
@@ -1059,7 +1061,7 @@ class AutoPipette:
                 self.operate_syringe(FluidDisplacement.dispense, prewet_vol)
                 self.gcode_wait(self.pipette_params.wait_aspirate)
 
-            dip_z = loc_source.get_dip_distance(tot_vol)
+            
             raise_z = dip_z - 30
             self.move_to_z(Coordinate(
                 x=coor_source.x,
@@ -1201,7 +1203,7 @@ class AutoPipette:
         tipbox_name: str | None = None,
         aspirate_air: float = 0.0,
         prewet: int = 0,
-        prewet_vol: float = 10.0,
+        prewet_vol: float = vol_ul,
         wiggle: bool = False,
         serum_speed: bool = False,
         extra_air: bool = False,
