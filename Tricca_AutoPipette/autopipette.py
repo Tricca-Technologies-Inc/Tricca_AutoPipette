@@ -1335,6 +1335,7 @@ class AutoPipette:
                 touch=touch,
                 serum_speed=serum_speed,
             )
+            self.clear_syringe(speed=100)
             
         else:
             self.dispense_volume(
@@ -1346,6 +1347,7 @@ class AutoPipette:
                 touch=touch,
                 serum_speed=serum_speed,
             )
+            self.clear_syringe(speed=100)
 
         # Dispose of tip unless explicitly keeping it
         if not keep_tip:
