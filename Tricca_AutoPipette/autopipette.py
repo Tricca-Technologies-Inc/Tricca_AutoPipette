@@ -1171,7 +1171,8 @@ class AutoPipette:
         self.move_to(coor_dest)
         self.dip_z_down(coor_dest, loc_dest.get_dip_distance(volume))
         if volume:
-            self.operate_syringe(FluidDisplacement.dispense, volume)
+            #self.operate_syringe(FluidDisplacement.dispense, volume)
+            self.clear_syringe()
         else:
             self.clear_syringe()
         self.gcode_wait(self.pipette_params.wait_aspirate)  # TODO Add wait_dispense
