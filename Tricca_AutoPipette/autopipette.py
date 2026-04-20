@@ -1328,27 +1328,27 @@ class AutoPipette:
         )
             # Only dispense the passed in amount if present
         if disp_vol_ul:
-            #self.dispense_volume(
-             #   dest,
-              #  dest_row=dest_row,
-               # dest_col=dest_col,
-                #volume=disp_tot_vol,
-                #wiggle=wiggle,
-                #touch=touch,
-                #serum_speed=serum_speed,
-            #)
+            self.dispense_volume(
+                dest,
+                dest_row=dest_row,
+                dest_col=dest_col,
+                volume=disp_tot_vol,
+                wiggle=wiggle,
+                touch=touch,
+                serum_speed=serum_speed,
+            )
             self.clear_syringe(speed=100)
             
         else:
-            #self.dispense_volume(
-             #   dest,
-              #  dest_row=dest_row,
-               # dest_col=dest_col,
-                #volume=tot_vol,
-                #wiggle=wiggle,
-                #touch=touch,
-                #serum_speed=serum_speed,
-            #)
+            self.dispense_volume(
+                dest,
+                dest_row=dest_row,
+                dest_col=dest_col,
+                volume=tot_vol,
+                wiggle=wiggle,
+                touch=touch,
+                serum_speed=serum_speed,
+            )
             self.clear_syringe(speed=100)
 
         # Dispose of tip unless explicitly keeping it
