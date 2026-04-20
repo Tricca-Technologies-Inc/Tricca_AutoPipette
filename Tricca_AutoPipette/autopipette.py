@@ -1079,7 +1079,7 @@ class AutoPipette:
               
         if extra_air:
             AIR_CUSHION_UL = ext_vol
-            self.operate_syringe(FluidDisplacement.aspiration, AIR_CUSHION_UL)
+            self.operate_syringe(FluidDisplacement.aspiration, AIR_CUSHION_UL, speed = self.pipette_params.speed_pipette_up)
             self.gcode_wait(self.pipette_params.wait_aspirate)
 
         # dip down into the liquid
