@@ -210,7 +210,7 @@ pipette 12.4 --touch --extra_air --dest_row 3 --dest_col 11 96wellplatePCR2 96we
 pipette 12.4 --touch --extra_air --dest_row 4 --dest_col 11 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 12.4 --tipbox tipbox
 pipette 12.4 --touch --extra_air --dest_row 5 --dest_col 11 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 12.4 --tipbox tipbox
 
-pipette 12.4 --touch --extra_air --dest_row 6 --dest_col 11 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 12.4 --tipbox tipbox2
-pipette 12.4 --touch --extra_air --dest_row 7 --dest_col 11 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 12.4 --tipbox tipbox2
+pipette 12.4 --touch --extra_air --dest_row 6 --dest_col 11 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 12.4 --tipbox tipbox
+pipette 12.4 --touch --extra_air --dest_row 7 --dest_col 11 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 12.4 --tipbox tipbox
 
 reset_plate 96wellplateSAMPLE
