@@ -1052,7 +1052,7 @@ class AutoPipette:
         # Prewetting cycle (if requested)
         if prewet:
             AIR_CUSHION_UL = ext_vol
-            self.operate_syringe(FluidDisplacement.aspiration, AIR_CUSHION_UL)
+            self.operate_syringe(FluidDisplacement.aspiration, AIR_CUSHION_UL, speed = self.pipette_params.speed_pipette_up)
             self.gcode_wait(self.pipette_params.wait_aspirate)
 
             dip_z = loc_source.get_dip_distance(tot_vol)
@@ -1063,7 +1063,7 @@ class AutoPipette:
             ))
             
             for _ in range(prewet):
-                self.operate_syringe(FluidDisplacement.aspiration, volume)
+                self.operate_syringe(FluidDisplacement.aspiration, volume, speed = self.pipette_params.speed_pipette_up)
                 self.gcode_wait(self.pipette_params.wait_aspirate)
                 self.operate_syringe(FluidDisplacement.dispense, volume)
                 self.gcode_wait(self.pipette_params.wait_aspirate)
