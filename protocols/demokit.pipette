@@ -1,0 +1,43 @@
+
+
+# Acetylornithine *)
+pipette 56.4 --extra_air --after_air manu1 KIT1 --dispense_vol 56.4 --tipbox tipbox --keep_tip 
+
+# Asymmetric dimethylarginine *)
+pipette 56.4 --extra_air --after_air manu1 KIT1 --dispense_vol 56.4 --tipbox tipbox --keep_tip 
+
+# Carnosine *)
+pipette 56.4 --extra_air --after_air manu1 KIT1 --dispense_vol 56.4 --tipbox tipbox --keep_tip 
+
+# Creatinine *)
+pipette 56.4 --extra_air --after_air manu1 KIT1 --dispense_vol 56.4 --tipbox tipbox --keep_tip 
+
+# Dopa *)
+pipette 56.4 --extra_air --after_air manu1 KIT1 --dispense_vol 56.4 --tipbox tipbox --keep_tip 
+
+# Dopamine *)
+pipette 56.4 --extra_air --after_air manu1 KIT1 --dispense_vol 56.4 --tipbox tipbox --keep_tip 
+
+# Histamine *)
+pipette 56.4 --extra_air --after_air manu1 KIT1 --dispense_vol 56.4 --tipbox tipbox --keep_tip 
+
+# Methioninesulfoxide *)
+pipette 56.4 --extra_air --after_air manu2 KIT1 --dispense_vol 56.4 --tipbox tipbox --keep_tip 
+
+# Hydroxyproline  (t4-OH-Pro) *)
+pipette 56.4 --extra_air --after_air manu2 KIT1 --dispense_vol 56.4 --tipbox tipbox --keep_tip 
+
+# Hydroxyproline  (c4-OH-Pro) *)
+pipette 56.4 --extra_air --after_air manu2 KIT1 --dispense_vol 56.4 --tipbox tipbox --keep_tip 
+
+# Phenylethylamine *)
+pipette 56.4 --extra_air --after_air manu2 KIT1 --dispense_vol 56.4 --tipbox tipbox --keep_tip 
+
+# Putrescine *)
+pipette 56.4 --extra_air --after_air manu2 KIT1 --dispense_vol 56.4 --tipbox tipbox --keep_tip 
+
+# Sarcosine *)
+pipette 56.4 --extra_air --after_air manu2 KIT1 --dispense_vol 56.4 --tipbox tipbox --keep_tip 
+
+# Serotonin *)
+pipette 56.4 --extra_air --after_air manu2 KIT1 --dispense_vol 56.4 --tipbox tipbox
