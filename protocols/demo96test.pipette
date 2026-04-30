@@ -1,0 +1,44 @@
+# A protocol for testing the individual mesurements of Prime A kit making
+
+# Acetylornithine *)
+pipette 50 --extra_air --after_air manu1 96wellplate --dispense_vol 50 --tipbox tipbox --keep_tip 
+
+# Asymmetric dimethylarginine *)
+pipette 50 --extra_air --after_air manu1 96wellplate --dispense_vol 50 --tipbox tipbox --keep_tip 
+
+# Carnosine *)
+pipette 50 --extra_air --after_air manu1 96wellplate --dispense_vol 50 --tipbox tipbox --keep_tip 
+
+# Creatinine *)
+pipette 50 --extra_air --after_air manu1 96wellplate --dispense_vol 50 --tipbox tipbox --keep_tip 
+
+# Dopa *)
+pipette 50 --extra_air --after_air manu1 96wellplate --dispense_vol 50 --tipbox tipbox --keep_tip 
+
+# Dopamine *)
+pipette 50 --extra_air --after_air manu1 96wellplate --dispense_vol 50 --tipbox tipbox --keep_tip 
+
+# Histamine *)
+pipette 50 --extra_air --after_air manu1 96wellplate --dispense_vol 50 --tipbox tipbox --keep_tip 
+
+# Methioninesulfoxide *)
+pipette 50 --extra_air --after_air manu2 96wellplate --dispense_vol 50 --tipbox tipbox --keep_tip 
+
+# Hydroxyproline  (t4-OH-Pro) *)
+pipette 50 --extra_air --after_air manu2 96wellplate --dispense_vol 50 --tipbox tipbox --keep_tip 
+
+# Hydroxyproline  (c4-OH-Pro) *)
+pipette 50 --extra_air --after_air manu2 96wellplate --dispense_vol 50 --tipbox tipbox --keep_tip 
+
+# Phenylethylamine *)
+pipette 50 --extra_air --after_air manu2 96wellplate --dispense_vol 50 --tipbox tipbox --keep_tip 
+
+# Putrescine *)
+pipette 50 --extra_air --after_air manu2 96wellplate --dispense_vol 50 --tipbox tipbox --keep_tip 
+
+# Sarcosine *)
+pipette 50 --extra_air --after_air manu2 96wellplate --dispense_vol 50 --tipbox tipbox --keep_tip 
+
+# Serotonin *)
+pipette 50 --extra_air --after_air manu2 96wellplate --dispense_vol 50 --tipbox tipbox
+
