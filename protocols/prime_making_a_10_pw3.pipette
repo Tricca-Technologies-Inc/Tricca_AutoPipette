@@ -49,7 +49,7 @@ pipette 55.8 --extra_air --after_air manu1 KIT1 --dispense_vol 55.8 --tipbox tip
 pipette 55.8 --extra_air --after_air manu1 KIT1 --dispense_vol 55.8 --tipbox tipbox --prewet 3 
 
 # Diacetylspermine *)
-pipette 30.7 --extra_air --after_air manu1 KIT1 --dispense_vol 30.7 --tipbox tipbox --prewet 3 
+pipette 28.5 --extra_air --after_air manu1 KIT1 --dispense_vol 28.5 --tipbox tipbox --prewet 3 
 
 # Taurine *)
 pipette 55.8 --extra_air --after_air manu1 KIT1 --dispense_vol 55.8 --tipbox tipbox --prewet 3 
@@ -151,7 +151,7 @@ pipette 55.8 --extra_air --after_air --keep_tip manu4 KIT1 --dispense_vol 55.8 -
 pipette 55.8 --extra_air --after_air --src_row 0 --src_col 0 manu4 KIT1 --dispense_vol 55.8 --tipbox tipbox --prewet 3
 
 # Choline *)
-pipette 30.7 --extra_air --after_air manu4 KIT1 --dispense_vol 30.7 --tipbox tipbox --prewet 3 
+pipette 28.5 --extra_air --after_air manu4 KIT1 --dispense_vol 28.5 --tipbox tipbox --prewet 3 
 
 # Nitrotyrosine *)
 pipette 67.5 --extra_air --after_air --keep_tip manu4 KIT1 --dispense_vol 67.5 --tipbox tipbox --prewet 3 
