@@ -1069,7 +1069,7 @@ class AutoPipette:
                 self.gcode_wait(self.pipette_params.wait_aspirate)
 
             
-            raise_z = dip_z - 30
+            raise_z = 0 if (dip_z - 30) < 0 else dip_z - 30
             self.move_to_z(Coordinate(
                 x=coor_source.x,
                 y=coor_source.y,
