@@ -718,8 +718,10 @@ class AutoPipette:
         # Move to tip and pick it up
         self.move_to(loc_tip)
         self.dip_z_down(
-            loc_tip, self.location_manager.tipboxes.get_dip_distance(vol=None)
+            loc_tip, self.location_manager.tipboxes.get_dip_distance(vol=None)-2
         )
+        self._buffer_command(f"G1 Z{box.get_dip_distance()} F{100}\n")
+        self.gcode_wait(self.pipette_params.wait_movement)
         self.dip_z_return(loc_tip)
 
         self.state.has_tip = True
