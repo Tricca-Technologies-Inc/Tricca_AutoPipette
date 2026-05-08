@@ -851,7 +851,9 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         box = self._resolve_tipbox(from_box)
         loc_tip = box.next()
         self.move_to(loc_tip)
-        self.dip_z_down(loc_tip, box.get_dip_distance())
+        self.dip_z_down(loc_tip, box.get_dip_distance()-2)
+        self._buffer_command(f"G1 Z{box.get_dip_distance()} F{100}\n")
+        self.gcode_wait(self.pipette_params.wait_movement)
         self.dip_z_return(loc_tip)
         self.has_tip = True
 
