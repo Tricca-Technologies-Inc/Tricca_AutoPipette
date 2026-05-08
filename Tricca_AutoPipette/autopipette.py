@@ -720,7 +720,7 @@ class AutoPipette:
         self.dip_z_down(
             loc_tip, self.location_manager.tipboxes.get_dip_distance(vol=None)-2
         )
-        self._buffer_command(f"G1 Z{box.get_dip_distance()} F{100}\n")
+        self.gcode_buffers.add(f"{GCodeCommand.LINEAR_MOVE} Z{self.location_manager.tipboxes.get_dip_distance(vol=None)} F{100}\n")
         self.gcode_wait(self.pipette_params.wait_movement)
         self.dip_z_return(loc_tip)
 
