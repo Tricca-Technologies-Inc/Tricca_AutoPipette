@@ -1,5 +1,8 @@
+reset_plate tipbox
+
+pipette 50.0 --extra_air --keep_tip LIS LIS --dispense_vol 50.0 --tipbox tipbox --prewet 1
 pipette 0 --keep_tip LIS 96wellplate --dispense_vol 0 --tipbox tipbox
-pipette 11.4 --extra_air --after_air --keep_tip LIS 96wellplate --dispense_vol 11.4 --tipbox tipbox --prewet 5
+pipette 11.4 --extra_air --after_air --keep_tip LIS 96wellplate --dispense_vol 11.4 --tipbox tipbox
 pipette 11.4 --extra_air --after_air --keep_tip LIS 96wellplate --dispense_vol 11.4 --tipbox tipbox
 pipette 11.4 --extra_air --after_air --keep_tip LIS 96wellplate --dispense_vol 11.4 --tipbox tipbox
 pipette 11.4 --extra_air --after_air --keep_tip LIS 96wellplate --dispense_vol 11.4 --tipbox tipbox
