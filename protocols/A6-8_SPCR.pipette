@@ -1,4 +1,3 @@
-reset_plate tipbox
 
 pipette 50.0 --extra_air --keep_tip LIS LIS --dispense_vol 50.0 --tipbox tipbox --prewet 1
 pipette 0 --keep_tip LIS 96wellplate --dispense_vol 0 --tipbox tipbox
@@ -213,7 +212,7 @@ pipette 12.4 --touch --extra_air --dest_row 3 --dest_col 11 96wellplatePCR2 96we
 pipette 12.4 --touch --extra_air --dest_row 4 --dest_col 11 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 12.4 --tipbox tipbox
 pipette 12.4 --touch --extra_air --dest_row 5 --dest_col 11 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 12.4 --tipbox tipbox
 
-pipette 12.4 --touch --extra_air --dest_row 6 --dest_col 11 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 12.4 --tipbox tipbox
-pipette 12.4 --touch --extra_air --dest_row 7 --dest_col 11 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 12.4 --tipbox tipbox
+pipette 12.4 --touch --extra_air --dest_row 6 --dest_col 11 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 12.4 --tipbox tipbox2
+pipette 12.4 --touch --extra_air --dest_row 7 --dest_col 11 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 12.4 --tipbox tipbox2
 
 reset_plate 96wellplateSAMPLE
