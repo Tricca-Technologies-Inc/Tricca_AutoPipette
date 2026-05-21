@@ -1186,10 +1186,10 @@ class AutoPipette:
         # Optional touch tip to side
         if touch:
             self.gcode_wait(1500) # 1.5 second hold
-            self.move_to_z(Coordinate(x=coor_dest.x, y=coor_dest.y, z=5))
-            self.move_to(Coordinate(x=150, y=150, z=5))
+            #self.move_to_z(Coordinate(x=coor_dest.x, y=coor_dest.y, z=5))
+            #self.move_to(Coordinate(x=150, y=150, z=5))
             # home z
-            self.home_z()
+            #self.home_z()
 
         self.state.has_liquid = False
 
