@@ -1113,9 +1113,9 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             #self.gcode_wait(500) # 0.5 second hold
             #self.move_to_z(Coordinate(x=coor_dest.x, y=coor_dest.y, z=touch_depth))
             self.gcode_wait(1500) # 1.5 second hold
-            self.move_to_z(Coordinate(x=coor_dest.x, y=coor_dest.y, z=5))
-            self.move_to(Coordinate(x=150, y=150, z=5))
-            self.home_z() # home z
+            #self.move_to_z(Coordinate(x=coor_dest.x, y=coor_dest.y, z=5))
+            #self.move_to(Coordinate(x=150, y=150, z=5))
+            #self.home_z() # home z
             
             #self.gcode_wait(2000) # 2 second hold
             #self.gcode_wait(self.pipette_params.wait_movement)
