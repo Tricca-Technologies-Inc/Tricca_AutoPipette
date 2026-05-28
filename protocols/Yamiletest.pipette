@@ -1,11 +1,11 @@
-pipette 11 --keep_tip  --extra_air --after_air FIS1 --dest_row 0 --dest_col 0 manu7 --dispense_vol 11 --tipbox tipbox --prewet 1
-pipette 11 --keep_tip  --extra_air --after_air FIS1 --dest_row 0 --dest_col 0 manu7 --dispense_vol 11 --tipbox tipbox --prewet 1
-pipette 11 --keep_tip  --extra_air --after_air FIS1 --dest_row 0 --dest_col 0 manu7 --dispense_vol 11 --tipbox tipbox --prewet 1
-pipette 11 --keep_tip  --extra_air --after_air FIS1 --dest_row 0 --dest_col 0 manu7 --dispense_vol 11 --tipbox tipbox --prewet 1
-pipette 11 --keep_tip  --extra_air --after_air FIS1 --dest_row 0 --dest_col 0 manu7 --dispense_vol 11 --tipbox tipbox --prewet 1
-pipette 11 --keep_tip  --extra_air --after_air FIS1 --dest_row 0 --dest_col 0 manu7 --dispense_vol 11 --tipbox tipbox --prewet 1
-pipette 11 --keep_tip  --extra_air --after_air FIS1 --dest_row 0 --dest_col 0 manu7 --dispense_vol 11 --tipbox tipbox --prewet 1
-pipette 11 --keep_tip  --extra_air --after_air FIS1 --dest_row 0 --dest_col 0 manu7 --dispense_vol 11 --tipbox tipbox --prewet 1
-pipette 11 --keep_tip  --extra_air --after_air FIS1 --dest_row 0 --dest_col 0 manu7 --dispense_vol 11 --tipbox tipbox --prewet 1
-pipette 11 --extra_air --after_air FIS1 --dest_row 0 --dest_col 0 manu7 --dispense_vol 11 --tipbox tipbox --prewet 1
+pipette 11 --keep_tip  --extra_air --after_air FS1 --dest_row 0 --dest_col 0 manu7 --dispense_vol 11 --tipbox tipbox --prewet 1
+pipette 11 --keep_tip  --extra_air --after_air FS1 --dest_row 0 --dest_col 0 manu7 --dispense_vol 11 --tipbox tipbox --prewet 1
+pipette 11 --keep_tip  --extra_air --after_air FS1 --dest_row 0 --dest_col 0 manu7 --dispense_vol 11 --tipbox tipbox --prewet 1
+pipette 11 --keep_tip  --extra_air --after_air FS1 --dest_row 0 --dest_col 0 manu7 --dispense_vol 11 --tipbox tipbox --prewet 1
+pipette 11 --keep_tip  --extra_air --after_air FS1 --dest_row 0 --dest_col 0 manu7 --dispense_vol 11 --tipbox tipbox --prewet 1
+pipette 11 --keep_tip  --extra_air --after_air FS1 --dest_row 0 --dest_col 0 manu7 --dispense_vol 11 --tipbox tipbox --prewet 1
+pipette 11 --keep_tip  --extra_air --after_air FS1 --dest_row 0 --dest_col 0 manu7 --dispense_vol 11 --tipbox tipbox --prewet 1
+pipette 11 --keep_tip  --extra_air --after_air FS1 --dest_row 0 --dest_col 0 manu7 --dispense_vol 11 --tipbox tipbox --prewet 1
+pipette 11 --keep_tip  --extra_air --after_air FS1 --dest_row 0 --dest_col 0 manu7 --dispense_vol 11 --tipbox tipbox --prewet 1
+pipette 11 --extra_air --after_air FS1 --dest_row 0 --dest_col 0 manu7 --dispense_vol 11 --tipbox tipbox --prewet 1
 
