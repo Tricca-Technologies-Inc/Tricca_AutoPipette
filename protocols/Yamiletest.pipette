@@ -1,1 +1,10 @@
-
+pipette 11 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 11 --tipbox tipbox --prewet 1
+pipette 11 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 11 --tipbox tipbox --prewet 1
+pipette 11 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 11 --tipbox tipbox --prewet 1
+pipette 11 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 11 --tipbox tipbox --prewet 1
+pipette 11 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 11 --tipbox tipbox --prewet 1
+pipette 11 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 11 --tipbox tipbox --prewet 1
+pipette 11 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 11 --tipbox tipbox --prewet 1
+pipette 11 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 11 --tipbox tipbox --prewet 1
+pipette 11 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 11 --tipbox tipbox --prewet 1
+pipette 11 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 11 --tipbox tipbox --prewet 1
