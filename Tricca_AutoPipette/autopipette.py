@@ -1037,6 +1037,7 @@ class AutoPipette:
         # Move to source, clear plunger, and aspirate air if needed
         self.move_to(coor_source)
         self.home_pipette_stepper()
+        dip_z = loc_source.get_dip_distance(volume)
         aft_vol = self.pipette_params.aft_air if after_air else 0
         if extra_air:
             if (self.pipette_params.ext_air+volume+aft_vol >= self.pipette_params.max_vol):
@@ -1057,7 +1058,6 @@ class AutoPipette:
             self.operate_syringe(FluidDisplacement.aspiration, AIR_CUSHION_UL, speed = self.pipette_params.speed_pipette_up)
             self.gcode_wait(self.pipette_params.wait_aspirate)
 
-            dip_z = loc_source.get_dip_distance(tot_vol)
             self.move_to_z(Coordinate(
                 x=coor_source.x,
                 y=coor_source.y,
@@ -1085,7 +1085,7 @@ class AutoPipette:
             self.gcode_wait(self.pipette_params.wait_aspirate)
 
         # dip down into the liquid
-        self.dip_z_down(coor_source, loc_source.get_dip_distance(volume))    
+        self.dip_z_down(coor_source, dip_z)    
         
         # Aspirate liquid
         self.operate_syringe(FluidDisplacement.aspiration, volume)
