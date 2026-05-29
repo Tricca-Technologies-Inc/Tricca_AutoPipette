@@ -970,7 +970,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         # Maybe check if we have liquid in tip already?
         # Pickup liquid
         self.move_to(coor_source)
-
+                            
+        dip_dist = loc_source.get_dip_distance(volume)
         self.home_pipette_stepper(self.pipette_params.speed_pipette_up_slow)
         aft_vol = self.pipette_params.aft_air if after_air else 0
         if (self.pipette_params.ext_air+volume+aft_vol >= self.pipette_params.max_vol):
@@ -980,17 +981,15 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         tot_vol = volume+aft_vol+ext_vol
 
         if prewet != 0:
-            #dip_z = loc_source.get_dip_distance(volume)
             #grab extra air
             AIR_CUSHION_UL = ext_vol
             self.plunge_down(AIR_CUSHION_UL,
                              self.pipette_params.speed_pipette_down)
             self.gcode_wait(self.pipette_params.wait_aspirate)
-            #was 5
+            
             for _ in range(prewet):
                     
                  # Dip into the liquid
-                dip_dist = loc_source.get_dip_distance(volume)
                 self.dip_z_down(coor_source, dip_dist)
                 
                 # Go aspirate
@@ -1004,8 +1003,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
              
             
               # Raise Z by 30 mm if prewet (absolute move)
-            dip_z = loc_source.get_dip_distance(tot_vol)
-            raise_z = dip_z - 30
+            raise_z = dip_dist - 30
             self.move_to_z(Coordinate(
                 x=coor_source.x,
                 y=coor_source.y,
@@ -1017,16 +1015,6 @@ class AutoPipette(metaclass=AutoPipetteMeta):
 
                             
         if extra_air:
-            #if prewet:
-                # Raise Z by 30 mm if prewet (absolute move)
-                #dip_z = loc_source.get_dip_distance(tot_vol)
-                #raise_z = dip_z - 30
-                #self.move_to_z(Coordinate(
-                    #x=coor_source.x,
-                    #y=coor_source.y,
-                    #z=raise_z
-                #))
-                #self.move_to(coor_source)
             AIR_CUSHION_UL = ext_vol
             self.plunge_down(
                 AIR_CUSHION_UL,
@@ -1035,7 +1023,6 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             self.gcode_wait(self.pipette_params.wait_aspirate)
 
         # Dip into the liquid
-        dip_dist = loc_source.get_dip_distance(volume)
         self.dip_z_down(coor_source, dip_dist)
 
         # Total aspirate = liquid + optional air cushion
