@@ -1,6 +1,6 @@
-pipette 10.65 --keep_tip  --extra_air --after_air RGNT_ABC KIT2 --dispense_vol 10.65 --tipbox tipbox --prewet 5
-pipette 10.65 --keep_tip  --extra_air --after_air RGNT_ABC KIT2 --dispense_vol 10.65 --tipbox tipbox --prewet 1
-pipette 10.65 --keep_tip  --extra_air --after_air RGNT_ABC KIT2 --dispense_vol 10.65 --tipbox tipbox --prewet 1
-pipette 10.65 --keep_tip  --extra_air --after_air RGNT_ABC KIT2 --dispense_vol 10.65 --tipbox tipbox --prewet 1
-pipette 10.65 --extra_air --after_air RGNT_ABC KIT2 --dispense_vol 10.65 --tipbox tipbox --prewet 1
+pipette 10.65 --keep_tip  --extra_air --after_air LIS KIT2 --dispense_vol 10.65 --tipbox tipbox --prewet 5
+pipette 10.65 --keep_tip  --extra_air --after_air LIS KIT2 --dispense_vol 10.65 --tipbox tipbox --prewet 1
+pipette 10.65 --keep_tip  --extra_air --after_air LIS KIT2 --dispense_vol 10.65 --tipbox tipbox --prewet 1
+pipette 10.65 --keep_tip  --extra_air --after_air LIS KIT2 --dispense_vol 10.65 --tipbox tipbox --prewet 1
+pipette 10.65 --extra_air --after_air LIS KIT2 --dispense_vol 10.65 --tipbox tipbox --prewet 1
 
