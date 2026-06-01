@@ -545,9 +545,6 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self._buffer_command(
             f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} "
             "MOVE=300 STOP_ON_ENDSTOP=1 SET_POSITION=0 ACCEL=800\n"
-            #f"MANUAL_STEPPER STEPPER={stepper} SPEED=5 "
-            #"MOVE=-2 ACCEL=800\n"
-            #"MOVE=300 STOP_ON_ENDSTOP=1 SET_POSITION=0 ACCEL=800\n"
             f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0\n")
 
     def home_pipette_stepper_disp(self, volume: float, speed: float = None) -> str:
