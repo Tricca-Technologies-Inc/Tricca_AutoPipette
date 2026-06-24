@@ -1,4 +1,4 @@
-pipette 53.8 --keep_tip  --extra_air --after_air LIS KIT2 --dispense_vol 53.8 --tipbox tipbox --keep_tip --prewet 1
-pipette 53.8 --keep_tip  --extra_air --after_air LIS KIT2 --dispense_vol 53.8 --tipbox tipbox --keep_tip --prewet 1
-pipette 53.8 --keep_tip  --extra_air --after_air LIS KIT2 --dispense_vol 53.8 --tipbox tipbox --keep_tip --prewet 1
-pipette 53.8 --keep_tip  --extra_air --after_air LIS KIT2 --dispense_vol 53.8 --tipbox tipbox --prewet 1
+pipette 53.3 --keep_tip  --extra_air --after_air LIS KIT2 --dispense_vol 53.3 --tipbox tipbox --keep_tip --prewet 1
+pipette 53.3 --keep_tip  --extra_air --after_air LIS KIT2 --dispense_vol 53.3 --tipbox tipbox --keep_tip --prewet 1
+pipette 53.3 --keep_tip  --extra_air --after_air LIS KIT2 --dispense_vol 53.3 --tipbox tipbox --keep_tip --prewet 1
+pipette 53.3 --keep_tip  --extra_air --after_air LIS KIT2 --dispense_vol 53.3 --tipbox tipbox --prewet 1
