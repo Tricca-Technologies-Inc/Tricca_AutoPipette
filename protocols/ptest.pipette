@@ -1,6 +1,6 @@
-# A protocol for testing 50uL repeated for tip consistency with the plastic nozzle
+# A protocol for testing 10uL repeated for tip consistency with the plastic nozzle
 
-pipette 50.0 --extra_air --after_air --src_row 0 --src_col 0 manu1 KIT1 --dispense_vol 50.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 50.0 --extra_air --after_air --src_row 0 --src_col 0 manu1 KIT1 --dispense_vol 50.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 50.0 --extra_air --after_air --src_row 0 --src_col 0 manu1 KIT1 --dispense_vol 50.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 50.0 --extra_air --after_air --src_row 0 --src_col 0 manu1 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1 
+pipette 10.0 --extra_air --after_air --src_row 0 --src_col 0 manu1 KIT1 --dispense_vol 10.0 --tipbox tipbox --keep_tip --prewet 1 
+pipette 10.0 --extra_air --after_air --src_row 0 --src_col 0 manu1 KIT1 --dispense_vol 10.0 --tipbox tipbox --keep_tip --prewet 1 
+pipette 10.0 --extra_air --after_air --src_row 0 --src_col 0 manu1 KIT1 --dispense_vol 10.0 --tipbox tipbox --keep_tip --prewet 1 
+pipette 10.0 --extra_air --after_air --src_row 0 --src_col 0 manu1 KIT1 --dispense_vol 10.0 --tipbox tipbox --prewet 1 
