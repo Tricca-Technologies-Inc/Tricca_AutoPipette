@@ -1,106 +1,106 @@
 #A quick program to load 80uL from a vial into the 96wellplatePCR2 plate
 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 3
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
-pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip --prewet 1 
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
+pipette 80.0 --extra_air --after_air PITC1 96wellplatePCR2 --dispense_vol 80.0 --tipbox tipbox --keep_tip  
 
