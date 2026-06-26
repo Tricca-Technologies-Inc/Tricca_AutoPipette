@@ -1,8 +1,8 @@
 #Steps for Mega Panel A 1 and 2 assuming combining FIS1 and FIS2 into two tubes
 
-pipette 50 --keep_tip  --extra_air FIS1 FIS1 --dispense_vol 50 --tipbox tipbox --prewet 1
+#pipette 50 --keep_tip  --extra_air FIS1 FIS1 --dispense_vol 50 --tipbox tipbox --prewet 1
 pipette 0  --extra_air --after_air FIS1 96wellplate --dispense_vol 0 --tipbox tipbox 
-pipette 20.6 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.6 --tipbox tipbox
+pipette 20.6 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.6 --tipbox tipbox --prewet 5
 pipette 20.6 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.6 --tipbox tipbox
 pipette 20.6 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.6 --tipbox tipbox
 pipette 20.6 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.6 --tipbox tipbox
