@@ -1,4 +1,4 @@
-pipette 295 --extra_air --after_air --keep_tip SOLV LCPLATE --dispense_vol 295 --tipbox tipbox --prewet
+pipette 295 --extra_air --after_air --keep_tip SOLV LCPLATE --dispense_vol 295 --tipbox tipbox --prewet 5
 pipette 295 --extra_air --after_air --keep_tip SOLV LCPLATE --dispense_vol 295 --tipbox tipbox
 pipette 295 --extra_air --after_air --keep_tip SOLV LCPLATE --dispense_vol 295 --tipbox tipbox
 pipette 295 --extra_air --after_air --keep_tip SOLV LCPLATE --dispense_vol 295 --tipbox tipbox
