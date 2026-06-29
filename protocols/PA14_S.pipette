@@ -1,2 +1,305 @@
-#For Prime Panel A. Adds 150uL (75 x 2) from the collection plate to each corresponding well of the LCplate
+#For Prime Panel A. Adds 150uL (75 x 2) from the collection plate to each corresponding well of the LCplate for the P100 config
 
+pipette 75.0 --extra_air --after_air --src_row 0 --src_col 0 --dest_row 0 --dest_col 0 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 0 --src_col 0 --dest_row 0 --dest_col 0 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 0 --src_col 1 --dest_row 0 --dest_col 1 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 0 --src_col 1 --dest_row 0 --dest_col 1 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 0 --src_col 2 --dest_row 0 --dest_col 2 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 0 --src_col 2 --dest_row 0 --dest_col 2 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 0 --src_col 3 --dest_row 0 --dest_col 3 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 0 --src_col 3 --dest_row 0 --dest_col 3 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 0 --src_col 4 --dest_row 0 --dest_col 4 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 0 --src_col 4 --dest_row 0 --dest_col 4 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 0 --src_col 5 --dest_row 0 --dest_col 5 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 0 --src_col 5 --dest_row 0 --dest_col 5 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 0 --src_col 6 --dest_row 0 --dest_col 6 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 0 --src_col 6 --dest_row 0 --dest_col 6 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 0 --src_col 7 --dest_row 0 --dest_col 7 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 0 --src_col 7 --dest_row 0 --dest_col 7 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 0 --src_col 8 --dest_row 0 --dest_col 8 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 0 --src_col 8 --dest_row 0 --dest_col 8 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 0 --src_col 9 --dest_row 0 --dest_col 9 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 0 --src_col 9 --dest_row 0 --dest_col 9 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 0 --src_col 10 --dest_row 0 --dest_col 10 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 0 --src_col 10 --dest_row 0 --dest_col 10 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 0 --src_col 11 --dest_row 0 --dest_col 11 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 0 --src_col 11 --dest_row 0 --dest_col 11 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+#################
+
+pipette 75.0 --extra_air --after_air --src_row 1 --src_col 0 --dest_row 1 --dest_col 0 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 1 --src_col 0 --dest_row 1 --dest_col 0 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 1 --src_col 1 --dest_row 1 --dest_col 1 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 1 --src_col 1 --dest_row 1 --dest_col 1 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 1 --src_col 2 --dest_row 1 --dest_col 2 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 1 --src_col 2 --dest_row 1 --dest_col 2 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 1 --src_col 3 --dest_row 1 --dest_col 3 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 1 --src_col 3 --dest_row 1 --dest_col 3 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 1 --src_col 4 --dest_row 1 --dest_col 4 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 1 --src_col 4 --dest_row 1 --dest_col 4 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 1 --src_col 5 --dest_row 1 --dest_col 5 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 1 --src_col 5 --dest_row 1 --dest_col 5 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 1 --src_col 6 --dest_row 1 --dest_col 6 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 1 --src_col 6 --dest_row 1 --dest_col 6 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 1 --src_col 7 --dest_row 1 --dest_col 7 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 1 --src_col 7 --dest_row 1 --dest_col 7 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 1 --src_col 8 --dest_row 1 --dest_col 8 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 1 --src_col 8 --dest_row 1 --dest_col 8 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 1 --src_col 9 --dest_row 1 --dest_col 9 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 1 --src_col 9 --dest_row 1 --dest_col 9 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 1 --src_col 10 --dest_row 1 --dest_col 10 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 1 --src_col 10 --dest_row 1 --dest_col 10 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 1 --src_col 11 --dest_row 1 --dest_col 11 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 1 --src_col 11 --dest_row 1 --dest_col 11 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+#################
+
+pipette 75.0 --extra_air --after_air --src_row 2 --src_col 0 --dest_row 2 --dest_col 0 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 2 --src_col 0 --dest_row 2 --dest_col 0 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 2 --src_col 1 --dest_row 2 --dest_col 1 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 2 --src_col 1 --dest_row 2 --dest_col 1 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 2 --src_col 2 --dest_row 2 --dest_col 2 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 2 --src_col 2 --dest_row 2 --dest_col 2 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 2 --src_col 3 --dest_row 2 --dest_col 3 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 2 --src_col 3 --dest_row 2 --dest_col 3 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 2 --src_col 4 --dest_row 2 --dest_col 4 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 2 --src_col 4 --dest_row 2 --dest_col 4 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 2 --src_col 5 --dest_row 2 --dest_col 5 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 2 --src_col 5 --dest_row 2 --dest_col 5 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 2 --src_col 6 --dest_row 2 --dest_col 6 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 2 --src_col 6 --dest_row 2 --dest_col 6 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 2 --src_col 7 --dest_row 2 --dest_col 7 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 2 --src_col 7 --dest_row 2 --dest_col 7 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 2 --src_col 8 --dest_row 2 --dest_col 8 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 2 --src_col 8 --dest_row 2 --dest_col 8 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 2 --src_col 9 --dest_row 2 --dest_col 9 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 2 --src_col 9 --dest_row 2 --dest_col 9 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 2 --src_col 10 --dest_row 2 --dest_col 10 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 2 --src_col 10 --dest_row 2 --dest_col 10 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 2 --src_col 11 --dest_row 2 --dest_col 11 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 2 --src_col 11 --dest_row 2 --dest_col 11 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+#################
+
+pipette 75.0 --extra_air --after_air --src_row 3 --src_col 0 --dest_row 3 --dest_col 0 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 3 --src_col 0 --dest_row 3 --dest_col 0 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 3 --src_col 1 --dest_row 3 --dest_col 1 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 3 --src_col 1 --dest_row 3 --dest_col 1 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 3 --src_col 2 --dest_row 3 --dest_col 2 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 3 --src_col 2 --dest_row 3 --dest_col 2 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 3 --src_col 3 --dest_row 3 --dest_col 3 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 3 --src_col 3 --dest_row 3 --dest_col 3 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 3 --src_col 4 --dest_row 3 --dest_col 4 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 3 --src_col 4 --dest_row 3 --dest_col 4 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 3 --src_col 5 --dest_row 3 --dest_col 5 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 3 --src_col 5 --dest_row 3 --dest_col 5 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 3 --src_col 6 --dest_row 3 --dest_col 6 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 3 --src_col 6 --dest_row 3 --dest_col 6 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 3 --src_col 7 --dest_row 3 --dest_col 7 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 3 --src_col 7 --dest_row 3 --dest_col 7 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 3 --src_col 8 --dest_row 3 --dest_col 8 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 3 --src_col 8 --dest_row 3 --dest_col 8 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 3 --src_col 9 --dest_row 3 --dest_col 9 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 3 --src_col 9 --dest_row 3 --dest_col 9 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 3 --src_col 10 --dest_row 3 --dest_col 10 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 3 --src_col 10 --dest_row 3 --dest_col 10 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 3 --src_col 11 --dest_row 3 --dest_col 11 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 3 --src_col 11 --dest_row 3 --dest_col 11 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+#################
+
+pipette 75.0 --extra_air --after_air --src_row 4 --src_col 0 --dest_row 4 --dest_col 0 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 4 --src_col 0 --dest_row 4 --dest_col 0 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 4 --src_col 1 --dest_row 4 --dest_col 1 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 4 --src_col 1 --dest_row 4 --dest_col 1 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 4 --src_col 2 --dest_row 4 --dest_col 2 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 4 --src_col 2 --dest_row 4 --dest_col 2 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 4 --src_col 3 --dest_row 4 --dest_col 3 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 4 --src_col 3 --dest_row 4 --dest_col 3 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 4 --src_col 4 --dest_row 4 --dest_col 4 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 4 --src_col 4 --dest_row 4 --dest_col 4 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 4 --src_col 5 --dest_row 4 --dest_col 5 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 4 --src_col 5 --dest_row 4 --dest_col 5 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 4 --src_col 6 --dest_row 4 --dest_col 6 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 4 --src_col 6 --dest_row 4 --dest_col 6 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 4 --src_col 7 --dest_row 4 --dest_col 7 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 4 --src_col 7 --dest_row 4 --dest_col 7 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 4 --src_col 8 --dest_row 4 --dest_col 8 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 4 --src_col 8 --dest_row 4 --dest_col 8 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 4 --src_col 9 --dest_row 4 --dest_col 9 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 4 --src_col 9 --dest_row 4 --dest_col 9 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 4 --src_col 10 --dest_row 4 --dest_col 10 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 4 --src_col 10 --dest_row 4 --dest_col 10 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 4 --src_col 11 --dest_row 4 --dest_col 11 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 4 --src_col 11 --dest_row 4 --dest_col 11 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+#################
+
+pipette 75.0 --extra_air --after_air --src_row 5 --src_col 0 --dest_row 5 --dest_col 0 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 5 --src_col 0 --dest_row 5 --dest_col 0 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 5 --src_col 1 --dest_row 5 --dest_col 1 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 5 --src_col 1 --dest_row 5 --dest_col 1 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 5 --src_col 2 --dest_row 5 --dest_col 2 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 5 --src_col 2 --dest_row 5 --dest_col 2 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 5 --src_col 3 --dest_row 5 --dest_col 3 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 5 --src_col 3 --dest_row 5 --dest_col 3 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 5 --src_col 4 --dest_row 5 --dest_col 4 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 5 --src_col 4 --dest_row 5 --dest_col 4 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 5 --src_col 5 --dest_row 5 --dest_col 5 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 5 --src_col 5 --dest_row 5 --dest_col 5 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 5 --src_col 6 --dest_row 5 --dest_col 6 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 5 --src_col 6 --dest_row 5 --dest_col 6 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 5 --src_col 7 --dest_row 5 --dest_col 7 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 5 --src_col 7 --dest_row 5 --dest_col 7 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 5 --src_col 8 --dest_row 5 --dest_col 8 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 5 --src_col 8 --dest_row 5 --dest_col 8 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 5 --src_col 9 --dest_row 5 --dest_col 9 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 5 --src_col 9 --dest_row 5 --dest_col 9 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 5 --src_col 10 --dest_row 5 --dest_col 10 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 5 --src_col 10 --dest_row 5 --dest_col 10 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 5 --src_col 11 --dest_row 5 --dest_col 11 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 5 --src_col 11 --dest_row 5 --dest_col 11 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+#################
+
+pipette 75.0 --extra_air --after_air --src_row 6 --src_col 0 --dest_row 6 --dest_col 0 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 6 --src_col 0 --dest_row 6 --dest_col 0 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 6 --src_col 1 --dest_row 6 --dest_col 1 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 6 --src_col 1 --dest_row 6 --dest_col 1 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 6 --src_col 2 --dest_row 6 --dest_col 2 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 6 --src_col 2 --dest_row 6 --dest_col 2 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 6 --src_col 3 --dest_row 6 --dest_col 3 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 6 --src_col 3 --dest_row 6 --dest_col 3 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 6 --src_col 4 --dest_row 6 --dest_col 4 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 6 --src_col 4 --dest_row 6 --dest_col 4 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 6 --src_col 5 --dest_row 6 --dest_col 5 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 6 --src_col 5 --dest_row 6 --dest_col 5 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 6 --src_col 6 --dest_row 6 --dest_col 6 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 6 --src_col 6 --dest_row 6 --dest_col 6 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 6 --src_col 7 --dest_row 6 --dest_col 7 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 6 --src_col 7 --dest_row 6 --dest_col 7 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 6 --src_col 8 --dest_row 6 --dest_col 8 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 6 --src_col 8 --dest_row 6 --dest_col 8 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 6 --src_col 9 --dest_row 6 --dest_col 9 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 6 --src_col 9 --dest_row 6 --dest_col 9 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 6 --src_col 10 --dest_row 6 --dest_col 10 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 6 --src_col 10 --dest_row 6 --dest_col 10 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 6 --src_col 11 --dest_row 6 --dest_col 11 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 6 --src_col 11 --dest_row 6 --dest_col 11 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+#################
+
+pipette 75.0 --extra_air --after_air --src_row 7 --src_col 0 --dest_row 7 --dest_col 0 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 7 --src_col 0 --dest_row 7 --dest_col 0 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 7 --src_col 1 --dest_row 7 --dest_col 1 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 7 --src_col 1 --dest_row 7 --dest_col 1 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 7 --src_col 2 --dest_row 7 --dest_col 2 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 7 --src_col 2 --dest_row 7 --dest_col 2 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 7 --src_col 3 --dest_row 7 --dest_col 3 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 7 --src_col 3 --dest_row 7 --dest_col 3 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 7 --src_col 4 --dest_row 7 --dest_col 4 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 7 --src_col 4 --dest_row 7 --dest_col 4 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 7 --src_col 5 --dest_row 7 --dest_col 5 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 7 --src_col 5 --dest_row 7 --dest_col 5 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 7 --src_col 6 --dest_row 7 --dest_col 6 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 7 --src_col 6 --dest_row 7 --dest_col 6 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 7 --src_col 7 --dest_row 7 --dest_col 7 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 7 --src_col 7 --dest_row 7 --dest_col 7 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 7 --src_col 8 --dest_row 7 --dest_col 8 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 7 --src_col 8 --dest_row 7 --dest_col 8 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 7 --src_col 9 --dest_row 7 --dest_col 9 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 7 --src_col 9 --dest_row 7 --dest_col 9 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 7 --src_col 10 --dest_row 7 --dest_col 10 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 7 --src_col 10 --dest_row 7 --dest_col 10 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+pipette 75.0 --extra_air --after_air --src_row 7 --src_col 11 --dest_row 7 --dest_col 11 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox --keep_tip --prewet 1
+pipette 75.0 --extra_air --after_air --src_row 7 --src_col 11 --dest_row 7 --dest_col 11 COLPLATE LCPLATE --dispense_vol 75.0 --tipbox tipbox
+
+#################
