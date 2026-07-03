@@ -1,44 +1,11 @@
-/Tricca_AutoPipette/__pycache__/
-/Tricca_AutoPipette/res/__pycache__/
-Tricca_AutoPipette/res/__pycache__/
-Tricca_AutoPipette/commands/__pycache__/
-.venv/
-temp/
-gcode/temp
-docs/_build
-Tricca_AutoPipette/.tap_history
-/.dir-locals.el
-/Tricca_AutoPipette/flycheck_autopipette.py
-/Tricca_AutoPipette/app.log
-/.envrc
-app.log
-
-# Byte-compiled / optimized / DLL files
+# Byte-compiled / cache
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
-*.so
-
-# Distribution / packaging
-.Python
-build/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.cache/
 
 # Virtual environments
 .venv/
@@ -46,57 +13,50 @@ venv/
 env/
 ENV/
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache/
-.pytest_cache/
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
+# Logs
+*.log
+logs/
 
-# Type checker / linter / static analysis caches
-.mypy_cache/
-.dmypy.json
-dmypy.json
-.pyre/
-.ruff_cache/
+# Databases / local data
+*.sqlite3
+*.db
 
-# Jupyter Notebook
-.ipynb_checkpoints/
+# Backup / temp files
+*.bak
+*.tmp
+*~
 
-# pyenv
-.python-version
+# Project-specific
+temp/
+gcode/temp
+docs/_build
+Tricca_AutoPipette/.tap_history
+Tricca_AutoPipette/flycheck_autopipette.py
 
-# Local environment files
+# Environment / local config
 .env
 .env.*
-*.local
+.envrc
+.dir-locals.el
 
-# IDE / editor files
+# IDE / editor
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
 
-# OS files
+# Emacs
+.#*
+\#*\#
+auto-save-list/
+
+# OS
 .DS_Store
 Thumbs.db
-
-# Logs
-*.log
-*.out
-*.err
-logs/
-*.log
-*.log
+Desktop.ini
