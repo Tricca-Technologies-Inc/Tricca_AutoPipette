@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutoPipette</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0e1117;
+    --surface:   #161b24;
+    --surface2:  #1e2533;
+    --border:    #2a3347;
+    --accent:    #3b82f6;
+    --accent-dim:#1d4ed8;
+    --text:      #e2e8f0;
+    --muted:     #64748b;
+    --success:   #22c55e;
+    --error:     #ef4444;
+    --running:   #f59e0b;
+    --radius:    8px;
+    --mono:      "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  /* ── layout ── */
+  .shell {
+    display: grid;
+    grid-template-rows: 56px 1fr;
+    height: 100vh;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-mark {
+    width: 28px; height: 28px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .logo-mark svg { width: 16px; height: 16px; fill: #fff; }
+
+  .logo-text {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .logo-sub {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+
+  .header-spacer { flex: 1; }
+
+  .conn-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .conn-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.3s;
+  }
+
+  .conn-dot.live { background: var(--success); }
+
+  main {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    overflow: hidden;
+  }
+
+  /* ── protocol list ── */
+  .protocol-panel {
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .protocol-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+  }
+
+  .protocol-list::-webkit-scrollbar { width: 4px; }
+  .protocol-list::-webkit-scrollbar-track { background: transparent; }
+  .protocol-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .protocol-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background 0.12s;
+    user-select: none;
+    border: 1px solid transparent;
+  }
+
+  .protocol-item:hover { background: var(--surface2); }
+
+  .protocol-item.selected {
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+
+  .protocol-icon {
+    width: 32px; height: 32px;
+    border-radius: 6px;
+    background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 13px;
+    font-family: var(--mono);
+    font-weight: 600;
+    color: var(--muted);
+    transition: background 0.12s, color 0.12s;
+  }
+
+  .protocol-item.selected .protocol-icon {
+    background: color-mix(in srgb, var(--accent) 20%, transparent);
+    color: var(--accent);
+  }
+
+  .protocol-name {
+    font-size: 14px;
+    font-weight: 500;
+    font-family: var(--mono);
+  }
+
+  .protocol-ext {
+    font-size: 11px;
+    color: var(--muted);
+    margin-left: auto;
+    font-family: var(--mono);
+  }
+
+  .empty-state {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  /* ── run panel ── */
+  .run-panel {
+    display: flex;
+    flex-direction: column;
+    padding: 32px 36px;
+    gap: 28px;
+    overflow-y: auto;
+  }
+
+  .selection-display {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 28px;
+  }
+
+  .selection-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .selection-name {
+    font-size: 28px;
+    font-weight: 600;
+    font-family: var(--mono);
+    color: var(--text);
+    min-height: 40px;
+  }
+
+  .selection-name.placeholder { color: var(--muted); font-weight: 400; font-size: 18px; }
+
+  /* ── run button ── */
+  .run-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    height: 56px;
+    padding: 0 32px;
+    border-radius: var(--radius);
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s, transform 0.1s;
+    width: 100%;
+    max-width: 360px;
+  }
+
+  .run-btn:hover:not(:disabled) { background: var(--accent-dim); }
+  .run-btn:active:not(:disabled) { transform: scale(0.98); }
+  .run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .run-btn svg { width: 18px; height: 18px; fill: currentColor; }
+
+  /* ── status card ── */
+  .status-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .status-icon {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 16px;
+  }
+
+  .status-icon.idle    { background: var(--surface2); color: var(--muted); }
+  .status-icon.running { background: color-mix(in srgb, var(--running) 15%, transparent); color: var(--running); }
+  .status-icon.done    { background: color-mix(in srgb, var(--success) 15%, transparent); color: var(--success); }
+  .status-icon.error   { background: color-mix(in srgb, var(--error) 15%, transparent); color: var(--error); }
+
+  .status-body { flex: 1; }
+
+  .status-state {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .status-state.idle    { color: var(--muted); }
+  .status-state.running { color: var(--running); }
+  .status-state.done    { color: var(--success); }
+  .status-state.error   { color: var(--error); }
+
+  .status-msg {
+    font-size: 13px;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinning { animation: spin 1s linear infinite; }
+
+  /* ── progress bar ── */
+  .progress-bar-wrap {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 12px;
+  }
+
+  @keyframes indeterminate {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(400%); }
+  }
+
+  .progress-bar {
+    height: 100%;
+    width: 25%;
+    border-radius: 2px;
+    background: var(--accent);
+    animation: indeterminate 1.4s ease-in-out infinite;
+    display: none;
+  }
+
+  .progress-bar.active { display: block; }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <header>
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 16 16"><path d="M8 1L2 4v4c0 3.3 2.6 6 6 7 3.4-1 6-3.7 6-7V4L8 1zm0 2.2l4 2v3.3c0 2.4-1.8 4.5-4 5.2-2.2-.7-4-2.8-4-5.2V5.2l4-2z"/></svg>
+      </div>
+      <span class="logo-text">AutoPipette</span>
+    </div>
+    <span class="logo-sub" style="margin-left:4px">/ kiosk</span>
+    <div class="header-spacer"></div>
+    <div class="conn-indicator">
+      <div class="conn-dot" id="connDot"></div>
+      <span id="connLabel">connecting</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Protocol list -->
+    <div class="protocol-panel">
+      <div class="panel-header">Protocols</div>
+      <div class="protocol-list" id="protocolList">
+        <div class="empty-state">Loading protocols…</div>
+      </div>
+    </div>
+
+    <!-- Run panel -->
+    <div class="run-panel">
+      <div class="selection-display">
+        <div class="selection-label">Selected protocol</div>
+        <div class="selection-name placeholder" id="selectionName">Select a protocol from the list</div>
+      </div>
+
+      <button class="run-btn" id="runBtn" disabled>
+        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        Run protocol
+      </button>
+
+      <div class="status-card">
+        <div class="status-icon idle" id="statusIcon">○</div>
+        <div class="status-body">
+          <div class="status-state idle" id="statusState">Idle</div>
+          <div class="status-msg" id="statusMsg">No protocol running</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar" id="progressBar"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  let selected = null;
+  let ws = null;
+
+  // ── protocol list ──────────────────────────────────────────────────────────
+  async function loadProtocols() {
+    try {
+      const res = await fetch('/protocols');
+      const protocols = await res.json();
+      renderList(protocols);
+    } catch (e) {
+      document.getElementById('protocolList').innerHTML =
+        '<div class="empty-state">Failed to load protocols</div>';
+    }
+  }
+
+  function renderList(protocols) {
+    const list = document.getElementById('protocolList');
+    if (!protocols.length) {
+      list.innerHTML = '<div class="empty-state">No .pipette files found</div>';
+      return;
+    }
+    list.innerHTML = protocols.map(p => `
+      <div class="protocol-item" data-filename="${p.filename}" onclick="selectProtocol(this, '${p.filename}', '${p.name}')">
+        <div class="protocol-icon">${p.name.slice(0, 2)}</div>
+        <span class="protocol-name">${p.name}</span>
+        <span class="protocol-ext">.pipette</span>
+      </div>
+    `).join('');
+  }
+
+  function selectProtocol(el, filename, name) {
+    document.querySelectorAll('.protocol-item').forEach(i => i.classList.remove('selected'));
+    el.classList.add('selected');
+    selected = filename;
+
+    const nameEl = document.getElementById('selectionName');
+    nameEl.textContent = name;
+    nameEl.classList.remove('placeholder');
+    document.getElementById('runBtn').disabled = false;
+  }
+
+  // ── run ────────────────────────────────────────────────────────────────────
+  document.getElementById('runBtn').addEventListener('click', async () => {
+    if (!selected) return;
+    try {
+      const res = await fetch('/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: selected }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        setStatus({ status: 'error', message: err.detail });
+      }
+    } catch (e) {
+      setStatus({ status: 'error', message: e.message });
+    }
+  });
+
+  // ── websocket status ───────────────────────────────────────────────────────
+  function connectWS() {
+    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+    ws = new WebSocket(`${proto}://${location.host}/ws/status`);
+
+    ws.onopen = () => {
+      document.getElementById('connDot').classList.add('live');
+      document.getElementById('connLabel').textContent = 'live';
+    };
+
+    ws.onmessage = e => {
+      const data = JSON.parse(e.data);
+      setStatus(data);
+    };
+
+    ws.onclose = () => {
+      document.getElementById('connDot').classList.remove('live');
+      document.getElementById('connLabel').textContent = 'reconnecting';
+      setTimeout(connectWS, 2000);
+    };
+  }
+
+  function setStatus(data) {
+    const icon  = document.getElementById('statusIcon');
+    const state = document.getElementById('statusState');
+    const msg   = document.getElementById('statusMsg');
+    const bar   = document.getElementById('progressBar');
+    const btn   = document.getElementById('runBtn');
+
+    const s = data.status;
+    const icons = { idle: '○', running: '◌', done: '✓', error: '✕' };
+
+    icon.className  = `status-icon ${s}`;
+    state.className = `status-state ${s}`;
+    icon.textContent  = icons[s] || '○';
+    state.textContent = s.charAt(0).toUpperCase() + s.slice(1);
+    msg.textContent   = data.message || '';
+
+    icon.classList.toggle('spinning', s === 'running');
+    bar.classList.toggle('active', s === 'running');
+    btn.disabled = s === 'running' || !selected;
+  }
+
+  // ── init ───────────────────────────────────────────────────────────────────
+  loadProtocols();
+  connectWS();
+</script>
+</body>
+</html>
