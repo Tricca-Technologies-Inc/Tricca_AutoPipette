@@ -122,6 +122,9 @@ class TriccaAutoPipetteShell(Cmd):
         self.intro = ""
         self.prompt: str = "autopipette >> "
 
+        # Lock guarding async_alert()/terminal output from background threads
+        self.terminal_lock = threading.Lock()
+
         # Initialize AutoPipette with config
         json_config_manager = JsonConfigManager()
         fn_system = (
