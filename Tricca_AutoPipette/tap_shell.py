@@ -122,9 +122,6 @@ class TriccaAutoPipetteShell(Cmd):
         self.intro = ""
         self.prompt: str = "autopipette >> "
 
-        # Lock guarding async_alert()/terminal output from background threads
-        self.terminal_lock = threading.Lock()
-
         # Initialize AutoPipette with config
         json_config_manager = JsonConfigManager()
         fn_system = (
@@ -352,8 +349,7 @@ class TriccaAutoPipetteShell(Cmd):
             try:
                 # Can't run if self.client is None
                 response = self.client.send_jsonrpc(payload)  # type: ignore[union-attr]
-                with self.terminal_lock:
-                    self.async_alert(f"Response: {response}")
+                self.add_alert(msg=f"Response: {response}")
                 logger.debug(f"RPC response: {response}")
             except json.JSONDecodeError as jde:
                 error_msg = f"JSON decode error in params: {jde}"
@@ -391,8 +387,7 @@ class TriccaAutoPipetteShell(Cmd):
             future = self.client.upload_gcode_file(filename, str(file_path))  # type: ignore[union-attr]
             try:
                 server_path = future.result()
-                with self.terminal_lock:
-                    self.async_alert(f"Upload successful. Server path: {server_path}")
+                self.add_alert(msg=f"Upload successful. Server path: {server_path}")
                 logger.info(f"Uploaded {filename} to {server_path}")
             except Exception as e:
                 error_msg = f"Upload failed: {e}"
@@ -428,8 +423,7 @@ class TriccaAutoPipetteShell(Cmd):
             future = self.client.upload_gcode_file(filename, str(file_path))  # type: ignore[union-attr]
             try:
                 server_path = future.result()
-                with self.terminal_lock:
-                    self.async_alert(f"Upload successful. Server path: {server_path}")
+                self.add_alert(msg=f"Upload successful. Server path: {server_path}")
 
                 self.send_rpc(self.mrr.printer_print_start(filename))
                 logger.info(f"Started execution of {filename}")
