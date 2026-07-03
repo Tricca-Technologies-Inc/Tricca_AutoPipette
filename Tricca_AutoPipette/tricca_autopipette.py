@@ -15,8 +15,6 @@ from pathlib import Path
 
 from cmd2 import Cmd2ArgumentParser
 from pipette_constants import DefaultFilenames, DefaultPaths
-from PyQt6.QtWidgets import QApplication
-from tap_gui import MainWindow
 from tap_shell import TriccaAutoPipetteShell
 
 # Constants
@@ -315,11 +313,13 @@ def main() -> int:
             )
         if args.gui:
             # Launch the GUI
-            logging.info("Starting Tricca AutoPipette GUI")
-            app = QApplication(sys.argv)
-            window = MainWindow()
-            window.show()
-            sys.exit(app.exec())
+            # logging.info("Starting Tricca AutoPipette GUI")
+            # app = QApplication(sys.argv)
+            # window = MainWindow()
+            # window.show()
+            # sys.exit(app.exec())
+            _ = args  # Placeholder to avoid unused variable warning
+            return 0
         else:
             # Launch the shell
             logging.info("Starting Tricca AutoPipette Shell")
