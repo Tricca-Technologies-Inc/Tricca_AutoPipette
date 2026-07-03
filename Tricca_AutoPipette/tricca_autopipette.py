@@ -330,6 +330,7 @@ def main() -> int:
                 config_locations=config_locations_path,
                 config_liquids=config_liquids_path,
                 connect_websocket=not args.no_connect,
+                connect_local_websocket=args.local_connect,
             )
             shell.cmdloop()
 
