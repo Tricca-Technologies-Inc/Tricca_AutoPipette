@@ -980,40 +980,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             ext_vol = self.pipette_params.ext_air
         tot_vol = volume+aft_vol+ext_vol
 
-        if prewet != 0:
-            #grab extra air
-            AIR_CUSHION_UL = ext_vol
-            self.plunge_down(AIR_CUSHION_UL,
-                             self.pipette_params.speed_pipette_down)
-            self.gcode_wait(self.pipette_params.wait_aspirate)
-            
-            for _ in range(prewet):
-                    
-                 # Dip into the liquid
-                self.dip_z_down(coor_source, dip_dist)
-                
-                # Go aspirate
-                self.plunge_down(tot_vol,
-                                self.pipette_params.speed_pipette_down)
-                self.gcode_wait(self.pipette_params.wait_aspirate)
-                self.plunge_down(ext_vol,
-                                self.pipette_params.speed_pipette_down)
-                self.gcode_wait(self.pipette_params.wait_aspirate)
-                
-             
-            
-              # Raise Z by 30 mm if prewet (absolute move)
-            raise_z = dip_dist - 30
-            self.move_to_z(Coordinate(
-                x=coor_source.x,
-                y=coor_source.y,
-                z=raise_z
-            ))    
-            self.home_pipette_stepper_disp(tot_vol,
-                (self.pipette_params.speed_pipette_down))
-
-
-                            
+     
         if extra_air:
             AIR_CUSHION_UL = ext_vol
             self.plunge_down(
@@ -1027,6 +994,18 @@ class AutoPipette(metaclass=AutoPipetteMeta):
 
         # Total aspirate = liquid + optional air cushion
         aspirate_amount = volume + (AIR_CUSHION_UL if extra_air else 0.0)
+
+       if prewet != 0:
+        
+            for _ in range(prewet):
+                
+                # Go aspirate
+                self.plunge_down(aspirate_amount,
+                                self.pipette_params.speed_pipette_down)
+                self.gcode_wait(self.pipette_params.wait_aspirate)
+                self.plunge_down(AIR_CUSHION_UL if extra_air else 0.0,
+                                self.pipette_params.speed_pipette_down)
+                self.gcode_wait(self.pipette_params.wait_aspirate)            
 
         # Aspirate from well
         self.plunge_down(
