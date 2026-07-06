@@ -994,11 +994,9 @@ class AutoPipette(metaclass=AutoPipetteMeta):
 
         # Total aspirate = liquid + optional air cushion
         aspirate_amount = volume + (AIR_CUSHION_UL if extra_air else 0.0)
-
-       if prewet != 0:
         
+        if prewet != 0:
             for _ in range(prewet):
-                
                 # Go aspirate
                 self.plunge_down(aspirate_amount,
                                 self.pipette_params.speed_pipette_down)
