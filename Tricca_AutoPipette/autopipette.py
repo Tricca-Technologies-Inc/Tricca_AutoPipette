@@ -1001,7 +1001,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 self.plunge_down(aspirate_amount,
                                 self.pipette_params.speed_pipette_down)
                 self.gcode_wait(self.pipette_params.wait_aspirate)
-                self.plunge_down(AIR_CUSHION_UL if extra_air else 0.0,
+                self.plunge_down(0.95*AIR_CUSHION_UL if extra_air else 0.0,
                                 self.pipette_params.speed_pipette_down)
                 self.gcode_wait(self.pipette_params.wait_aspirate)            
 
