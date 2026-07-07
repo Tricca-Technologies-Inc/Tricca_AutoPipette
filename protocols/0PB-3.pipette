@@ -1,0 +1,111 @@
+#Prime panel B adding 150uL of either 3:1 methanol or ice cold methanol to the appropriate eppendorf tubes
+
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --prewet 5
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS2 --dispense_vol 139.6 --tipbox tipbox
+
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air ICEM STANS3 --dispense_vol 139.6 --tipbox tipbox
+
+reset_plate tipbox
