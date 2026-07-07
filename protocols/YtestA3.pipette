@@ -5,3 +5,5 @@ pipette 11.4 --keep_tip  --extra_air --after_air FS1 manu3 --dispense_vol 11.4 -
 pipette 11.4 --keep_tip  --extra_air --after_air FS1 manu3 --dispense_vol 11.4 --tipbox tipbox
 pipette 11.4 --keep_tip  --extra_air --after_air FS1 manu3 --dispense_vol 11.4 --tipbox tipbox
 pipette 11.4 --extra_air --after_air FS1 manu3 --dispense_vol 11.4 --tipbox tipbox
+
+reset_plate manu3
