@@ -1,0 +1,7 @@
+# code to test Prime Panel A step 4 PITC
+
+
+pipette 51.3 --keep_tip  --extra_air --after_air PITC manu3 --dispense_vol 51.3 --tipbox tipbox --prewet 5
+pipette 51.3 --keep_tip  --extra_air --after_air PITC manu3 --dispense_vol 51.3 --tipbox tipbox
+pipette 51.3 --keep_tip  --extra_air --after_air PITC manu3 --dispense_vol 51.3 --tipbox tipbox
+pipette 51.3 --extra_air --after_air PITC manu3 --dispense_vol 51.3 --tipbox tipbox
