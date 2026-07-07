@@ -1,0 +1,7 @@
+# code to test Prime Panel A step 2
+
+
+pipette 11.4 --keep_tip  --extra_air --after_air FIS2 manu3 --dispense_vol 11.4 --tipbox tipbox --prewet 5
+pipette 11.4 --keep_tip  --extra_air --after_air FIS2 manu3 --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --keep_tip  --extra_air --after_air FIS2 manu3 --dispense_vol 11.4 --tipbox tipbox
+pipette 11.4 --extra_air --after_air FIS2 manu3 --dispense_vol 11.4 --tipbox tipbox
