@@ -1,0 +1,111 @@
+#First step of Prime panel B Serum, adding ISTD into each flip top tube
+
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox
+
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --serum_speed --prewet 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox
+
+reset_plate tipbox
