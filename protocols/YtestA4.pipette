@@ -5,3 +5,5 @@ pipette 51.3 --keep_tip  --extra_air --after_air PITC1 manu3 --dispense_vol 51.3
 pipette 51.3 --keep_tip  --extra_air --after_air PITC1 manu3 --dispense_vol 51.3 --tipbox tipbox
 pipette 51.3 --keep_tip  --extra_air --after_air PITC1 manu3 --dispense_vol 51.3 --tipbox tipbox
 pipette 51.3 --extra_air --after_air PITC1 manu3 --dispense_vol 51.3 --tipbox tipbox
+
+reset_plate manu3
