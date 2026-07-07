@@ -1,7 +1,6 @@
+#Mega Panel A steps 6-8, adding LIS to each well and then adding the PBS, CAls, QC and samples to the wells from a PCR plate by column!
 
-pipette 50.0 --extra_air --keep_tip LIS LIS --dispense_vol 50.0 --tipbox tipbox --prewet 1
-pipette 0 --keep_tip LIS 96wellplate --dispense_vol 0 --tipbox tipbox
-pipette 10.45 --extra_air --after_air --keep_tip LIS 96wellplate --dispense_vol 10.45 --tipbox tipbox
+pipette 10.45 --extra_air --after_air --keep_tip LIS 96wellplate --dispense_vol 10.45 --tipbox tipbox --prewet 5
 pipette 10.45 --extra_air --after_air --keep_tip LIS 96wellplate --dispense_vol 10.45 --tipbox tipbox
 pipette 10.45 --extra_air --after_air --keep_tip LIS 96wellplate --dispense_vol 10.45 --tipbox tipbox
 pipette 10.45 --extra_air --after_air --keep_tip LIS 96wellplate --dispense_vol 10.45 --tipbox tipbox
