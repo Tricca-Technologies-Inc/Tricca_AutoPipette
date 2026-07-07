@@ -62,7 +62,7 @@ pipette 12.3 --touch --extra_air --src_row 3 --src_col 6 --dest_row 3 --dest_col
 pipette 12.3 --touch --extra_air --src_row 4 --src_col 6 --dest_row 4 --dest_col 6 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 12.3 --tipbox tipbox
 pipette 12.3 --touch --extra_air --src_row 5 --src_col 6 --dest_row 5 --dest_col 6 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 12.3 --tipbox tipbox
 pipette 12.3 --touch --extra_air --src_row 6 --src_col 6 --dest_row 6 --dest_col 6 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 12.3 --tipbox tipbox
-pipette 12.3 --touch --extra_air --src_row 7 --src_col 7 --dest_row 7 --dest_col 6 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 12.3 --tipbox tipbox
+pipette 12.3 --touch --extra_air --src_row 7 --src_col 6 --dest_row 7 --dest_col 6 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 12.3 --tipbox tipbox
 
 pipette 12.3 --touch --extra_air --src_row 0 --src_col 7 --dest_row 0 --dest_col 7 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 12.3 --tipbox tipbox
 pipette 12.3 --touch --extra_air --src_row 1 --src_col 7 --dest_row 1 --dest_col 7 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 12.3 --tipbox tipbox
