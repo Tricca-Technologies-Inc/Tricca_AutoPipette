@@ -20,9 +20,6 @@ pipette 77.3 --extra_air --after_air --src_row 4 --src_col 0 --dest_row 4 --dest
 pipette 77.3 --extra_air --after_air --src_row 5 --src_col 0 --dest_row 5 --dest_col 0 COLPLATE LCPLATE --dispense_vol 77.3 --tipbox tipbox --keep_tip --prewet 1
 pipette 77.3 --extra_air --after_air --src_row 5 --src_col 0 --dest_row 5 --dest_col 0 COLPLATE LCPLATE --dispense_vol 77.3 --tipbox tipbox
 
-pipette 77.3 --extra_air --after_air --src_row 5 --src_col 0 --dest_row 5 --dest_col 0 COLPLATE LCPLATE --dispense_vol 77.3 --tipbox tipbox --keep_tip --prewet 1
-pipette 77.3 --extra_air --after_air --src_row 5 --src_col 0 --dest_row 5 --dest_col 0 COLPLATE LCPLATE --dispense_vol 77.3 --tipbox tipbox
-
 pipette 77.3 --extra_air --after_air --src_row 6 --src_col 0 --dest_row 6 --dest_col 0 COLPLATE LCPLATE --dispense_vol 77.3 --tipbox tipbox --keep_tip --prewet 1
 pipette 77.3 --extra_air --after_air --src_row 6 --src_col 0 --dest_row 6 --dest_col 0 COLPLATE LCPLATE --dispense_vol 77.3 --tipbox tipbox
 
