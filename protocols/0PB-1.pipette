@@ -1,7 +1,7 @@
 #First step of Prime panel B Serum, adding 10uL ISTD into each flip top tube
 
+pipette 0 --extra_air --after_air  PBISTD STANS1_FULL --dispense_vol 0 --tipbox tipbox
 pipette 11.4 --extra_air --after_air  PBISTD STANS1_FULL --dispense_vol 11.4 --tipbox tipbox --prewet 5
-pipette 11.4 --extra_air --after_air  PBISTD STANS1_FULL --dispense_vol 11.4 --tipbox tipbox
 pipette 11.4 --extra_air --after_air  PBISTD STANS1_FULL --dispense_vol 11.4 --tipbox tipbox
 pipette 11.4 --extra_air --after_air  PBISTD STANS1_FULL --dispense_vol 11.4 --tipbox tipbox
 pipette 11.4 --extra_air --after_air  PBISTD STANS1_FULL --dispense_vol 11.4 --tipbox tipbox
