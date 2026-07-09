@@ -1,0 +1,7 @@
+
+
+
+
+pipette 76.8 --keep_tip --extra_air --after_air --serum_speed RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --prewet 5
+pipette 76.8 --keep_tip --extra_air --after_air --serum_speed RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox
+pipette 76.8 --keep_tip --extra_air --after_air --serum_speed RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox
