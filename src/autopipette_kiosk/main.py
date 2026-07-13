@@ -5,12 +5,13 @@ Serves the protocol list from the protocols/ directory and dispatches
 runs by invoking the existing AutoPipette machinery.
 
 Run with:
-    uvicorn main:app --host 0.0.0.0 --port 8000
+    uvicorn autopipette_kiosk.main:app --host 0.0.0.0 --port 8000
 """
 
 import asyncio
 import logging
-import subprocess
+import os
+import sys
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
@@ -23,7 +24,7 @@ logger = logging.getLogger(__name__)
 # ── paths ──────────────────────────────────────────────────────────────────────
 # Adjust REPO_ROOT to wherever the project lives on the Pi.
 REPO_ROOT = Path(__file__).parent.parent  # e.g. ~/Documents/Tricca_AutoPipette
-PROTOCOLS_DIR = REPO_ROOT / "protocols"
+PROTOCOLS_DIR = Path(os.environ.get("AUTOPIPETTE_PROTOCOLS_DIR", REPO_ROOT / "protocols"))
 STATIC_DIR = Path(__file__).parent / "static"
 
 app = FastAPI(title="AutoPipette Kiosk")
@@ -128,15 +129,17 @@ async def _execute_protocol(protocol_path: Path):
     """
     global _current_run
     try:
+        # Drive the tap shell non-interactively: cmd2 executes piped stdin.
         proc = await asyncio.create_subprocess_exec(
-            "python3",
-            str(REPO_ROOT / "Tricca_AutoPipette" / "tricca_autopipette.py"),
-            "--protocol", str(protocol_path),
+            sys.executable,
+            "-m", "tricca_autopipette.cli.main",
+            "--local-connect",
+            stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
-            cwd=str(REPO_ROOT),
         )
-        stdout, stderr = await proc.communicate()
+        commands = f"run {protocol_path}\nquit\n".encode()
+        stdout, stderr = await proc.communicate(input=commands)
 
         if proc.returncode == 0:
             _current_run = RunStatus(status="done", message="Protocol completed successfully")

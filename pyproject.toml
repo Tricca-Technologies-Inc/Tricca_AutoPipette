@@ -206,3 +206,7 @@ source = [
 
 [project.scripts]
 tap = "tricca_autopipette.cli.main:main"
+
+[tool.setuptools.package-data]
+autopipette_kiosk = ["static/*"]
+
