@@ -1,12 +1,205 @@
+# ============================================================================
+# pyproject.toml
+#
+# Central configuration for:
+#   - Packaging
+#   - Dependencies
+#   - Ruff (linting + formatting)
+#   - Pyright
+#   - Pytest
+#   - Coverage
+#
+# Python version: 3.12+
+# ============================================================================
+
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "tricca-autopipette"
+version = "0.1.0"
+description = "Automation software for the Tricca AutoPipette"
+
+# TODO:
+# Replace with your actual minimum supported version.
+requires-python = ">=3.12"
+
+# TODO:
+# Add runtime dependencies here.
+dependencies = [
+    "aiohttp",
+    "cmd2",
+    "opencv-python",
+    "pydantic>=2",
+    "requests",
+    "websockets",
+    "numpy",
+    "fastapi",
+    "uvicorn",
+]
+
+authors = [
+    { name = "James Cook" },
+]
+
+readme = "README.md"
+license = { text = "LICENSE" }
+
+
+[project.optional-dependencies]
+
+# Development tools.
+dev = [
+    "coverage",
+    "pyright",
+    "pytest",
+    "ruff",
+]
+
+
+# ============================================================================
+# Ruff
+# ============================================================================
+
 [tool.ruff]
+
+target-version = "py312"
+line-length = 88
 preview = true
 
+# Exclude common generated directories.
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+]
+
+
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "D", "ANN", "DOC"]
+
+select = [
+    # Pycodestyle
+    "E",
+    "W",
+
+    # Pyflakes
+    "F",
+
+    # isort
+    "I",
+
+    # Pyupgrade
+    "UP",
+
+    # flake8-bugbear
+    "B",
+
+    # flake8-simplify
+    "SIM",
+
+    # flake8-comprehensions
+    "C4",
+
+    # Return statement improvements
+    "RET",
+
+    # Ruff-specific rules
+    "RUF",
+
+    # Type annotations
+    "ANN",
+
+    # Docstrings
+    "D",
+]
+
+ignore = [
+    # Google-style docstrings
+    "D203",
+    "D213",
+]
+
 external = ["DOC"]
 
-[tool.ruff.lint.pycodestyle]
-max-line-length = 88
+
+[tool.ruff.lint.isort]
+
+# TODO:
+# Replace with your package name under src/.
+known-first-party = [
+    "tricca_autopipette", "autopipette_kiosk"
+]
+
+combine-as-imports = true
+
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+
+[tool.ruff.lint.flake8-annotations]
+allow-star-arg-any = false
+
+
+[tool.ruff.format]
+
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
+
+# ============================================================================
+# Pyright
+# ============================================================================
+
+[tool.pyright]
+
+pythonVersion = "3.12"
+
+typeCheckingMode = "strict"
+
+reportMissingImports = true
+reportMissingTypeStubs = false
+
+reportUnknownMemberType = true
+reportUnknownParameterType = true
+reportUnknownVariableType = true
+
+extraPaths = ["src"]
+
+
+# ============================================================================
+# Pytest
+# ============================================================================
+
+[tool.pytest.ini_options]
+
+# TODO:
+# Uncomment if your tests live here.
+#
+# testpaths = ["tests"]
+
+pythonpath = [
+    "src",
+]
+
+addopts = "-ra"
+
+
+# ============================================================================
+# Coverage
+# ============================================================================
+
+[tool.coverage.run]
+
+branch = true
+
+# TODO:
+# Replace with your package name.
+source = [
+    "tricca_autopipette",
+]
