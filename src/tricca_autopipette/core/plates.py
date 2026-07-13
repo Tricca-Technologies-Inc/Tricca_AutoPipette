@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Callable, ClassVar, Iterator
 
-from coordinate import Coordinate
+from tricca_autopipette.core.coordinate import Coordinate
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -13,7 +13,7 @@ from pydantic import (
     ValidationInfo,
     field_validator,
 )
-from well import Well
+from tricca_autopipette.core.well import Well
 
 
 class PlateError(Exception):

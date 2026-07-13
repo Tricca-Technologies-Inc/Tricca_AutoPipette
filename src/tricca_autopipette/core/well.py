@@ -57,7 +57,7 @@ import math
 from abc import ABC, abstractmethod
 from enum import Enum
 
-from coordinate import Coordinate
+from tricca_autopipette.core.coordinate import Coordinate
 from pydantic import BaseModel, Field, model_validator
 
 

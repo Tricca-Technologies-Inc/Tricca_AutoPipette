@@ -7,11 +7,11 @@ liquid transfer, tip management, and advanced dispensing patterns.
 from __future__ import annotations
 
 from cmd2 import Statement, with_argparser
-from pipette_exceptions import NoTipboxError, NoWasteContainerError, TipAlreadyOnError
-from pipette_models import TipState
+from tricca_autopipette.core.pipette_exceptions import NoTipboxError, NoWasteContainerError, TipAlreadyOnError
+from tricca_autopipette.core.pipette_models import TipState
 from rich import print as rprint
 
-from commands.base_command_set import TAPCommandSet
+from tricca_autopipette.commands.base_command_set import TAPCommandSet
 
 from .tap_cmd_parsers import AspirateArgs, DispenseArgs, PipetteArgs, TAPCmdParsers
 

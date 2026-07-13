@@ -7,11 +7,11 @@ including initialisation, homing operations, and absolute/relative positioning.
 from __future__ import annotations
 
 from cmd2 import Statement, with_argparser
-from coordinate import Coordinate
-from pipette_constants import CoordinateSystem
+from tricca_autopipette.core.coordinate import Coordinate
+from tricca_autopipette.core.pipette_constants import CoordinateSystem
 from rich import print as rprint
 
-from commands.base_command_set import TAPCommandSet
+from tricca_autopipette.commands.base_command_set import TAPCommandSet
 
 from .tap_cmd_parsers import (
     HomeArgs,

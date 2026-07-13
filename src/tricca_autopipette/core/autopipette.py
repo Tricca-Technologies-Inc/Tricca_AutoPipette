@@ -28,20 +28,20 @@ from __future__ import annotations
 
 import logging
 
-from coordinate import Coordinate
-from gcode_buffer import GCodeBuffer
-from json_config_manager import JsonConfigManager
-from location_manager import LocationManager
-from pipette_constants import (
+from tricca_autopipette.core.coordinate import Coordinate
+from tricca_autopipette.core.gcode_buffer import GCodeBuffer
+from tricca_autopipette.core.json_config_manager import JsonConfigManager
+from tricca_autopipette.core.location_manager import LocationManager
+from tricca_autopipette.core.pipette_constants import (
     CoordinateSystem,
     GCodeCommand,
     PhysicalConstants,
 )
-from pipette_exceptions import (
+from tricca_autopipette.core.pipette_exceptions import (
     NoTipboxError,
     TipAlreadyOnError,
 )
-from pipette_models import (
+from tricca_autopipette.core.pipette_models import (
     FluidDisplacement,
     GantryKinematics,
     PipetteModel,
@@ -50,8 +50,8 @@ from pipette_models import (
     SystemConfig,
     TipState,
 )
-from plates import Plate
-from volume_converter import VolumeConverter
+from tricca_autopipette.core.plates import Plate
+from tricca_autopipette.core.volume_converter import VolumeConverter
 
 
 class AutoPipette:

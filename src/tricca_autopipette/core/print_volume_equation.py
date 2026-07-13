@@ -8,7 +8,7 @@ from configparser import ConfigParser, ExtendedInterpolation
 import numpy as np
 import matplotlib.pyplot as plt
 from numpy.polynomial import Polynomial
-from volume_converter import VolumeConverter
+from tricca_autopipette.core.volume_converter import VolumeConverter
 
 
 def parse_float_list(s: str) -> list[float]:

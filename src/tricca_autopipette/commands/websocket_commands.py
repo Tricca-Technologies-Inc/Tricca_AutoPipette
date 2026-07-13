@@ -14,9 +14,9 @@ from typing import Any
 
 from cmd2 import Statement, with_argparser
 from rich import print as rprint
-from websocket_client import WebSocketClient
+from tricca_autopipette.moonraker.websocket_client import WebSocketClient
 
-from commands.base_command_set import TAPCommandSet
+from tricca_autopipette.commands.base_command_set import TAPCommandSet
 
 from .tap_cmd_parsers import NotifyArgs, SendArgs, TAPCmdParsers, UploadArgs
 

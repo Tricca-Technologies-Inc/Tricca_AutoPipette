@@ -13,8 +13,8 @@ import json
 import logging
 from typing import Any
 
-from pipette_constants import DefaultFilenames, DefaultPaths
-from pipette_models import (
+from tricca_autopipette.core.pipette_constants import DefaultFilenames, DefaultPaths
+from tricca_autopipette.core.pipette_models import (
     GantryKinematics,
     LiquidProfile,
     PipetteModel,

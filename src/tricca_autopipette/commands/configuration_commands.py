@@ -8,13 +8,13 @@ configuration state.
 from __future__ import annotations
 
 from cmd2 import Statement, with_argparser
-from coordinate import Coordinate
-from plates import Plate, PlateParams
+from tricca_autopipette.core.coordinate import Coordinate
+from tricca_autopipette.core.plates import Plate, PlateParams
 from rich import print as rprint
 from rich.table import Table
-from well import StrategyType, Well
+from tricca_autopipette.core.well import StrategyType, Well
 
-from commands.base_command_set import TAPCommandSet
+from tricca_autopipette.commands.base_command_set import TAPCommandSet
 
 from .tap_cmd_parsers import (
     CoorArgs,

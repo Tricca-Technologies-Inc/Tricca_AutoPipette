@@ -9,12 +9,12 @@ This package contains all command sets organized by functionality:
 - utility_commands: Miscellaneous utilities
 """
 
-from commands.configuration_commands import ConfigurationCommands
-from commands.movement_commands import MovementCommands
-from commands.pipette_commands import PipetteCommands
-from commands.protocol_commands import ProtocolCommands
-from commands.utility_commands import UtilityCommands
-from commands.websocket_commands import WebSocketCommands
+from tricca_autopipette.commands.configuration_commands import ConfigurationCommands
+from tricca_autopipette.commands.movement_commands import MovementCommands
+from tricca_autopipette.commands.pipette_commands import PipetteCommands
+from tricca_autopipette.commands.protocol_commands import ProtocolCommands
+from tricca_autopipette.commands.utility_commands import UtilityCommands
+from tricca_autopipette.commands.websocket_commands import WebSocketCommands
 
 __all__ = [
     "ConfigurationCommands",

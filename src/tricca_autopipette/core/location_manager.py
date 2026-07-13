@@ -11,15 +11,15 @@ import json
 import logging
 from pathlib import Path
 
-from coordinate import Coordinate
-from pipette_constants import (
+from tricca_autopipette.core.coordinate import Coordinate
+from tricca_autopipette.core.pipette_constants import (
     DefaultFilenames,
     DefaultPaths,
     PlateType,
 )
-from pipette_exceptions import NotALocationError
-from plates import Plate, PlateFactory, PlateParams, TipBox, WasteContainer
-from well import StrategyType, Well
+from tricca_autopipette.core.pipette_exceptions import NotALocationError
+from tricca_autopipette.core.plates import Plate, PlateFactory, PlateParams, TipBox, WasteContainer
+from tricca_autopipette.core.well import StrategyType, Well
 
 logger = logging.getLogger(__name__)
 

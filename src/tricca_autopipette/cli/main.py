@@ -14,8 +14,8 @@ import sys
 from pathlib import Path
 
 from cmd2 import Cmd2ArgumentParser
-from pipette_constants import DefaultFilenames, DefaultPaths
-from tap_shell import TriccaAutoPipetteShell
+from tricca_autopipette.core.pipette_constants import DefaultFilenames, DefaultPaths
+from tricca_autopipette.cli.tap_shell import TriccaAutoPipetteShell
 
 # Constants
 DEFAULT_LOG_FILE = "app.log"

@@ -12,9 +12,9 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
-from autopipette import AutoPipette
+from tricca_autopipette.core.autopipette import AutoPipette
 from cmd2 import Cmd, plugin
-from commands import (
+from tricca_autopipette.commands import (
     ConfigurationCommands,
     MovementCommands,
     PipetteCommands,
@@ -22,15 +22,15 @@ from commands import (
     UtilityCommands,
     WebSocketCommands,
 )
-from gcode_manager import GCodeManager
-from json_config_manager import JsonConfigManager
-from location_manager import LocationManager
-from moonraker_requests import MoonrakerRequests
-from pipette_constants import ConfigKey, DefaultFilenames, DefaultPaths
-from res.string_constants import TAP_CLR_BANNER
+from tricca_autopipette.core.gcode_manager import GCodeManager
+from tricca_autopipette.core.json_config_manager import JsonConfigManager
+from tricca_autopipette.core.location_manager import LocationManager
+from tricca_autopipette.moonraker.moonraker_requests import MoonrakerRequests
+from tricca_autopipette.core.pipette_constants import ConfigKey, DefaultFilenames, DefaultPaths
+from tricca_autopipette.resources.string_constants import TAP_CLR_BANNER
 from rich import print as rprint
 from rich.console import Console
-from websocket_client import WebSocketClient
+from tricca_autopipette.moonraker.websocket_client import WebSocketClient
 
 logger = logging.getLogger(__name__)
 

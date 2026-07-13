@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterator
 
-from gcode_buffer import GCodeBuffer
+from tricca_autopipette.core.gcode_buffer import GCodeBuffer
 
 if TYPE_CHECKING:
     from autopipette import AutoPipette
