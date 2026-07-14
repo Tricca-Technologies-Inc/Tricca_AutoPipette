@@ -1,6 +1,6 @@
-pipette 50.0 --keep_tip  --extra_air FIS1 FIS1 --dispense_vol 50.0 --tipbox tipbox --prewet 1
+
 pipette 0  --extra_air --after_air FIS1 96wellplate --dispense_vol 0 --tipbox tipbox 
-pipette 10.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 10.0 --tipbox tipbox
+pipette 10.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 10.0 --tipbox tipbox --prewet 5
 pipette 10.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 10.0 --tipbox tipbox
 pipette 10.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 10.0 --tipbox tipbox
 pipette 10.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 10.0 --tipbox tipbox
