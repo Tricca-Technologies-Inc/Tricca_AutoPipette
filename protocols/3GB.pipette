@@ -1,7 +1,7 @@
 #Giga panel B. adding 20uL of WIS into each well of the LCMS plate
 
 
-pipette 0 --keep_tip --src_row 0 --src_col 0 manu5 COLPLATE --prewet
+pipette 0 --keep_tip --src_row 0 --src_col 0 manu5 COLPLATE
 pipette 22.8 --extra_air --after_air --keep_tip --src_row 0 --src_col 0 manu5 COLPLATE --dispense_vol 22.8 --tipbox tipbox --prewet 5
 pipette 22.8 --extra_air --after_air --keep_tip --src_row 0 --src_col 0 manu5 COLPLATE --dispense_vol 22.8 --tipbox tipbox
 pipette 22.8 --extra_air --after_air --keep_tip --src_row 0 --src_col 0 manu5 COLPLATE --dispense_vol 22.8 --tipbox tipbox
