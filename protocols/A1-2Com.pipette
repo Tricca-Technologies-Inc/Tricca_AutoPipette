@@ -1,0 +1,107 @@
+#Steps for Mega Panel A 1 and 2 assuming combining FIS1 and FIS2 into two tubes
+
+pipette 0  --extra_air --after_air FIS1 96wellplate --dispense_vol 0 --tipbox tipbox 
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --prewet 5
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox
+
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --keep_tip  --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+pipette 20.0 --extra_air --after_air FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox
+
+reset_plate 96wellplate
