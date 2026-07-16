@@ -1,110 +1,109 @@
+# now taking by column not row transferring 50uL of samples from a PCR plate to flip top tubes
 
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 0 --src_col 0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 1 --src_col 0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 2 --src_col 0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 3 --src_col 0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 4 --src_col 0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 5 --src_col 0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 6 --src_col 0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 7 --src_col 0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
 
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 0 --src_col 1 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 1 --src_col 1 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 2 --src_col 1 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 3 --src_col 1 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 4 --src_col 1 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 5 --src_col 1 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 6 --src_col 1 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 7 --src_col 1 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
 
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 0 --src_col 2 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 1 --src_col 2 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 2 --src_col 2 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 3 --src_col 2 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 4 --src_col 2 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 5 --src_col 2 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 6 --src_col 2 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 7 --src_col 2 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
 
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 0 --src_col 3 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 1 --src_col 3 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 2 --src_col 3 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 3 --src_col 3 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 4 --src_col 3 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 5 --src_col 3 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 6 --src_col 3 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 7 --src_col 3 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --tipbox tipbox
 
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 0 --src_col 4 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 1 --src_col 4 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 2 --src_col 4 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 3 --src_col 4 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 4 --src_col 4 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 5 --src_col 4 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 6 --src_col 4 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 7 --src_col 4 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
 
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 0 --src_col 5 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 1 --src_col 5 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 2 --src_col 5 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 3 --src_col 5 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 4 --src_col 5 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 5 --src_col 5 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 6 --src_col 5 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 7 --src_col 5 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
 
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 0 --src_col 6 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 1 --src_col 6 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 2 --src_col 6 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 3 --src_col 6 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 4 --src_col 6 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 5 --src_col 6 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 6 --src_col 6 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 7 --src_col 6 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
 
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 0 --src_col 7 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 1 --src_col 7 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 2 --src_col 7 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 3 --src_col 7 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 4 --src_col 7 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 5 --src_col 7 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 6 --src_col 7 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 7 --src_col 7 96wellplatePCR STANS2 --dispense_vol 50.0 --tipbox tipbox
 
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 0 --src_col 8 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 1 --src_col 8 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 2 --src_col 8 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 3 --src_col 8 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 4 --src_col 8 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 5 --src_col 8 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 6 --src_col 8 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 7 --src_col 8 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
 
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 0 --src_col 9 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 1 --src_col 9 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 2 --src_col 9 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 3 --src_col 9 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 4 --src_col 9 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 5 --src_col 9 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 6 --src_col 9 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 7 --src_col 9 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
 
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 0 --src_col 10 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 1 --src_col 10 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 2 --src_col 10 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 3 --src_col 10 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 4 --src_col 10 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 5 --src_col 10 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 6 --src_col 10 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 7 --src_col 10 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
 
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-pipette 50.0 --extra_air 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
-
-reset_plate tipbox
+pipette 50.0 --extra_air --after_air --src_row 0 --src_col 11 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 1 --src_col 11 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 2 --src_col 11 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 3 --src_col 11 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 4 --src_col 11 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 5 --src_col 11 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 6 --src_col 11 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --extra_air --after_air --src_row 7 --src_col 11 96wellplatePCR STANS3 --dispense_vol 50.0 --tipbox tipbox
