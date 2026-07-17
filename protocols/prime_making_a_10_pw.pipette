@@ -154,7 +154,7 @@ pipette 50.0 --extra_air --after_air --src_row 2 --src_col 0 manu3 KIT1 --dispen
 pipette 25.0 --extra_air --after_air --src_row 2 --src_col 1 manu3 KIT1 --dispense_vol 25.0 --tipbox tipbox --prewet 1 
 
 # Nitrotyrosine *)
-pipette 67.5 --extra_air --after_air --keep_tip --src_row 2 --src_col 2 manu3 KIT1 --dispense_vol 67.5 --tipbox tipbox --prewet 1 
+pipette 60.0 --extra_air --after_air --keep_tip --src_row 2 --src_col 2 manu3 KIT1 --dispense_vol 60.0 --tipbox tipbox --prewet 1 
 pipette 50.0 --extra_air --after_air --keep_tip --src_row 2 --src_col 2 manu3 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1
 pipette 50.0 --extra_air --after_air --src_row 2 --src_col 2 manu3 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1
 
@@ -185,6 +185,6 @@ pipette 50.0 --extra_air --after_air --src_row 2 --src_col 2 manu4 KIT1 --dispen
 pipette 50.0 --extra_air --after_air --src_row 2 --src_col 3 manu4 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1 
 
 # alpha-Aminoadipicacid *)
-pipette 67.5 --extra_air --after_air --keep_tip --src_row 3 --src_col 0 manu3 KIT1 --dispense_vol 67.5 --tipbox tipbox --prewet 1 
+pipette 60.0 --extra_air --after_air --keep_tip --src_row 3 --src_col 0 manu3 KIT1 --dispense_vol 60.0 --tipbox tipbox --prewet 1 
 pipette 50.0 --extra_air --after_air --keep_tip --src_row 3 --src_col 0 manu3 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1
 pipette 50.0 --extra_air --after_air --src_row 3 --src_col 0 manu3 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1
