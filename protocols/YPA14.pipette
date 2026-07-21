@@ -1,4 +1,4 @@
-#Testing the first 9 samples for Prime Panel A: transfer centrifuged samples to LC plate
+#Testing the first 15 samples for Prime Panel A: transfer centrifuged samples to LC plate
 
 #For Prime Panel A. Adds 150uL (75 x 2) from the collection plate to each corresponding well of the LCplate for the P100 config
 
@@ -76,4 +76,22 @@ pipette 77.3 --extra_air --after_air --src_row 5 --src_col 2 --dest_row 5 --dest
 pipette 77.3 --extra_air --after_air --src_row 6 --src_col 2 --dest_row 6 --dest_col 2 COLPLATE LCPLATE --dispense_vol 77.3 --tipbox tipbox --keep_tip --prewet 1
 pipette 77.3 --extra_air --after_air --src_row 6 --src_col 2 --dest_row 6 --dest_col 2 COLPLATE LCPLATE --dispense_vol 77.3 --tipbox tipbox
 
+pipette 77.3 --extra_air --after_air --src_row 7 --src_col 2 --dest_row 7 --dest_col 2 COLPLATE LCPLATE --dispense_vol 77.3 --tipbox tipbox --keep_tip --prewet 1
+pipette 77.3 --extra_air --after_air --src_row 7 --src_col 2 --dest_row 7 --dest_col 2 COLPLATE LCPLATE --dispense_vol 77.3 --tipbox tipbox
 
+#################
+
+pipette 77.3 --extra_air --after_air --src_row 0 --src_col 3 --dest_row 0 --dest_col 3 COLPLATE LCPLATE --dispense_vol 77.3 --tipbox tipbox --keep_tip --prewet 1
+pipette 77.3 --extra_air --after_air --src_row 0 --src_col 3 --dest_row 0 --dest_col 3 COLPLATE LCPLATE --dispense_vol 77.3 --tipbox tipbox
+
+pipette 77.3 --extra_air --after_air --src_row 1 --src_col 3 --dest_row 1 --dest_col 3 COLPLATE LCPLATE --dispense_vol 77.3 --tipbox tipbox --keep_tip --prewet 1
+pipette 77.3 --extra_air --after_air --src_row 1 --src_col 3 --dest_row 1 --dest_col 3 COLPLATE LCPLATE --dispense_vol 77.3 --tipbox tipbox
+
+pipette 77.3 --extra_air --after_air --src_row 2 --src_col 3 --dest_row 2 --dest_col 3 COLPLATE LCPLATE --dispense_vol 77.3 --tipbox tipbox --keep_tip --prewet 1
+pipette 77.3 --extra_air --after_air --src_row 2 --src_col 3 --dest_row 2 --dest_col 3 COLPLATE LCPLATE --dispense_vol 77.3 --tipbox tipbox
+
+pipette 77.3 --extra_air --after_air --src_row 3 --src_col 3 --dest_row 3 --dest_col 3 COLPLATE LCPLATE --dispense_vol 77.3 --tipbox tipbox --keep_tip --prewet 1
+pipette 77.3 --extra_air --after_air --src_row 3 --src_col 3 --dest_row 3 --dest_col 3 COLPLATE LCPLATE --dispense_vol 77.3 --tipbox tipbox
+
+pipette 77.3 --extra_air --after_air --src_row 4 --src_col 3 --dest_row 4 --dest_col 3 COLPLATE LCPLATE --dispense_vol 77.3 --tipbox tipbox --keep_tip --prewet 1
+pipette 77.3 --extra_air --after_air --src_row 4 --src_col 3 --dest_row 4 --dest_col 3 COLPLATE LCPLATE --dispense_vol 77.3 --tipbox tipbox
