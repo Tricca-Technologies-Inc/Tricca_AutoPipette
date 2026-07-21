@@ -130,10 +130,13 @@ class DefaultPaths:
         DEFAULT_CONFIG: Default configuration filename.
     """
 
+    # Four levels up: core -> tricca_autopipette -> src -> repo root.
+    DIR_REPO_ROOT: Path = Path(__file__).parents[3]
+
     DIR_SHELL: Path = Path(__file__).parent
-    DIR_GCODE: Path = Path(__file__).parent.parent / "gcode"
-    DIR_PROTOCOL: Path = Path(__file__).parent.parent / "protocols"
-    DIR_CONFIG: Path = Path(__file__).parent.parent / "config/"
+    DIR_GCODE: Path = DIR_REPO_ROOT / "gcode"
+    DIR_PROTOCOL: Path = DIR_REPO_ROOT / "protocols"
+    DIR_CONFIG: Path = DIR_REPO_ROOT / "config/"
     DIR_CONFIG_SYSTEM: Path = DIR_CONFIG / "system/"
     DIR_CONFIG_GANTRY: Path = DIR_CONFIG / "gantry/"
     DIR_CONFIG_PIPETTE: Path = DIR_CONFIG / "pipettes/"

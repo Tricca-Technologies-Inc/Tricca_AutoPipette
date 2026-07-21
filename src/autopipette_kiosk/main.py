@@ -22,8 +22,8 @@ from pydantic import BaseModel
 logger = logging.getLogger(__name__)
 
 # ── paths ──────────────────────────────────────────────────────────────────────
-# Adjust REPO_ROOT to wherever the project lives on the Pi.
-REPO_ROOT = Path(__file__).parent.parent  # e.g. ~/Documents/Tricca_AutoPipette
+# main.py -> autopipette_kiosk -> src -> repo root.
+REPO_ROOT = Path(__file__).parents[2]
 PROTOCOLS_DIR = Path(os.environ.get("AUTOPIPETTE_PROTOCOLS_DIR", REPO_ROOT / "protocols"))
 STATIC_DIR = Path(__file__).parent / "static"
 
