@@ -84,10 +84,10 @@ YAML-based configuration files that define protocol setup, speeds,  layout, etc.
 
 ## Dependencies
 
-Make sure Python 3.x is installed. Then, install the required packages using:
+Make sure Python 3.12+ is installed. Then, install the package (with dev tools) using:
 
 ```bash
-pip install -r requirements.txt
+pip install -e ".[dev]"
 ```
 
 ---
