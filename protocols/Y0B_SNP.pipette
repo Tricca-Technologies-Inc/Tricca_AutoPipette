@@ -1,4 +1,4 @@
-# now taking by column not row
+# now taking by column not row first 15 samples for July 22 prime test
 
 pipette 51.5 --extra_air --after_air --src_row 0 --src_col 0 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
 pipette 51.5 --extra_air --after_air --src_row 1 --src_col 0 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
@@ -25,5 +25,12 @@ pipette 51.5 --extra_air --after_air --src_row 3 --src_col 2 96wellplatePCR STAN
 pipette 51.5 --extra_air --after_air --src_row 4 --src_col 2 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
 pipette 51.5 --extra_air --after_air --src_row 5 --src_col 2 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
 pipette 51.5 --extra_air --after_air --src_row 6 --src_col 2 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --after_air --src_row 7 --src_col 2 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+
+pipette 51.5 --extra_air --after_air --src_row 0 --src_col 3 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --after_air --src_row 1 --src_col 3 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --after_air --src_row 2 --src_col 3 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --after_air --src_row 3 --src_col 3 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
+pipette 51.5 --extra_air --after_air --src_row 4 --src_col 3 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
 
 reset_plate tipbox
