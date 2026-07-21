@@ -20,6 +20,7 @@ tap --no-connect             # start without a WebSocket connection
 tap --local-connect          # connect to ws://localhost/websocket (e.g. local Moonraker/mock)
 tap --config <file.json>     # override system config (resolved under config/system/)
 tap --log-level DEBUG
+tap --skip-homed-check       # bypass the homed-safety interlock (non-interactive callers only, e.g. kiosk)
 
 # Run the kiosk web backend
 uvicorn autopipette_kiosk.main:app --host 0.0.0.0 --port 8000
@@ -39,7 +40,9 @@ Inside the `tap` shell, protocol files (`.pipette`, plain text — one shell com
 
 ### Two independent apps, one core library
 - `src/tricca_autopipette/` — the shell/CLI and hardware-control core. Entry point `tap` → `cli.main:main`.
-- `src/autopipette_kiosk/` — a thin FastAPI app (`main.py` + a static `index.html`) that lists `.pipette` files and triggers runs by shelling out to `python -m tricca_autopipette.cli.main --local-connect` and piping `run <file>\nquit\n` into its stdin. It does not import the core library directly.
+- `src/autopipette_kiosk/` — a thin FastAPI app (`main.py` + a static `index.html`) exposing `GET /protocols` (lists `.pipette` files), `POST /run` (kicks off a run, tracked via a single in-memory `_current_run` + `_run_lock`), `GET /status`, and `WS /ws/status` (polls/pushes the current `RunStatus` every 500ms — coarse start/done/error only, not live stdout streaming). It does not import the core library directly; `POST /run` triggers `_execute_protocol()`, which shells out to `python -m tricca_autopipette.cli.main --local-connect --skip-homed-check` and pipes `run <file>\nquit\n` into its stdin.
+  - This subprocess-per-run design (and `--skip-homed-check`, below) is a deliberate stopgap. The planned direction is to turn `tricca_autopipette` into a long-running systemd service that the kiosk talks to directly instead of spawning a fresh process per run.
+  - `do_run` returning (or the subprocess exiting 0) only means the G-code was uploaded and print-start was requested — nothing polls Moonraker for actual job completion, so `/status` can report `"done"` before the gantry has finished moving.
 
 ### Shell composition (`cli/tap_shell.py`)
 `TriccaAutoPipetteShell` (a `cmd2.Cmd` subclass) owns:
@@ -58,7 +61,7 @@ Commands are split into `CommandSet` subclasses (`commands/*.py`, all extending 
 
 Argparse parsers/arg dataclasses for commands live centrally in `commands/tap_cmd_parsers.py` (`TAPCmdParsers`), not next to each `do_*` method.
 
-A `precmd` hook in `tap_shell.py` blocks movement/pipetting/`run` commands unless `AutoPipette.state.homed` is true (safety interlock — run `init` or `home all` first). Shell startup runs `core/.init_pipette` as a startup script and persists history to `core/.tap_history`.
+A `precmd` hook in `tap_shell.py` (`_precommand_hook`) blocks movement/pipetting/`run` commands unless `AutoPipette.state.homed` is true (safety interlock — run `init` or `home all` first). `TriccaAutoPipetteShell.__init__` accepts `skip_homed_check=True` (wired to `tap`'s `--skip-homed-check` flag) to pre-seed `state.homed = True` at startup instead, for non-interactive callers like the kiosk that dispatch one `run` per process with no prior `init`. This bypasses the *software* precondition only — it doesn't home the physical machine, so protocols invoked this way must home themselves via a leading `home all`/`init` line if needed. Note the interlock's own "block the command" mechanism (`dataclasses.replace(data, stop=True)` on a `PrecommandData`) is broken against the installed cmd2 4.0 API (that dataclass has no `stop` field), so an unhomed blocked command still raises a `TypeError` in the interactive path (harmless — swallowed by cmd2 — but noisy); `skip_homed_check` sidesteps this too by never entering that branch. Shell startup runs `core/.init_pipette` as a startup script and persists history to `core/.tap_history`.
 
 ### Config system (layered JSON, see `config/README.md`)
 `JsonConfigManager` (`core/json_config_manager.py`) loads and merges:
@@ -71,7 +74,7 @@ A `precmd` hook in `tap_shell.py` blocks movement/pipetting/`run` commands unles
 
 Filenames not paths are passed around at the shell/CLI layer — `DefaultPaths`/`DefaultFilenames` (`core/pipette_constants.py`) resolve them against `DefaultPaths.DIR_REPO_ROOT` (repo root, four levels up from `pipette_constants.py`). `ConfigKey` centralizes JSON key name constants; use those instead of hardcoding strings when touching config parsing.
 
-The kiosk (`autopipette_kiosk/main.py`) computes its own `REPO_ROOT` independently (two levels up from `main.py`) rather than importing `DefaultPaths` — keep both in sync if the package layout ever moves. It also honors an `AUTOPIPETTE_PROTOCOLS_DIR` env var override for `PROTOCOLS_DIR`.
+The kiosk (`autopipette_kiosk/main.py`) computes its own `REPO_ROOT` independently (`Path(__file__).parents[2]`: `autopipette_kiosk` → `src` → repo root) rather than importing `DefaultPaths` — keep both in sync if the package layout ever moves. `PROTOCOLS_DIR` (default `REPO_ROOT / "protocols"`, overridable via `AUTOPIPETTE_PROTOCOLS_DIR`) is resolved once at module import time, so changing the env var requires a process restart to take effect.
 
 ### Domain model (`core/`)
 - `autopipette.py` — `AutoPipette`: central controller tying config, location manager, G-code buffer, and volume converter together; owns `pipette()`/`aspirate()`/`dispense()`/tip-handling and multi-liquid switching (`switch_liquid`).
