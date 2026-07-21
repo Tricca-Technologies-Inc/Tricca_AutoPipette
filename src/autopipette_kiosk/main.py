@@ -72,12 +72,10 @@ def list_protocols():
 
 @app.post("/run", response_model=RunStatus)
 async def run_protocol(req: RunRequest):
-    """
-    Kick off a protocol run.
+    """Kick off a protocol run.
 
-    Currently shells out to tricca_autopipette.py with the protocol path.
-    Swap the subprocess call for a direct Python call once you've confirmed
-    the integration path with your existing AutoPipette machinery.
+    Shells out to `tricca_autopipette.cli.main --local-connect --skip-homed-check`
+    and feeds it `run <path>` + `quit` over stdin (see `_execute_protocol`).
     """
     global _current_run
 
@@ -118,14 +116,14 @@ async def status_ws(websocket: WebSocket):
 
 # ── internal ───────────────────────────────────────────────────────────────────
 async def _execute_protocol(protocol_path: Path):
-    """
-    Run a protocol file. Currently uses subprocess; replace with a direct call
-    to your AutoPipette/ProtocolCommands class once you've wired it in.
+    """Run a protocol file by driving the `tap` shell as a subprocess.
 
-    Example direct call (uncomment and adapt):
-        from Tricca_AutoPipette.autopipette import AutoPipette
-        ap = AutoPipette()
-        ap.run_protocol(str(protocol_path))
+    `--skip-homed-check` bypasses the interactive homed-safety interlock, since
+    this is a one-shot non-interactive invocation with no prior `init`/`home all`
+    step; protocols that need physical homing still perform it themselves via a
+    leading `home all` line. This is a stopgap until Tricca AutoPipette moves to
+    a long-running service the kiosk talks to directly instead of spawning a
+    fresh process per run.
     """
     global _current_run
     try:
@@ -134,6 +132,7 @@ async def _execute_protocol(protocol_path: Path):
             sys.executable,
             "-m", "tricca_autopipette.cli.main",
             "--local-connect",
+            "--skip-homed-check",
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,

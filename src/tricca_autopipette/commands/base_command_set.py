@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from cmd2 import CommandSet
 
 if TYPE_CHECKING:
-    from tap_shell import TriccaAutoPipetteShell
+    from tricca_autopipette.cli.tap_shell import TriccaAutoPipetteShell
 
 
 class TAPCommandSet(CommandSet):
@@ -26,7 +26,7 @@ class TAPCommandSet(CommandSet):
         Raises:
             RuntimeError: If command set has not been registered with a shell.
         """
-        from tap_shell import TriccaAutoPipetteShell
+        from tricca_autopipette.cli.tap_shell import TriccaAutoPipetteShell
 
         if self._cmd is None:
             raise RuntimeError("CommandSet not registered with a shell")
