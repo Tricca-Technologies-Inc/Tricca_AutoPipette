@@ -1,4 +1,4 @@
-#Testing the first 9 samples for Prime Panel B: BHT 50uL
+#Testing the first 15 samples for Prime Panel B: BHT 50uL
 
 pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 0 --dest_col 0 RGNT_D SAMPLEPLATE --dispense_vol 51.3 --tipbox tipbox --prewet 5
 pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 1 --dest_col 0 RGNT_D SAMPLEPLATE --dispense_vol 51.3 --tipbox tipbox
