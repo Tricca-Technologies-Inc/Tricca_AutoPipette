@@ -31,6 +31,6 @@ pipette 76.8 --keep_tip  --extra_air --after_air --dest_row 0 --dest_col 3 RGNT_
 pipette 76.8 --keep_tip  --extra_air --after_air --dest_row 1 --dest_col 3 RGNT_ABCb SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox
 pipette 76.8 --keep_tip  --extra_air --after_air --dest_row 2 --dest_col 3 RGNT_ABCb SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox
 pipette 76.8 --keep_tip  --extra_air --after_air --dest_row 3 --dest_col 3 RGNT_ABCb SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox
-pipette 76.8 --keep_tip  --extra_air --after_air --dest_row 4 --dest_col 3 RGNT_ABCb SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox
+pipette 76.8 --extra_air --after_air --dest_row 4 --dest_col 3 RGNT_ABCb SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox
 
 reset_plate SAMPLEPLATE
