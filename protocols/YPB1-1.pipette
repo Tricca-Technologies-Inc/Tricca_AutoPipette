@@ -23,7 +23,7 @@ pipette 51.5 --extra_air --after_air --dest_row 3 --dest_col 2 SUPER1 96wellplat
 pipette 51.5 --extra_air --after_air --dest_row 4 --dest_col 2 SUPER1 96wellplate --dispense_vol 51.5 --tipbox tipbox 
 pipette 51.5 --extra_air --after_air --dest_row 5 --dest_col 2 SUPER1 96wellplate --dispense_vol 51.5 --tipbox tipbox 
 pipette 51.5 --extra_air --after_air --dest_row 6 --dest_col 2 SUPER1 96wellplate --dispense_vol 51.5 --tipbox tipbox 
-pipette 51.5 --extra_air --after_air --dest_row 6 --dest_col 2 SUPER1 96wellplate --dispense_vol 51.5 --tipbox tipbox 
+pipette 51.5 --extra_air --after_air --dest_row 7 --dest_col 2 SUPER1 96wellplate --dispense_vol 51.5 --tipbox tipbox 
 
 pipette 51.5 --extra_air --after_air --dest_row 0 --dest_col 3 SUPER1 96wellplate --dispense_vol 51.5 --tipbox tipbox 
 pipette 51.5 --extra_air --after_air --dest_row 1 --dest_col 3 SUPER1 96wellplate --dispense_vol 51.5 --tipbox tipbox 
