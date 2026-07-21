@@ -1,4 +1,4 @@
-#Testing the first 15 samples for Prime Panel B: Rgnt ABC
+#Testing the first 15 samples for Prime Panel B: Rgnt ABC with 3mL of RgntB
 
 pipette 76.8 --keep_tip  --extra_air --after_air --dest_row 0 --dest_col 0 RGNT_ABCb SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --prewet 5
 pipette 76.8 --keep_tip  --extra_air --after_air --dest_row 1 --dest_col 0 RGNT_ABCb SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox
