@@ -1,4 +1,4 @@
-#an alternate version that goes to the front of the wells rather than the back
+#an alternate version that goes to the front of the wells rather than the back. first 15 samples
 
 pipette 51.5 --extra_air --after_air --dest_row 0 --dest_col 0 SUPER1b 96wellplate --dispense_vol 51.5 --tipbox tipbox 
 pipette 51.5 --extra_air --after_air --dest_row 1 --dest_col 0 SUPER1b 96wellplate --dispense_vol 51.5 --tipbox tipbox 
