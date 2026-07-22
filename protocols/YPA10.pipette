@@ -1,0 +1,31 @@
+#Testing the first 9 samples for Prime Panel A: PITC
+
+pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 0 --dest_col 0 PITC1 96wellplatePITC --dispense_vol 51.3 --tipbox tipbox --prewet 5
+pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 1 --dest_col 0 PITC1 96wellplatePITC --dispense_vol 51.3 --tipbox tipbox
+pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 2 --dest_col 0 PITC1 96wellplatePITC --dispense_vol 51.3 --tipbox tipbox
+pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 3 --dest_col 0 PITC1 96wellplatePITC --dispense_vol 51.3 --tipbox tipbox
+pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 4 --dest_col 0 PITC1 96wellplatePITC --dispense_vol 51.3 --tipbox tipbox
+pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 5 --dest_col 0 PITC1 96wellplatePITC --dispense_vol 51.3 --tipbox tipbox
+pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 6 --dest_col 0 PITC1 96wellplatePITC --dispense_vol 51.3 --tipbox tipbox
+pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 7 --dest_col 0 PITC1 96wellplatePITC --dispense_vol 51.3 --tipbox tipbox
+
+pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 0 --dest_col 1 PITC1 96wellplatePITC --dispense_vol 51.3 --tipbox tipbox
+pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 1 --dest_col 1 PITC1 96wellplatePITC --dispense_vol 51.3 --tipbox tipbox
+pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 2 --dest_col 1 PITC1 96wellplatePITC --dispense_vol 51.3 --tipbox tipbox
+pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 3 --dest_col 1 PITC1 96wellplatePITC --dispense_vol 51.3 --tipbox tipbox
+pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 4 --dest_col 1 PITC1 96wellplatePITC --dispense_vol 51.3 --tipbox tipbox
+pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 5 --dest_col 1 PITC1 96wellplatePITC --dispense_vol 51.3 --tipbox tipbox
+pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 6 --dest_col 1 PITC1 96wellplatePITC --dispense_vol 51.3 --tipbox tipbox
+pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 7 --dest_col 1 PITC1 96wellplatePITC --dispense_vol 51.3 --tipbox tipbox
+
+pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 0 --dest_col 2 PITC1 96wellplatePITC --dispense_vol 51.3 --tipbox tipbox
+pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 1 --dest_col 2 PITC1 96wellplatePITC --dispense_vol 51.3 --tipbox tipbox
+pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 2 --dest_col 2 PITC1 96wellplatePITC --dispense_vol 51.3 --tipbox tipbox
+pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 3 --dest_col 2 PITC1 96wellplatePITC --dispense_vol 51.3 --tipbox tipbox
+pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 4 --dest_col 2 PITC1 96wellplatePITC --dispense_vol 51.3 --tipbox tipbox
+pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 5 --dest_col 2 PITC1 96wellplatePITC --dispense_vol 51.3 --tipbox tipbox
+pipette 51.3 --extra_air --after_air --dest_row 6 --dest_col 2 PITC1 96wellplatePITC --dispense_vol 51.3 --tipbox tipbox
+
+
+
+reset_plate 96wellplate
