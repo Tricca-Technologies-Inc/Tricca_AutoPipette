@@ -1,4 +1,4 @@
-#Testing the first 9 samples for Prime Panel A
+#Testing the first 15 samples for Prime Panel A
 
 
 pipette 11.4 --keep_tip  --extra_air --after_air --dest_row 1 --dest_col 0 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --prewet 5
