@@ -1,4 +1,4 @@
-#Testing the first 15 samples for Prime Panel A: Extraction solvent
+#Testing the first 9 samples for Prime Panel A: Extraction solvent
 
 pipette 282 --keep_tip  --extra_air --after_air --dest_row 0 --dest_col 0 SOLV 96wellplate --dispense_vol 282 --tipbox tipbox --prewet 5
 pipette 282 --keep_tip  --extra_air --after_air --dest_row 1 --dest_col 0 SOLV 96wellplate --dispense_vol 282 --tipbox tipbox
