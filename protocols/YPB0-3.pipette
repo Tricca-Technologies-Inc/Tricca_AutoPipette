@@ -1,21 +1,21 @@
-#Prime panel B adding 150uL of ice cold methanol to the appropriate eppendorf tubes skips the double blank and blanks (4 tubes)
+#Prime panel B adding 150uL of ice cold methanol to the appropriate eppendorf tubes skips the double blank and blanks (14 tubes)
 
+pipette 0 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 0 --tipbox tipbox
+pipette 0 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 0 --tipbox tipbox
+pipette 0 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 0 --tipbox tipbox
+pipette 0 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 0 --tipbox tipbox
+pipette 0 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 0 --tipbox tipbox
+pipette 0 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 0 --tipbox tipbox
+pipette 0 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 0 --tipbox tipbox
+pipette 0 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 0 --tipbox tipbox
+
+pipette 0 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 0 --tipbox tipbox
+pipette 0 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 0 --tipbox tipbox
 pipette 0 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 0 --tipbox tipbox
 pipette 0 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 0 --tipbox tipbox
 pipette 0 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 0 --tipbox tipbox
 pipette 0 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 0 --tipbox tipbox
 pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --prewet 5
-pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
-pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
-pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
-
-pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
-pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
-pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
-pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
-pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
-pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
-pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
 pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
 
 pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
