@@ -1043,7 +1043,7 @@ class AutoPipette:
             if (self.pipette_params.ext_air+volume+aft_vol >= self.pipette_params.max_vol):
                 ext_vol = self.pipette_params.max_vol - (volume+aft_vol+2)
                 if ext_vol < 0:
-                ext_vol = 0
+                    ext_vol = 0
             else:
                 ext_vol = self.pipette_params.ext_air
         else:
