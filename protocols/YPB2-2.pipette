@@ -24,7 +24,7 @@ pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 2 --dest_col 2 RGNT_
 pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 3 --dest_col 2 RGNT_D SAMPLEPLATE --dispense_vol 51.3 --tipbox tipbox
 pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 4 --dest_col 2 RGNT_D SAMPLEPLATE --dispense_vol 51.3 --tipbox tipbox
 pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 5 --dest_col 2 RGNT_D SAMPLEPLATE --dispense_vol 51.3 --tipbox tipbox
-pipette 51.3 --keep_tip  --extra_air --after_air --dest_row 6 --dest_col 2 RGNT_D SAMPLEPLATE --dispense_vol 51.3 --tipbox tipbox
+pipette 51.3 --extra_air --after_air --dest_row 6 --dest_col 2 RGNT_D SAMPLEPLATE --dispense_vol 51.3 --tipbox tipbox
 
 
 reset_plate SAMPLEPLATE
