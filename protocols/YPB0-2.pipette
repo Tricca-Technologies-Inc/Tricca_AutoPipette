@@ -1,4 +1,4 @@
-# now taking by column not row first 9 samples for July 23 prime test
+# now taking by column not row first 9 samples for July 23 prime test adding 50uL of sample
 
 pipette 51.5 --extra_air --after_air --src_row 0 --src_col 0 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
 pipette 51.5 --extra_air --after_air --src_row 1 --src_col 0 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox
