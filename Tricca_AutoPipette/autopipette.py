@@ -976,6 +976,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         aft_vol = self.pipette_params.aft_air if after_air else 0
         if (self.pipette_params.ext_air+volume+aft_vol >= self.pipette_params.max_vol):
             ext_vol = self.pipette_params.max_vol - (volume+aft_vol+2)
+            if ext_vol < 0:
+                ext_vol = 0
         else:
             ext_vol = self.pipette_params.ext_air
         tot_vol = volume+aft_vol+ext_vol
