@@ -1,0 +1,21 @@
+#Prime panel B adding 150uL of MeOH  to the appropriate eppendorf tubes, blanks, cals and qcs 
+
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --prewet 5
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air --keep_tip ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+pipette 139.6 --extra_air --after_air ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox
+
+
+
+reset_plate STANS1_FULL
