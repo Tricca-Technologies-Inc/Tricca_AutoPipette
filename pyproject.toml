@@ -127,6 +127,13 @@ ignore = [
 external = ["DOC"]
 
 
+[tool.ruff.lint.per-file-ignores]
+
+# Test names are the documentation; don't require docstrings/type
+# annotations on every test function.
+"tests/**" = ["D", "ANN"]
+
+
 [tool.ruff.lint.isort]
 
 # TODO:
@@ -179,10 +186,7 @@ extraPaths = ["src"]
 
 [tool.pytest.ini_options]
 
-# TODO:
-# Uncomment if your tests live here.
-#
-# testpaths = ["tests"]
+testpaths = ["tests"]
 
 pythonpath = [
     "src",

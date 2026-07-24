@@ -39,6 +39,7 @@ from tricca_autopipette.core.pipette_constants import (
 )
 from tricca_autopipette.core.pipette_exceptions import (
     NoTipboxError,
+    NoWasteContainerError,
     TipAlreadyOnError,
 )
 from tricca_autopipette.core.pipette_models import (
@@ -184,7 +185,7 @@ class AutoPipette:
         if liquid_name not in self.system_config.liquids:
             available = list(self.system_config.liquids.keys())
             raise ValueError(
-                f"Liquid '{liquid_name}' not found. " f"Available liquids: {available}"
+                f"Liquid '{liquid_name}' not found. Available liquids: {available}"
             )
 
         self.active_liquid = liquid_name
@@ -580,10 +581,10 @@ class AutoPipette:
         """Eject the current tip into the waste container.
 
         Raises:
-            RuntimeError: If no waste container is configured.
+            NoWasteContainerError: If no waste container is configured.
         """
         if self.location_manager.waste_container is None:
-            raise RuntimeError("No waste container configured")
+            raise NoWasteContainerError()
 
         curr_coor = self.location_manager.waste_container.next()
         self.move_to(curr_coor)
@@ -931,14 +932,13 @@ class AutoPipette:
                     touch=touch,
                 )
                 break
-            else:
-                self.dispense_volume(
-                    dest,
-                    dest_row=dest_row,
-                    dest_col=dest_col,
-                    wiggle=wiggle,
-                    touch=touch,
-                )
+            self.dispense_volume(
+                dest,
+                dest_row=dest_row,
+                dest_col=dest_col,
+                wiggle=wiggle,
+                touch=touch,
+            )
 
         # Dispose of tip unless explicitly keeping it
         if not keep_tip:

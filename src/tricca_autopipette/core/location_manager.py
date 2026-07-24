@@ -18,7 +18,13 @@ from tricca_autopipette.core.pipette_constants import (
     PlateType,
 )
 from tricca_autopipette.core.pipette_exceptions import NotALocationError
-from tricca_autopipette.core.plates import Plate, PlateFactory, PlateParams, TipBox, WasteContainer
+from tricca_autopipette.core.plates import (
+    Plate,
+    PlateFactory,
+    PlateParams,
+    TipBox,
+    WasteContainer,
+)
 from tricca_autopipette.core.well import StrategyType, Well
 
 logger = logging.getLogger(__name__)
@@ -112,10 +118,7 @@ class LocationManager:
             >>> from well import Well
             >>> well = Well(coor=Coordinate(10, 10, 5), ...)
             >>> params = PlateParams(
-            ...     plate_type="array",
-            ...     well_template=well,
-            ...     num_row=8,
-            ...     num_col=12
+            ...     plate_type="array", well_template=well, num_row=8, num_col=12
             ... )
             >>> manager.set_plate("96_well_plate", params)
         """
@@ -209,20 +212,17 @@ class LocationManager:
         if isinstance(location, Plate):
             if row is None and col is None:
                 return location.next()
-            elif row is not None and col is not None:
+            if row is not None and col is not None:
                 coor = location.get_coor(row, col)
                 if coor is not None:
                     return coor
-                else:
-                    raise ValueError("Coordinate returned from location is None.")
-            else:
-                raise ValueError(
-                    "Both row and col must be provided together, or both must be None"
-                )
-        elif isinstance(location, Coordinate):
+                raise ValueError("Coordinate returned from location is None.")
+            raise ValueError(
+                "Both row and col must be provided together, or both must be None"
+            )
+        if isinstance(location, Coordinate):
             return location
-        else:
-            raise NotALocationError(name)
+        raise NotALocationError(name)
 
     def get_plate_names(self) -> list[str]:
         """Get names of all locations that are plates.
@@ -416,9 +416,12 @@ class LocationManager:
         for name in self.get_coordinate_names():
             location = self.locations[name]
             if isinstance(location, Coordinate):
-                data["coordinates"].append(
-                    {"name": name, "x": location.x, "y": location.y, "z": location.z}
-                )
+                data["coordinates"].append({
+                    "name": name,
+                    "x": location.x,
+                    "y": location.y,
+                    "z": location.z,
+                })
 
         # Save plates
         for name in self.get_plate_names():
@@ -426,7 +429,7 @@ class LocationManager:
             if isinstance(location, Plate):
                 plate_data = {
                     "name": name,
-                    "type": location.__class__.__name__.lower(),
+                    "type": PlateFactory.type_name_for(location),
                     "x": location.wells[0].coor.x if location.wells else 0,
                     "y": location.wells[0].coor.y if location.wells else 0,
                     "z": location.wells[0].coor.z if location.wells else 0,
@@ -509,7 +512,7 @@ class LocationManager:
                 "y": str(location.y),
                 "z": str(location.z),
             }
-        elif isinstance(location, Plate):
+        if isinstance(location, Plate):
             info: dict[str, str] = {
                 "type": "plate",
                 "rows": str(location.num_row),
@@ -519,8 +522,7 @@ class LocationManager:
                 info["current_row"] = str(location.current_row)
                 info["current_col"] = str(location.current_col)
             return info
-        else:
-            return {"type": "unknown"}
+        return {"type": "unknown"}
 
     def __repr__(self) -> str:
         """Return string representation of LocationManager.

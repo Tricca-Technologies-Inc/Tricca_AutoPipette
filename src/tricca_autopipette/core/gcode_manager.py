@@ -5,10 +5,11 @@ This module provides G-code generation, buffering, and file operations.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterator
+from typing import TYPE_CHECKING
 
 from tricca_autopipette.core.gcode_buffer import GCodeBuffer
 
@@ -79,6 +80,19 @@ class GCodeManager:
         Yields:
             Self for method chaining within the context.
 
+        Note:
+            Turns batch mode off again on exit (so commands issued after
+            the ``with`` block go back to immediate mode), but does NOT
+            clear the buffer -- the caller must retrieve it via
+            ``get_buffer()`` (and eventually clear it via
+            ``clear_buffer()``) explicitly. Previously this ``finally``
+            was a bare ``pass``, leaving ``is_batch_mode`` stuck ``True``
+            forever after the first ``with gcode_mgr.batch_mode():`` block
+            anywhere in the process -- since nothing else ever reset it,
+            every command issued after the first completed protocol run
+            would silently accumulate into the (already-retrieved) buffer
+            instead of actually uploading and executing.
+
         Example:
             >>> with gcode_mgr.batch_mode():
             ...     gcode_mgr.add_gcode(["G0 X10 Y10"])
@@ -89,7 +103,7 @@ class GCodeManager:
         try:
             yield self
         finally:
-            pass  # Don't auto-clear; caller retrieves buffer explicitly
+            self._batch_mode = False
 
     def add_gcode(self, gcode: list[str]) -> None:
         """Add G-code commands to the buffer.
@@ -146,8 +160,7 @@ class GCodeManager:
 
         Example:
             >>> path = gcode_mgr.write_gcode_file(
-            ...     ["G28", "G0 X10 Y10"],
-            ...     "home_and_move.gcode"
+            ...     ["G28", "G0 X10 Y10"], "home_and_move.gcode"
             ... )
         """
         if filename is None:

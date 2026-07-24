@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Holds the various plate classes."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Callable, ClassVar, Iterator
+from collections.abc import Callable, Iterator
+from typing import ClassVar
 
-from tricca_autopipette.core.coordinate import Coordinate
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -13,6 +14,8 @@ from pydantic import (
     ValidationInfo,
     field_validator,
 )
+
+from tricca_autopipette.core.coordinate import Coordinate
 from tricca_autopipette.core.well import Well
 
 
@@ -428,6 +431,31 @@ class PlateFactory:
             Sorted list of registered plate type names.
         """
         return sorted(cls._registry.keys())
+
+    @classmethod
+    def type_name_for(cls, plate: Plate) -> str:
+        """Return the registered plate-type name for a plate instance.
+
+        The inverse of :meth:`create`. Needed anywhere a plate must be
+        serialized back to the type string ``PlateParams.plate_type``
+        expects (e.g. ``LocationManager.save_to_json``) -- ``type(plate)``
+        alone isn't that string (e.g. ``PlateArray`` registers as
+        ``"array"``, not ``"platearray"``).
+
+        Args:
+            plate: A plate instance, normally one created via :meth:`create`.
+
+        Returns:
+            The registry key whose class is exactly ``type(plate)``.
+
+        Raises:
+            InvalidPlateTypeError: If ``type(plate)`` isn't a registered
+                plate class.
+        """
+        for key, plate_class in cls._registry.items():
+            if plate_class is type(plate):
+                return key
+        raise InvalidPlateTypeError(type(plate).__name__, cls.registered())
 
 
 @PlateFactory.register("array")
