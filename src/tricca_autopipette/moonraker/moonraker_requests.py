@@ -929,14 +929,15 @@ class MoonrakerRequests:
         self,
         namespace: str,
         key: str,
-        value: str,
+        value: Any,  # noqa: ANN401
     ) -> dict[str, Any]:
         """Set database item.
 
         Args:
             namespace: Database namespace.
             key: Item key within the namespace.
-            value: Value to store.
+            value: Value to store. Any JSON-serializable value is accepted,
+                matching Moonraker's database API.
 
         Returns:
             Request to store a database item.

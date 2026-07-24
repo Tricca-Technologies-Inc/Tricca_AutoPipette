@@ -1,0 +1,14 @@
+[Unit]
+Description=Tricca AutoPipette control daemon
+After=network-online.target moonraker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Adjust to the venv/user for your host; see systemd/README.md.
+ExecStart=/opt/tricca-autopipette/venv/bin/tapd
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
