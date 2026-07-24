@@ -1106,7 +1106,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             self.plunge_down(ext_vol,
                             (self.pipette_params.speed_pipette_up_slow if serum_speed else self.pipette_params.speed_pipette_down))
             self.gcode_wait(self.pipette_params.wait_aspirate)
-            self.home_pipette_stepper_disp(volume, (self.pipette_params.speed_pipette_up_slow if serum_speed else self.pipette_params.speed_pipette_down))
+            self.home_pipette_stepper_disp(volume, (self.pipette_params.speed_pipette_up_slow))
         else:
             self.home_pipette_stepper_disp(volume, (self.pipette_params.speed_pipette_up_slow if serum_speed else self.pipette_params.speed_pipette_down))
 
