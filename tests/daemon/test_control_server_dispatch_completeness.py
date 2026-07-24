@@ -15,6 +15,7 @@ falling through to "Unknown method" in production.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterator
 from typing import Any
 
 import pytest
@@ -37,9 +38,29 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     VolToStepsArgs,
     WaitArgs,
 )
+from tricca_autopipette.core.pipette_constants import DefaultPaths
 from tricca_autopipette.daemon.control_requests import ControlRequests
 from tricca_autopipette.daemon.control_server import ControlServer
 from tricca_autopipette.daemon.service import AutoPipetteService
+
+# save_to_json/load_from_json hard-code config/locations/ as their
+# directory (not parameterized -- see test_service_configuration.py's
+# TestSaveAndLoadLocations for the same note), so dispatching
+# "save_locations" for real necessarily writes into the real repo
+# directory. Use a clearly-scratch filename and clean it up via the
+# fixture below, rather than leaving a stray file behind (this is what
+# previously left an untracked config/locations/custom_locations.json in
+# the repo after every test run).
+_SCRATCH_LOCATIONS_FILENAME = "test_control_server_dispatch_completeness_scratch.json"
+
+
+@pytest.fixture(autouse=True)
+def _clean_up_scratch_locations_file() -> Iterator[None]:
+    scratch_path = DefaultPaths.DIR_CONFIG_LOCATIONS / _SCRATCH_LOCATIONS_FILENAME
+    scratch_path.unlink(missing_ok=True)
+    yield
+    scratch_path.unlink(missing_ok=True)
+
 
 # Every ControlRequests builder that produces a request dict to dispatch,
 # paired with the args needed to call it.
@@ -80,8 +101,8 @@ _BUILDER_CALLS: list[tuple[str, tuple[Any, ...]]] = [
     ("reset_plates", ()),
     ("del_loc", (DelLocArgs(name="bench"),)),
     ("clear_locs", ()),
-    ("save_locations", ("custom_locations.json",)),
-    ("load_locations", ("custom_locations.json",)),
+    ("save_locations", (_SCRATCH_LOCATIONS_FILENAME,)),
+    ("load_locations", (_SCRATCH_LOCATIONS_FILENAME,)),
     ("wait", (WaitArgs(ms=1.0),)),
     ("trigger", (TriggerArgs(channel="air", state="on"),)),
     ("gcode_print", (GcodePrintArgs(msg="hi"),)),
