@@ -1,0 +1,14 @@
+[Unit]
+Description=AutoPipette Kiosk web UI
+After=tapd.service
+Requires=tapd.service
+
+[Service]
+Type=simple
+# Adjust to the venv/user for your host; see systemd/README.md.
+ExecStart=/opt/tricca-autopipette/venv/bin/uvicorn autopipette_kiosk.main:app --host 0.0.0.0 --port 8000
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
