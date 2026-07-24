@@ -67,13 +67,14 @@ class ControlServer:
         self._host = host
         self._port = port
         self._clients: set[web.WebSocketResponse] = set()
-        self._background_tasks: set[asyncio.Task[None]] = set()
         self._app = web.Application()
         self._app.router.add_get("/control", self._handle_control)
         self._runner: web.AppRunner | None = None
+        self._loop: asyncio.AbstractEventLoop | None = None
 
     async def start(self) -> None:
         """Start the underlying service and begin listening for clients."""
+        self._loop = asyncio.get_running_loop()
         self.service.set_broadcast_callback(self._broadcast)
         await self.service.start()
 
@@ -96,13 +97,22 @@ class ControlServer:
     def _broadcast(self, method: str, params: dict[str, Any]) -> None:
         """Schedule a notification push to every connected client.
 
+        Called both from the event loop thread (``AutoPipetteService``'s own
+        async methods) and from worker threads (e.g.
+        ``request_breakpoint``, invoked via ``asyncio.to_thread``), so this
+        must not assume it's running on the loop's thread —
+        ``asyncio.create_task`` would raise ``RuntimeError: no running
+        event loop`` when called from a worker thread.
+
         Args:
             method: Notification method name (e.g. "notify_run_status").
             params: Notification payload.
         """
-        task = asyncio.create_task(self._broadcast_async(method, params))
-        self._background_tasks.add(task)
-        task.add_done_callback(self._background_tasks.discard)
+        if self._loop is None:
+            return
+        asyncio.run_coroutine_threadsafe(
+            self._broadcast_async(method, params), self._loop
+        )
 
     async def _broadcast_async(self, method: str, params: dict[str, Any]) -> None:
         """Send a notification frame to every connected client.
@@ -166,16 +176,12 @@ class ControlServer:
             await ws.send_json({"id": request_id, "result": result})
         except Exception as exc:
             logger.exception("Error dispatching control-plane method '%s'", method)
-            await ws.send_json(
-                {
-                    "id": request_id,
-                    "error": {"type": type(exc).__name__, "message": str(exc)},
-                }
-            )
+            await ws.send_json({
+                "id": request_id,
+                "error": {"type": type(exc).__name__, "message": str(exc)},
+            })
 
-    async def _call(
-        self, method: str | None, params: dict[str, Any]
-    ) -> Any:  # noqa: ANN401
+    async def _call(self, method: str | None, params: dict[str, Any]) -> Any:  # noqa: ANN401
         """Route one method name to the corresponding service call.
 
         Args:
@@ -204,6 +210,9 @@ class ControlServer:
             return _run_status_to_dict(await self.service.pause_run())
         if method == "run.resume":
             return _run_status_to_dict(await self.service.resume_run())
+        if method == "run.confirm_breakpoint":
+            await self.service.confirm_breakpoint(bool(params["proceed"]))
+            return {}
         if method == "protocols.list":
             return {"protocols": self.service.list_protocols()}
         if method == "daemon.ping":

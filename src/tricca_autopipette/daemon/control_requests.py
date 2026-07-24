@@ -99,6 +99,20 @@ class ControlRequests:
         """
         return self.gen_request("run.resume")
 
+    def run_confirm_breakpoint(self, proceed: bool) -> dict[str, Any]:
+        """Build a request answering a pending protocol breakpoint.
+
+        Only one run (and therefore one pending breakpoint) can be active
+        at a time, so this doesn't need a run/breakpoint id to disambiguate.
+
+        Args:
+            proceed: True to continue the protocol, False to abort it.
+
+        Returns:
+            Request to resolve the pending breakpoint.
+        """
+        return self.gen_request("run.confirm_breakpoint", {"proceed": proceed})
+
     def protocols_list(self) -> dict[str, Any]:
         """Build a request to list available protocol files.
 

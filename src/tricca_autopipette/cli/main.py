@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
-"""Entry point for the Tricca AutoPipette Shell application.
+"""Entry point for the interactive Tricca AutoPipette client (``tap``).
 
-This module provides the main entry point and command-line argument parsing
-for the Tricca AutoPipette Shell, a command-line interface for controlling
-automated pipetting operations.
+``tap`` is a thin client of the ``tapd`` control daemon: all domain logic,
+config loading, and the Moonraker connection live in the daemon
+(``tricca_autopipette.daemon``), not here. See ``cli/remote_shell.py`` for
+the shell that forwards commands over the control-plane WebSocket.
+
+Note this is a breaking change from earlier versions of ``tap``, which
+loaded config files and connected to Moonraker directly: the
+``--config*``/``--no-connect``/``--local-connect`` flags that used to
+configure *this* process now configure ``tapd`` instead (run ``tapd
+--help``); ``tap`` itself only needs to know where the daemon's control
+plane is (``--control-uri``).
 """
 
 from __future__ import annotations
@@ -11,31 +19,14 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
-from pathlib import Path
 
-from cmd2 import Cmd2ArgumentParser
-from tricca_autopipette.core.pipette_constants import DefaultFilenames, DefaultPaths
-from tricca_autopipette.cli.tap_shell import TriccaAutoPipetteShell
+from tricca_autopipette.cli.remote_shell import RemoteTapShell
+from tricca_autopipette.daemon.control_server import DEFAULT_HOST, DEFAULT_PORT
 
-# Constants
 DEFAULT_LOG_FILE = "app.log"
 LOG_FORMAT = "%(asctime)s [%(module)s] %(levelname)s: %(message)s"
 DEFAULT_LOG_LEVEL = logging.INFO
-
-# Configuration file paths
-DIR_CONFIG = DefaultPaths.DIR_CONFIG
-DIR_CONFIG_SYSTEM = DefaultPaths.DIR_CONFIG_SYSTEM
-DIR_CONFIG_GANTRY = DefaultPaths.DIR_CONFIG_GANTRY
-DIR_CONFIG_PIPETTE = DefaultPaths.DIR_CONFIG_PIPETTE
-DIR_CONFIG_LOCATIONS = DefaultPaths.DIR_CONFIG_LOCATIONS
-DIR_CONFIG_LIQUIDS = DefaultPaths.DIR_CONFIG_LIQUIDS
-
-# Default configuration filenames
-CONFIG_SYSTEM = DefaultFilenames.CONFIG_SYSTEM
-CONFIG_GANTRY = DefaultFilenames.CONFIG_GANTRY
-CONFIG_PIPETTE = DefaultFilenames.CONFIG_PIPETTE
-CONFIG_LOCATIONS = DefaultFilenames.CONFIG_LOCATIONS
-CONFIG_LIQUIDS = DefaultFilenames.CONFIG_LIQUIDS
+DEFAULT_CONTROL_URI = f"ws://{DEFAULT_HOST}:{DEFAULT_PORT}/control"
 
 
 def setup_logging(
@@ -68,51 +59,17 @@ def parse_arguments() -> argparse.Namespace:
 
     Returns:
         Namespace object containing parsed command-line arguments.
-
-    Example:
-        Command line: python tricca_autopipette.py --config config.json
-        Returns: Namespace(config='config.json')
     """
-    parser = Cmd2ArgumentParser(
-        description="Tricca AutoPipette Shell - Automated pipetting control interface"
-    )
-    # --------------------------- Configuration arguments --------------------------- #
-    parser.add_argument(
-        "--config",
-        type=str,
-        default=None,
-        metavar="FILE",
-        help="Path to optional system configuration file (JSON format)",
+    parser = argparse.ArgumentParser(
+        description="Tricca AutoPipette Shell - thin client for the tapd control daemon"
     )
     parser.add_argument(
-        "--config-gantry",
+        "--control-uri",
         type=str,
-        default=None,
-        metavar="FILE",
-        help="Path to optional gantry configuration file (JSON format)",
+        default=DEFAULT_CONTROL_URI,
+        metavar="URI",
+        help=f"tapd control-plane WebSocket URI (default: {DEFAULT_CONTROL_URI})",
     )
-    parser.add_argument(
-        "--config-pipette",
-        type=str,
-        default=None,
-        metavar="FILE",
-        help="Path to optional pipette model configuration file (JSON format)",
-    )
-    parser.add_argument(
-        "--config-liquids",
-        type=str,
-        default=None,
-        metavar="FILE",
-        help="Path to optional liquid profile configurations file (JSON format)",
-    )
-    parser.add_argument(
-        "--config-locations",
-        type=str,
-        default=None,
-        metavar="FILE",
-        help="Path to optional location configurations file (JSON format)",
-    )
-    # ----------------------------- Logging arguments ----------------------------- #
     parser.add_argument(
         "--log-file",
         type=str,
@@ -127,134 +84,14 @@ def parse_arguments() -> argparse.Namespace:
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
         help="Logging level (default: INFO)",
     )
-    # ----------------------------- Connection arguments ----------------------------- #
-    parser.add_argument(
-        "--no-connect",
-        default=False,
-        action="store_true",
-        help="Start the shell without attempting to connect to websocket",
-    )
-    parser.add_argument(
-        "--local-connect",
-        default=False,
-        action="store_true",
-        help="Start the shell and connect to a local websocket server (ws://localhost:7125)",
-    )
-    # ----------------------------- GUI Arguments ------------------------------------ #
-    parser.add_argument(
-        "--gui",
-        default=False,
-        action="store_true",
-        help="Start with the graphical user interface (GUI)",
-    )
     return parser.parse_args()
 
 
-def validate_config_files(
-    config_system: str | None,
-    config_gantry: str | None,
-    config_pipette: str | None,
-    config_locations: str | None,
-    config_liquids: str | None,
-) -> None:
-    """Validate that each configuration file exists if a path is provided.
-
-    Resolves each config argument against its corresponding default directory,
-    falling back to the default filename if the argument is None.
-
-    Args:
-        config_system: Filename of the system configuration file, or None to use the
-                       default.
-        config_gantry: Filename of the gantry configuration file, or None to use the
-                       default.
-        config_pipette: Filename of the pipette configuration file, or None to use the
-                        default.
-        config_locations: Filename of the locations configuration file, or None to use
-                          the default.
-        config_liquids: Filename of the liquids configuration file, or None to use the
-                        default.
-
-    Example:
-        >>> validate_config_files("system.json", None, None, None, None)
-        >>> validate_config_files(None, None, None, None, None)  # all defaults
-    """
-
-    def _validate_path_as_file(config_path: Path | None) -> None:
-        """Check that a resolved config path exists and is a regular file.
-
-        Args:
-            config_path: Resolved path to validate, or None to skip validation.
-
-        Raises:
-            FileNotFoundError: If the path does not exist.
-            ValueError: If the path exists but is not a regular file.
-        """
-        if config_path is not None:
-            if not config_path.exists():
-                raise FileNotFoundError(f"Configuration file not found: {config_path}")
-            if not config_path.is_file():
-                raise ValueError(f"Configuration path is not a file: {config_path}")
-            logging.info("Using configuration file: %s", config_path)
-
-    config_system_path: Path
-    config_gantry_path: Path | None
-    config_pipette_path: Path | None
-    config_locations_path: Path | None
-    config_liquids_path: Path | None
-
-    if config_system is not None:
-        config_system_path = DIR_CONFIG_SYSTEM / Path(config_system)
-    else:
-        config_system_path = DIR_CONFIG_SYSTEM / CONFIG_SYSTEM
-
-    if config_gantry is not None:
-        config_gantry_path = DIR_CONFIG_GANTRY / Path(config_gantry)
-    else:
-        config_gantry_path = (
-            None  # Gantry config is optional, use None to skip validation
-        )
-
-    if config_pipette is not None:
-        config_pipette_path = DIR_CONFIG_PIPETTE / Path(config_pipette)
-    else:
-        # config_pipette_path = DIR_CONFIG_PIPETTE / DEFAULT_CONFIG_PIPETTE
-        config_pipette_path = (
-            None  # Pipette config is optional, use None to skip validation
-        )
-
-    if config_locations is not None:
-        config_locations_path = DIR_CONFIG_LOCATIONS / Path(config_locations)
-    else:
-        # config_locations_path = DIR_CONFIG_LOCATIONS / DEFAULT_CONFIG_LOCATIONS
-        config_locations_path = (
-            None  # Locations config is optional, use None to skip validation
-        )
-
-    if config_liquids is not None:
-        config_liquids_path = DIR_CONFIG_LIQUIDS / Path(config_liquids)
-    else:
-        # config_liquids_path = DIR_CONFIG_LIQUIDS / DEFAULT_CONFIG_LIQUIDS
-        config_liquids_path = (
-            None  # Liquids config is optional, use None to skip validation
-        )
-
-    for config_path in [
-        config_system_path,
-        config_gantry_path,
-        config_pipette_path,
-        config_locations_path,
-        config_liquids_path,
-    ]:
-        if config_path is not None:
-            config_path = Path(config_path)
-        _validate_path_as_file(config_path)
-
-
 def main() -> int:
-    """Entry point for the Tricca AutoPipette Shell application.
+    """Entry point for the interactive Tricca AutoPipette client.
 
-    Parses command-line arguments, configures logging, validates inputs,
-    and launches the interactive shell interface.
+    Parses command-line arguments, configures logging, and connects a
+    ``RemoteTapShell`` to the ``tapd`` control daemon.
 
     Returns:
         Exit code (0 for success, non-zero for errors).
@@ -263,84 +100,17 @@ def main() -> int:
         >>> sys.exit(main())
     """
     try:
-        # Parse command-line arguments
         args = parse_arguments()
 
-        # Setup logging
         log_level = getattr(logging, args.log_level.upper())
         setup_logging(args.log_file, log_level)
 
-        # Validate configuration file if provided
-        validate_config_files(
-            config_system=args.config,
-            config_gantry=args.config_gantry,
-            config_pipette=args.config_pipette,
-            config_locations=args.config_locations,
-            config_liquids=args.config_liquids,
-        )
+        logging.info("Starting Tricca AutoPipette Shell (tapd client)")
+        shell = RemoteTapShell(args.control_uri)
+        shell.cmdloop()
 
-        if args.config is not None:
-            config_system_path: Path = DIR_CONFIG_SYSTEM / Path(args.config)
-        else:
-            config_system_path = DIR_CONFIG_SYSTEM / CONFIG_SYSTEM
-
-        if args.config_gantry is not None:
-            config_gantry_path = DIR_CONFIG_GANTRY / Path(args.config_gantry)
-        else:
-            config_gantry_path = (
-                None  # Gantry config is optional, use None to skip validation
-            )
-
-        if args.config_pipette is not None:
-            config_pipette_path = DIR_CONFIG_PIPETTE / Path(args.config_pipette)
-        else:
-            config_pipette_path = (
-                None  # Pipette config is optional, use None to skip validation
-            )
-
-        if args.config_locations is not None:
-            config_locations_path = DIR_CONFIG_LOCATIONS / Path(args.config_locations)
-        else:
-            config_locations_path = (
-                None  # Locations config is optional, use None to skip validation
-            )
-
-        if args.config_liquids is not None:
-            config_liquids_path = DIR_CONFIG_LIQUIDS / Path(args.config_liquids)
-        else:
-            config_liquids_path = (
-                None  # Liquids config is optional, use None to skip validation
-            )
-        if args.gui:
-            # Launch the GUI
-            # logging.info("Starting Tricca AutoPipette GUI")
-            # app = QApplication(sys.argv)
-            # window = MainWindow()
-            # window.show()
-            # sys.exit(app.exec())
-            _ = args  # Placeholder to avoid unused variable warning
-            return 0
-        else:
-            # Launch the shell
-            logging.info("Starting Tricca AutoPipette Shell")
-            shell = TriccaAutoPipetteShell(
-                config_system=config_system_path,
-                config_gantry=config_gantry_path,
-                config_pipette=config_pipette_path,
-                config_locations=config_locations_path,
-                config_liquids=config_liquids_path,
-                connect_websocket=not args.no_connect,
-                connect_local_websocket=args.local_connect,
-            )
-            shell.cmdloop()
-
-            logging.info("Tricca AutoPipette Shell terminated successfully")
-            return 0
-
-    except (FileNotFoundError, ValueError) as e:
-        logging.error("Configuration error: %s", e)
-        print(f"Error: {e}", file=sys.stderr)
-        return 1
+        logging.info("Tricca AutoPipette Shell terminated successfully")
+        return 0
 
     except KeyboardInterrupt:
         logging.info("Application interrupted by user")

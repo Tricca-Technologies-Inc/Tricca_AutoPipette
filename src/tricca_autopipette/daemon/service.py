@@ -14,11 +14,14 @@ import asyncio
 import contextlib
 import io
 import logging
+import threading
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+from cmd2.py_bridge import PyBridge
 
 from tricca_autopipette.core.pipette_constants import DefaultPaths
 from tricca_autopipette.daemon.headless_shell import HeadlessTapShell
@@ -97,11 +100,15 @@ class AutoPipetteService:
                 self.shell.client, self.shell.mrr
             )
             self.shell.moonraker_state = self.moonraker_state
+        self.shell.breakpoint_handler = self.request_breakpoint
 
         self._lock = asyncio.Lock()
         self._current = RunStatus(status="idle")
         self._loop: asyncio.AbstractEventLoop | None = None
         self._broadcast_callback: Callable[[str, dict[str, Any]], None] | None = None
+        self._breakpoint_event: threading.Event | None = None
+        self._breakpoint_proceed = False
+        self._background_tasks: set[asyncio.Task[None]] = set()
 
     def set_broadcast_callback(
         self, callback: Callable[[str, dict[str, Any]], None]
@@ -133,9 +140,7 @@ class AutoPipetteService:
 
         if self.moonraker_state is not None:
             await asyncio.to_thread(self.moonraker_state.start)
-            self.moonraker_state.on_print_state_change(
-                self._handle_print_state_change
-            )
+            self.moonraker_state.on_print_state_change(self._handle_print_state_change)
             persisted = await asyncio.to_thread(
                 self.moonraker_state.load_tip_liquid_state
             )
@@ -184,20 +189,34 @@ class AutoPipetteService:
     def _execute_line_sync(self, line: str) -> dict[str, str | None]:
         """Synchronous half of :meth:`execute_line`, run in a worker thread.
 
+        Combines two capture mechanisms, since cmd2 commands write through
+        two different channels: `contextlib.redirect_stdout` catches rich's
+        ``rprint`` calls (rich resolves ``sys.stdout`` dynamically on every
+        call), while cmd2's own `PyBridge` — its official "run a command
+        and capture its output" API, normally used by ``do_py``/scripting —
+        catches everything routed through ``self.shell.stdout`` instead:
+        argparse usage/error text and ``self.poutput``/``self.perror``
+        calls, none of which respond to ``redirect_stdout`` because
+        ``self.shell.stdout`` is a reference cmd2 captures once at shell
+        construction, not looked up fresh per call. Without both, half of
+        a command's output silently leaks to the daemon's own real stdout
+        instead of being returned to the caller.
+
         Args:
             line: Raw shell command line.
 
         Returns:
             Dict with ``output`` and ``error`` keys.
         """
-        buffer = io.StringIO()
-        error: str | None = None
-        with contextlib.redirect_stdout(buffer):
-            try:
-                self.shell.onecmd_plus_hooks(line, add_to_history=False)
-            except Exception as exc:
-                error = str(exc)
-        return {"output": buffer.getvalue(), "error": error}
+        rich_buffer = io.StringIO()
+        bridge = PyBridge(self.shell, add_to_history=False)
+        try:
+            with contextlib.redirect_stdout(rich_buffer):
+                result = bridge(line)
+        except Exception as exc:
+            return {"output": rich_buffer.getvalue(), "error": str(exc)}
+        output = rich_buffer.getvalue() + result.stdout + result.stderr
+        return {"output": output, "error": None}
 
     # ==================== Run lifecycle ====================
 
@@ -208,11 +227,13 @@ class AutoPipetteService:
             filename: Bare filename under ``protocols/`` (e.g. "A1.pipette").
 
         Returns:
-            The run's initial status. Completion is reported later via the
-            broadcast callback as ``notify_run_status``, driven by real
-            Moonraker ``print_stats`` transitions rather than this call
-            returning (``run <file>`` is fire-and-forget: it only uploads
-            the G-code and requests print-start).
+            The run's initial status. This returns as soon as the run is
+            *started*, not when it finishes — ``do_run`` can block for an
+            arbitrarily long time (e.g. at a ``break``, waiting on a remote
+            client), so the actual protocol replay runs as a background
+            task rather than being awaited here; completion (or a
+            halt/error) is reported later via the broadcast callback as
+            ``notify_run_status``.
 
         Raises:
             RunAlreadyActiveError: If a run is already in progress.
@@ -237,6 +258,27 @@ class AutoPipetteService:
             )
             self._broadcast_status()
 
+        task = asyncio.create_task(self._run_protocol(filename, run_id))
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.discard)
+
+        return self._current
+
+    async def _run_protocol(self, filename: str, run_id: str) -> None:
+        """Replay a protocol file and update run status with the outcome.
+
+        Args:
+            filename: Bare filename under ``protocols/``.
+            run_id: The run's id, as set by :meth:`start_run`.
+
+        Note:
+            Holds ``self._lock`` for the whole replay (potentially a long
+            time, if it pauses at a breakpoint) so ``shell.exec`` calls from
+            other clients can't interleave G-code generation with this run.
+            ``cancel_run``/``pause_run``/``resume_run`` deliberately bypass
+            this lock — see their docstrings.
+        """
+        async with self._lock:
             self.shell.last_blocked_command = None
             result = await asyncio.to_thread(self._execute_line_sync, f"run {filename}")
 
@@ -265,21 +307,33 @@ class AutoPipetteService:
                 )
                 self._broadcast_status()
 
-            return self._current
-
     async def cancel_run(self) -> RunStatus:
-        """Cancel the active run via ``ProtocolCommands.do_cancel``."""
-        await self.execute_line("cancel")
+        """Cancel the active run via ``ProtocolCommands.do_cancel``.
+
+        Deliberately bypasses ``self._lock``: that lock can be held for a
+        long time by an in-progress run (including one paused at a
+        breakpoint), but ``do_cancel`` only sends a Moonraker control RPC —
+        it never touches the G-code buffer or ``AutoPipette`` domain state
+        — so it's safe to run concurrently, and it must be able to
+        interrupt a run that's stuck.
+        """
+        await asyncio.to_thread(self._execute_line_sync, "cancel")
         return self._current
 
     async def pause_run(self) -> RunStatus:
-        """Pause the active run via ``ProtocolCommands.do_pause``."""
-        await self.execute_line("pause")
+        """Pause the active run via ``ProtocolCommands.do_pause``.
+
+        See :meth:`cancel_run` for why this bypasses ``self._lock``.
+        """
+        await asyncio.to_thread(self._execute_line_sync, "pause")
         return self._current
 
     async def resume_run(self) -> RunStatus:
-        """Resume the active run via ``ProtocolCommands.do_resume``."""
-        await self.execute_line("resume")
+        """Resume the active run via ``ProtocolCommands.do_resume``.
+
+        See :meth:`cancel_run` for why this bypasses ``self._lock``.
+        """
+        await asyncio.to_thread(self._execute_line_sync, "resume")
         return self._current
 
     def get_status(self) -> RunStatus:
@@ -295,6 +349,53 @@ class AutoPipetteService:
         """
         files = sorted(DefaultPaths.DIR_PROTOCOL.glob("*.pipette"))
         return [{"name": f.stem, "filename": f.name} for f in files]
+
+    def request_breakpoint(self) -> bool:
+        """Pause for operator confirmation, called synchronously from `do_break`.
+
+        `do_break` runs on the worker thread `execute_line`/`start_run`
+        dispatch onto via `asyncio.to_thread`, so blocking here with a plain
+        `threading.Event` only blocks that worker thread — the daemon's
+        event loop (and thus `confirm_breakpoint`, which resolves the event)
+        keeps running normally.
+
+        Returns:
+            True to continue the protocol, False to abort it — whatever the
+            client passed to `confirm_breakpoint`.
+        """
+        event = threading.Event()
+        self._breakpoint_event = event
+        if self._broadcast_callback is not None:
+            self._broadcast_callback(
+                "notify_breakpoint",
+                {
+                    "run_id": self._current.run_id,
+                    "filename": self._current.filename,
+                    "pending": True,
+                },
+            )
+        event.wait()
+        return self._breakpoint_proceed
+
+    async def confirm_breakpoint(self, proceed: bool) -> None:
+        """Resolve the pending breakpoint raised by `request_breakpoint`.
+
+        Args:
+            proceed: True to continue the protocol, False to abort it.
+        """
+        self._breakpoint_proceed = proceed
+        event, self._breakpoint_event = self._breakpoint_event, None
+        if event is not None:
+            event.set()
+        if self._broadcast_callback is not None:
+            self._broadcast_callback(
+                "notify_breakpoint",
+                {
+                    "run_id": self._current.run_id,
+                    "filename": self._current.filename,
+                    "pending": False,
+                },
+            )
 
     async def ping(self) -> dict[str, bool]:
         """Health check for control-plane clients.

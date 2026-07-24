@@ -174,17 +174,37 @@ class ProtocolCommands(TAPCommandSet):
                 pipette 100 source dest
 
         Raises:
-            KeyboardInterrupt: If the user selects "No", stopping
+            KeyboardInterrupt: If the user (or a remote client, when running
+                inside the ``tapd`` daemon) chooses to abort, stopping
                 ``runcmds_plus_hooks`` when run with
                 ``stop_on_keyboard_interrupt=True``.
-        """
-        result = self.shell.select(["Yes", "No"], prompt="Continue protocol execution?")
 
-        if result == "No":
+        Note:
+            Inside the daemon there's no TTY to prompt directly — if
+            ``self.shell.breakpoint_handler`` is set (by
+            ``AutoPipetteService``), this publishes a ``notify_breakpoint``
+            event and blocks the current worker thread until a remote
+            client answers via ``run.confirm_breakpoint`` instead of
+            calling ``self.shell.select(...)``.
+        """
+        handler = getattr(self.shell, "breakpoint_handler", None)
+
+        if handler is not None:
+            rprint(
+                "[yellow]⏸ Protocol paused at breakpoint — "
+                "waiting for remote confirmation...[/yellow]"
+            )
+            proceed = handler()
+        else:
+            result = self.shell.select(
+                ["Yes", "No"], prompt="Continue protocol execution?"
+            )
+            proceed = result == "Yes"
+
+        if not proceed:
             rprint("[yellow]Protocol execution stopped by user.[/yellow]")
             raise KeyboardInterrupt
-        else:
-            rprint("[green]Continuing protocol execution...[/green]")
+        rprint("[green]Continuing protocol execution...[/green]")
 
     # =========================================================================
     # WEBSOCKET CONTROL COMMANDS

@@ -15,7 +15,7 @@ import signal
 import sys
 from pathlib import Path
 
-from tricca_autopipette.cli.main import validate_config_files
+from tricca_autopipette.core.config_validation import validate_config_files
 from tricca_autopipette.core.pipette_constants import DefaultFilenames, DefaultPaths
 from tricca_autopipette.daemon.control_server import (
     DEFAULT_HOST,

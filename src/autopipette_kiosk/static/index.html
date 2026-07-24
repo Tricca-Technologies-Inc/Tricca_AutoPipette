@@ -351,6 +351,53 @@
   }
 
   .progress-bar.active { display: block; }
+
+  /* ── breakpoint banner ── */
+  .breakpoint-banner {
+    display: none;
+    align-items: center;
+    gap: 16px;
+    background: color-mix(in srgb, var(--running) 14%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--running) 45%, var(--border));
+    border-radius: 12px;
+    padding: 18px 22px;
+  }
+
+  .breakpoint-banner.active { display: flex; }
+
+  .breakpoint-icon { font-size: 20px; }
+
+  .breakpoint-text { flex: 1; }
+
+  .breakpoint-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--running);
+    margin-bottom: 2px;
+  }
+
+  .breakpoint-msg { font-size: 13px; color: var(--muted); }
+
+  .breakpoint-actions { display: flex; gap: 10px; }
+
+  .bp-btn {
+    height: 40px;
+    padding: 0 20px;
+    border-radius: var(--radius);
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+
+  .bp-btn:active { transform: scale(0.97); }
+  .bp-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .bp-btn.continue { background: var(--success); color: #06240f; }
+  .bp-btn.abort { background: var(--error); color: #2a0a0a; }
 </style>
 </head>
 <body>
@@ -396,6 +443,18 @@
         <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
         Run protocol
       </button>
+
+      <div class="breakpoint-banner" id="breakpointBanner">
+        <div class="breakpoint-icon">⚠</div>
+        <div class="breakpoint-text">
+          <div class="breakpoint-title">Protocol paused at breakpoint</div>
+          <div class="breakpoint-msg" id="breakpointMsg"></div>
+        </div>
+        <div class="breakpoint-actions">
+          <button class="bp-btn continue" id="bpContinueBtn">Continue</button>
+          <button class="bp-btn abort" id="bpAbortBtn">Abort</button>
+        </div>
+      </div>
 
       <div class="status-card">
         <div class="status-icon idle" id="statusIcon">○</div>
@@ -537,7 +596,37 @@
     icon.classList.toggle('spinning', s === 'running');
     bar.classList.toggle('active', s === 'running');
     btn.disabled = s === 'running' || !selected;
+
+    setBreakpoint(data.breakpoint || null);
   }
+
+  // ── breakpoint ─────────────────────────────────────────────────────────────
+  function setBreakpoint(breakpoint) {
+    const banner = document.getElementById('breakpointBanner');
+    const msg = document.getElementById('breakpointMsg');
+    banner.classList.toggle('active', !!breakpoint);
+    if (breakpoint) {
+      msg.textContent = breakpoint.filename ? `Protocol: ${breakpoint.filename}` : '';
+    }
+  }
+
+  async function respondToBreakpoint(proceed) {
+    document.getElementById('bpContinueBtn').disabled = true;
+    document.getElementById('bpAbortBtn').disabled = true;
+    try {
+      await fetch('/breakpoint/respond', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ proceed }),
+      });
+    } finally {
+      document.getElementById('bpContinueBtn').disabled = false;
+      document.getElementById('bpAbortBtn').disabled = false;
+    }
+  }
+
+  document.getElementById('bpContinueBtn').addEventListener('click', () => respondToBreakpoint(true));
+  document.getElementById('bpAbortBtn').addEventListener('click', () => respondToBreakpoint(false));
 
   // ── init ───────────────────────────────────────────────────────────────────
   loadProtocols();

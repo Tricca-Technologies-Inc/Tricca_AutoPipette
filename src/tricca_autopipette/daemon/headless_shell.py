@@ -25,6 +25,7 @@ from tricca_autopipette.cli.tap_shell import TriccaAutoPipetteShell
 from tricca_autopipette.core.pipette_models import TipState
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from typing import Any
 
     from tricca_autopipette.daemon.moonraker_state import MoonrakerStateTracker
@@ -41,6 +42,11 @@ class HeadlessTapShell(TriccaAutoPipetteShell):
             ``client``/``mrr`` to exist first). ``None`` until then; the
             interlock fails safe (treats the machine as not homed) while
             it's unset.
+        breakpoint_handler: Set by ``AutoPipetteService`` after construction.
+            Called by ``ProtocolCommands.do_break`` in place of the
+            interactive shell's TTY-based ``self.shell.select(...)`` prompt
+            (there's no TTY inside the daemon); returns True to continue the
+            protocol, False to abort it.
     """
 
     #: Commands blocked until Moonraker reports the machine homed. Unlike
@@ -49,20 +55,18 @@ class HeadlessTapShell(TriccaAutoPipetteShell):
     #: line inside a protocol, so a protocol that needs homing must include
     #: its own leading `home all`/`init` line rather than the outer `run`
     #: command being gated itself.
-    _GATED_COMMANDS = frozenset(
-        {
-            "move",
-            "move_loc",
-            "move_rel",
-            "pipette",
-            "aspirate",
-            "dispense",
-            "next_tip",
-            "eject_tip",
-            "dispose_tip",
-            "change_tip",
-        }
-    )
+    _GATED_COMMANDS = frozenset({
+        "move",
+        "move_loc",
+        "move_rel",
+        "pipette",
+        "aspirate",
+        "dispense",
+        "next_tip",
+        "eject_tip",
+        "dispose_tip",
+        "change_tip",
+    })
 
     def __init__(
         self,
@@ -98,6 +102,7 @@ class HeadlessTapShell(TriccaAutoPipetteShell):
         #: an empty G-code buffer always means "protocol was legitimately
         #: empty."
         self.last_blocked_command: str | None = None
+        self.breakpoint_handler: Callable[[], bool] | None = None
         super().__init__(
             config_system=config_system,
             config_gantry=config_gantry,

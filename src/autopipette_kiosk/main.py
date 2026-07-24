@@ -63,6 +63,12 @@ class RunStatus(BaseModel):
     message: str = ""
 
 
+class BreakpointResponse(BaseModel):
+    """Request body for `POST /breakpoint/respond`."""
+
+    proceed: bool
+
+
 # ── daemon control-plane connection ────────────────────────────────────────────
 _control_client: WebSocketClient | None = None
 _control_requests = ControlRequests()
@@ -70,6 +76,9 @@ _main_loop: asyncio.AbstractEventLoop | None = None
 
 # ── in-memory run state, mirrored from the daemon's notify_run_status pushes ──
 _current_run: RunStatus = RunStatus(status="idle")
+# Pending breakpoint, mirrored from notify_breakpoint pushes: {"run_id",
+# "filename"} while one is awaiting a response, None otherwise.
+_current_breakpoint: dict[str, Any] | None = None
 _ws_clients: set[WebSocket] = set()
 
 _ERROR_TYPE_RE = re.compile(r"'type':\s*'([^']+)'")
@@ -91,6 +100,7 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
 
     client = WebSocketClient(TAPD_CONTROL_URI)
     client.register_handler("notify_run_status", _on_run_status_notification)
+    client.register_handler("notify_breakpoint", _on_breakpoint_notification)
     client.start()
     connected = await asyncio.to_thread(
         client.wait_for_connection, TAPD_CONNECT_TIMEOUT_SECONDS
@@ -194,6 +204,23 @@ async def home_pipette() -> RunStatus:
     return RunStatus(status="done", message=output or "Homing dispatched")
 
 
+@app.post("/breakpoint/respond")
+async def respond_to_breakpoint(req: BreakpointResponse) -> dict[str, bool]:
+    """Answer a pending protocol breakpoint (Continue/Abort).
+
+    Only one run (and therefore one pending breakpoint) can be active at a
+    time, so no run/breakpoint id is needed to disambiguate.
+    """
+    if _control_client is None:
+        raise HTTPException(status_code=503, detail="Control daemon not connected")
+
+    await asyncio.to_thread(
+        _control_client.send_jsonrpc,
+        _control_requests.run_confirm_breakpoint(req.proceed),
+    )
+    return {"ok": True}
+
+
 @app.get("/status", response_model=RunStatus)
 def get_status() -> RunStatus:
     """Return the current (or most recent) protocol run status."""
@@ -206,7 +233,7 @@ async def status_ws(websocket: WebSocket) -> None:
     await websocket.accept()
     _ws_clients.add(websocket)
     try:
-        await websocket.send_json(_current_run.model_dump())
+        await websocket.send_json(_status_payload())
         while True:
             # No messages are expected from the browser; this just blocks
             # until the client disconnects, since updates are pushed via
@@ -250,7 +277,7 @@ def _on_run_status_notification(params: Any) -> None:  # noqa: ANN401
         Invoked from the control-plane WebSocketClient's background thread;
         marshals the browser-facing broadcast back onto the main event loop.
     """
-    global _current_run
+    global _current_run, _current_breakpoint
     if not isinstance(params, dict):
         return
     notification = cast("dict[str, Any]", params)
@@ -258,16 +285,53 @@ def _on_run_status_notification(params: Any) -> None:  # noqa: ANN401
         status=notification.get("status", "idle"),
         message=notification.get("message", ""),
     )
+    if _current_run.status != "running":
+        # A run that's no longer active can't have a pending breakpoint;
+        # clear any stale one (e.g. an aborted run) rather than waiting for
+        # the matching notify_breakpoint(pending=False).
+        _current_breakpoint = None
     if _main_loop is not None:
         asyncio.run_coroutine_threadsafe(_broadcast_status(), _main_loop)
 
 
+def _on_breakpoint_notification(params: Any) -> None:  # noqa: ANN401
+    """Handle a `notify_breakpoint` push from the tapd control daemon.
+
+    Args:
+        params: Notification params, `{"run_id", "filename", "pending"}` as
+            sent by `AutoPipetteService.request_breakpoint`/
+            `confirm_breakpoint`.
+
+    Note:
+        Invoked from the control-plane WebSocketClient's background thread;
+        marshals the browser-facing broadcast back onto the main event loop.
+    """
+    global _current_breakpoint
+    if not isinstance(params, dict):
+        return
+    notification = cast("dict[str, Any]", params)
+    _current_breakpoint = notification if notification.get("pending") else None
+    if _main_loop is not None:
+        asyncio.run_coroutine_threadsafe(_broadcast_status(), _main_loop)
+
+
+def _status_payload() -> dict[str, Any]:
+    """Build the JSON payload pushed over `/ws/status`.
+
+    Returns:
+        The current `RunStatus` fields plus a `breakpoint` key: the pending
+        breakpoint's `{"run_id", "filename"}` dict, or None.
+    """
+    return {**_current_run.model_dump(), "breakpoint": _current_breakpoint}
+
+
 async def _broadcast_status() -> None:
-    """Push the current run status to every connected browser WebSocket."""
+    """Push the current run/breakpoint status to every connected browser."""
+    payload = _status_payload()
     stale: list[WebSocket] = []
     for ws in _ws_clients:
         try:
-            await ws.send_json(_current_run.model_dump())
+            await ws.send_json(payload)
         except Exception:
             stale.append(ws)
     for ws in stale:
