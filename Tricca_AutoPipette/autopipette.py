@@ -1087,28 +1087,28 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         stepper = self.pipette_params.name_pipette_stepper
         speed   = (self.pipette_params.speed_pipette_up_slow if serum_speed else self.pipette_params.speed_pipette_down)
 
-        #if disp_vol_ul is not None:
+        if disp_vol_ul is not None:
             # ----- ABSOLUTE partial-dispense -----
-         #   A = float(self.volume_converter.vol_to_steps(volume))
-          #  D = float(self.volume_converter.vol_to_steps(disp_vol_ul))
-           # if D < 0.0: D = 0.0
-            #if D > A:   D = A
-            #target = -(A - D)               # ∈ [-A, 0]
-            #if abs(target) < 1e-9: target = 0.0  # avoid "-0.0"
+            A = float(self.volume_converter.vol_to_steps(volume))
+            D = float(self.volume_converter.vol_to_steps(disp_vol_ul))
+            if D < 0.0: D = 0.0
+            if D > A:   D = A
+            target = -(A - D)               # ∈ [-A, 0]
+            if abs(target) < 1e-9: target = 0.0  # avoid "-0.0"
 
-            #self._buffer_command(
-            #    f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} MOVE={target} ACCEL=800\n"
-            #)
-            # self._buffer_command("M400\n")  # wait for stepper to finish
-        #else:
-            # ----- Full dump to 0 (legacy) -----
-        if extra_air:
-            self.plunge_down(ext_vol,
-                            (self.pipette_params.speed_pipette_up_slow if serum_speed else self.pipette_params.speed_pipette_down))
-            self.gcode_wait(self.pipette_params.wait_aspirate)
-            self.home_pipette_stepper_disp(volume, (self.pipette_params.speed_pipette_up_slow))
+            self._buffer_command(
+                f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} MOVE={target} ACCEL=800\n"
+            )
+            self._buffer_command("M400\n")  # wait for stepper to finish
         else:
-            self.home_pipette_stepper_disp(volume, (self.pipette_params.speed_pipette_up_slow if serum_speed else self.pipette_params.speed_pipette_down))
+            # ----- Full dump to 0 (legacy) -----
+            if extra_air:
+                self.plunge_down(ext_vol,
+                            (self.pipette_params.speed_pipette_up_slow if serum_speed else self.pipette_params.speed_pipette_down))
+                self.gcode_wait(self.pipette_params.wait_aspirate)
+                self.home_pipette_stepper_disp(volume, (self.pipette_params.speed_pipette_up_slow if serum_speed else self.pipette_params.speed_pipette_down))
+            else:
+                self.home_pipette_stepper_disp(volume, (self.pipette_params.speed_pipette_up_slow if serum_speed else self.pipette_params.speed_pipette_down))
 
 
         # 2) Optional wiggle
