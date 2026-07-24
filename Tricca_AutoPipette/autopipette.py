@@ -1062,8 +1062,20 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                         dest_col: Optional[int] = None,
                         disp_vol_ul: float | None = None,
                         wiggle: bool = False,
+                        extra_air: bool = False,
+                        after_air: bool = False,
                         serum_speed = False,
                         touch: bool = False) -> None:  
+        
+        aft_vol = self.pipette_params.aft_air if after_air else 0
+        if (self.pipette_params.ext_air+volume+aft_vol >= self.pipette_params.max_vol):
+            ext_vol = self.pipette_params.max_vol - (volume+aft_vol+2)
+            if ext_vol < 0:
+                ext_vol = 0
+        else:
+            ext_vol = self.pipette_params.ext_air
+        tot_vol = volume+aft_vol+ext_vol
+                            
         """Dip into a well and expel some liquid."""
         coor_dest = self.get_location_coor(dest, dest_row, dest_col)
         loc_dest  = self.locations[dest]
@@ -1090,7 +1102,14 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             # self._buffer_command("M400\n")  # wait for stepper to finish
         else:
             # ----- Full dump to 0 (legacy) -----
+        if ext_air:
+            self.plunge_down(ext_vol,
+                                (self.pipette_params.speed_pipette_up_slow if serum_speed else self.pipette_params.speed_pipette_down))
+            self.gcode_wait(self.pipette_params.wait_aspirate)
             self.home_pipette_stepper_disp(volume, (self.pipette_params.speed_pipette_up_slow if serum_speed else self.pipette_params.speed_pipette_down))
+        else:
+            self.home_pipette_stepper_disp(volume, (self.pipette_params.speed_pipette_up_slow if serum_speed else self.pipette_params.speed_pipette_down))
+
 
         # 2) Optional wiggle
         if wiggle:
@@ -1250,7 +1269,7 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         for pip_vol in transfer_volumes:
             # BUGFIX: use 'pip_vol' (not 'vol_ul') for each chunk
             self.aspirate_volume(pip_vol, source, src_row, src_col, prewet, tipbox_name=tipbox_name, extra_air=extra_air, after_air=after_air, serum_speed=serum_speed)
-            self.dispense_volume(pip_vol, dest, dest_row, dest_col, disp_vol_ul, wiggle=wiggle, serum_speed=serum_speed, touch=touch)
+            self.dispense_volume(pip_vol, dest, dest_row, dest_col, disp_vol_ul, wiggle=wiggle, extra_air=extra_air, after_air=after_air, serum_speed=serum_speed, touch=touch)
 
         if not keep_tip:
             self.dispose_tip()
