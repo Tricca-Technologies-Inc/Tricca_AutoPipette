@@ -123,7 +123,11 @@ class ControlServer:
         """
         payload = {"jsonrpc": "2.0", "method": method, "params": params}
         stale: list[web.WebSocketResponse] = []
-        for ws in self._clients:
+        # Snapshot: _handle_control's finally-block can discard from
+        # self._clients concurrently (e.g. a client disconnecting mid-
+        # broadcast), which would otherwise raise "Set changed size during
+        # iteration" and silently drop this broadcast.
+        for ws in list(self._clients):
             try:
                 await ws.send_json(payload)
             except ConnectionResetError:

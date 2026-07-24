@@ -14,6 +14,7 @@ import asyncio
 import contextlib
 import io
 import logging
+import shlex
 import threading
 import uuid
 from collections.abc import Callable
@@ -280,9 +281,14 @@ class AutoPipetteService:
         """
         async with self._lock:
             self.shell.last_blocked_command = None
-            result = await asyncio.to_thread(self._execute_line_sync, f"run {filename}")
+            # shlex.quote is required since filenames may contain spaces --
+            # cmd2's statement parser splits on unquoted whitespace, and
+            # parser_run takes a single positional argument.
+            result = await asyncio.to_thread(
+                self._execute_line_sync, f"run {shlex.quote(filename)}"
+            )
 
-            if result["error"]:
+            if result["error"] is not None:
                 self._current = RunStatus(
                     status="error",
                     message=result["error"],

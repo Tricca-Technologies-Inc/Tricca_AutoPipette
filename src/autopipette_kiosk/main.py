@@ -199,7 +199,7 @@ async def home_pipette() -> RunStatus:
     result: dict[str, Any] = response.get("result", {})
     output = str(result.get("output", "")).strip()
     error = result.get("error")
-    if error:
+    if error is not None:
         raise HTTPException(status_code=500, detail=str(error))
     return RunStatus(status="done", message=output or "Homing dispatched")
 
@@ -329,7 +329,10 @@ async def _broadcast_status() -> None:
     """Push the current run/breakpoint status to every connected browser."""
     payload = _status_payload()
     stale: list[WebSocket] = []
-    for ws in _ws_clients:
+    # Snapshot: status_ws's finally-block can discard from _ws_clients
+    # concurrently (e.g. a browser disconnecting mid-broadcast), which would
+    # otherwise raise "Set changed size during iteration" here.
+    for ws in list(_ws_clients):
         try:
             await ws.send_json(payload)
         except Exception:

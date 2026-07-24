@@ -137,7 +137,9 @@ class MoonrakerStateTracker:
         """
         toolhead = _as_dict(status.get("toolhead"))
         homed_axes = toolhead.get("homed_axes")
-        if isinstance(homed_axes, list):
+        if isinstance(homed_axes, str):
+            self._homed_axes = frozenset(homed_axes)
+        elif isinstance(homed_axes, list):
             self._homed_axes = frozenset(
                 str(axis) for axis in cast("list[Any]", homed_axes)
             )

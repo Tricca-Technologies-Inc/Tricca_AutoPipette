@@ -5,6 +5,7 @@ This module provides a cmd2-based shell for controlling an automated pipetting
 system. It handles G-code generation, WebSocket communication with the pipette,
 and protocol execution.
 """
+
 import json
 import logging
 import threading
@@ -12,8 +13,10 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
-from tricca_autopipette.core.autopipette import AutoPipette
 from cmd2 import Cmd, plugin
+from rich import print as rprint
+from rich.console import Console
+
 from tricca_autopipette.commands import (
     ConfigurationCommands,
     MovementCommands,
@@ -22,15 +25,18 @@ from tricca_autopipette.commands import (
     UtilityCommands,
     WebSocketCommands,
 )
+from tricca_autopipette.core.autopipette import AutoPipette
 from tricca_autopipette.core.gcode_manager import GCodeManager
 from tricca_autopipette.core.json_config_manager import JsonConfigManager
 from tricca_autopipette.core.location_manager import LocationManager
+from tricca_autopipette.core.pipette_constants import (
+    ConfigKey,
+    DefaultFilenames,
+    DefaultPaths,
+)
 from tricca_autopipette.moonraker.moonraker_requests import MoonrakerRequests
-from tricca_autopipette.core.pipette_constants import ConfigKey, DefaultFilenames, DefaultPaths
-from tricca_autopipette.resources.string_constants import TAP_CLR_BANNER
-from rich import print as rprint
-from rich.console import Console
 from tricca_autopipette.moonraker.websocket_client import WebSocketClient
+from tricca_autopipette.resources.string_constants import TAP_CLR_BANNER
 
 logger = logging.getLogger(__name__)
 
@@ -170,6 +176,13 @@ class TriccaAutoPipetteShell(Cmd):
 
         # G-code management
         self.gcode_manager = GCodeManager(DefaultPaths.DIR_GCODE, self._autopipette)
+
+        # Set by do_break when a breakpoint is aborted, since cmd2's
+        # runcmds_plus_hooks/onecmd_plus_hooks swallow the resulting
+        # KeyboardInterrupt into the same `False` return value used for
+        # normal completion -- do_run checks this flag to tell the two
+        # apart.
+        self.protocol_aborted: bool = False
 
         # Register all command sets
         self._register_command_sets()
@@ -478,7 +491,7 @@ class TriccaAutoPipetteShell(Cmd):
             )
             logger.debug(f"Wrote G-code to {file_path}")
             self.upload_and_execute_gcode(file_path.name, file_path, delete_file=True)
-        except IOError as e:
+        except OSError as e:
             error_msg = f"Failed to write G-code file: {e}"
             self.perror(error_msg)
             logger.exception("Failed to write G-code file")

@@ -9,10 +9,10 @@ from __future__ import annotations
 from pathlib import Path
 
 from cmd2 import Statement, with_argparser
-from tricca_autopipette.core.pipette_constants import DefaultPaths
 from rich import print as rprint
 
 from tricca_autopipette.commands.base_command_set import TAPCommandSet
+from tricca_autopipette.core.pipette_constants import DefaultPaths
 
 from .tap_cmd_parsers import RunArgs, TAPCmdParsers
 
@@ -97,6 +97,7 @@ class ProtocolCommands(TAPCommandSet):
 
         rprint(f"[dim]Executing {len(commands)} command(s)...[/dim]")
 
+        self.shell.protocol_aborted = False
         try:
             with self.shell.gcode_manager.batch_mode():
                 halted_early = self.shell.runcmds_plus_hooks(
@@ -107,11 +108,18 @@ class ProtocolCommands(TAPCommandSet):
 
             gcode_buffer = self.shell.gcode_manager.get_buffer()
 
-            if halted_early:
-                # A line was blocked (e.g. by the homed-safety interlock) or
-                # otherwise signaled "stop" — runcmds_plus_hooks aborts the
-                # whole batch at that point rather than skipping just that
-                # one line, so any commands after it never ran.
+            # runcmds_plus_hooks returns False both on normal completion AND
+            # when do_break's "Abort" raises KeyboardInterrupt (cmd2 catches
+            # that internally and just breaks its loop) -- so a breakpoint
+            # abort is indistinguishable from success via the return value
+            # alone. self.shell.protocol_aborted, set by do_break, is what
+            # actually tells the two apart.
+            if halted_early or self.shell.protocol_aborted:
+                # A line was blocked (e.g. by the homed-safety interlock),
+                # aborted via a breakpoint, or otherwise signaled "stop" —
+                # runcmds_plus_hooks aborts the whole batch at that point
+                # rather than skipping just that one line, so any commands
+                # after it never ran.
                 rprint(
                     "[red]Protocol halted before completion "
                     f"({len(gcode_buffer)} of {len(commands)} command(s) "
@@ -147,7 +155,7 @@ class ProtocolCommands(TAPCommandSet):
                 f"successfully.[/bold green]"
             )
 
-        except IOError as e:
+        except OSError as e:
             self.shell.perror(f"Failed to write protocol G-code: {e}")
         except Exception as e:
             self.shell.perror(f"Error executing protocol: {e}")
@@ -203,6 +211,7 @@ class ProtocolCommands(TAPCommandSet):
 
         if not proceed:
             rprint("[yellow]Protocol execution stopped by user.[/yellow]")
+            self.shell.protocol_aborted = True
             raise KeyboardInterrupt
         rprint("[green]Continuing protocol execution...[/green]")
 
