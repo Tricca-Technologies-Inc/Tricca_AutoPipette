@@ -2,17 +2,25 @@
 
 This module provides shell commands for running protocol scripts,
 controlling execution (pause, resume, cancel), and handling emergency stops.
+
+Thin cmd2 adapter: each ``do_*`` method only parses arguments and renders
+the result -- the actual logic lives on ``AutoPipetteService``
+(``daemon/service.py``), reached via ``self.service`` (see
+``base_command_set.py``'s ``TAPCommandSet.service`` property). As of
+migration Phase 4 (see CLAUDE.md), ``do_run`` replays a protocol file via
+``AutoPipetteService.run_protocol_blocking`` -- the exact same per-line
+dispatch loop the daemon's ``run.start`` RPC uses -- rather than its own,
+independent implementation built on cmd2's ``runcmds_plus_hooks``.
 """
 
 from __future__ import annotations
-
-from pathlib import Path
 
 from cmd2 import Statement, with_argparser
 from rich import print as rprint
 
 from tricca_autopipette.commands.base_command_set import TAPCommandSet
 from tricca_autopipette.core.pipette_constants import DefaultPaths
+from tricca_autopipette.core.pipette_exceptions import ProtocolAbortedError
 
 from .tap_cmd_parsers import RunArgs, TAPCmdParsers
 
@@ -49,7 +57,8 @@ class ProtocolCommands(TAPCommandSet):
 
         Reads the protocol file, executes each command in batch mode to
         accumulate G-code, then uploads and runs the result as a single
-        file on the pipette.
+        file on the pipette. Blocks until the protocol finishes (or is
+        aborted at a breakpoint).
 
         Args:
             args: Parsed arguments containing filename.
@@ -57,150 +66,45 @@ class ProtocolCommands(TAPCommandSet):
         Example:
             >>> run my_protocol.tap
             >>> run protocols/calibration.tap
-
-        Note:
-            Protocol files contain TAP shell commands, one per line.
-            Lines starting with # and blank lines are ignored.
         """
-        filename: str = args.filename
-        proto_path = DefaultPaths.DIR_PROTOCOL / filename
-
-        if not proto_path.exists():
-            rprint(f"[red]Protocol file not found: {proto_path}[/red]")
+        rprint(f"[cyan]Running protocol: {args.filename}[/cyan]")
+        try:
+            result = self.service.run_protocol_blocking(args.filename)
+            rprint(f"[bold green]✓ {result.message}[/bold green]")
+        except ProtocolAbortedError as e:
+            rprint(f"[yellow]{e}[/yellow]")
+        except FileNotFoundError as e:
+            rprint(f"[red]{e}[/red]")
             rprint(
                 f"[dim]Hint: Check '{DefaultPaths.DIR_PROTOCOL}' for "
-                f"available protocols.[/dim]"
+                "available protocols.[/dim]"
             )
-            return
-
-        if not proto_path.is_file():
-            rprint(f"[red]'{proto_path}' is a directory, not a file.[/red]")
-            return
-
-        rprint(f"[cyan]Running protocol: {filename}[/cyan]")
-
-        try:
-            lines = proto_path.read_text(encoding="utf-8").splitlines()
-        except UnicodeDecodeError as e:
-            rprint(f"[red]Error reading protocol file (encoding issue): {e}[/red]")
-            return
-
-        commands = [
-            line + "\n"
-            for line in lines
-            if line.strip() and not line.strip().startswith("#")
-        ]
-
-        if not commands:
-            rprint("[yellow]Protocol file is empty or contains only comments.[/yellow]")
-            return
-
-        rprint(f"[dim]Executing {len(commands)} command(s)...[/dim]")
-
-        self.shell.protocol_aborted = False
-        try:
-            with self.shell.gcode_manager.batch_mode():
-                halted_early = self.shell.runcmds_plus_hooks(
-                    commands,
-                    add_to_history=False,
-                    stop_on_keyboard_interrupt=True,
-                )
-
-            gcode_buffer = self.shell.gcode_manager.get_buffer()
-
-            # runcmds_plus_hooks returns False both on normal completion AND
-            # when do_break's "Abort" raises KeyboardInterrupt (cmd2 catches
-            # that internally and just breaks its loop) -- so a breakpoint
-            # abort is indistinguishable from success via the return value
-            # alone. self.shell.protocol_aborted, set by do_break, is what
-            # actually tells the two apart.
-            if halted_early or self.shell.protocol_aborted:
-                # A line was blocked (e.g. by the homed-safety interlock),
-                # aborted via a breakpoint, or otherwise signaled "stop" —
-                # runcmds_plus_hooks aborts the whole batch at that point
-                # rather than skipping just that one line, so any commands
-                # after it never ran.
-                rprint(
-                    "[red]Protocol halted before completion "
-                    f"({len(gcode_buffer)} of {len(commands)} command(s) "
-                    "produced G-code). See the message above for why.[/red]"
-                )
-                self.shell.gcode_manager.clear_buffer()
-                return
-
-            if not gcode_buffer:
-                rprint("[yellow]No G-code generated from protocol.[/yellow]")
-                self.shell.gcode_manager.clear_buffer()
-                return
-
-            # Output filename is always a flat .gcode file regardless of
-            # any subdirectory in the input path — intentional.
-            output_filename = Path(filename).with_suffix(".gcode").name
-
-            file_path = self.shell.gcode_manager.write_gcode_file(
-                gcode_buffer, output_filename, append_header=True
-            )
-
-            rprint(
-                f"[green]G-code generated: {output_filename} "
-                f"({len(gcode_buffer)} lines)[/green]"
-            )
-
-            self.shell.upload_and_execute_gcode(
-                output_filename, file_path, delete_file=True
-            )
-
-            rprint(
-                f"[bold green]✓ Protocol '{filename}' executed "
-                f"successfully.[/bold green]"
-            )
-
         except OSError as e:
-            self.shell.perror(f"Failed to write protocol G-code: {e}")
+            rprint(f"[red]Failed to write protocol G-code: {e}[/red]")
         except Exception as e:
-            self.shell.perror(f"Error executing protocol: {e}")
-        finally:
-            # Always clear the buffer, whether the run succeeded or failed.
-            self.shell.gcode_manager.clear_buffer()
+            rprint(f"[red]Error executing protocol: {e}[/red]")
 
     # =========================================================================
     # INTERACTIVE BREAKPOINT
     # =========================================================================
 
     def do_break(self, _: Statement) -> None:
-        """Pause protocol execution for user confirmation.
+        """Manually invoke the breakpoint-confirmation flow.
 
-        Inserts an interactive breakpoint into a running protocol.
-        The user is prompted to continue or abort. Intended for use
-        inside protocol files to allow manual intervention mid-run.
+        Inside a running protocol, ``break`` lines are handled directly by
+        ``AutoPipetteService``'s per-line dispatch loop (which calls
+        ``request_breakpoint`` itself, never reaching this method) -- this
+        ``do_break`` is only reachable by typing ``break`` directly at the
+        interactive prompt, mostly useful for manually testing the
+        confirmation flow outside of a protocol run.
 
         Example:
-            In a protocol file::
-
-                move_loc plate_a
-                break
-                pipette 100 source dest
-
-        Raises:
-            KeyboardInterrupt: If the user (or a remote client, when running
-                inside the ``tapd`` daemon) chooses to abort, stopping
-                ``runcmds_plus_hooks`` when run with
-                ``stop_on_keyboard_interrupt=True``.
-
-        Note:
-            Inside the daemon there's no TTY to prompt directly — if
-            ``self.shell.breakpoint_handler`` is set (by
-            ``AutoPipetteService``), this publishes a ``notify_breakpoint``
-            event and blocks the current worker thread until a remote
-            client answers via ``run.confirm_breakpoint`` instead of
-            calling ``self.shell.select(...)``.
+            >>> break
         """
-        handler = getattr(self.shell, "breakpoint_handler", None)
-
+        handler = self.service.breakpoint_handler
         if handler is not None:
             rprint(
-                "[yellow]⏸ Protocol paused at breakpoint — "
-                "waiting for remote confirmation...[/yellow]"
+                "[yellow]⏸ Waiting for remote confirmation...[/yellow]"
             )
             proceed = handler()
         else:
@@ -209,40 +113,14 @@ class ProtocolCommands(TAPCommandSet):
             )
             proceed = result == "Yes"
 
-        if not proceed:
+        if proceed:
+            rprint("[green]Continuing protocol execution...[/green]")
+        else:
             rprint("[yellow]Protocol execution stopped by user.[/yellow]")
-            self.shell.protocol_aborted = True
-            raise KeyboardInterrupt
-        rprint("[green]Continuing protocol execution...[/green]")
 
     # =========================================================================
-    # WEBSOCKET CONTROL COMMANDS
+    # RUN CONTROL COMMANDS
     # =========================================================================
-
-    def _check_websocket(self) -> bool:
-        """Check if the WebSocket client is connected and ready.
-
-        Returns:
-            True if connected, False otherwise.
-
-        Note:
-            Uses ``self.shell.client`` to match the attribute name used by
-            WebSocketCommands. If the shell stores the client under a
-            different name, update both this method and WebSocketCommands
-            to match.
-        """
-        # NOTE: must match the attribute name used in tap_shell.py.
-        # websocket_commands.py uses `self.shell.client` — kept consistent.
-        ws_client = getattr(self.shell, "client", None)
-
-        if not ws_client or not ws_client.is_connected():
-            rprint(
-                "[yellow]WebSocket not connected. "
-                "Cannot communicate with pipette.[/yellow]"
-            )
-            return False
-
-        return True
 
     def do_stop(self, _: Statement) -> None:
         """Send an emergency stop to the pipette.
@@ -254,15 +132,9 @@ class ProtocolCommands(TAPCommandSet):
             >>> stop
         """
         rprint("[bold red]⚠ EMERGENCY STOP ⚠[/bold red]")
-
-        if not self._check_websocket():
-            return
-
         try:
-            request = self.shell.mrr.printer_emergency_stop()
-            self.shell.send_rpc(request)
-            rprint("[bold red]Emergency stop sent.[/bold red]")
-            rprint("[yellow]Re-home the pipette before continuing.[/yellow]")
+            result = self.service.emergency_stop()
+            rprint(f"[bold red]{result.message}[/bold red]")
         except Exception as e:
             rprint(f"[red]Failed to send emergency stop: {e}[/red]")
 
@@ -273,14 +145,9 @@ class ProtocolCommands(TAPCommandSet):
             >>> pause
         """
         rprint("[yellow]⏸ Pausing protocol...[/yellow]")
-
-        if not self._check_websocket():
-            return
-
         try:
-            request = self.shell.mrr.printer_print_pause()
-            self.shell.send_rpc(request)
-            rprint("[green]Protocol paused.[/green]")
+            result = self.service.send_pause()
+            rprint(f"[green]{result.message}[/green]")
             rprint("[dim]Use 'resume' to continue.[/dim]")
         except Exception as e:
             rprint(f"[red]Failed to pause protocol: {e}[/red]")
@@ -292,14 +159,9 @@ class ProtocolCommands(TAPCommandSet):
             >>> resume
         """
         rprint("[cyan]▶ Resuming protocol...[/cyan]")
-
-        if not self._check_websocket():
-            return
-
         try:
-            request = self.shell.mrr.printer_print_resume()
-            self.shell.send_rpc(request)
-            rprint("[green]Protocol resumed.[/green]")
+            result = self.service.send_resume()
+            rprint(f"[green]{result.message}[/green]")
         except Exception as e:
             rprint(f"[red]Failed to resume protocol: {e}[/red]")
 
@@ -310,13 +172,8 @@ class ProtocolCommands(TAPCommandSet):
             >>> cancel
         """
         rprint("[yellow]⏹ Canceling protocol...[/yellow]")
-
-        if not self._check_websocket():
-            return
-
         try:
-            request = self.shell.mrr.printer_print_cancel()
-            self.shell.send_rpc(request)
-            rprint("[red]Protocol canceled.[/red]")
+            result = self.service.send_cancel()
+            rprint(f"[red]{result.message}[/red]")
         except Exception as e:
             rprint(f"[red]Failed to cancel protocol: {e}[/red]")

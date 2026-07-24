@@ -8,6 +8,7 @@ from cmd2 import CommandSet
 
 if TYPE_CHECKING:
     from tricca_autopipette.cli.tap_shell import TriccaAutoPipetteShell
+    from tricca_autopipette.daemon.service import AutoPipetteService
 
 
 class TAPCommandSet(CommandSet):
@@ -34,3 +35,19 @@ class TAPCommandSet(CommandSet):
         # Type assertion - we know this is TriccaAutoPipetteShell
         assert isinstance(self._cmd, TriccaAutoPipetteShell)
         return self._cmd
+
+    @property
+    def service(self) -> AutoPipetteService:
+        """The ``AutoPipetteService`` that owns this shell's business logic.
+
+        As of migration Phase 4 (see CLAUDE.md's ports-and-adapters notes),
+        ``TriccaAutoPipetteShell.__init__`` always constructs its
+        ``AutoPipetteService`` before registering any command sets, so this
+        is unconditionally available -- both for the daemon (which talks to
+        an ``AutoPipetteService`` directly, with no cmd2 shell at all) and
+        for standalone/local-scripting use of this shell.
+
+        Returns:
+            The ``AutoPipetteService`` instance.
+        """
+        return self.shell.service

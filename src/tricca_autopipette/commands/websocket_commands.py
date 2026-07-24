@@ -3,18 +3,25 @@
 This module provides shell commands for managing WebSocket connections,
 sending JSON-RPC requests and notifications, uploading G-code files,
 and monitoring server communications.
+
+Thin cmd2 adapter: each ``do_*`` method only parses arguments and renders
+the result -- the actual logic lives on ``AutoPipetteService``
+(``daemon/service.py``), reached via ``self.service`` (see
+``base_command_set.py``'s ``TAPCommandSet.service`` property). Migrated off
+direct ``self.shell.client``/``self.shell.mrr`` access in migration Phase 4
+(see CLAUDE.md) so this group works identically whether reached through
+this standalone shell or through ``tap``/``RemoteTapShell`` talking to the
+daemon over the control plane.
 """
 
 from __future__ import annotations
 
 import json
-import time
 from pathlib import Path
 from typing import Any
 
 from cmd2 import Statement, with_argparser
 from rich import print as rprint
-from tricca_autopipette.moonraker.websocket_client import WebSocketClient
 
 from tricca_autopipette.commands.base_command_set import TAPCommandSet
 
@@ -48,43 +55,6 @@ class WebSocketCommands(TAPCommandSet):
         super().__init__()
 
     # =========================================================================
-    # INTERNAL HELPERS
-    # =========================================================================
-
-    def _get_client(self) -> WebSocketClient | None:
-        """Return the WebSocket client, or None if unavailable.
-
-        Prints a warning and returns None if the client has not been
-        initialised on the shell.
-
-        Returns:
-            WebSocket client if available, None otherwise.
-        """
-        client = getattr(self.shell, "client", None)
-
-        if not client:
-            rprint("[yellow]WebSocket client not available.[/yellow]")
-            return None
-
-        return client
-
-    def _ensure_connected(self) -> WebSocketClient | None:
-        """Return the WebSocket client only if it is currently connected.
-
-        Returns:
-            Connected WebSocket client, or None if not connected.
-        """
-        client = self._get_client()
-        if not client:
-            return None
-
-        if not client.is_connected():
-            rprint("[yellow]WebSocket not connected. Use 'reconnect' first.[/yellow]")
-            return None
-
-        return client
-
-    # =========================================================================
     # STATUS / DIAGNOSTICS
     # =========================================================================
 
@@ -97,28 +67,27 @@ class WebSocketCommands(TAPCommandSet):
         Example:
             >>> ws_status
         """
-        client = self._get_client()
-        if not client:
+        result = self.service.ws_status()
+        data = result.data or {}
+        if not data:
+            rprint(f"[yellow]{result.message}[/yellow]")
             return
 
-        # Connection status
-        if client.is_connected():
-            rprint("[green]✓ WebSocket connected[/green]")
-        else:
-            rprint("[red]✗ WebSocket disconnected[/red]")
-
-        uri = getattr(self.shell, "uri", "Unknown")
-        rprint(f"[dim]Server:[/dim] {uri}")
+        rprint(
+            "[green]✓ WebSocket connected[/green]"
+            if data.get("connected")
+            else "[red]✗ WebSocket disconnected[/red]"
+        )
+        rprint(f"[dim]Server:[/dim] {data.get('uri')}")
         rprint()
 
-        # len(client) calls __len__ → message_queue.qsize(), non-destructive.
-        msg_count = len(client)
+        msg_count = data.get("queued_messages", 0)
         if msg_count > 0:
             rprint(f"[yellow]📬 {msg_count} unread message(s)[/yellow]")
         else:
             rprint("[dim]📭 No queued messages[/dim]")
 
-        handlers = client.handlers
+        handlers = data.get("handlers") or []
         if handlers:
             rprint(f"[cyan]🔔 {len(handlers)} notification handler(s):[/cyan]")
             for method in handlers:
@@ -126,8 +95,9 @@ class WebSocketCommands(TAPCommandSet):
         else:
             rprint("[dim]🔕 No notification handlers[/dim]")
 
-        if client.pending_count > 0:
-            rprint(f"[yellow]⏳ {client.pending_count} pending request(s)[/yellow]")
+        pending = data.get("pending_requests", 0)
+        if pending > 0:
+            rprint(f"[yellow]⏳ {pending} pending request(s)[/yellow]")
 
     def do_ping(self, _: Statement) -> None:
         """Ping the server to check connection health and measure round-trip time.
@@ -136,26 +106,10 @@ class WebSocketCommands(TAPCommandSet):
             >>> ping
             ✓ Pong! (Round-trip: 23.4ms)
         """
-        client = self._ensure_connected()
-        if not client:
-            return
-
-        mrr = getattr(self.shell, "mrr", None)
-        if not mrr:
-            rprint("[yellow]MoonrakerRequests not available.[/yellow]")
-            return
-
         try:
-            request = mrr.server_info()
-            start = time.time()
-            response = client.send_jsonrpc(request, timeout=5.0)
-            elapsed = (time.time() - start) * 1000
-
-            if "result" in response:
-                rprint(f"[green]✓ Pong! (Round-trip: {elapsed:.1f}ms)[/green]")
-            else:
-                rprint("[yellow]Response received but contained no result.[/yellow]")
-
+            result = self.service.ping_moonraker()
+            color = "green" if result.ok else "yellow"
+            rprint(f"[{color}]{'✓ ' if result.ok else ''}{result.message}[/{color}]")
         except TimeoutError:
             rprint("[red]✗ Ping timed out[/red]")
         except Exception as e:
@@ -180,27 +134,17 @@ class WebSocketCommands(TAPCommandSet):
             >>> send server.config
             >>> send gcode.script '{"script": "G28"}'
         """
-        client = self._ensure_connected()
-        if not client:
-            return
-
-        mrr = getattr(self.shell, "mrr", None)
-        if not mrr:
-            rprint("[yellow]MoonrakerRequests not available.[/yellow]")
-            return
-
         try:
             params: dict[str, Any] | None = None
             if args.params and args.params.strip():
                 params = json.loads(args.params.strip())
 
-            request = mrr.gen_request(args.method, params)
-
             rprint(f"[cyan]Sending request: {args.method}...[/cyan]")
-            response = client.send_jsonrpc(request, timeout=5.0)
+            result = self.service.send_raw(args.method, params)
 
             rprint("[green]✓ Response received:[/green]")
-            rprint(json.dumps(response, indent=2))
+            data = result.data or {}
+            rprint(json.dumps(data.get("response"), indent=2))
 
         except json.JSONDecodeError as e:
             rprint(f"[red]Invalid JSON in params: {e}[/red]")
@@ -230,17 +174,13 @@ class WebSocketCommands(TAPCommandSet):
             Parameters must be valid JSON. Use single quotes around
             the JSON string to avoid shell escaping issues.
         """
-        client = self._ensure_connected()
-        if not client:
-            return
-
         try:
             params: dict[str, Any] | None = None
             if args.params and args.params.strip():
                 params = json.loads(args.params.strip())
 
-            client.send_notification(args.method, params)
-            rprint(f"[green]✓ Notification sent: {args.method}[/green]")
+            result = self.service.notify_raw(args.method, params)
+            rprint(f"[green]✓ {result.message}[/green]")
 
         except json.JSONDecodeError as e:
             rprint(f"[red]Invalid JSON in params: {e}[/red]")
@@ -258,8 +198,7 @@ class WebSocketCommands(TAPCommandSet):
     def do_subscribe(self, arg: str) -> None:
         """Subscribe to server notifications for a specific method.
 
-        Registers a handler that prints incoming notifications for the
-        given method as they arrive.
+        Prints matching notifications as they arrive.
 
         Usage:
             subscribe <method>
@@ -276,26 +215,15 @@ class WebSocketCommands(TAPCommandSet):
             rprint("[dim]Example: subscribe notify_status_update[/dim]")
             return
 
-        method = arg.strip()
-        client = self._get_client()
-        if not client:
-            return
-
-        def notification_handler(params: dict[str, Any] | None) -> None:
-            rprint(f"[bold cyan]📨 {method}:[/bold cyan]")
-            if params:
-                rprint(json.dumps(params, indent=2))
-            else:
-                rprint("[dim](no parameters)[/dim]")
-
-        client.register_handler(method, notification_handler)
-        rprint(f"[green]✓ Subscribed to '{method}'[/green]")
-        rprint("[dim]Notifications will be displayed as they arrive.[/dim]")
+        try:
+            result = self.service.subscribe_raw(arg.strip())
+            rprint(f"[green]✓ {result.message}[/green]")
+            rprint("[dim]Notifications will be displayed as they arrive.[/dim]")
+        except Exception as e:
+            rprint(f"[red]Error subscribing: {e}[/red]")
 
     def do_unsubscribe(self, arg: str) -> None:
         """Unsubscribe from server notifications for a specific method.
-
-        Removes the handler for the specified notification method.
 
         Usage:
             unsubscribe <method>
@@ -310,16 +238,12 @@ class WebSocketCommands(TAPCommandSet):
             rprint("[yellow]Usage: unsubscribe <method>[/yellow]")
             return
 
-        method = arg.strip()
-        client = self._get_client()
-        if not client:
-            return
-
-        if method in client.handlers:
-            client.unregister_handler(method)
-            rprint(f"[green]✓ Unsubscribed from '{method}'[/green]")
-        else:
-            rprint(f"[yellow]Not currently subscribed to '{method}'.[/yellow]")
+        try:
+            result = self.service.unsubscribe_raw(arg.strip())
+            color = "green" if result.ok else "yellow"
+            rprint(f"[{color}]{result.message}[/{color}]")
+        except Exception as e:
+            rprint(f"[red]Error unsubscribing: {e}[/red]")
 
     # =========================================================================
     # FILE UPLOAD
@@ -340,13 +264,16 @@ class WebSocketCommands(TAPCommandSet):
 
         Note:
             ``file_name`` is the name assigned on the server.
-            ``file_path`` is the local path to the file to upload.
+            ``file_path`` is the local path to the file to upload -- local
+            to the process running this command (the daemon's host, when
+            reached via ``tap``).
         """
         file_name: str = args.file_name
         file_path: Path = args.file_path
 
         try:
-            self.shell.upload_gcode(file_name, file_path)
+            server_path = self.service.upload_gcode(file_name, file_path)
+            rprint(f"[green]✓ Upload successful. Server path: {server_path}[/green]")
         except Exception as e:
             rprint(f"[red]Upload failed: {e}[/red]")
 
@@ -363,24 +290,24 @@ class WebSocketCommands(TAPCommandSet):
         Example:
             >>> read
         """
-        client = self._get_client()
-        if not client:
+        try:
+            result = self.service.read_message()
+        except Exception as e:
+            rprint(f"[red]Error reading message: {e}[/red]")
             return
 
-        message = client.pop_message()
-
-        if message is None:
-            rprint("[dim]No messages in queue.[/dim]")
+        if not result.ok:
+            rprint(f"[dim]{result.message}[/dim]")
             return
 
+        data = result.data or {}
         rprint("[bold cyan]Message from queue:[/bold cyan]")
-        rprint(f"[dim]Type:[/dim] {message.type.value}")
-
-        if message.data:
+        rprint(f"[dim]Type:[/dim] {data.get('type')}")
+        if data.get("message_data"):
             rprint("[dim]Data:[/dim]")
-            rprint(json.dumps(message.data, indent=2))
+            rprint(json.dumps(data["message_data"], indent=2))
 
-        remaining = len(client)
+        remaining = data.get("remaining", 0)
         if remaining > 0:
             rprint(f"[dim]({remaining} more message(s) in queue)[/dim]")
 
@@ -390,23 +317,23 @@ class WebSocketCommands(TAPCommandSet):
         Example:
             >>> read_all
         """
-        client = self._get_client()
-        if not client:
+        try:
+            result = self.service.read_all_messages()
+        except Exception as e:
+            rprint(f"[red]Error reading messages: {e}[/red]")
             return
 
-        messages = client.get_queued_messages()
-
+        messages = (result.data or {}).get("messages", [])
         if not messages:
             rprint("[dim]No messages in queue.[/dim]")
             return
 
         rprint(f"[bold cyan]{len(messages)} message(s) in queue:[/bold cyan]\n")
-
         for i, message in enumerate(messages, 1):
             rprint(f"[bold]Message {i}:[/bold]")
-            rprint(f"  [dim]Type:[/dim] {message.type.value}")
-            if message.data:
-                formatted = json.dumps(message.data, indent=4)
+            rprint(f"  [dim]Type:[/dim] {message.get('type')}")
+            if message.get("message_data"):
+                formatted = json.dumps(message["message_data"], indent=4)
                 indented = "\n".join(f"  {line}" for line in formatted.split("\n"))
                 rprint(indented)
             rprint()
@@ -417,16 +344,15 @@ class WebSocketCommands(TAPCommandSet):
         Example:
             >>> clear_queue
         """
-        client = self._get_client()
-        if not client:
-            return
-
-        count = client.clear_queue()
-
-        if count > 0:
-            rprint(f"[green]✓ Cleared {count} message(s) from queue.[/green]")
-        else:
-            rprint("[dim]Queue was already empty.[/dim]")
+        try:
+            result = self.service.clear_message_queue()
+            data = result.data or {}
+            if data.get("cleared"):
+                rprint(f"[green]✓ {result.message}[/green]")
+            else:
+                rprint("[dim]Queue was already empty.[/dim]")
+        except Exception as e:
+            rprint(f"[red]Error clearing queue: {e}[/red]")
 
     # =========================================================================
     # CONNECTION MANAGEMENT
@@ -446,50 +372,18 @@ class WebSocketCommands(TAPCommandSet):
             subscriptions (e.g. Moonraker printer.objects.subscribe) must
             be re-sent separately if required — see ``send`` or ``notify``.
         """
-        client = self._get_client()
-        if not client:
-            return
-
         rprint("[cyan]Reconnecting WebSocket...[/cyan]")
-
         try:
-            existing_handlers = client.handlers
-
-            uri = getattr(self.shell, "uri", None)
-            if not uri:
-                rprint("[red]WebSocket URI not available.[/red]")
-                return
-
-            client.stop()
-            rprint("[dim]Old connection closed.[/dim]")
-
-            new_client = WebSocketClient(uri)
-
-            # Restore client-side handlers on the new client.
-            # Server-side subscriptions are NOT re-sent here — Moonraker
-            # subscriptions use printer.objects.subscribe, not outbound
-            # notifications, so re-sending method names as notifications
-            # would be incorrect.
-            for method, callback in existing_handlers.items():
-                new_client.register_handler(method, callback)
-
-            new_client.start()
-
-            if new_client.wait_for_connection(timeout=10):
-                self.shell.client = new_client
-                rprint("[green]✓ WebSocket reconnected.[/green]")
-                if existing_handlers:
+            result = self.service.reconnect_websocket()
+            if result.ok:
+                rprint(f"[green]✓ {result.message}[/green]")
+                restored = (result.data or {}).get("handlers_restored", 0)
+                if restored:
                     rprint(
-                        f"[dim]{len(existing_handlers)} handler(s) restored. "
+                        f"[dim]{restored} handler(s) restored. "
                         f"Re-send any server subscriptions if needed.[/dim]"
                     )
             else:
-                rprint("[red]Failed to reconnect — reverting to old client.[/red]")
-                # NOTE: the old client was stopped above; restarting it may
-                # not fully restore its previous state depending on the
-                # WebSocketClient implementation.
-                self.shell.client = client
-                client.start()
-
+                rprint(f"[red]{result.message}[/red]")
         except Exception as e:
             rprint(f"[red]Reconnection error: {e}[/red]")

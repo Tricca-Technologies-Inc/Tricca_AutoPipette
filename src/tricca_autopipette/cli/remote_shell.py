@@ -2,21 +2,53 @@
 
 Unlike `TriccaAutoPipetteShell`, this owns no `AutoPipette`/`WebSocketClient`
 of its own — all domain logic, config loading, and the Moonraker connection
-live in the daemon's `HeadlessTapShell` (see `tricca_autopipette.daemon`).
-Unrecognized commands are forwarded verbatim to the daemon's `shell.exec`;
-`run`/`cancel`/`pause`/`resume`/`continue`/`abort` are explicit thin
-wrappers around the matching control-plane RPCs so live progress renders
-from `notify_run_status`/`notify_breakpoint` pushes instead of a single
-blocking round-trip.
+live in the daemon's `AutoPipetteService` (see `tricca_autopipette.daemon`).
+Every command has a structured control-plane method and a thin `do_*`
+wrapper (either hand-written or generated from `_STRUCTURED_COMMANDS`) --
+as of migration Phase 4 (see CLAUDE.md's ports-and-adapters notes), there is
+no `shell.exec` escape hatch left to fall back to; an unrecognized command
+falls through to cmd2's own default "unknown command" handling.
 """
 
 from __future__ import annotations
 
+import json
 import logging
-from typing import Any, cast
+from collections.abc import Callable
+from typing import Any, Literal, cast
 
-from cmd2 import Cmd, Statement
+from cmd2 import Cmd, Statement, with_argparser
 
+from tricca_autopipette.cli.report_tables import (
+    build_liquids_table,
+    build_locations_table,
+    build_plates_table,
+    build_system_table,
+)
+from tricca_autopipette.commands.tap_cmd_parsers import (
+    AspirateArgs,
+    CoorArgs,
+    DelLocArgs,
+    DispenseArgs,
+    GcodePrintArgs,
+    HomeArgs,
+    LsArgs,
+    MoveArgs,
+    MoveLocArgs,
+    MoveRelArgs,
+    NotifyArgs,
+    PipetteArgs,
+    PlateArgs,
+    ResetPlateArgs,
+    SendArgs,
+    SetArgs,
+    TAPCmdParsers,
+    TriggerArgs,
+    UploadArgs,
+    VolToStepsArgs,
+    WaitArgs,
+    args_from_namespace,
+)
 from tricca_autopipette.daemon.control_requests import ControlRequests
 from tricca_autopipette.moonraker.websocket_client import WebSocketClient
 
@@ -25,7 +57,7 @@ logger = logging.getLogger(__name__)
 WEBSOCKET_TIMEOUT_SECONDS = 10
 
 
-def _as_dict(value: Any) -> dict[str, Any]:  # noqa: ANN401
+def _as_dict(value: Any) -> dict[str, Any]:  # ruff:ignore[any-type]
     """Narrow a loosely-typed JSON-RPC result/params value to a dict.
 
     Args:
@@ -86,7 +118,7 @@ class RemoteTapShell(Cmd):
 
     # ==================== notification handlers ====================
 
-    def _on_run_status(self, params: Any) -> None:  # noqa: ANN401
+    def _on_run_status(self, params: Any) -> None:  # ruff:ignore[any-type]
         """Show a live run-status update without disrupting the prompt.
 
         Args:
@@ -100,7 +132,7 @@ class RemoteTapShell(Cmd):
         message = notification.get("message", "")
         self.add_alert(msg=f"[run:{status}] {message}")
 
-    def _on_breakpoint(self, params: Any) -> None:  # noqa: ANN401
+    def _on_breakpoint(self, params: Any) -> None:  # ruff:ignore[any-type]
         """Prompt the user to answer a pending breakpoint.
 
         Args:
@@ -144,6 +176,54 @@ class RemoteTapShell(Cmd):
         """Confirm a pending breakpoint and abort the protocol."""
         self._confirm_breakpoint(proceed=False)
 
+    def do_switch_liquid(self, statement: Statement) -> None:
+        """Switch to a different liquid profile: switch_liquid <name>."""
+        liquid_name = statement.arg_list[0] if statement.arg_list else None
+        if not liquid_name:
+            self.perror("Usage: switch_liquid <liquid_name>")
+            return
+        self._call_and_print(self.requests.switch_liquid(liquid_name))
+
+    def do_load_liquid(self, statement: Statement) -> None:
+        """Load a new liquid profile from a JSON file: load_liquid <filename>."""
+        filename = statement.arg_list[0] if statement.arg_list else None
+        if not filename:
+            self.perror("Usage: load_liquid <filename.json>")
+            return
+        self._call_and_print(self.requests.load_liquid(filename))
+
+    def do_save_locations(self, statement: Statement) -> None:
+        """Save current locations to a JSON file: save_locations [filename]."""
+        filename = (
+            statement.arg_list[0] if statement.arg_list else "custom_locations.json"
+        )
+        self._call_and_print(self.requests.save_locations(filename))
+
+    def do_load_locations(self, statement: Statement) -> None:
+        """Load locations from a JSON file: load_locations <filename>."""
+        filename = statement.arg_list[0] if statement.arg_list else None
+        if not filename:
+            self.perror("Usage: load_locations <filename.json>")
+            return
+        self._call_and_print(self.requests.load_locations(filename))
+
+    def do_webcam(self, _: Statement) -> None:
+        """Print the webcam stream URL for this pipette."""
+        self._call_and_print(self.requests.webcam_url())
+
+    def do_steps_to_vol(self, statement: Statement) -> None:
+        """Convert motor steps to volume in µL: steps_to_vol <steps>."""
+        arg = statement.arg_list[0] if statement.arg_list else ""
+        if not arg.strip():
+            self.perror("Usage: steps_to_vol <steps>")
+            return
+        try:
+            steps = int(float(arg.strip()))
+        except ValueError:
+            self.perror(f"Invalid steps value: '{arg.strip()}'. Must be a number.")
+            return
+        self._call_and_print(self.requests.steps_to_vol(steps))
+
     def _confirm_breakpoint(self, *, proceed: bool) -> None:
         """Send a breakpoint confirmation to the daemon.
 
@@ -163,38 +243,354 @@ class RemoteTapShell(Cmd):
         Args:
             request: JSON-RPC request dict, as built by `self.requests`.
         """
-        try:
-            response = self.client.send_jsonrpc(request)
-        except RuntimeError as exc:
-            self.perror(str(exc))
+        response = self._send(request)
+        if response is None:
             return
         raw_result: Any = response.get("result")
         result = _as_dict(raw_result)
         if "status" in result:
+            # run.*-shaped reply: {"status", "message", "run_id", "filename"}.
             self.poutput(f"{result.get('status')}: {result.get('message', '')}")
+        elif "message" in result:
+            # CommandResult-shaped reply: {"ok", "message", "data"}, as
+            # returned by the structured movement.*/etc. methods.
+            self.poutput(str(result["message"]))
         else:
             self.poutput(str(raw_result))
 
-    # ==================== catch-all: forward to shell.exec ====================
+    def do_stop(self, _: Statement) -> None:
+        """Send an emergency stop to the pipette."""
+        self._call_and_print(self.requests.run_stop())
 
-    def default(self, statement: Statement) -> None:
-        """Forward any unrecognized command to the daemon's `shell.exec`.
+    # ==================== WebSocket diagnostics ====================
+
+    def do_ws_status(self, _: Statement) -> None:
+        """Show the daemon's own Moonraker connection status."""
+        response = self._send(self.requests.ws_status())
+        if response is None:
+            return
+        data = _as_dict(_as_dict(response.get("result")).get("data"))
+        if not data:
+            self.poutput(_as_dict(response.get("result")).get("message", ""))
+            return
+        self.poutput(
+            "Connected" if data.get("connected") else "Disconnected"
+        )
+        self.poutput(f"Server: {data.get('uri')}")
+        self.poutput(f"Queued messages: {data.get('queued_messages')}")
+        self.poutput(f"Handlers: {', '.join(data.get('handlers') or []) or '(none)'}")
+        self.poutput(f"Pending requests: {data.get('pending_requests')}")
+
+    def do_ping(self, _: Statement) -> None:
+        """Ping Moonraker directly and measure round-trip time."""
+        self._call_and_print(self.requests.ws_ping())
+
+    @with_argparser(TAPCmdParsers.parser_send)  # type: ignore[arg-type]
+    def do_send(self, args: SendArgs) -> None:
+        """Send a JSON-RPC request to Moonraker and await a response."""
+        params = self._parse_json_params(args.params)
+        if params is False:
+            return
+        response = self._send(self.requests.ws_send(args.method, params))
+        if response is None:
+            return
+        data = _as_dict(_as_dict(response.get("result")).get("data"))
+        self.poutput(json.dumps(data.get("response"), indent=2))
+
+    @with_argparser(TAPCmdParsers.parser_notify)  # type: ignore[arg-type]
+    def do_notify(self, args: NotifyArgs) -> None:
+        """Send a fire-and-forget JSON-RPC notification to Moonraker."""
+        params = self._parse_json_params(args.params)
+        if params is False:
+            return
+        self._call_and_print(self.requests.ws_notify(args.method, params))
+
+    def do_subscribe(self, arg: str) -> None:
+        """Subscribe to a raw Moonraker notification method: subscribe <method>."""
+        method = arg.strip()
+        if not method:
+            self.perror("Usage: subscribe <method>")
+            return
+        self._call_and_print(self.requests.ws_subscribe(method))
+
+    def do_unsubscribe(self, arg: str) -> None:
+        """Unsubscribe from a raw Moonraker notification method.
+
+        Usage: unsubscribe <method>
+        """
+        method = arg.strip()
+        if not method:
+            self.perror("Usage: unsubscribe <method>")
+            return
+        self._call_and_print(self.requests.ws_unsubscribe(method))
+
+    @with_argparser(TAPCmdParsers.parser_upload)  # type: ignore[arg-type]
+    def do_upload(self, args: UploadArgs) -> None:
+        """Upload a G-code file (local to the daemon's machine) to the pipette."""
+        self._call_and_print(
+            self.requests.ws_upload(args.file_name, str(args.file_path))
+        )
+
+    def do_read(self, _: Statement) -> None:
+        """Read and display the next message from the WebSocket queue."""
+        self._call_and_print(self.requests.ws_read())
+
+    def do_read_all(self, _: Statement) -> None:
+        """Read and display all messages from the WebSocket queue."""
+        self._call_and_print(self.requests.ws_read_all())
+
+    def do_clear_queue(self, _: Statement) -> None:
+        """Discard all messages from the WebSocket queue."""
+        self._call_and_print(self.requests.ws_clear_queue())
+
+    def do_reconnect(self, _: Statement) -> None:
+        """Reconnect the daemon's WebSocket connection to Moonraker."""
+        self._call_and_print(self.requests.ws_reconnect())
+
+    # ==================== reporting ====================
+
+    @with_argparser(TAPCmdParsers.parser_ls)  # type: ignore[arg-type]
+    def do_ls(self, args: LsArgs) -> None:
+        """List configuration state by category: ls <locs|plates|liquids|system>."""
+        var = args.var.lower()
+        if var in ("locs", "locations"):
+            response = self._send(self.requests.list_locations())
+            data = self._result_data(response)
+            if data is not None:
+                rows = data.get("locations") or []
+                self.poutput(
+                    build_locations_table(rows) if rows else "No locations defined."
+                )
+        elif var == "plates":
+            response = self._send(self.requests.list_plates())
+            data = self._result_data(response)
+            if data is not None:
+                rows = data.get("plates") or []
+                self.poutput(build_plates_table(rows) if rows else "No plates defined.")
+        elif var == "liquids":
+            self._print_liquids()
+        elif var in ("system", "config"):
+            response = self._send(self.requests.system_summary())
+            data = self._result_data(response)
+            if data is not None:
+                self.poutput(build_system_table(data))
+        else:
+            self.perror(
+                f"Unknown category '{var}'. Valid: locs, plates, liquids, system"
+            )
+
+    def do_list_liquids(self, _: Statement) -> None:
+        """List all loaded liquid profiles."""
+        self._print_liquids()
+
+    def _print_liquids(self) -> None:
+        """Fetch and render the liquid-profile table (shared by `ls liquids`)."""
+        response = self._send(self.requests.list_liquids())
+        data = self._result_data(response)
+        if data is None:
+            return
+        rows = data.get("liquids") or []
+        if not rows:
+            self.poutput("No liquid profiles loaded.")
+            return
+        self.poutput(build_liquids_table(rows))
+        self.poutput(f"Active liquid: {data.get('active_liquid')}")
+
+    def _result_data(self, response: dict[str, Any] | None) -> dict[str, Any] | None:
+        """Extract a `CommandResult`-shaped response's `data` dict, if any.
 
         Args:
-            statement: The parsed (but unrecognized-as-a-local-command)
-                statement; its raw text is forwarded verbatim.
+            response: Raw JSON-RPC response, or None if the request failed
+                (already reported to the user by `_send`).
+
+        Returns:
+            The `data` dict, or None if `response` was None.
+        """
+        if response is None:
+            return None
+        return _as_dict(_as_dict(response.get("result")).get("data"))
+
+    def _parse_json_params(
+        self, raw: str | None
+    ) -> dict[str, Any] | Literal[False] | None:
+        """Parse an optional JSON params string, reporting errors to the user.
+
+        Args:
+            raw: The raw JSON string (or None).
+
+        Returns:
+            The parsed dict, None if `raw` was empty/None, or False if
+            parsing failed (error already printed).
+        """
+        if not raw or not raw.strip():
+            return None
+        try:
+            return cast("dict[str, Any]", json.loads(raw.strip()))
+        except json.JSONDecodeError as exc:
+            self.perror(f"Invalid JSON in params: {exc}")
+            return False
+
+    def _send(self, request: dict[str, Any]) -> dict[str, Any] | None:
+        """Send a control-plane request, reporting a `RuntimeError` if it fails.
+
+        Args:
+            request: JSON-RPC request dict.
+
+        Returns:
+            The raw JSON-RPC response, or None if sending failed.
         """
         try:
-            response = self.client.send_jsonrpc(self.requests.shell_exec(statement.raw))
+            return self.client.send_jsonrpc(request)
         except RuntimeError as exc:
             self.perror(str(exc))
-            return
+            return None
 
-        result = _as_dict(response.get("result"))
-        output = result.get("output", "")
-        if output:
-            self.poutput(str(output).rstrip("\n"))
 
-        error = result.get("error")
-        if error:
-            self.perror(str(error))
+# ==================== structured commands (generated do_* methods) ====================
+#
+# Declarative table of (name, parser, request-builder) driving a generated
+# do_<name> method each, rather than ~25 hand-written near-duplicates as
+# more command groups migrate off shell.exec (see CLAUDE.md's
+# ports-and-adapters migration notes). `parser` is None for commands that
+# take no arguments; `build_request` takes the parsed argparse Namespace (or
+# the raw Statement, for no-arg commands) and returns the JSON-RPC request
+# dict to send. Namespace-to-dataclass conversion is `args_from_namespace`,
+# shared with `daemon/service.py`'s protocol-file dispatch (see that
+# module) so there's one copy of this logic, not two.
+
+_STRUCTURED_COMMANDS: list[
+    tuple[str, Any, Callable[[ControlRequests, Any], dict[str, Any]]]
+] = [
+    ("init", None, lambda r, _args: r.init()),
+    (
+        "home",
+        TAPCmdParsers.parser_home,
+        lambda r, a: r.home(args_from_namespace(HomeArgs, a)),
+    ),
+    (
+        "move",
+        TAPCmdParsers.parser_move,
+        lambda r, a: r.move(args_from_namespace(MoveArgs, a)),
+    ),
+    (
+        "move_loc",
+        TAPCmdParsers.parser_move_loc,
+        lambda r, a: r.move_loc(args_from_namespace(MoveLocArgs, a)),
+    ),
+    (
+        "move_rel",
+        TAPCmdParsers.parser_move_rel,
+        lambda r, a: r.move_rel(args_from_namespace(MoveRelArgs, a)),
+    ),
+    (
+        "aspirate",
+        TAPCmdParsers.parser_aspirate,
+        lambda r, a: r.aspirate(args_from_namespace(AspirateArgs, a)),
+    ),
+    (
+        "dispense",
+        TAPCmdParsers.parser_dispense,
+        lambda r, a: r.dispense(args_from_namespace(DispenseArgs, a)),
+    ),
+    (
+        "pipette",
+        TAPCmdParsers.parser_pipette,
+        lambda r, a: r.transfer(args_from_namespace(PipetteArgs, a)),
+    ),
+    ("next_tip", None, lambda r, _args: r.next_tip()),
+    ("eject_tip", None, lambda r, _args: r.eject_tip()),
+    ("dispose_tip", None, lambda r, _args: r.dispose_tip()),
+    ("change_tip", None, lambda r, _args: r.change_tip()),
+    (
+        "set",
+        TAPCmdParsers.parser_set,
+        lambda r, a: r.set(args_from_namespace(SetArgs, a)),
+    ),
+    (
+        "coor",
+        TAPCmdParsers.parser_coor,
+        lambda r, a: r.coor(args_from_namespace(CoorArgs, a)),
+    ),
+    (
+        "plate",
+        TAPCmdParsers.parser_plate,
+        lambda r, a: r.plate(args_from_namespace(PlateArgs, a)),
+    ),
+    (
+        "reset_plate",
+        TAPCmdParsers.parser_reset_plate,
+        lambda r, a: r.reset_plate(args_from_namespace(ResetPlateArgs, a)),
+    ),
+    ("reset_plates", None, lambda r, _args: r.reset_plates()),
+    (
+        "del_loc",
+        TAPCmdParsers.parser_del_loc,
+        lambda r, a: r.del_loc(args_from_namespace(DelLocArgs, a)),
+    ),
+    ("clear_locs", None, lambda r, _args: r.clear_locs()),
+    (
+        "wait",
+        TAPCmdParsers.parser_wait,
+        lambda r, a: r.wait(args_from_namespace(WaitArgs, a)),
+    ),
+    (
+        "trigger",
+        TAPCmdParsers.parser_trigger,
+        lambda r, a: r.trigger(args_from_namespace(TriggerArgs, a)),
+    ),
+    (
+        "gcode_print",
+        TAPCmdParsers.parser_gcode_print,
+        lambda r, a: r.gcode_print(args_from_namespace(GcodePrintArgs, a)),
+    ),
+    (
+        "vol_to_steps",
+        TAPCmdParsers.parser_vol_to_steps,
+        lambda r, a: r.vol_to_steps(args_from_namespace(VolToStepsArgs, a)),
+    ),
+]
+
+
+def _register_structured_commands() -> None:
+    """Attach a generated ``do_<name>`` method to ``RemoteTapShell`` per entry.
+
+    Runs once at import time. Each generated method builds its request via
+    the entry's callable and dispatches through ``_call_and_print`` --
+    identical in shape to the hand-written ``do_run``/``do_cancel`` above,
+    just generated instead of duplicated per command.
+    """
+    for name, parser, build_request in _STRUCTURED_COMMANDS:
+
+        def handler(
+            self: RemoteTapShell,
+            args: Any,  # ruff:ignore[any-type]
+            build_request: Any = build_request,  # ruff:ignore[any-type]
+        ) -> None:
+            # _call_and_print is a same-class method reached through a
+            # properly-typed `self` -- pyright still flags it because this
+            # function is defined outside RemoteTapShell's class body.
+            self._call_and_print(  # pyright: ignore[reportPrivateUsage]
+                build_request(self.requests, args)
+            )
+
+        handler.__name__ = f"do_{name}"
+        # cmd2 caches each command's parser keyed by `__module__.__qualname__`
+        # (see CommandParsers._fully_qualified_name), not by function identity
+        # -- every handler defined here shares the same __qualname__ by
+        # default (they're all `def handler` at this one call site), which
+        # would silently collapse all of them onto whichever parser cmd2
+        # resolves first. __qualname__ must be set explicitly, not just
+        # __name__, to keep each command's parser distinct.
+        handler.__qualname__ = f"{RemoteTapShell.__qualname__}.do_{name}"
+        handler.__doc__ = f"Send a structured '{name}' command to the daemon."
+        if parser is not None:
+            # with_argparser's return type doesn't structurally match the
+            # plain handler signature above (same mismatch every do_*
+            # elsewhere in this codebase silences via `# type: ignore
+            # [arg-type]` on its @with_argparser line) -- it's still the
+            # right callable at runtime, cmd2 only cares about arity.
+            handler = with_argparser(parser)(handler)  # type: ignore[assignment]
+        setattr(RemoteTapShell, f"do_{name}", handler)
+
+
+_register_structured_commands()
