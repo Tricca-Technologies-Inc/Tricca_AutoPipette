@@ -1,0 +1,4 @@
+# Exercises the break/abort-vs-continue paths.
+move 10 20 5
+break
+wait 100

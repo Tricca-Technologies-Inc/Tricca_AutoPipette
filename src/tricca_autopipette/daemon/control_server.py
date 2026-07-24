@@ -12,12 +12,32 @@ clients should use instead of hand-rolling these dicts.
 from __future__ import annotations
 
 import asyncio
+import dataclasses
 import json
 import logging
+from pathlib import Path
 from typing import Any
 
 from aiohttp import WSMsgType, web
 
+from tricca_autopipette.commands.tap_cmd_parsers import (
+    AspirateArgs,
+    CoorArgs,
+    DelLocArgs,
+    DispenseArgs,
+    GcodePrintArgs,
+    HomeArgs,
+    MoveArgs,
+    MoveLocArgs,
+    MoveRelArgs,
+    PipetteArgs,
+    PlateArgs,
+    ResetPlateArgs,
+    SetArgs,
+    TriggerArgs,
+    VolToStepsArgs,
+    WaitArgs,
+)
 from tricca_autopipette.daemon.service import AutoPipetteService, RunStatus
 
 logger = logging.getLogger(__name__)
@@ -185,7 +205,7 @@ class ControlServer:
                 "error": {"type": type(exc).__name__, "message": str(exc)},
             })
 
-    async def _call(self, method: str | None, params: dict[str, Any]) -> Any:  # noqa: ANN401
+    async def _call(self, method: str | None, params: dict[str, Any]) -> Any:  # ruff:ignore[any-type]
         """Route one method name to the corresponding service call.
 
         Args:
@@ -201,8 +221,160 @@ class ControlServer:
                 already active.
             FileNotFoundError: If ``run.start`` names a missing protocol.
         """
-        if method == "shell.exec":
-            return await self.service.execute_line(params["line"])
+        if method == "movement.init":
+            return dataclasses.asdict(await self.service.dispatch(self.service.init))
+        if method == "movement.home":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.home(HomeArgs(**params))
+                )
+            )
+        if method == "movement.move":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.move(MoveArgs(**params))
+                )
+            )
+        if method == "movement.move_loc":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.move_loc(MoveLocArgs(**params))
+                )
+            )
+        if method == "movement.move_rel":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.move_rel(MoveRelArgs(**params))
+                )
+            )
+        if method == "pipette.aspirate":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.aspirate(AspirateArgs(**params))
+                )
+            )
+        if method == "pipette.dispense":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.dispense(DispenseArgs(**params))
+                )
+            )
+        if method == "pipette.transfer":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.transfer(PipetteArgs(**params))
+                )
+            )
+        if method == "pipette.next_tip":
+            return dataclasses.asdict(
+                await self.service.dispatch(self.service.next_tip)
+            )
+        if method == "pipette.eject_tip":
+            return dataclasses.asdict(
+                await self.service.dispatch(self.service.eject_tip)
+            )
+        if method == "pipette.dispose_tip":
+            return dataclasses.asdict(
+                await self.service.dispatch(self.service.dispose_tip)
+            )
+        if method == "pipette.change_tip":
+            return dataclasses.asdict(
+                await self.service.dispatch(self.service.change_tip)
+            )
+        if method == "config.switch_liquid":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.switch_liquid(params["liquid_name"])
+                )
+            )
+        if method == "config.load_liquid":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.load_liquid(params["filename"])
+                )
+            )
+        if method == "config.set":
+            return dataclasses.asdict(
+                await self.service.dispatch(lambda: self.service.set(SetArgs(**params)))
+            )
+        if method == "config.coor":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.coor(CoorArgs(**params))
+                )
+            )
+        if method == "config.plate":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.plate(PlateArgs(**params))
+                )
+            )
+        if method == "config.reset_plate":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.reset_plate(ResetPlateArgs(**params))
+                )
+            )
+        if method == "config.reset_plates":
+            return dataclasses.asdict(
+                await self.service.dispatch(self.service.reset_plates)
+            )
+        if method == "config.del_loc":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.del_loc(DelLocArgs(**params))
+                )
+            )
+        if method == "config.clear_locs":
+            return dataclasses.asdict(
+                await self.service.dispatch(self.service.clear_locs)
+            )
+        if method == "config.save_locations":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.save_locations(params["filename"])
+                )
+            )
+        if method == "config.load_locations":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.load_locations(params["filename"])
+                )
+            )
+        if method == "util.wait":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.wait(WaitArgs(**params))
+                )
+            )
+        if method == "util.trigger":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.trigger(TriggerArgs(**params))
+                )
+            )
+        if method == "util.gcode_print":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.gcode_print(GcodePrintArgs(**params))
+                )
+            )
+        if method == "util.webcam_url":
+            return dataclasses.asdict(
+                await self.service.dispatch(self.service.webcam_url)
+            )
+        if method == "util.vol_to_steps":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.vol_to_steps(VolToStepsArgs(**params))
+                )
+            )
+        if method == "util.steps_to_vol":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.steps_to_vol(params["steps"])
+                )
+            )
         if method == "run.start":
             status = await self.service.start_run(params["filename"])
             return _run_status_to_dict(status)
@@ -217,8 +389,86 @@ class ControlServer:
         if method == "run.confirm_breakpoint":
             await self.service.confirm_breakpoint(bool(params["proceed"]))
             return {}
+        if method == "run.stop":
+            return _run_status_to_dict(await self.service.stop_run())
         if method == "protocols.list":
             return {"protocols": self.service.list_protocols()}
         if method == "daemon.ping":
             return await self.service.ping()
+        if method == "ws.status":
+            return dataclasses.asdict(
+                await self.service.dispatch(self.service.ws_status)
+            )
+        if method == "ws.ping":
+            return dataclasses.asdict(
+                await self.service.dispatch(self.service.ping_moonraker)
+            )
+        if method == "ws.send":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.send_raw(
+                        params["method"], params.get("params")
+                    )
+                )
+            )
+        if method == "ws.notify":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.notify_raw(
+                        params["method"], params.get("params")
+                    )
+                )
+            )
+        if method == "ws.subscribe":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.subscribe_raw(params["method"])
+                )
+            )
+        if method == "ws.unsubscribe":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.unsubscribe_raw(params["method"])
+                )
+            )
+        if method == "ws.upload":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.upload_gcode_result(
+                        params["file_name"], Path(params["file_path"])
+                    )
+                )
+            )
+        if method == "ws.read":
+            return dataclasses.asdict(
+                await self.service.dispatch(self.service.read_message)
+            )
+        if method == "ws.read_all":
+            return dataclasses.asdict(
+                await self.service.dispatch(self.service.read_all_messages)
+            )
+        if method == "ws.clear_queue":
+            return dataclasses.asdict(
+                await self.service.dispatch(self.service.clear_message_queue)
+            )
+        if method == "ws.reconnect":
+            return dataclasses.asdict(
+                await self.service.dispatch(self.service.reconnect_websocket)
+            )
+        if method == "config.list_locations":
+            return dataclasses.asdict(
+                await self.service.dispatch(self.service.list_locations)
+            )
+        if method == "config.list_plates":
+            return dataclasses.asdict(
+                await self.service.dispatch(self.service.list_plates)
+            )
+        if method == "config.list_liquids":
+            return dataclasses.asdict(
+                await self.service.dispatch(self.service.list_liquids)
+            )
+        if method == "config.system_summary":
+            return dataclasses.asdict(
+                await self.service.dispatch(self.service.system_summary)
+            )
         raise ValueError(f"Unknown method: {method}")

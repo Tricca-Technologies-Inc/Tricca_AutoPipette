@@ -11,13 +11,15 @@ from enum import Enum
 from pathlib import Path
 
 __all__ = [
+    "ConfigKey",
     "CoordinateSystem",
-    "PlateType",
-    "GCodeCommand",
-    "PhysicalConstants",
     "DefaultFilenames",
     "DefaultPaths",
-    "ConfigKey",
+    "GCodeCommand",
+    "HomingTargets",
+    "PhysicalConstants",
+    "PlateType",
+    "TriggerChannels",
 ]
 
 
@@ -99,6 +101,59 @@ class PhysicalConstants:
 
     WIGGLE_OFFSET_MM = 1.0  # Offset for wiggle motion in millimeters
     VOLUME_TOLERANCE_UL = 1e-6  # Minimum significant volume in microliters
+
+
+class HomingTargets:
+    """Motor-name lookup tables for the ``home``/``init`` commands.
+
+    Shared between ``commands/movement_commands.py`` (the cmd2 adapter) and
+    ``daemon/service.py`` (``AutoPipetteService.home``/``init``, the
+    business-logic owner) so both stay in sync without either importing
+    from the other.
+
+    Attributes:
+        MOTOR_METHODS: Maps motor name to (output filename, ``AutoPipette``
+            method name) for motors that map directly to a single method.
+        MOTOR_SPECIAL: Motor names that don't map to a single method --
+            ``"all"`` delegates to ``AutoPipette.init_pipette()`` instead.
+        VALID_MOTORS: Combined set of all valid motor names, kept in sync
+            with ``MOTOR_METHODS``/``MOTOR_SPECIAL`` manually.
+    """
+
+    MOTOR_METHODS: dict[str, tuple[str, str]] = {
+        "x": ("home_x.gcode", "home_x"),
+        "y": ("home_y.gcode", "home_y"),
+        "z": ("home_z.gcode", "home_z"),
+        "pipette": ("home_pipette.gcode", "home_pipette_motors"),
+        "axis": ("home_axis.gcode", "home_axis"),
+        "servo": ("home_servo.gcode", "home_servo"),
+    }
+
+    MOTOR_SPECIAL: dict[str, str] = {
+        "all": "home_all.gcode",
+    }
+
+    VALID_MOTORS: frozenset[str] = frozenset({
+        "x",
+        "y",
+        "z",
+        "pipette",
+        "axis",
+        "servo",
+        "all",
+    })
+
+
+class TriggerChannels:
+    """Valid channel/state names for the (not-yet-implemented) ``trigger`` command.
+
+    Shared between ``commands/utility_commands.py`` (the cmd2 adapter) and
+    ``daemon/service.py`` (``AutoPipetteService.trigger``) for the same
+    reason as :class:`HomingTargets`.
+    """
+
+    VALID_CHANNELS: frozenset[str] = frozenset({"air", "shake", "aux"})
+    VALID_STATES: frozenset[str] = frozenset({"on", "off"})
 
 
 class DefaultFilenames:

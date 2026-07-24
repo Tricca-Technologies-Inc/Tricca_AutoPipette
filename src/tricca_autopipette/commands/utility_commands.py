@@ -23,6 +23,12 @@ from .tap_cmd_parsers import (
 class UtilityCommands(TAPCommandSet):
     """Miscellaneous utility commands.
 
+    Thin cmd2 adapter: each ``do_*`` method only parses arguments and
+    renders the result -- the actual logic lives on ``AutoPipetteService``
+    (``daemon/service.py``), reached via ``self.service`` (see
+    ``base_command_set.py``'s ``TAPCommandSet.service`` property for why
+    this indirection is temporary).
+
     Provides shell commands for:
     - Inserting timed pauses into G-code output
     - Controlling auxiliary triggers (air, shake, aux)
@@ -38,11 +44,6 @@ class UtilityCommands(TAPCommandSet):
         >>> steps_to_vol 4523
         >>> webcam
     """
-
-    # Valid trigger channels and states — kept as class constants so they
-    # remain a single source of truth if trigger support is added later.
-    VALID_CHANNELS: frozenset[str] = frozenset({"air", "shake", "aux"})
-    VALID_STATES: frozenset[str] = frozenset({"on", "off"})
 
     def __init__(self) -> None:
         """Initialize utility commands."""
@@ -67,15 +68,12 @@ class UtilityCommands(TAPCommandSet):
             >>> wait 500
             >>> wait 2000
         """
-        if args.ms <= 0:
-            rprint("[yellow]Wait duration must be greater than zero.[/yellow]")
-            return
-
         try:
-            autopipette = self.shell._autopipette
-            autopipette.gcode_wait(args.ms)
-            self.shell.output_gcode(autopipette.get_gcode())
-            rprint(f"[green]✓ Wait: {args.ms:.0f} ms[/green]")
+            result = self.service.wait(args)
+            if result.ok:
+                rprint(f"[green]✓ {result.message}[/green]")
+            else:
+                rprint(f"[yellow]{result.message}[/yellow]")
         except Exception as e:
             rprint(f"[red]Wait error: {e}[/red]")
 
@@ -103,29 +101,8 @@ class UtilityCommands(TAPCommandSet):
             Valid states: on, off
             This feature is not yet implemented.
         """
-        channel = args.channel.lower()
-        state = args.state.lower()
-
-        if channel not in self.VALID_CHANNELS:
-            rprint(f"[yellow]Invalid channel '{channel}'.[/yellow]")
-            rprint(
-                f"[cyan]Valid channels: {', '.join(sorted(self.VALID_CHANNELS))}[/cyan]"
-            )
-            return
-
-        if state not in self.VALID_STATES:
-            rprint(f"[yellow]Invalid state '{state}'.[/yellow]")
-            rprint(f"[cyan]Valid states: {', '.join(sorted(self.VALID_STATES))}[/cyan]")
-            return
-
-        # TODO: Implement trigger functionality in AutoPipette.
-        # autopipette = self.shell._autopipette
-        # autopipette.set_trigger(channel, state)
-        # self.shell.output_gcode(autopipette.get_gcode())
-        # emoji = "✓" if state == "on" else "✗"
-        # rprint(f"[green]{emoji} Trigger '{channel}' turned {state}[/green]")
-        rprint("[yellow]Trigger functionality not yet implemented.[/yellow]")
-        rprint(f"[dim]Would turn '{channel}' {state}.[/dim]")
+        result = self.service.trigger(args)
+        rprint(f"[yellow]{result.message}[/yellow]")
 
     # =========================================================================
     # G-CODE / DISPLAY
@@ -145,17 +122,14 @@ class UtilityCommands(TAPCommandSet):
             >>> gcode_print "Protocol started"
             >>> gcode_print "Dispensing sample 1"
         """
-        msg: str = args.msg
-
-        if not msg.strip():
-            rprint("[yellow]Message cannot be empty.[/yellow]")
-            return
-
         try:
-            autopipette = self.shell._autopipette
-            autopipette.gcode_print(msg)
-            self.shell.output_gcode(autopipette.get_gcode())
-            rprint(f"[green]✓ Display message queued:[/green] [dim]{msg}[/dim]")
+            result = self.service.gcode_print(args)
+            if result.ok:
+                rprint(
+                    f"[green]✓ Display message queued:[/green] [dim]{args.msg}[/dim]"
+                )
+            else:
+                rprint(f"[yellow]{result.message}[/yellow]")
         except Exception as e:
             rprint(f"[red]Error sending message: {e}[/red]")
 
@@ -174,13 +148,12 @@ class UtilityCommands(TAPCommandSet):
             Webcam Stream URL:
             http://192.168.1.100/webcam/?action=stream
         """
-        hostname = getattr(self.shell, "hostname", "localhost")
-        url = f"http://{hostname}/webcam/?action=stream"
+        result = self.service.webcam_url()
+        url = result.message
 
         rprint("[bold cyan]Webcam Stream URL:[/bold cyan]")
         rprint(f"[link={url}]{url}[/link]")
         rprint("[dim]Copy this URL to your browser to view the stream.[/dim]")
-        # TODO: consider auto-opening via webbrowser.open(url)
 
     # =========================================================================
     # VOLUME / STEP CONVERSION
@@ -203,27 +176,22 @@ class UtilityCommands(TAPCommandSet):
             >>> vol_to_steps 250
             250.0 µL = 11307 steps
         """
-        if args.vol <= 0:
-            rprint("[yellow]Volume must be greater than zero.[/yellow]")
-            return
-
         try:
-            autopipette = self.shell._autopipette
-            converter = autopipette.volume_converter
-
-            if converter is None:
-                rprint("[yellow]Volume converter not initialised.[/yellow]")
-                rprint("[dim]Check calibration data is present in config.[/dim]")
+            result = self.service.vol_to_steps(args)
+            if not result.ok:
+                rprint(f"[yellow]{result.message}[/yellow]")
                 return
 
-            steps = converter.vol_to_steps(args.vol)
-            rprint(f"[cyan]{args.vol} µL[/cyan] = [green]{steps} steps[/green]")
+            data = result.data or {}
+            rprint(
+                f"[cyan]{args.vol} µL[/cyan] = [green]{data.get('steps')} steps[/green]"
+            )
 
             # Show reverse conversion to surface any rounding difference
-            actual_vol = converter.steps_to_vol(steps)
-            if abs(actual_vol - args.vol) > 0.01:
+            actual_vol = data.get("round_trip_vol")
+            if actual_vol is not None and abs(actual_vol - args.vol) > 0.01:
                 rprint(
-                    f"[dim]Note: {steps} steps → {actual_vol:.2f} µL "
+                    f"[dim]Note: {data.get('steps')} steps → {actual_vol:.2f} µL "
                     f"(rounding difference)[/dim]"
                 )
         except Exception as e:
@@ -264,20 +232,13 @@ class UtilityCommands(TAPCommandSet):
             )
             return
 
-        if steps < 0:
-            rprint("[yellow]Steps cannot be negative.[/yellow]")
-            return
-
         try:
-            autopipette = self.shell._autopipette
-            converter = autopipette.volume_converter
-
-            if converter is None:
-                rprint("[yellow]Volume converter not initialised.[/yellow]")
-                rprint("[dim]Check calibration data is present in config.[/dim]")
+            result = self.service.steps_to_vol(steps)
+            if not result.ok:
+                rprint(f"[yellow]{result.message}[/yellow]")
                 return
 
-            vol = converter.steps_to_vol(steps)
+            vol = (result.data or {}).get("vol")
             rprint(f"[cyan]{steps} steps[/cyan] = [green]{vol:.2f} µL[/green]")
         except Exception as e:
             rprint(f"[red]Conversion error: {e}[/red]")

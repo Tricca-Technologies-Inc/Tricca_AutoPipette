@@ -139,3 +139,57 @@ class NoWasteContainerError(AutoPipetteError):
     def __init__(self) -> None:
         """Initialize the error with a descriptive message."""
         super().__init__("No waste container configured.")
+
+
+class ProtocolAbortedError(AutoPipetteError):
+    """Raised when a ``break`` line's breakpoint is answered "abort".
+
+    Replaces the old ``KeyboardInterrupt``-based signal, which
+    ``cmd2.Cmd.runcmds_plus_hooks`` used to swallow into the same ``False``
+    return value used for normal completion -- making an aborted protocol
+    indistinguishable from a successful one from the caller's side. This is
+    a distinct, named exception instead, caught explicitly by
+    ``daemon/service.py``'s protocol-run methods.
+
+    Kept in this module (rather than ``daemon/service.py``, where it was
+    originally defined) so that ``commands/protocol_commands.py`` can catch
+    it without importing ``daemon/service.py`` -- ``daemon/service.py``
+    itself imports from ``commands/tap_cmd_parsers.py``, which triggers the
+    ``commands`` package's ``__init__.py``, which imports
+    ``protocol_commands.py`` -- so the reverse import would be a genuine
+    circular import when the daemon (not a cmd2 shell) is the first thing
+    to import ``daemon/service.py``.
+    """
+
+
+class NotHomedError(AutoPipetteError):
+    """Raised when a gated command runs before the pipette is homed.
+
+    Sourced from live Moonraker ``toolhead.homed_axes`` state (see
+    ``daemon/moonraker_state.py``), not local domain state -- unlike this
+    module's other exceptions, this one is raised by
+    ``daemon/service.py``'s ``require_homed`` decorator rather than
+    anywhere in ``core/autopipette.py`` itself. Kept in this module anyway
+    since it's the same kind of precondition failure as
+    ``NoTipboxError``/``TipAlreadyOnError``.
+
+    Attributes:
+        command_name: Name of the command that was blocked.
+
+    Example:
+        >>> service.move(MoveArgs(x=10, y=10, z=10))  # Not homed yet
+        NotHomedError: Command 'move' blocked — pipette not homed. Run
+        'init' or 'home all' first.
+    """
+
+    def __init__(self, command_name: str) -> None:
+        """Initialize the error with the blocked command's name.
+
+        Args:
+            command_name: Name of the command that was blocked.
+        """
+        self.command_name = command_name
+        super().__init__(
+            f"Command '{command_name}' blocked — pipette not homed. "
+            "Run 'init' or 'home all' first."
+        )

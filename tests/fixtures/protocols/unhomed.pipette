@@ -1,0 +1,2 @@
+# No leading "init"/"home all" -- exercises the not-homed error path.
+move 10 20 5

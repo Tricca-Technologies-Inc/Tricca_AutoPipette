@@ -12,10 +12,39 @@ field names must always match the argparse ``dest`` values so that
 
 from __future__ import annotations
 
+import dataclasses
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from cmd2 import Cmd2ArgumentParser
+
+
+def args_from_namespace[ArgsT](
+    args_cls: type[ArgsT],
+    ns: Any,  # ruff:ignore[any-type]
+) -> ArgsT:
+    """Build one of this module's ``*Args`` dataclasses from a parsed Namespace.
+
+    Single shared helper for every place that needs to turn cmd2's/argparse's
+    parsed ``Namespace`` into the matching typed dataclass -- the interactive
+    shell's ``@with_argparser`` decorator does this implicitly, but
+    ``RemoteTapShell`` and the daemon's protocol-file dispatch
+    (``AutoPipetteService``) both do it explicitly, and previously
+    duplicated the same field-copy logic.
+
+    Args:
+        args_cls: One of the ``*Args`` dataclasses in this module.
+        ns: A parsed ``argparse.Namespace`` (or anything else exposing the
+            same attributes) whose field names line up with ``args_cls``'s,
+            since both are built from the same ``Cmd2ArgumentParser``.
+
+    Returns:
+        An instance of ``args_cls``.
+    """
+    field_names = [field.name for field in dataclasses.fields(args_cls)]  # type: ignore[arg-type]
+    return args_cls(**{name: getattr(ns, name) for name in field_names})
+
 
 # ===========================================================================
 # Movement

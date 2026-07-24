@@ -7,17 +7,27 @@ liquid transfer, tip management, and advanced dispensing patterns.
 from __future__ import annotations
 
 from cmd2 import Statement, with_argparser
-from tricca_autopipette.core.pipette_exceptions import NoTipboxError, NoWasteContainerError, TipAlreadyOnError
-from tricca_autopipette.core.pipette_models import TipState
 from rich import print as rprint
 
 from tricca_autopipette.commands.base_command_set import TAPCommandSet
+from tricca_autopipette.core.pipette_exceptions import (
+    NotALocationError,
+    NoTipboxError,
+    NoWasteContainerError,
+    TipAlreadyOnError,
+)
 
 from .tap_cmd_parsers import AspirateArgs, DispenseArgs, PipetteArgs, TAPCmdParsers
 
 
 class PipetteCommands(TAPCommandSet):
     """Commands for pipetting operations.
+
+    Thin cmd2 adapter: each ``do_*`` method only parses arguments and
+    renders the result -- the actual logic lives on ``AutoPipetteService``
+    (``daemon/service.py``), reached via ``self.service`` (see
+    ``base_command_set.py``'s ``TAPCommandSet.service`` property for why
+    this indirection is temporary).
 
     Provides shell commands for:
     - Complete liquid transfer (aspirate, dispense, tip disposal)
@@ -61,35 +71,15 @@ class PipetteCommands(TAPCommandSet):
         Note:
             Remember to dispose or eject the tip when done.
         """
-        autopipette = self.shell._autopipette
-
-        if autopipette.state.tip_state != TipState.ATTACHED:
-            rprint("[yellow]No tip attached. Use 'next_tip' first.[/yellow]")
-            return
-
-        if args.vol_ul <= 0:
-            rprint("[yellow]Volume must be greater than zero.[/yellow]")
-            return
-
-        if not autopipette.location_manager.has_location(args.source):
-            rprint(f"[yellow]Source location '{args.source}' does not exist.[/yellow]")
-            rprint("[dim]Hint: Use 'ls locs' to see defined locations.[/dim]")
-            return
-
         try:
-            autopipette.aspirate_volume(
-                volume=args.vol_ul,
-                source=args.source,
-                src_row=args.src_row,
-                src_col=args.src_col,
-                pre_aspirate_air=args.pre_aspirate_air,
-                post_aspirate_air=args.post_aspirate_air,
-                prewet=args.prewet,
-                prewet_vol=args.prewet_vol,
-            )
-            self.shell.output_gcode(autopipette.get_gcode())
-            rprint(f"[green]✓ Aspirated {args.vol_ul} µL from {args.source}[/green]")
-
+            result = self.service.aspirate(args)
+            if result.ok:
+                rprint(f"[green]✓ {result.message}[/green]")
+            else:
+                rprint(f"[yellow]{result.message}[/yellow]")
+        except NotALocationError as e:
+            rprint(f"[yellow]{e}[/yellow]")
+            rprint("[dim]Hint: Use 'ls locs' to see defined locations.[/dim]")
         except Exception as e:
             rprint(f"[red]Aspiration error: {e}[/red]")
 
@@ -114,33 +104,15 @@ class PipetteCommands(TAPCommandSet):
         Note:
             Omit --volume to dispense all remaining liquid.
         """
-        autopipette = self.shell._autopipette
-
-        if not autopipette.location_manager.has_location(args.dest):
-            rprint(f"[yellow]Destination '{args.dest}' does not exist.[/yellow]")
-            rprint("[dim]Hint: Use 'ls locs' to see defined locations.[/dim]")
-            return
-
-        if not autopipette.state.has_liquid:
-            rprint("[yellow]No liquid in tip. Use 'aspirate' first.[/yellow]")
-            return
-
         try:
-            autopipette.dispense_volume(
-                dest=args.dest,
-                dest_row=args.dest_row,
-                dest_col=args.dest_col,
-                volume=args.volume,
-                wiggle=args.wiggle,
-                touch=args.touch,
-            )
-            self.shell.output_gcode(autopipette.get_gcode())
-
-            if args.volume is not None:
-                rprint(f"[green]✓ Dispensed {args.volume} µL to {args.dest}[/green]")
+            result = self.service.dispense(args)
+            if result.ok:
+                rprint(f"[green]✓ {result.message}[/green]")
             else:
-                rprint(f"[green]✓ Dispensed all liquid to {args.dest}[/green]")
-
+                rprint(f"[yellow]{result.message}[/yellow]")
+        except NotALocationError as e:
+            rprint(f"[yellow]{e}[/yellow]")
+            rprint("[dim]Hint: Use 'ls locs' to see defined locations.[/dim]")
         except Exception as e:
             rprint(f"[red]Dispense error: {e}[/red]")
 
@@ -165,64 +137,15 @@ class PipetteCommands(TAPCommandSet):
             >>> pipette 150 src dest --keep_tip
             >>> pipette 300 src dest --dispense_vol 100 --src_row 0 --src_col 0
         """
-        autopipette = self.shell._autopipette
-
-        if args.vol_ul <= 0:
-            rprint("[yellow]Volume must be greater than zero.[/yellow]")
-            return
-
-        if not autopipette.location_manager.has_location(args.source):
-            rprint(f"[yellow]Source location '{args.source}' does not exist.[/yellow]")
-            rprint("[dim]Hint: Use 'ls locs' to see defined locations.[/dim]")
-            return
-
-        if not autopipette.location_manager.has_location(args.dest):
-            rprint(f"[yellow]Destination '{args.dest}' does not exist.[/yellow]")
-            rprint("[dim]Hint: Use 'ls locs' to see defined locations.[/dim]")
-            return
-
         try:
-            autopipette.pipette(
-                vol_ul=args.vol_ul,
-                source=args.source,
-                dest=args.dest,
-                disp_vol_ul=args.disp_vol_ul,
-                src_row=args.src_row,
-                src_col=args.src_col,
-                dest_row=args.dest_row,
-                dest_col=args.dest_col,
-                tipbox_name=args.tipbox_name,
-                pre_aspirate_air=args.pre_aspirate_air,
-                post_aspirate_air=args.post_aspirate_air,
-                prewet=args.prewet,
-                prewet_vol=args.prewet_vol,
-                wiggle=args.wiggle,
-                touch=args.touch,
-                keep_tip=args.keep_tip,
-            )
-
-            # Build a descriptive G-code comment
-            features = []
-            if args.prewet:
-                features.append(f"prewet×{args.prewet}")
-            if args.wiggle:
-                features.append("wiggle")
-            if args.touch:
-                features.append("touch")
-            if args.keep_tip:
-                features.append("keep-tip")
-
-            comment = f"\n; Pipette {args.vol_ul} µL from {args.source} to {args.dest}"
-            if features:
-                comment += f" [{', '.join(features)}]"
-            comment += "\n"
-
-            self.shell.output_gcode([comment] + autopipette.get_gcode() + ["\n"])
-            rprint(
-                f"[green]✓ Pipetting complete "
-                f"({args.vol_ul} µL: {args.source} → {args.dest})[/green]"
-            )
-
+            result = self.service.transfer(args)
+            if result.ok:
+                rprint(f"[green]✓ {result.message}[/green]")
+            else:
+                rprint(f"[yellow]{result.message}[/yellow]")
+        except NotALocationError as e:
+            rprint(f"[yellow]{e}[/yellow]")
+            rprint("[dim]Hint: Use 'ls locs' to see defined locations.[/dim]")
         except NoTipboxError as e:
             rprint(f"[yellow]{e}[/yellow]")
             rprint("[dim]Hint: Define a tipbox plate in your configuration.[/dim]")
@@ -255,13 +178,9 @@ class PipetteCommands(TAPCommandSet):
             Requires a tipbox to be defined in the configuration.
             Raises an error if a tip is already attached.
         """
-        autopipette = self.shell._autopipette
-
         try:
-            autopipette.next_tip()
-            self.shell.output_gcode(autopipette.get_gcode())
-            rprint("[green]✓ Tip picked up.[/green]")
-
+            result = self.service.next_tip()
+            rprint(f"[green]✓ {result.message}[/green]")
         except NoTipboxError as e:
             rprint(f"[yellow]{e}[/yellow]")
             rprint("[dim]Hint: Define a tipbox plate in your configuration.[/dim]")
@@ -285,18 +204,12 @@ class PipetteCommands(TAPCommandSet):
             The tip is left at the current pipette position, not in the
             waste container.
         """
-        autopipette = self.shell._autopipette
-
-        if autopipette.state.tip_state != TipState.ATTACHED:
-            rprint("[yellow]No tip attached — nothing to eject.[/yellow]")
-            return
-
         try:
-            autopipette.eject_tip()
-            self.shell.output_gcode(autopipette.get_gcode())
-            rprint("[green]✓ Tip ejected at current position.[/green]")
-            rprint("[yellow]Note: Tip was not moved to the waste container.[/yellow]")
-
+            result = self.service.eject_tip()
+            if result.ok:
+                rprint(f"[green]✓ {result.message}[/green]")
+            else:
+                rprint(f"[yellow]{result.message}[/yellow]")
         except Exception as e:
             rprint(f"[red]Error ejecting tip: {e}[/red]")
 
@@ -312,22 +225,16 @@ class PipetteCommands(TAPCommandSet):
         Note:
             Requires a waste container to be defined in the configuration.
         """
-        autopipette = self.shell._autopipette
-
-        if autopipette.state.tip_state != TipState.ATTACHED:
-            rprint("[yellow]No tip attached — nothing to dispose.[/yellow]")
-            return
-
         try:
-            autopipette.dispose_tip()
-            self.shell.output_gcode(autopipette.get_gcode())
-            rprint("[green]✓ Tip disposed.[/green]")
-
+            result = self.service.dispose_tip()
+            if result.ok:
+                rprint(f"[green]✓ {result.message}[/green]")
+            else:
+                rprint(f"[yellow]{result.message}[/yellow]")
         except NoWasteContainerError as e:
             rprint(f"[yellow]{e}[/yellow]")
             rprint(
-                "[dim]Hint: Define a waste container plate in your "
-                "configuration.[/dim]"
+                "[dim]Hint: Define a waste container plate in your configuration.[/dim]"
             )
         except Exception as e:
             rprint(f"[red]Error disposing tip: {e}[/red]")
@@ -344,24 +251,16 @@ class PipetteCommands(TAPCommandSet):
         Note:
             Requires both a tipbox and a waste container to be configured.
         """
-        autopipette = self.shell._autopipette
-
         try:
-            if autopipette.state.tip_state == TipState.ATTACHED:
-                autopipette.dispose_tip()
-
-            autopipette.next_tip()
-            self.shell.output_gcode(autopipette.get_gcode())
-            rprint("[green]✓ Tip changed.[/green]")
-
+            result = self.service.change_tip()
+            rprint(f"[green]✓ {result.message}[/green]")
         except NoTipboxError as e:
             rprint(f"[yellow]{e}[/yellow]")
             rprint("[dim]Hint: Define a tipbox plate in your configuration.[/dim]")
         except NoWasteContainerError as e:
             rprint(f"[yellow]{e}[/yellow]")
             rprint(
-                "[dim]Hint: Define a waste container plate in your "
-                "configuration.[/dim]"
+                "[dim]Hint: Define a waste container plate in your configuration.[/dim]"
             )
         except Exception as e:
             rprint(f"[red]Error changing tip: {e}[/red]")

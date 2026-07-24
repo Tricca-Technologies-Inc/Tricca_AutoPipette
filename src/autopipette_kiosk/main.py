@@ -181,27 +181,28 @@ async def run_protocol(req: RunRequest) -> RunStatus:
 async def home_pipette() -> RunStatus:
     """Home the pipette (`init`) via the tapd control daemon.
 
-    Unlike `/run`, this dispatches a single shell command directly
-    (`shell.exec "init"`) rather than tracking a run: `init` itself is
-    fire-and-forget (it uploads G-code and requests print-start, same as
-    any other command), so this reports whether dispatch succeeded, not
-    physical completion. Once Klipper actually finishes homing, the
-    daemon's live `toolhead.homed_axes` tracking (see
-    `daemon/moonraker_state.py`) unblocks gated commands automatically —
-    no separate "homing done" signal is needed here.
+    Unlike `/run`, this dispatches the structured `movement.init` method
+    directly rather than tracking a run: `init` itself is fire-and-forget
+    (it uploads G-code and requests print-start, same as any other
+    command), so this reports whether dispatch succeeded, not physical
+    completion. Once Klipper actually finishes homing, the daemon's live
+    `toolhead.homed_axes` tracking (see `daemon/moonraker_state.py`)
+    unblocks gated commands automatically — no separate "homing done"
+    signal is needed here.
     """
     if _control_client is None:
         raise HTTPException(status_code=503, detail="Control daemon not connected")
 
-    response = await asyncio.to_thread(
-        _control_client.send_jsonrpc, _control_requests.shell_exec("init")
-    )
+    try:
+        response = await asyncio.to_thread(
+            _control_client.send_jsonrpc, _control_requests.init()
+        )
+    except RuntimeError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
     result: dict[str, Any] = response.get("result", {})
-    output = str(result.get("output", "")).strip()
-    error = result.get("error")
-    if error is not None:
-        raise HTTPException(status_code=500, detail=str(error))
-    return RunStatus(status="done", message=output or "Homing dispatched")
+    message = str(result.get("message", "")) or "Homing dispatched"
+    return RunStatus(status="done", message=message)
 
 
 @app.post("/breakpoint/respond")
@@ -266,7 +267,7 @@ def _extract_error_type(exc: RuntimeError) -> str | None:
     return match.group(1) if match else None
 
 
-def _on_run_status_notification(params: Any) -> None:  # noqa: ANN401
+def _on_run_status_notification(params: Any) -> None:  # ruff:ignore[any-type]
     """Handle a `notify_run_status` push from the tapd control daemon.
 
     Args:
@@ -294,7 +295,7 @@ def _on_run_status_notification(params: Any) -> None:  # noqa: ANN401
         asyncio.run_coroutine_threadsafe(_broadcast_status(), _main_loop)
 
 
-def _on_breakpoint_notification(params: Any) -> None:  # noqa: ANN401
+def _on_breakpoint_notification(params: Any) -> None:  # ruff:ignore[any-type]
     """Handle a `notify_breakpoint` push from the tapd control daemon.
 
     Args:

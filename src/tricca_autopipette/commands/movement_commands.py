@@ -7,11 +7,10 @@ including initialisation, homing operations, and absolute/relative positioning.
 from __future__ import annotations
 
 from cmd2 import Statement, with_argparser
-from tricca_autopipette.core.coordinate import Coordinate
-from tricca_autopipette.core.pipette_constants import CoordinateSystem
 from rich import print as rprint
 
 from tricca_autopipette.commands.base_command_set import TAPCommandSet
+from tricca_autopipette.core.pipette_exceptions import NotALocationError
 
 from .tap_cmd_parsers import (
     HomeArgs,
@@ -25,6 +24,11 @@ from .tap_cmd_parsers import (
 class MovementCommands(TAPCommandSet):
     """Commands for controlling pipette movement and homing.
 
+    Thin cmd2 adapter: each ``do_*`` method only parses arguments and
+    renders the result -- the actual logic lives on ``AutoPipetteService``
+    (``daemon/service.py``), reached via ``self.shell.service`` (see that
+    attribute's docstring for why this indirection is temporary).
+
     Provides shell commands for:
     - Full pipette initialisation (coordinate system, speed, homing)
     - Homing individual motors or groups (x, y, z, pipette, axis, all, servo)
@@ -37,39 +41,8 @@ class MovementCommands(TAPCommandSet):
         >>> home axis
         >>> move 100 50 10
         >>> move_loc plate_a --row 0 --col 3
-        >>> move_rel --z -5
+        >>> move_rel - -z - 5
     """
-
-    # Maps motor name → (output filename, autopipette method name) for all
-    # motors that map directly to a single AutoPipette method.
-    MOTOR_METHODS: dict[str, tuple[str, str]] = {
-        "x": ("home_x.gcode", "home_x"),
-        "y": ("home_y.gcode", "home_y"),
-        "z": ("home_z.gcode", "home_z"),
-        "pipette": ("home_pipette.gcode", "home_pipette_motors"),
-        "axis": ("home_axis.gcode", "home_axis"),
-        "servo": ("home_servo.gcode", "home_servo"),
-    }
-
-    # Special-case motor names that do not map to a single method.
-    # "all" delegates to init_pipette() via do_init logic.
-    MOTOR_SPECIAL: dict[str, str] = {
-        "all": "home_all.gcode",
-    }
-
-    # Combined set of all valid motor names for upfront validation.
-    # Kept in sync with MOTOR_METHODS and MOTOR_SPECIAL manually.
-    VALID_MOTORS: frozenset[str] = frozenset(
-        {
-            "x",
-            "y",
-            "z",
-            "pipette",
-            "axis",
-            "servo",  # MOTOR_METHODS keys
-            "all",  # MOTOR_SPECIAL keys
-        }
-    )
 
     def __init__(self) -> None:
         """Initialize movement commands."""
@@ -94,12 +67,9 @@ class MovementCommands(TAPCommandSet):
         Example:
             >>> init
         """
-        autopipette = self.shell._autopipette
-
         try:
-            autopipette.init_pipette()
-            self.shell.output_gcode(autopipette.get_gcode(), "home_all.gcode")
-            rprint("[green]✓ Pipette initialised and all motors homed.[/green]")
+            result = self.service.init()
+            rprint(f"[green]✓ {result.message}[/green]")
         except Exception as e:
             rprint(f"[red]Initialisation error: {e}[/red]")
 
@@ -125,31 +95,11 @@ class MovementCommands(TAPCommandSet):
             >>> home pipette
             >>> home x
         """
-        autopipette = self.shell._autopipette
-        motors: str = args.motors.lower()
-
-        if motors not in self.VALID_MOTORS:
-            rprint(f"[yellow]'{motors}' is not a valid motor specification.[/yellow]")
-            rprint(
-                f"[cyan]Valid options: {', '.join(sorted(self.VALID_MOTORS))}[/cyan]"
-            )
-            return
-
         try:
-            if motors in self.MOTOR_SPECIAL:
-                # "all" — delegate to init_pipette() so coordinate system and
-                # speed are always reset alongside homing (identical to do_init).
-                filename = self.MOTOR_SPECIAL[motors]
-                autopipette.init_pipette()
-                self.shell.output_gcode(autopipette.get_gcode(), filename)
-                rprint("[green]✓ All motors homed (full init complete).[/green]")
-            else:
-                filename, method_name = self.MOTOR_METHODS[motors]
-                method = getattr(autopipette, method_name)
-                method()
-                self.shell.output_gcode(autopipette.get_gcode(), filename)
-                rprint(f"[green]✓ Homed {motors}.[/green]")
-
+            result = self.service.home(args)
+            rprint(f"[green]✓ {result.message}[/green]")
+        except ValueError as e:
+            rprint(f"[yellow]{e}[/yellow]")
         except Exception as e:
             rprint(f"[red]Homing error: {e}[/red]")
 
@@ -168,14 +118,9 @@ class MovementCommands(TAPCommandSet):
             >>> move 100 50 10
             >>> move 0 0 50
         """
-        autopipette = self.shell._autopipette
-
-        coor = Coordinate(x=args.x, y=args.y, z=args.z)
-
         try:
-            autopipette.move_to(coor)
-            self.shell.output_gcode(autopipette.get_gcode())
-            rprint(f"[green]Moving to X:{args.x} Y:{args.y} Z:{args.z}[/green]")
+            result = self.service.move(args)
+            rprint(f"[green]{result.message}[/green]")
         except Exception as e:
             rprint(f"[red]Move error: {e}[/red]")
 
@@ -195,26 +140,16 @@ class MovementCommands(TAPCommandSet):
             >>> move_loc plate_a
             >>> move_loc plate_a --row 1 --col 3
         """
-        autopipette = self.shell._autopipette
-        loc: str = args.name_loc
-
-        if not autopipette.location_manager.has_location(loc):
-            rprint(f"[yellow]Location '{loc}' does not exist.[/yellow]")
-            rprint("[dim]Hint: Use 'ls locs' to see defined locations.[/dim]")
-            return
-
         try:
-            coor = autopipette.location_manager.get_coordinate(loc, args.row, args.col)
-            autopipette.move_to(coor)
-            self.shell.output_gcode(autopipette.get_gcode())
-            rprint(
-                f"[green]Moving to '{loc}' "
-                f"(X:{coor.x:.2f} Y:{coor.y:.2f} Z:{coor.z:.2f})[/green]"
-            )
+            result = self.service.move_loc(args)
+            rprint(f"[green]{result.message}[/green]")
+        except NotALocationError as e:
+            rprint(f"[yellow]{e}[/yellow]")
+            rprint("[dim]Hint: Use 'ls locs' to see defined locations.[/dim]")
         except ValueError as e:
             rprint(f"[red]Invalid well specification: {e}[/red]")
         except Exception as e:
-            rprint(f"[red]Error moving to '{loc}': {e}[/red]")
+            rprint(f"[red]Error moving to '{args.name_loc}': {e}[/red]")
 
     # =========================================================================
     # RELATIVE MOVEMENT
@@ -234,34 +169,12 @@ class MovementCommands(TAPCommandSet):
 
         Example:
             >>> move_rel --x 5
-            >>> move_rel --z -10
+            >>> move_rel - -z - 10
             >>> move_rel --x 2 --y -3
         """
-        x: float = args.x
-        y: float = args.y
-        z: float = args.z
-
-        if x == 0.0 and y == 0.0 and z == 0.0:
-            rprint("[yellow]No movement — all offsets are zero.[/yellow]")
-            return
-
-        autopipette = self.shell._autopipette
-        coor = Coordinate(x=x, y=y, z=z)
-
         try:
-            autopipette.set_coor_sys(CoordinateSystem.RELATIVE)
-            autopipette.move_to(coor)
-            autopipette.set_coor_sys(CoordinateSystem.ABSOLUTE)
-            self.shell.output_gcode(autopipette.get_gcode())
-
-            parts = []
-            if x != 0:
-                parts.append(f"X{x:+.2f}")
-            if y != 0:
-                parts.append(f"Y{y:+.2f}")
-            if z != 0:
-                parts.append(f"Z{z:+.2f}")
-            rprint(f"[green]Moving relative: {' '.join(parts)}[/green]")
-
+            result = self.service.move_rel(args)
+            color = "green" if result.ok else "yellow"
+            rprint(f"[{color}]{result.message}[/{color}]")
         except Exception as e:
             rprint(f"[red]Relative move error: {e}[/red]")
