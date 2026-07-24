@@ -99,13 +99,26 @@ class ProtocolCommands(TAPCommandSet):
 
         try:
             with self.shell.gcode_manager.batch_mode():
-                self.shell.runcmds_plus_hooks(
+                halted_early = self.shell.runcmds_plus_hooks(
                     commands,
                     add_to_history=False,
                     stop_on_keyboard_interrupt=True,
                 )
 
             gcode_buffer = self.shell.gcode_manager.get_buffer()
+
+            if halted_early:
+                # A line was blocked (e.g. by the homed-safety interlock) or
+                # otherwise signaled "stop" — runcmds_plus_hooks aborts the
+                # whole batch at that point rather than skipping just that
+                # one line, so any commands after it never ran.
+                rprint(
+                    "[red]Protocol halted before completion "
+                    f"({len(gcode_buffer)} of {len(commands)} command(s) "
+                    "produced G-code). See the message above for why.[/red]"
+                )
+                self.shell.gcode_manager.clear_buffer()
+                return
 
             if not gcode_buffer:
                 rprint("[yellow]No G-code generated from protocol.[/yellow]")

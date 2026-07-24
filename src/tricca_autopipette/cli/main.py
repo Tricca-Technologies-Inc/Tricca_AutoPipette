@@ -140,16 +140,6 @@ def parse_arguments() -> argparse.Namespace:
         action="store_true",
         help="Start the shell and connect to a local websocket server (ws://localhost:7125)",
     )
-    parser.add_argument(
-        "--skip-homed-check",
-        default=False,
-        action="store_true",
-        help=(
-            "Bypass the homed-safety interlock for movement/pipetting/run commands. "
-            "Intended for non-interactive callers (e.g. the kiosk) that dispatch a "
-            "single 'run' per process; use with caution."
-        ),
-    )
     # ----------------------------- GUI Arguments ------------------------------------ #
     parser.add_argument(
         "--gui",
@@ -341,7 +331,6 @@ def main() -> int:
                 config_liquids=config_liquids_path,
                 connect_websocket=not args.no_connect,
                 connect_local_websocket=args.local_connect,
-                skip_homed_check=args.skip_homed_check,
             )
             shell.cmdloop()
 

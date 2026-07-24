@@ -90,6 +90,14 @@ class HeadlessTapShell(TriccaAutoPipetteShell):
         """
         self.moonraker_state: MoonrakerStateTracker | None = None
         self._last_persisted_state: tuple[str, bool, str] | None = None
+        #: Set by `_homed_interlock_hook` to the name of the last command it
+        #: blocked, so batch callers (e.g. `AutoPipetteService.start_run`)
+        #: can detect an interlock-caused abort. `runcmds_plus_hooks` stops
+        #: the whole batch on the first blocked line rather than skipping
+        #: just that line, so callers must check this rather than assuming
+        #: an empty G-code buffer always means "protocol was legitimately
+        #: empty."
+        self.last_blocked_command: str | None = None
         super().__init__(
             config_system=config_system,
             config_gantry=config_gantry,
@@ -137,6 +145,7 @@ class HeadlessTapShell(TriccaAutoPipetteShell):
             logger.warning(
                 "Command '%s' blocked - pipette not homed", data.statement.command
             )
+            self.last_blocked_command = data.statement.command
             return replace(data, stop=True)
         return data
 

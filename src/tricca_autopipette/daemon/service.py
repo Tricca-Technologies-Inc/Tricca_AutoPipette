@@ -237,12 +237,29 @@ class AutoPipetteService:
             )
             self._broadcast_status()
 
+            self.shell.last_blocked_command = None
             result = await asyncio.to_thread(self._execute_line_sync, f"run {filename}")
 
             if result["error"]:
                 self._current = RunStatus(
                     status="error",
                     message=result["error"],
+                    run_id=run_id,
+                    filename=filename,
+                )
+                self._broadcast_status()
+            elif self.shell.last_blocked_command:
+                # do_run's runcmds_plus_hooks aborts the whole protocol on the
+                # first blocked line rather than skipping just that line, so an
+                # unhomed run silently produces no G-code and never calls
+                # print.start — without this check, print_stats would never
+                # transition and the run would hang at "running" forever.
+                self._current = RunStatus(
+                    status="error",
+                    message=(
+                        f"Protocol halted: '{self.shell.last_blocked_command}' "
+                        "blocked — pipette not homed. Run 'init' or 'home all' first."
+                    ),
                     run_id=run_id,
                     filename=filename,
                 )

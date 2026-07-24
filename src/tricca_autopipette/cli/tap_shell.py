@@ -83,7 +83,6 @@ class TriccaAutoPipetteShell(Cmd):
         config_liquids: Path | None,
         connect_websocket: bool = True,
         connect_local_websocket: bool = False,
-        skip_homed_check: bool = False,
     ) -> None:
         """Initialize the AutoPipette shell and WebSocket connection.
 
@@ -100,14 +99,6 @@ class TriccaAutoPipetteShell(Cmd):
                                (default: True).
             connect_local_websocket: Whether to connect to local WebSocket for testing
                                      (default: False).
-            skip_homed_check: Bypass the homed-safety interlock for the lifetime of
-                               this shell instance, letting movement/pipetting/`run`
-                               commands execute without a prior `init`/`home all`.
-                               Intended for non-interactive callers (e.g. the kiosk)
-                               that dispatch a single `run` per process; it does not
-                               skip physical homing, since protocols that need it
-                               still home themselves via their own leading `home all`
-                               line (default: False).
 
         Example:
             >>> shell = TriccaAutoPipetteShell(
@@ -161,8 +152,6 @@ class TriccaAutoPipetteShell(Cmd):
         location_manager = LocationManager()
         location_manager.load_from_json(fn_locations)
         self._autopipette = AutoPipette(json_config_manager, location_manager)
-        if skip_homed_check:
-            self._autopipette.state.homed = True
 
         # Network configuration
         self.hostname = self._get_hostname()
