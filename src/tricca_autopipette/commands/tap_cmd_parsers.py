@@ -424,33 +424,6 @@ class UploadArgs:
 
 
 # ===========================================================================
-# Unused / reserved (no do_ handler implemented yet)
-# ===========================================================================
-
-
-@dataclass
-class ProfileArgs:
-    """Arguments for a future ``profile`` command.
-
-    Attributes:
-        name: Name of the configuration profile.
-    """
-
-    name: str
-
-
-@dataclass
-class TipboxArgs:
-    """Arguments for a future ``tipbox`` command.
-
-    Attributes:
-        name: Name of the tipbox.
-    """
-
-    name: str
-
-
-# ===========================================================================
 # Parser definitions
 # ===========================================================================
 
@@ -848,17 +821,3 @@ class TAPCmdParsers:
     parser_upload.add_argument(
         "file_path", type=Path, help="Local path to the G-code file"
     )
-
-    # -----------------------------------------------------------------------
-    # Reserved / not yet implemented
-    # -----------------------------------------------------------------------
-
-    parser_profile: Cmd2ArgumentParser = Cmd2ArgumentParser(
-        description="(Reserved) Select a configuration profile."
-    )
-    parser_profile.add_argument("name", type=str, help="Profile name")
-
-    parser_tipbox: Cmd2ArgumentParser = Cmd2ArgumentParser(
-        description="(Reserved) Configure a tipbox."
-    )
-    parser_tipbox.add_argument("name", type=str, help="Tipbox name")
