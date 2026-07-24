@@ -1097,8 +1097,8 @@ class AutoPipette(metaclass=AutoPipetteMeta):
             #if abs(target) < 1e-9: target = 0.0  # avoid "-0.0"
 
             #self._buffer_command(
-                f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} MOVE={target} ACCEL=800\n"
-            )
+            #    f"MANUAL_STEPPER STEPPER={stepper} SPEED={speed} MOVE={target} ACCEL=800\n"
+            #)
             # self._buffer_command("M400\n")  # wait for stepper to finish
         #else:
             # ----- Full dump to 0 (legacy) -----
