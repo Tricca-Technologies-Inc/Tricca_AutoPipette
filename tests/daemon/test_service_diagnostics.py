@@ -1,7 +1,7 @@
-"""Unit tests for ``AutoPipetteService``'s WebSocket-diagnostics and
+"""Unit tests for ``AutoPipetteService``'s diagnostics and reporting methods.
 
-reporting methods (Phase 4 of the ports-and-adapters migration -- see
-CLAUDE.md), migrated off cmd2's ``WebSocketCommands``/``ls``/``list_liquids``.
+Phase 4 of the ports-and-adapters migration -- see CLAUDE.md -- covering
+what was migrated off cmd2's ``WebSocketCommands``/``ls``/``list_liquids``.
 Uses ``FakeWebSocketClient`` (Phase 0) as ``service.client`` directly,
 since none of these methods need a real background-thread connection.
 """
@@ -34,6 +34,7 @@ class TestWsStatus:
     def test_reports_connected_client_details(
         self, service: AutoPipetteService
     ) -> None:
+        service.uri = "ws://sentinel.invalid:7125/websocket"
         client = _wire_fake_client(service, connected=True)
         client.register_handler("notify_status_update", lambda _params: None)
         client.queue_message()
@@ -43,7 +44,7 @@ class TestWsStatus:
         assert result.ok is True
         assert result.data is not None
         assert result.data["connected"] is True
-        assert result.data["uri"] == service.uri
+        assert result.data["uri"] == "ws://sentinel.invalid:7125/websocket"
         assert result.data["queued_messages"] == 1
         assert result.data["handlers"] == ["notify_status_update"]
         assert result.data["pending_requests"] == 0
@@ -54,6 +55,11 @@ class TestWsStatus:
         result = service.ws_status()
 
         assert result.ok is False
+        # Distinguishes this from the no-client branch above, which also
+        # returns ok=False but with no data at all: a disconnected client
+        # must still report its details, just with connected=False.
+        assert result.data is not None
+        assert result.data["connected"] is False
 
 
 class TestPingMoonraker:
@@ -100,9 +106,7 @@ class TestSendNotifyRaw:
         with pytest.raises(RuntimeError, match="not connected"):
             service.notify_raw("printer.restart", None)
 
-    def test_notify_raw_sends_a_notification(
-        self, service: AutoPipetteService
-    ) -> None:
+    def test_notify_raw_sends_a_notification(self, service: AutoPipetteService) -> None:
         client = _wire_fake_client(service, connected=True)
 
         result = service.notify_raw("printer.restart", {"a": 1})
@@ -112,9 +116,7 @@ class TestSendNotifyRaw:
 
 
 class TestSubscribeUnsubscribeRaw:
-    def test_subscribe_raises_when_no_client(
-        self, service: AutoPipetteService
-    ) -> None:
+    def test_subscribe_raises_when_no_client(self, service: AutoPipetteService) -> None:
         with pytest.raises(RuntimeError):
             service.subscribe_raw("notify_status_update")
 

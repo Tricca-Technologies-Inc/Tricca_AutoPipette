@@ -205,7 +205,7 @@ class ControlServer:
                 "error": {"type": type(exc).__name__, "message": str(exc)},
             })
 
-    async def _call(self, method: str | None, params: dict[str, Any]) -> Any:  # ruff:ignore[any-type]
+    async def _call(self, method: str | None, params: dict[str, Any]) -> Any:  # noqa: ANN401
         """Route one method name to the corresponding service call.
 
         Args:

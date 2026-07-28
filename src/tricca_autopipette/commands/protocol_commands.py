@@ -103,9 +103,7 @@ class ProtocolCommands(TAPCommandSet):
         """
         handler = self.service.breakpoint_handler
         if handler is not None:
-            rprint(
-                "[yellow]⏸ Waiting for remote confirmation...[/yellow]"
-            )
+            rprint("[yellow]⏸ Waiting for remote confirmation...[/yellow]")
             proceed = handler()
         else:
             result = self.shell.select(

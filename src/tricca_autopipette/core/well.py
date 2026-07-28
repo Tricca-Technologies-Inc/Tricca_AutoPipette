@@ -21,7 +21,7 @@ Core behavior:
     for a strategy.
 - `SimpleDipStrategy` returns `well.dip_top` unchanged (no volume tracking).
 - `CylinderDipStrategy` assumes a cylindrical well and converts a volume change
-  (µL) into a liquid-height change using the well diameter, updating
+  (μL) into a liquid-height change using the well diameter, updating
   `well.dip_curr` and clamping it to `well.dip_btm`.
 - `StrategyType` enumerates supported strategies and `StrategyRegistry` provides
   singleton instances and reverse lookup.
@@ -32,7 +32,7 @@ Core behavior:
 
 Units:
     - Distances are in millimeters (mm).
-    - Volumes are in microliters (µL).
+    - Volumes are in microliters (μL).
 
 Notes:
     - Some strategies (notably `CylinderDipStrategy`) mutate `Well.dip_curr`
@@ -51,14 +51,17 @@ Typical usage:
     >>> well = Well(**params.model_dump())
     >>> dip_mm = well.get_dip_distance(volume=100.0)
 """
+
 from __future__ import annotations
 
 import math
 from abc import ABC, abstractmethod
-from enum import Enum
+from enum import StrEnum
+from typing import ClassVar
+
+from pydantic import BaseModel, Field, model_validator
 
 from tricca_autopipette.core.coordinate import Coordinate
-from pydantic import BaseModel, Field, model_validator
 
 
 class DipStrategy(ABC):
@@ -120,7 +123,7 @@ class SimpleDipStrategy(DipStrategy):
     def calculate_dip_distance(
         self,
         well: Well,
-        volume: float,  # noqa: ARG002  # pyright: ignore[reportUnusedParameter]
+        volume: float,  # pyright: ignore[reportUnusedParameter]
     ) -> float:
         """Calculate the dip distance for the given well and volume.
 
@@ -198,8 +201,7 @@ class CylinderDipStrategy(DipStrategy):
 
         Example:
             >>> strategy = CylinderDipStrategy()
-            >>> well = Well(coor=coord, dip_top=10.0, dip_btm=50.0,
-            ...             well_diameter=8.0)
+            >>> well = Well(coor=coord, dip_top=10.0, dip_btm=50.0, well_diameter=8.0)
             >>> well.dip_curr = 10.0
             >>> distance = strategy.calculate_dip_distance(well, 100.0)
             >>> well.dip_curr  # Updated based on volume removed
@@ -244,7 +246,7 @@ class CylinderDipStrategy(DipStrategy):
             raise ValueError("Cylinder strategy requires dip_btm")
 
 
-class StrategyType(str, Enum):
+class StrategyType(StrEnum):
     """Available dip strategy types.
 
     Enumeration of supported strategies for calculating pipette dip distances.
@@ -272,7 +274,7 @@ class StrategyRegistry:
         _strategies: Dictionary mapping StrategyType enums to strategy instances.
     """
 
-    _strategies: dict[StrategyType, DipStrategy] = {
+    _strategies: ClassVar[dict[StrategyType, DipStrategy]] = {
         StrategyType.SIMPLE: SimpleDipStrategy(),
         StrategyType.CYLINDER: CylinderDipStrategy(),
     }
@@ -350,7 +352,7 @@ class WellParams(BaseModel):
     well_diameter: float | None = Field(None, gt=0)
 
     @model_validator(mode="after")
-    def validate_strategy_requirements(self) -> "WellParams":
+    def validate_strategy_requirements(self) -> WellParams:
         """Validate that the well configuration matches strategy requirements.
 
         Ensures the selected dip strategy has all the parameters it needs
@@ -370,7 +372,7 @@ class WellParams(BaseModel):
             >>> params = WellParams(
             ...     coor=Coordinate(x=10, y=20, z=5),
             ...     dip_top=10.0,
-            ...     strategy_type=StrategyType.SIMPLE
+            ...     strategy_type=StrategyType.SIMPLE,
             ... )
             >>>
             >>> # Invalid cylinder strategy (missing diameter)
@@ -378,7 +380,7 @@ class WellParams(BaseModel):
             ...     coor=Coordinate(x=10, y=20, z=5),
             ...     dip_top=10.0,
             ...     dip_btm=50.0,
-            ...     strategy_type=StrategyType.CYLINDER
+            ...     strategy_type=StrategyType.CYLINDER,
             ... )  # Will fail: Cylinder strategy requires well_diameter
         """
         strategy = StrategyRegistry.get_strategy(self.strategy_type)
@@ -428,10 +430,7 @@ class Well:
 
         Example:
             >>> # Simple well (no volume tracking)
-            >>> well = Well(
-            ...     coor=Coordinate(x=10, y=20, z=5),
-            ...     dip_top=10.0
-            ... )
+            >>> well = Well(coor=Coordinate(x=10, y=20, z=5), dip_top=10.0)
             >>>
             >>> # Cylindrical well (tracks volume changes)
             >>> well = Well(
@@ -439,7 +438,7 @@ class Well:
             ...     dip_top=10.0,
             ...     dip_btm=50.0,
             ...     strategy_type=StrategyType.CYLINDER,
-            ...     well_diameter=8.0
+            ...     well_diameter=8.0,
             ... )
         """
         self.coor = coor
@@ -473,10 +472,10 @@ class Well:
             ...     dip_top=10.0,
             ...     dip_btm=50.0,
             ...     strategy_type=StrategyType.CYLINDER,
-            ...     well_diameter=8.0
+            ...     well_diameter=8.0,
             ... )
             >>> distance = well.get_dip_distance(100.0)
-            >>> distance  # Accounts for 100 µL removed
+            >>> distance  # Accounts for 100 μL removed
             12.0
         """
         return self._strategy.calculate_dip_distance(self, volume)
@@ -494,7 +493,7 @@ class Well:
             ...     dip_top=10.0,
             ...     strategy_type=StrategyType.CYLINDER,
             ...     well_diameter=8.0,
-            ...     dip_btm=50.0
+            ...     dip_btm=50.0,
             ... )
             >>> well.strategy_name
             <StrategyType.CYLINDER: 'cylinder'>

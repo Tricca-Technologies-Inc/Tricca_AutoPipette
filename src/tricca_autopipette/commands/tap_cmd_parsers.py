@@ -22,7 +22,7 @@ from cmd2 import Cmd2ArgumentParser
 
 def args_from_namespace[ArgsT](
     args_cls: type[ArgsT],
-    ns: Any,  # ruff:ignore[any-type]
+    ns: Any,  # noqa: ANN401
 ) -> ArgsT:
     """Build one of this module's ``*Args`` dataclasses from a parsed Namespace.
 
@@ -121,10 +121,10 @@ class AspirateArgs:
         source: Source location name.
         src_row: Source row index for plate locations.
         src_col: Source column index for plate locations.
-        pre_aspirate_air: Volume of air to aspirate before liquid (µL).
-        post_aspirate_air: Volume of air to aspirate after liquid (µL).
+        pre_aspirate_air: Volume of air to aspirate before liquid (μL).
+        post_aspirate_air: Volume of air to aspirate after liquid (μL).
         prewet: Number of prewet cycles before aspirating.
-        prewet_vol: Volume to use for each prewet cycle (µL).
+        prewet_vol: Volume to use for each prewet cycle (μL).
     """
 
     vol_ul: float
@@ -145,7 +145,7 @@ class DispenseArgs:
         dest: Destination location name.
         dest_row: Destination row index for plate locations.
         dest_col: Destination column index for plate locations.
-        volume: Volume to dispense in µL, or None to dispense all.
+        volume: Volume to dispense in μL, or None to dispense all.
         wiggle: If True, wiggle tip during dispensing.
         touch: If True, touch tip to well side after dispensing.
     """
@@ -172,9 +172,9 @@ class PipetteArgs:
         dest_row: Destination row index for plate locations.
         dest_col: Destination column index for plate locations.
         tipbox_name: Name of specific tipbox to use.
-        aspirate_air: Volume of air to aspirate before liquid (µL).
+        aspirate_air: Volume of air to aspirate before liquid (μL).
         prewet: Number of prewet cycles before aspirating.
-        prewet_vol: Volume to use for each prewet cycle (µL).
+        prewet_vol: Volume to use for each prewet cycle (μL).
         wiggle: If True, wiggle tip during dispensing.
         touch: If True, touch tip to well side after dispensing.
         keep_tip: If True, retain tip after the full operation.
@@ -507,13 +507,13 @@ class TAPCmdParsers:
         "--pre_aspirate_air",
         default=0.0,
         type=float,
-        help="Volume of air to aspirate before liquid in µL (default: 0.0)",
+        help="Volume of air to aspirate before liquid in μL (default: 0.0)",
     )
     parser_aspirate.add_argument(
         "--post_aspirate_air",
         default=0.0,
         type=float,
-        help="Volume of air to aspirate before liquid in µL (default: 0.0)",
+        help="Volume of air to aspirate before liquid in μL (default: 0.0)",
     )
     parser_aspirate.add_argument(
         "--prewet",
@@ -525,7 +525,7 @@ class TAPCmdParsers:
         "--prewet_vol",
         default=10.0,
         type=float,
-        help="Volume per prewet cycle in µL (default: 10.0)",
+        help="Volume per prewet cycle in μL (default: 10.0)",
     )
 
     parser_dispense: Cmd2ArgumentParser = Cmd2ArgumentParser(
@@ -537,7 +537,7 @@ class TAPCmdParsers:
         "-v",
         default=None,
         type=float,
-        help="Volume to dispense in µL (default: all remaining liquid)",
+        help="Volume to dispense in μL (default: all remaining liquid)",
     )
     parser_dispense.add_argument(
         "--dest_row",
@@ -613,13 +613,13 @@ class TAPCmdParsers:
         "--pre_aspirate_air",
         default=0.0,
         type=float,
-        help="Volume of air to aspirate before liquid in µL (default: 0.0)",
+        help="Volume of air to aspirate before liquid in μL (default: 0.0)",
     )
     parser_pipette.add_argument(
         "--post_aspirate_air",
         default=0.0,
         type=float,
-        help="Volume of air to aspirate after liquid in µL (default: 0.0)",
+        help="Volume of air to aspirate after liquid in μL (default: 0.0)",
     )
     parser_pipette.add_argument(
         "--prewet",
@@ -631,7 +631,7 @@ class TAPCmdParsers:
         "--prewet_vol",
         default=10.0,
         type=float,
-        help="Volume per prewet cycle in µL (default: 10.0)",
+        help="Volume per prewet cycle in μL (default: 10.0)",
     )
     parser_pipette.add_argument(
         "--wiggle",
@@ -770,7 +770,7 @@ class TAPCmdParsers:
     parser_gcode_print.add_argument("msg", type=str, help="Message to display")
 
     parser_vol_to_steps: Cmd2ArgumentParser = Cmd2ArgumentParser(
-        description="Convert a volume in µL to motor steps."
+        description="Convert a volume in μL to motor steps."
     )
     parser_vol_to_steps.add_argument("vol", type=float, help="Volume in microliters")
 

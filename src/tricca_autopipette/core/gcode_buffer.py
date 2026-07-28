@@ -185,7 +185,7 @@ class GCodeBuffer:
         Example:
             >>> sections = {
             ...     "SPEED": {"SPEED_XY": "5000", "SPEED_Z": "2000"},
-            ...     "SERVO": {"ANGLE_RETRACT": "160"}
+            ...     "SERVO": {"ANGLE_RETRACT": "160"},
             ... }
             >>> buffer.build_header_from_config("auto.conf", sections)
             >>> header = buffer.get_header()
@@ -237,6 +237,5 @@ class GCodeBuffer:
             'GCodeBuffer(commands=1, header=0)'
         """
         return (
-            f"GCodeBuffer(commands={len(self._commands)}, "
-            f"header={len(self._header)})"
+            f"GCodeBuffer(commands={len(self._commands)}, header={len(self._header)})"
         )

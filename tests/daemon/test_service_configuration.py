@@ -211,29 +211,25 @@ class TestClearLocs:
 
 class TestSaveAndLoadLocations:
     def test_round_trips_through_a_real_file(self, service: AutoPipetteService) -> None:
-        # save_to_json/load_from_json hard-code config/locations/ as their
-        # directory (not parameterized), so this necessarily touches the
-        # real repo directory -- use a clearly-scratch filename and clean
-        # up afterward rather than leaving a stray file behind.
-        filename = "test_service_configuration_scratch.json"
-        locations_path = DefaultPaths.DIR_CONFIG_LOCATIONS / filename
-        try:
-            service.coor(CoorArgs(name="bench", x=1.0, y=2.0, z=3.0))
-            service.plate(_plate_args())
+        # The `service` fixture points location_manager.locations_dir at
+        # tmp_path, so this writes a real file without touching the repo's
+        # config/locations/.
+        loc_mgr = service._autopipette.location_manager
+        filename = "round_trip.json"
 
-            save_result = service.save_locations(filename)
-            assert save_result.ok is True
-            assert locations_path.exists()
+        service.coor(CoorArgs(name="bench", x=1.0, y=2.0, z=3.0))
+        service.plate(_plate_args())
 
-            service.clear_locs()
-            load_result = service.load_locations(filename)
+        save_result = service.save_locations(filename)
+        assert save_result.ok is True
+        assert (loc_mgr.locations_dir / filename).exists()
 
-            assert load_result.ok is True
-            loc_mgr = service._autopipette.location_manager
-            assert loc_mgr.has_location("bench")
-            assert loc_mgr.has_location("my_plate")
-        finally:
-            locations_path.unlink(missing_ok=True)
+        service.clear_locs()
+        load_result = service.load_locations(filename)
+
+        assert load_result.ok is True
+        assert loc_mgr.has_location("bench")
+        assert loc_mgr.has_location("my_plate")
 
     def test_load_missing_file_raises_file_not_found(
         self, service: AutoPipetteService

@@ -5,6 +5,10 @@ Wants=network-online.target
 
 [Service]
 Type=simple
+# Required whenever tapd runs from an installed package rather than a
+# src-layout checkout: config/, protocols/ and gcode/ are resolved relative
+# to this. Must be an absolute path. See systemd/README.md.
+Environment=AUTOPIPETTE_REPO_ROOT=/opt/tricca-autopipette
 # Adjust to the venv/user for your host; see systemd/README.md.
 ExecStart=/opt/tricca-autopipette/venv/bin/tapd
 Restart=on-failure

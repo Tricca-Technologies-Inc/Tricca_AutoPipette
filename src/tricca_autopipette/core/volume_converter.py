@@ -4,7 +4,10 @@
 This module provides conversion between liquid volumes (microliters) and
 stepper motor positions (microsteps) for precise pipetting control.
 """
+
 from __future__ import annotations
+
+from typing import ClassVar
 
 from numpy.polynomial import Polynomial
 
@@ -12,21 +15,21 @@ from numpy.polynomial import Polynomial
 class VolumeConverter:
     """Convert between motor steps and liquid volume.
 
-    Uses polynomial fitting to translate between microliters (µL) and
-    motor microsteps (µsteps) for accurate pipette volume control.
+    Uses polynomial fitting to translate between microliters (μL) and
+    motor microsteps (μsteps) for accurate pipette volume control.
     The converter can be initialized with default calibration data or
     custom calibration points.
 
     Class Attributes:
-        _consts: Default calibration mapping of volumes (µL) to steps (µsteps).
+        _consts: Default calibration mapping of volumes (μL) to steps (μsteps).
         _poly: Default polynomial fit for volume-to-steps conversion.
 
     Attributes:
         _poly: Polynomial function for converting volume to steps.
     """
 
-    # Default calibration mapping: volume (µL) -> motor steps (µsteps)
-    _consts: dict[float, float] = {
+    # Default calibration mapping: volume (μL) -> motor steps (μsteps)
+    _consts: ClassVar[dict[float, float]] = {
         0.0: 0.0,
         25.0: 14.35,
         50.0: 22.45,
@@ -51,8 +54,8 @@ class VolumeConverter:
         values.
 
         Args:
-            x: List of volume values in microliters (µL), or None for defaults.
-            y: List of corresponding motor step values (µsteps), or None for defaults.
+            x: List of volume values in microliters (μL), or None for defaults.
+            y: List of corresponding motor step values (μsteps), or None for defaults.
 
         Note:
             Uses quadratic (degree 2) polynomial fitting for custom calibration,
@@ -82,10 +85,10 @@ class VolumeConverter:
         microsteps needed to dispense the specified volume.
 
         Args:
-            vol_ul: Volume to dispense in microliters (µL).
+            vol_ul: Volume to dispense in microliters (μL).
 
         Returns:
-            Number of motor microsteps (µsteps) required.
+            Number of motor microsteps (μsteps) required.
 
         Example:
             >>> converter = VolumeConverter()
@@ -102,10 +105,10 @@ class VolumeConverter:
         to a given number of motor steps. Uses root-finding on the polynomial.
 
         Args:
-            steps: Number of motor microsteps (µsteps).
+            steps: Number of motor microsteps (μsteps).
 
         Returns:
-            Corresponding volume in microliters (µL).
+            Corresponding volume in microliters (μL).
 
         Raises:
             ValueError: If no valid positive volume can be found for the given steps.

@@ -45,7 +45,8 @@ class LocationManager:
         locations: Dictionary mapping location names to Coordinates or Plates.
         waste_container: The designated waste container (if configured).
         tipboxes: The primary tipbox or linked tipboxes (if configured).
-        config_dir: Path to configuration directory for loading/saving.
+        locations_dir: Directory `load_from_json`/`save_to_json` resolve
+            their filenames against.
 
     Example:
         >>> manager = LocationManager()
@@ -54,16 +55,24 @@ class LocationManager:
         >>> position = manager.get_coordinate("home")
     """
 
-    def __init__(self) -> None:
+    def __init__(self, locations_dir: Path | None = None) -> None:
         """Initialize the location manager.
 
+        Args:
+            locations_dir: Directory to load/save locations files from.
+                Defaults to `config/locations/` under the repo root. Mainly
+                an injection point for tests, which would otherwise have to
+                write scratch files into the real repo and clean up after
+                themselves.
+
         Example:
-            >>> # Use default config directory
+            >>> # Use the default config/locations/ directory
             >>> manager = LocationManager()
 
-            >>> # Use custom config directory
-            >>> manager = LocationManager(Path("/custom/config"))
+            >>> # Use a custom locations directory
+            >>> manager = LocationManager(Path("/custom/config/locations"))
         """
+        self.locations_dir: Path = locations_dir or DIR_CONFIG_LOCATIONS
         self.locations: dict[str, Coordinate | Plate] = {}
         self.waste_container: WasteContainer | None = None
         self.tipboxes: TipBox | None = None
@@ -300,7 +309,7 @@ class LocationManager:
     def load_from_json(self, filename: str = CONFIG_LOCATIONS) -> None:
         """Load all locations from a JSON configuration file.
 
-        Loads locations from config_dir/locations/filename.
+        Loads locations from `self.locations_dir / filename`.
 
         Args:
             filename: Name of locations JSON file. Defaults to
@@ -319,7 +328,7 @@ class LocationManager:
         """
         self.clear()
 
-        locations_file = DIR_CONFIG_LOCATIONS / filename
+        locations_file = self.locations_dir / filename
 
         if not locations_file.exists():
             logger.warning(f"Locations file not found: {locations_file}")
@@ -392,7 +401,7 @@ class LocationManager:
     def save_to_json(self, filename: str = "custom_locations.json") -> None:
         """Save all locations to a JSON configuration file.
 
-        Saves to config_dir/locations/filename.
+        Saves to `self.locations_dir / filename`.
 
         Args:
             filename: Name of output JSON file. Defaults to
@@ -404,7 +413,7 @@ class LocationManager:
         Example:
             >>> manager.save_to_json("backup_locations.json")
         """
-        locations_dir = DIR_CONFIG_LOCATIONS
+        locations_dir = self.locations_dir
         locations_dir.mkdir(parents=True, exist_ok=True)
 
         locations_file = locations_dir / filename

@@ -119,7 +119,7 @@ def build_system_table(data: dict[str, Any]) -> Table:
     table.add_row("[bold]Pipette[/bold]", "")
     table.add_row("  Model", data["pipette_model"])
     table.add_row("  Design", data["pipette_design"])
-    table.add_row("  Max Volume", f"{data['max_volume_ul']} µL")
+    table.add_row("  Max Volume", f"{data['max_volume_ul']} μL")
     table.add_row("", "")
     table.add_row("[bold]Active Liquid[/bold]", data["active_liquid"])
     table.add_row("", "")

@@ -115,8 +115,7 @@ class Coordinate(BaseModel):
 
         if new_x < 0 or new_y < 0 or new_z < 0:
             raise ValueError(
-                f"Resulting coordinate ({new_x}, {new_y}, {new_z}) "
-                "has negative values"
+                f"Resulting coordinate ({new_x}, {new_y}, {new_z}) has negative values"
             )
 
         return self.__class__(x=new_x, y=new_y, z=new_z)

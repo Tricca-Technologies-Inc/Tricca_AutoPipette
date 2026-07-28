@@ -7,14 +7,14 @@ configuration.
 
 from __future__ import annotations
 
-from enum import Enum, IntEnum
+from enum import IntEnum, StrEnum
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 from pydantic.dataclasses import dataclass
 
 
-class TipState(str, Enum):
+class TipState(StrEnum):
     """State of tip attachment.
 
     Attributes:
@@ -212,7 +212,7 @@ class PipetteSyringeKinematics(BaseModel):
         motor_orientation: Motor direction (1 for normal, -1 for reversed).
         max_volume_ul: Maximum pipette volume in microliters.
         min_volume_ul: Minimum reliable volume in microliters.
-        calibration_volumes: Calibration volume points in µL.
+        calibration_volumes: Calibration volume points in μL.
         calibration_steps: Corresponding motor steps.
         speed_aspirate: Aspiration speed in steps/s.
         speed_dispense: Dispense speed in steps/s.
@@ -226,7 +226,7 @@ class PipetteSyringeKinematics(BaseModel):
         >>> syringe = PipetteSyringeKinematics(
         ...     max_volume_ul=1000.0,
         ...     calibration_volumes=[0, 100, 500, 1000],
-        ...     calibration_steps=[0, 4800, 24000, 48000]
+        ...     calibration_steps=[0, 4800, 24000, 48000],
         ... )
         >>> print(syringe.max_volume_ul)
         1000.0
@@ -259,7 +259,7 @@ class PipetteSyringeKinematics(BaseModel):
     # Volume Curve
     calibration_volumes: list[float] | None = Field(
         default=None,
-        description="Calibration volume points in µL (overrides pipette default)",
+        description="Calibration volume points in μL (overrides pipette default)",
     )
 
     calibration_steps: list[float] | None = Field(
@@ -351,7 +351,7 @@ class PipetteModel(BaseModel):
         ...     name="P1000_Vertical",
         ...     design_type="vertical",
         ...     syringe=PipetteSyringeKinematics(max_volume_ul=1000.0),
-        ...     servo=ServoConfig()
+        ...     servo=ServoConfig(),
         ... )
         >>> print(pipette.name)
         'P1000_Vertical'
@@ -403,9 +403,9 @@ class LiquidProfile(BaseModel):
         wait_dispense_ms: Override dispense wait time in milliseconds.
         prewet_recommended: Whether pre-wetting is recommended.
         prewet_cycles: Recommended number of prewet cycles.
-        air_gap_ul: Recommended air gap to prevent dripping in µL.
+        air_gap_ul: Recommended air gap to prevent dripping in μL.
         blowout_recommended: Whether blowout is recommended.
-        calibration_volumes: Calibration volume points in µL (overrides pipette).
+        calibration_volumes: Calibration volume points in μL (overrides pipette).
         calibration_steps: Corresponding motor steps (overrides pipette).
 
     Example:
@@ -414,7 +414,7 @@ class LiquidProfile(BaseModel):
         ...     name="glycerol",
         ...     viscosity_cP=1400.0,
         ...     speed_aspirate=50.0,
-        ...     prewet_recommended=True
+        ...     prewet_recommended=True,
         ... )
         >>> print(glycerol.prewet_recommended)
         True
@@ -463,7 +463,7 @@ class LiquidProfile(BaseModel):
     )
 
     air_gap_ul: float = Field(
-        default=0.0, ge=0, description="Recommended air gap to prevent dripping (µL)"
+        default=0.0, ge=0, description="Recommended air gap to prevent dripping (μL)"
     )
 
     blowout_recommended: bool = Field(
@@ -473,7 +473,7 @@ class LiquidProfile(BaseModel):
     # Volume Curve
     calibration_volumes: list[float] | None = Field(
         default=None,
-        description="Calibration volume points in µL (overrides pipette default)",
+        description="Calibration volume points in μL (overrides pipette default)",
     )
 
     calibration_steps: list[float] | None = Field(

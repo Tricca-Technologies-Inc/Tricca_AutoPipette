@@ -8,8 +8,9 @@ used throughout the pipette control system.
 from __future__ import annotations
 
 import os
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
+from typing import ClassVar
 
 __all__ = [
     "ConfigKey",
@@ -24,7 +25,7 @@ __all__ = [
 ]
 
 
-class CoordinateSystem(str, Enum):
+class CoordinateSystem(StrEnum):
     """Coordinate system modes for motion commands.
 
     Attributes:
@@ -40,7 +41,7 @@ class CoordinateSystem(str, Enum):
     RELATIVE = "relative"
 
 
-class PlateType(str, Enum):
+class PlateType(StrEnum):
     """Special plate type identifiers.
 
     These types receive special handling during configuration.
@@ -121,7 +122,7 @@ class HomingTargets:
             with ``MOTOR_METHODS``/``MOTOR_SPECIAL`` manually.
     """
 
-    MOTOR_METHODS: dict[str, tuple[str, str]] = {
+    MOTOR_METHODS: ClassVar[dict[str, tuple[str, str]]] = {
         "x": ("home_x.gcode", "home_x"),
         "y": ("home_y.gcode", "home_y"),
         "z": ("home_z.gcode", "home_z"),
@@ -130,7 +131,7 @@ class HomingTargets:
         "servo": ("home_servo.gcode", "home_servo"),
     }
 
-    MOTOR_SPECIAL: dict[str, str] = {
+    MOTOR_SPECIAL: ClassVar[dict[str, str]] = {
         "all": "home_all.gcode",
     }
 
@@ -191,8 +192,23 @@ class DefaultPaths:
     # (Nix, pip, wheel) drop the "src" segment, so this lands one directory
     # too high with no config/protocols/gcode underneath it. Override with
     # AUTOPIPETTE_REPO_ROOT wherever the package is actually installed.
-    DIR_REPO_ROOT: Path = Path(
-        os.environ.get("AUTOPIPETTE_REPO_ROOT", str(Path(__file__).parents[3]))
+    #
+    # An empty override is treated as unset, and a relative one is rejected
+    # outright: systemd starts services with cwd=/ and neither shipped unit
+    # sets WorkingDirectory, so "Environment=AUTOPIPETTE_REPO_ROOT=" or a
+    # relative value would otherwise resolve config/ against / and surface
+    # as a FileNotFoundError far from the actual mistake.
+    _REPO_ROOT_OVERRIDE = os.environ.get("AUTOPIPETTE_REPO_ROOT", "").strip()
+    if _REPO_ROOT_OVERRIDE and not Path(_REPO_ROOT_OVERRIDE).expanduser().is_absolute():
+        raise ValueError(
+            f"AUTOPIPETTE_REPO_ROOT must be an absolute path, got "
+            f"{_REPO_ROOT_OVERRIDE!r}. It is the directory containing config/, "
+            f"protocols/ and gcode/; see systemd/README.md."
+        )
+    DIR_REPO_ROOT: Path = (
+        Path(_REPO_ROOT_OVERRIDE).expanduser()
+        if _REPO_ROOT_OVERRIDE
+        else Path(__file__).parents[3]
     )
 
     DIR_SHELL: Path = Path(__file__).parent

@@ -1,7 +1,7 @@
-"""Dispatch-completeness test for ``ControlServer`` (Phase 5 of the
+"""Dispatch-completeness test for ``ControlServer``.
 
-ports-and-adapters migration -- see CLAUDE.md). Every request builder on
-``ControlRequests`` should have a matching branch in
+Phase 5 of the ports-and-adapters migration -- see CLAUDE.md. Every
+request builder on ``ControlRequests`` should have a matching branch in
 ``ControlServer._call`` -- this test calls each builder to get its
 ``method`` string, then dispatches that (with the builder's own params)
 through a real ``ControlServer``, asserting the *specific* "Unknown
@@ -15,7 +15,6 @@ falling through to "Unknown method" in production.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterator
 from typing import Any
 
 import pytest
@@ -38,29 +37,17 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     VolToStepsArgs,
     WaitArgs,
 )
-from tricca_autopipette.core.pipette_constants import DefaultPaths
+from tricca_autopipette.core.pipette_exceptions import AutoPipetteError
 from tricca_autopipette.daemon.control_requests import ControlRequests
 from tricca_autopipette.daemon.control_server import ControlServer
 from tricca_autopipette.daemon.service import AutoPipetteService
 
-# save_to_json/load_from_json hard-code config/locations/ as their
-# directory (not parameterized -- see test_service_configuration.py's
-# TestSaveAndLoadLocations for the same note), so dispatching
-# "save_locations" for real necessarily writes into the real repo
-# directory. Use a clearly-scratch filename and clean it up via the
-# fixture below, rather than leaving a stray file behind (this is what
-# previously left an untracked config/locations/custom_locations.json in
-# the repo after every test run).
-_SCRATCH_LOCATIONS_FILENAME = "test_control_server_dispatch_completeness_scratch.json"
-
-
-@pytest.fixture(autouse=True)
-def _clean_up_scratch_locations_file() -> Iterator[None]:
-    scratch_path = DefaultPaths.DIR_CONFIG_LOCATIONS / _SCRATCH_LOCATIONS_FILENAME
-    scratch_path.unlink(missing_ok=True)
-    yield
-    scratch_path.unlink(missing_ok=True)
-
+# "save_locations" is dispatched for real, writing an actual file. The
+# `service` fixture points location_manager.locations_dir at tmp_path, so
+# it lands there rather than in the repo's config/locations/ (which is
+# what previously left an untracked custom_locations.json behind after
+# every test run).
+_SCRATCH_LOCATIONS_FILENAME = "dispatch_completeness_scratch.json"
 
 # Every ControlRequests builder that produces a request dict to dispatch,
 # paired with the args needed to call it.
@@ -70,20 +57,57 @@ _BUILDER_CALLS: list[tuple[str, tuple[Any, ...]]] = [
     ("move", (MoveArgs(x=1.0, y=1.0, z=1.0),)),
     ("move_loc", (MoveLocArgs(name_loc="bench", row=None, col=None),)),
     ("move_rel", (MoveRelArgs(x=1.0, y=0.0, z=0.0),)),
-    ("aspirate", (AspirateArgs(
-        vol_ul=10.0, source="bench", src_row=None, src_col=None,
-        pre_aspirate_air=0.0, post_aspirate_air=0.0, prewet=0, prewet_vol=0.0,
-    ),)),
-    ("dispense", (DispenseArgs(
-        dest="bench", dest_row=None, dest_col=None, volume=10.0,
-        wiggle=False, touch=False,
-    ),)),
-    ("transfer", (PipetteArgs(
-        vol_ul=10.0, source="bench", dest="bench", disp_vol_ul=None,
-        src_row=None, src_col=None, dest_row=None, dest_col=None,
-        tipbox_name=None, pre_aspirate_air=0.0, post_aspirate_air=0.0,
-        prewet=0, prewet_vol=0.0, wiggle=False, touch=False, keep_tip=True,
-    ),)),
+    (
+        "aspirate",
+        (
+            AspirateArgs(
+                vol_ul=10.0,
+                source="bench",
+                src_row=None,
+                src_col=None,
+                pre_aspirate_air=0.0,
+                post_aspirate_air=0.0,
+                prewet=0,
+                prewet_vol=0.0,
+            ),
+        ),
+    ),
+    (
+        "dispense",
+        (
+            DispenseArgs(
+                dest="bench",
+                dest_row=None,
+                dest_col=None,
+                volume=10.0,
+                wiggle=False,
+                touch=False,
+            ),
+        ),
+    ),
+    (
+        "transfer",
+        (
+            PipetteArgs(
+                vol_ul=10.0,
+                source="bench",
+                dest="bench",
+                disp_vol_ul=None,
+                src_row=None,
+                src_col=None,
+                dest_row=None,
+                dest_col=None,
+                tipbox_name=None,
+                pre_aspirate_air=0.0,
+                post_aspirate_air=0.0,
+                prewet=0,
+                prewet_vol=0.0,
+                wiggle=False,
+                touch=False,
+                keep_tip=True,
+            ),
+        ),
+    ),
     ("next_tip", ()),
     ("eject_tip", ()),
     ("dispose_tip", ()),
@@ -92,11 +116,26 @@ _BUILDER_CALLS: list[tuple[str, tuple[Any, ...]]] = [
     ("load_liquid", ("water.json",)),
     ("set", (SetArgs(var="SPEED_FACTOR", value=100.0),)),
     ("coor", (CoorArgs(name="bench", x=1.0, y=1.0, z=1.0),)),
-    ("plate", (PlateArgs(
-        name="p", plate_type="array", num_row=1, num_col=1, x=1.0, y=1.0,
-        z=1.0, dip_top=1.0, dip_btm=None, dip_func="simple",
-        well_diameter=None, spacing_row=1.0, spacing_col=1.0,
-    ),)),
+    (
+        "plate",
+        (
+            PlateArgs(
+                name="p",
+                plate_type="array",
+                num_row=1,
+                num_col=1,
+                x=1.0,
+                y=1.0,
+                z=1.0,
+                dip_top=1.0,
+                dip_btm=None,
+                dip_func="simple",
+                well_diameter=None,
+                spacing_row=1.0,
+                spacing_col=1.0,
+            ),
+        ),
+    ),
     ("reset_plate", (ResetPlateArgs(name="p"),)),
     ("reset_plates", ()),
     ("del_loc", (DelLocArgs(name="bench"),)),
@@ -193,9 +232,15 @@ def test_builder_method_is_dispatchable(
             )
         # Any other ValueError (e.g. a real validation error) means the
         # method WAS recognized -- that's what this test checks for.
-    except Exception:
-        # Any other exception (NotHomedError, FileNotFoundError, a real
-        # RuntimeError from no WebSocket client, etc.) also means dispatch
-        # found the right branch and got as far as calling into the
-        # service -- that's a pass for this test's purposes.
+    except (AutoPipetteError, FileNotFoundError, RuntimeError):
+        # Reaching a real precondition failure (unhomed pipette, missing
+        # file, no WebSocket client) means dispatch found the right branch
+        # and got as far as calling into the service -- a pass here.
+        #
+        # Deliberately NOT a bare `except Exception`: `_call` unpacks
+        # params by name (`HomeArgs(**params)`, `params["liquid_name"]`,
+        # ...), so a builder whose param keys drift out of step with its
+        # `_call` branch fails with TypeError/KeyError. That is the other
+        # half of the drift this file exists to catch, and a catch-all
+        # would swallow it.
         pass

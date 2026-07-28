@@ -30,20 +30,21 @@ import asyncio
 import json
 import logging
 import threading
+from collections.abc import Callable
 from concurrent.futures import Future
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 from queue import Empty, Queue
 from types import TracebackType
-from typing import Any, Callable
+from typing import Any
 from urllib.parse import urlparse
 
 import aiohttp
 from aiohttp import ClientSession, ClientWebSocketResponse, FormData, WSMsgType
 
 
-class MessageType(str, Enum):
+class MessageType(StrEnum):
     """Types of messages that can appear in the message queue.
 
     Attributes:
@@ -234,7 +235,7 @@ class WebSocketClient:
             >>> repr(client)
             'WebSocketClient(url=ws://localhost:7125/websocket, connected=False)'
         """
-        return f"WebSocketClient(url={self.url}, " f"connected={self.is_connected()})"
+        return f"WebSocketClient(url={self.url}, connected={self.is_connected()})"
 
     def __len__(self) -> int:
         """Return number of queued messages.
@@ -620,11 +621,7 @@ class WebSocketClient:
             TimeoutError: If response not received within timeout.
 
         Example:
-            >>> request = {
-            ...     "jsonrpc": "2.0",
-            ...     "method": "printer.info",
-            ...     "id": "123"
-            ... }
+            >>> request = {"jsonrpc": "2.0", "method": "printer.info", "id": "123"}
             >>> response = client.send_jsonrpc(request)
             >>> print(response["result"])
         """
@@ -636,7 +633,7 @@ class WebSocketClient:
 
         try:
             return concurrent_future.result(timeout)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             self._pending.pop(request_id, None)
             method = payload.get("method", "unknown")
             self.logger.warning(f"Request timeout for method '{method}'")
@@ -831,10 +828,7 @@ class WebSocketClient:
             Future.result() is called).
 
         Example:
-            >>> future = client.upload_gcode_file(
-            ...     "protocol.gcode",
-            ...     "/tmp/file.gcode"
-            ... )
+            >>> future = client.upload_gcode_file("protocol.gcode", "/tmp/file.gcode")
             >>> server_path = future.result()
             >>> print(f"Uploaded to: {server_path}")
         """

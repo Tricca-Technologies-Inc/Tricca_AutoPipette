@@ -57,7 +57,7 @@ logger = logging.getLogger(__name__)
 WEBSOCKET_TIMEOUT_SECONDS = 10
 
 
-def _as_dict(value: Any) -> dict[str, Any]:  # ruff:ignore[any-type]
+def _as_dict(value: Any) -> dict[str, Any]:  # noqa: ANN401
     """Narrow a loosely-typed JSON-RPC result/params value to a dict.
 
     Args:
@@ -118,7 +118,7 @@ class RemoteTapShell(Cmd):
 
     # ==================== notification handlers ====================
 
-    def _on_run_status(self, params: Any) -> None:  # ruff:ignore[any-type]
+    def _on_run_status(self, params: Any) -> None:  # noqa: ANN401
         """Show a live run-status update without disrupting the prompt.
 
         Args:
@@ -132,7 +132,7 @@ class RemoteTapShell(Cmd):
         message = notification.get("message", "")
         self.add_alert(msg=f"[run:{status}] {message}")
 
-    def _on_breakpoint(self, params: Any) -> None:  # ruff:ignore[any-type]
+    def _on_breakpoint(self, params: Any) -> None:  # noqa: ANN401
         """Prompt the user to answer a pending breakpoint.
 
         Args:
@@ -212,7 +212,7 @@ class RemoteTapShell(Cmd):
         self._call_and_print(self.requests.webcam_url())
 
     def do_steps_to_vol(self, statement: Statement) -> None:
-        """Convert motor steps to volume in µL: steps_to_vol <steps>."""
+        """Convert motor steps to volume in μL: steps_to_vol <steps>."""
         arg = statement.arg_list[0] if statement.arg_list else ""
         if not arg.strip():
             self.perror("Usage: steps_to_vol <steps>")
@@ -273,9 +273,7 @@ class RemoteTapShell(Cmd):
         if not data:
             self.poutput(_as_dict(response.get("result")).get("message", ""))
             return
-        self.poutput(
-            "Connected" if data.get("connected") else "Disconnected"
-        )
+        self.poutput("Connected" if data.get("connected") else "Disconnected")
         self.poutput(f"Server: {data.get('uri')}")
         self.poutput(f"Queued messages: {data.get('queued_messages')}")
         self.poutput(f"Handlers: {', '.join(data.get('handlers') or []) or '(none)'}")
@@ -563,8 +561,8 @@ def _register_structured_commands() -> None:
 
         def handler(
             self: RemoteTapShell,
-            args: Any,  # ruff:ignore[any-type]
-            build_request: Any = build_request,  # ruff:ignore[any-type]
+            args: Any,  # noqa: ANN401
+            build_request: Any = build_request,  # noqa: ANN401
         ) -> None:
             # _call_and_print is a same-class method reached through a
             # properly-typed `self` -- pyright still flags it because this

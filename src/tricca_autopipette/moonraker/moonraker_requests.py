@@ -13,7 +13,7 @@ Example:
 from __future__ import annotations
 
 import uuid
-from typing import Any
+from typing import Any, ClassVar
 
 
 class MoonrakerRequests:
@@ -45,7 +45,7 @@ class MoonrakerRequests:
     JSON_RPC_VERSION: str = "2.0"
 
     # All available Moonraker API methods
-    METHODS: list[str] = [
+    METHODS: ClassVar[list[str]] = [
         # Server Administration
         "server.info",
         "server.config",
@@ -179,7 +179,7 @@ class MoonrakerRequests:
     ]
 
     # Printer objects available for subscription
-    SUBSCRIBABLE: list[str] = [
+    SUBSCRIBABLE: ClassVar[list[str]] = [
         "angle",
         "bed_mesh",
         "bed_screws",
@@ -245,7 +245,9 @@ class MoonrakerRequests:
             >>> request = mrr.gen_request("printer.info")
             >>> # {'jsonrpc': '2.0', 'method': 'printer.info', 'id': '...'}
 
-            >>> request = mrr.gen_request("printer.print.start", {"filename": "test.gcode"})
+            >>> request = mrr.gen_request(
+            ...     "printer.print.start", {"filename": "test.gcode"}
+            ... )
             >>> # {'jsonrpc': '2.0', 'method': 'printer.print.start', 'id': '...',
             >>> #  'params': {'filename': 'test.gcode'}}
         """
@@ -432,7 +434,7 @@ class MoonrakerRequests:
         Example:
             >>> request = mrr.printer_objects_query({
             ...     "toolhead": ["position", "max_velocity"],
-            ...     "extruder": None  # All fields
+            ...     "extruder": None,  # All fields
             ... })
         """
         return self.gen_request("printer.objects.query", {"objects": objects})
@@ -1346,7 +1348,7 @@ class MoonrakerRequests:
         Returns:
             Request for status of multiple devices.
         """
-        params = {dev: None for dev in devices}
+        params = dict.fromkeys(devices)
         return self.gen_request("machine.device_power.status", params)
 
     def machine_device_power_on(self, devices: list[str]) -> dict[str, Any]:
@@ -1358,7 +1360,7 @@ class MoonrakerRequests:
         Returns:
             Request to turn on specified devices.
         """
-        params = {dev: None for dev in devices}
+        params = dict.fromkeys(devices)
         return self.gen_request("machine.device_power.on", params)
 
     def machine_device_power_off(self, devices: list[str]) -> dict[str, Any]:
@@ -1370,7 +1372,7 @@ class MoonrakerRequests:
         Returns:
             Request to turn off specified devices.
         """
-        params = {dev: None for dev in devices}
+        params = dict.fromkeys(devices)
         return self.gen_request("machine.device_power.off", params)
 
     # ==================== WLED APIs ====================
@@ -1392,7 +1394,7 @@ class MoonrakerRequests:
         Returns:
             Request for status of specified WLED strips.
         """
-        params = {strip: None for strip in strips}
+        params = dict.fromkeys(strips)
         return self.gen_request("machine.wled.status", params)
 
     def machine_wled_on(self, strips: list[str]) -> dict[str, Any]:
@@ -1404,7 +1406,7 @@ class MoonrakerRequests:
         Returns:
             Request to turn on specified WLED strips.
         """
-        params = {strip: None for strip in strips}
+        params = dict.fromkeys(strips)
         return self.gen_request("machine.wled.on", params)
 
     def machine_wled_off(self, strips: list[str]) -> dict[str, Any]:
@@ -1416,7 +1418,7 @@ class MoonrakerRequests:
         Returns:
             Request to turn off specified WLED strips.
         """
-        params = {strip: None for strip in strips}
+        params = dict.fromkeys(strips)
         return self.gen_request("machine.wled.off", params)
 
     def machine_wled_toggle(self, strips: list[str]) -> dict[str, Any]:
@@ -1428,7 +1430,7 @@ class MoonrakerRequests:
         Returns:
             Request to toggle specified WLED strips.
         """
-        params = {strip: None for strip in strips}
+        params = dict.fromkeys(strips)
         return self.gen_request("machine.wled.toggle", params)
 
     # ==================== Sensor APIs ====================

@@ -25,14 +25,19 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from tricca_autopipette.core.pipette_constants import DefaultPaths
 from tricca_autopipette.daemon.control_requests import ControlRequests
 from tricca_autopipette.moonraker.websocket_client import WebSocketClient
 
 logger = logging.getLogger(__name__)
 
 # ── paths ──────────────────────────────────────────────────────────────────────
-# main.py -> autopipette_kiosk -> src -> repo root.
-REPO_ROOT = Path(__file__).parents[2]
+# Reuse the core's repo-root resolution rather than recomputing it from
+# __file__ here: this package sits next to tricca_autopipette in the same
+# install, and a second copy of the logic silently diverged once already
+# (it missed the AUTOPIPETTE_REPO_ROOT override added for installed
+# layouts, where __file__-relative walking lands a directory too high).
+REPO_ROOT = DefaultPaths.DIR_REPO_ROOT
 PROTOCOLS_DIR = Path(
     os.environ.get("AUTOPIPETTE_PROTOCOLS_DIR", REPO_ROOT / "protocols")
 )
@@ -267,7 +272,7 @@ def _extract_error_type(exc: RuntimeError) -> str | None:
     return match.group(1) if match else None
 
 
-def _on_run_status_notification(params: Any) -> None:  # ruff:ignore[any-type]
+def _on_run_status_notification(params: Any) -> None:  # noqa: ANN401
     """Handle a `notify_run_status` push from the tapd control daemon.
 
     Args:
@@ -295,7 +300,7 @@ def _on_run_status_notification(params: Any) -> None:  # ruff:ignore[any-type]
         asyncio.run_coroutine_threadsafe(_broadcast_status(), _main_loop)
 
 
-def _on_breakpoint_notification(params: Any) -> None:  # ruff:ignore[any-type]
+def _on_breakpoint_notification(params: Any) -> None:  # noqa: ANN401
     """Handle a `notify_breakpoint` push from the tapd control daemon.
 
     Args:

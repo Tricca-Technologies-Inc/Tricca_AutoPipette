@@ -126,6 +126,12 @@ ignore = [
 
 external = ["DOC"]
 
+# "8×12 wells", "prewet×2" -- the multiplication sign is the intended
+# character in these display strings, and RUF001's suggested ASCII "x" is
+# a downgrade. Micro sign (U+00B5) is deliberately NOT allowlisted: it is
+# normalized to GREEK SMALL LETTER MU (U+03BC) throughout, per NFKC.
+allowed-confusables = ["×"]
+
 
 [tool.ruff.lint.per-file-ignores]
 

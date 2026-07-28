@@ -224,7 +224,7 @@ class AutoPipette:
             f"; Pipette: {self.pipette_model.name}\n",
             f"; Manufacturer: {self.pipette_model.manufacturer}\n",
             f"; Design: {self.pipette_model.design_type}\n",
-            f"; Max Volume: {self.syringe.max_volume_ul} µL\n",
+            f"; Max Volume: {self.syringe.max_volume_ul} μL\n",
             ";\n",
             f"; Active Liquid: {self.active_liquid}\n",
             ";\n",
@@ -868,7 +868,7 @@ class AutoPipette:
             pre_aspirate_air: Volume of air to aspirate before liquid.
             post_aspirate_air: Volume of air to aspirate after liquid.
             prewet: Number of prewet cycles.
-            prewet_vol: Volume in µL to prewet the tip with.
+            prewet_vol: Volume in μL to prewet the tip with.
             wiggle: If True, shake tip during dispensing.
             touch: If True, touch tip to side after dispensing.
             keep_tip: If True, retain tip after operation.
@@ -891,7 +891,7 @@ class AutoPipette:
             >>> pipette.pipette(vol_ul=500, source="a", dest="b")
         """
         if vol_ul < 0:
-            raise ValueError(f"Invalid volume: {vol_ul}µL. Volume must be positive.")
+            raise ValueError(f"Invalid volume: {vol_ul}μL. Volume must be positive.")
 
         # Pick up tip if needed
         if self.state.tip_state == TipState.DETACHED:

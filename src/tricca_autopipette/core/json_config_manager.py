@@ -140,8 +140,7 @@ class JsonConfigManager:
             path_system = user_path
         else:
             raise FileNotFoundError(
-                f"System config not found: {filename} "
-                f"(searched in {user_path.parent})"
+                f"System config not found: {filename} (searched in {user_path.parent})"
             )
 
         # 1. Load defaults
@@ -168,7 +167,7 @@ class JsonConfigManager:
             if pipette_ref not in default_pipettes:
                 available = list(default_pipettes.keys())
                 raise ValueError(
-                    f"Unknown pipette '{pipette_ref}'. " f"Available: {available}"
+                    f"Unknown pipette '{pipette_ref}'. Available: {available}"
                 )
             merged_pipette = default_pipettes[pipette_ref]
         else:
@@ -246,8 +245,7 @@ class JsonConfigManager:
             path_gantry = user_path
         else:
             raise FileNotFoundError(
-                f"Gantry config not found: {filename} "
-                f"(searched in {user_path.parent})"
+                f"Gantry config not found: {filename} (searched in {user_path.parent})"
             )
 
         try:
@@ -301,8 +299,7 @@ class JsonConfigManager:
             path = user_path
         else:
             raise FileNotFoundError(
-                f"Pipette config not found: {filename} "
-                f"(searched in {user_path.parent})"
+                f"Pipette config not found: {filename} (searched in {user_path.parent})"
             )
 
         try:
@@ -356,8 +353,7 @@ class JsonConfigManager:
             path = user_path
         else:
             raise FileNotFoundError(
-                f"Liquid config not found: {filename} "
-                f"(searched in {user_path.parent})"
+                f"Liquid config not found: {filename} (searched in {user_path.parent})"
             )
 
         try:
@@ -412,7 +408,7 @@ class JsonConfigManager:
         if liquid_name not in self.system_config.liquids:
             available = list(self.system_config.liquids.keys())
             raise ValueError(
-                f"Liquid '{liquid_name}' not loaded. " f"Available liquids: {available}"
+                f"Liquid '{liquid_name}' not loaded. Available liquids: {available}"
             )
 
         logger.info("Switched active liquid to: %s", liquid_name)

@@ -121,8 +121,7 @@ class NotADipStrategyError(AutoPipetteError):
 
         if valid_strategies:
             super().__init__(
-                f"Invalid dip strategy {strategy!r}. "
-                f"Valid options: {valid_strategies}"
+                f"Invalid dip strategy {strategy!r}. Valid options: {valid_strategies}"
             )
         else:
             super().__init__(f"Invalid dip strategy {strategy!r}.")

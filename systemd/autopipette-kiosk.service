@@ -5,6 +5,9 @@ Requires=tapd.service
 
 [Service]
 Type=simple
+# Keep in step with tapd.service: the kiosk resolves protocols/ from the
+# same repo root. Must be an absolute path. See systemd/README.md.
+Environment=AUTOPIPETTE_REPO_ROOT=/opt/tricca-autopipette
 # Adjust to the venv/user for your host; see systemd/README.md.
 ExecStart=/opt/tricca-autopipette/venv/bin/uvicorn autopipette_kiosk.main:app --host 0.0.0.0 --port 8000
 Restart=on-failure

@@ -168,10 +168,12 @@ def require_homed(
         func: Callable[..., CommandResult],
     ) -> Callable[..., CommandResult]:
         @functools.wraps(func)
-        def wrapper(self: AutoPipetteService, *args: Any, **kwargs: Any) -> CommandResult:  # ruff:ignore[any-type]
-            homed = (
-                self.moonraker_state is not None and self.moonraker_state.is_homed()
-            )
+        def wrapper(
+            self: AutoPipetteService,
+            *args: Any,  # noqa: ANN401
+            **kwargs: Any,  # noqa: ANN401
+        ) -> CommandResult:
+            homed = self.moonraker_state is not None and self.moonraker_state.is_homed()
             if not homed:
                 raise NotHomedError(command_name)
             return func(self, *args, **kwargs)
@@ -211,7 +213,7 @@ def persist_tip_liquid_state(
     """
 
     @functools.wraps(func)
-    def wrapper(self: AutoPipetteService, *args: Any, **kwargs: Any) -> CommandResult:  # ruff:ignore[any-type]
+    def wrapper(self: AutoPipetteService, *args: Any, **kwargs: Any) -> CommandResult:  # noqa: ANN401
         try:
             return func(self, *args, **kwargs)
         finally:
@@ -418,10 +420,7 @@ class AutoPipetteService:
         if "has_liquid" in values:
             state.has_liquid = bool(values["has_liquid"])
         current_liquid = values.get("current_liquid")
-        if (
-            current_liquid
-            and current_liquid in self._autopipette.system_config.liquids
-        ):
+        if current_liquid and current_liquid in self._autopipette.system_config.liquids:
             self._autopipette.switch_liquid(current_liquid)
         self._last_persisted_state = (
             state.tip_state.value,
@@ -683,7 +682,7 @@ class AutoPipetteService:
         )
         self.output_gcode(autopipette.get_gcode())
         return CommandResult(
-            ok=True, message=f"Aspirated {args.vol_ul} µL from {args.source}"
+            ok=True, message=f"Aspirated {args.vol_ul} μL from {args.source}"
         )
 
     @require_homed("dispense")
@@ -721,7 +720,7 @@ class AutoPipetteService:
         )
         self.output_gcode(autopipette.get_gcode())
         if args.volume is not None:
-            message = f"Dispensed {args.volume} µL to {args.dest}"
+            message = f"Dispensed {args.volume} μL to {args.dest}"
         else:
             message = f"Dispensed all liquid to {args.dest}"
         return CommandResult(ok=True, message=message)
@@ -789,7 +788,7 @@ class AutoPipetteService:
         if args.keep_tip:
             features.append("keep-tip")
 
-        comment = f"\n; Pipette {args.vol_ul} µL from {args.source} to {args.dest}"
+        comment = f"\n; Pipette {args.vol_ul} μL from {args.source} to {args.dest}"
         if features:
             comment += f" [{', '.join(features)}]"
         comment += "\n"
@@ -798,7 +797,7 @@ class AutoPipetteService:
         return CommandResult(
             ok=True,
             message=(
-                f"Pipetting complete ({args.vol_ul} µL: {args.source} → {args.dest})"
+                f"Pipetting complete ({args.vol_ul} μL: {args.source} → {args.dest})"
             ),
         )
 
@@ -1277,7 +1276,7 @@ class AutoPipetteService:
         steps = converter.vol_to_steps(args.vol)
         return CommandResult(
             ok=True,
-            message=f"{args.vol} µL = {steps} steps",
+            message=f"{args.vol} μL = {steps} steps",
             data={"steps": steps, "round_trip_vol": converter.steps_to_vol(steps)},
         )
 
@@ -1300,7 +1299,7 @@ class AutoPipetteService:
         converter = self._autopipette.volume_converter
         vol = converter.steps_to_vol(steps)
         return CommandResult(
-            ok=True, message=f"{steps} steps = {vol:.2f} µL", data={"vol": vol}
+            ok=True, message=f"{steps} steps = {vol:.2f} μL", data={"vol": vol}
         )
 
     # ==================== G-code file management ====================
@@ -1548,7 +1547,7 @@ class AutoPipetteService:
             )
         return CommandResult(ok=True, message=f"Subscribed to '{method}'.")
 
-    def _forward_raw_notification(self, method: str, params: Any) -> None:  # ruff:ignore[any-type]
+    def _forward_raw_notification(self, method: str, params: Any) -> None:  # noqa: ANN401
         """Re-broadcast a subscribed raw Moonraker notification.
 
         Args:
@@ -1957,9 +1956,7 @@ class AutoPipetteService:
                 # failure -- the G-code file is still written to disk.
                 logger.error("Cannot upload G-code: no WebSocket client configured.")
                 return
-            self.upload_and_execute_gcode(
-                output_filename, file_path, delete_file=True
-            )
+            self.upload_and_execute_gcode(output_filename, file_path, delete_file=True)
         finally:
             gcode_manager.clear_buffer()
 

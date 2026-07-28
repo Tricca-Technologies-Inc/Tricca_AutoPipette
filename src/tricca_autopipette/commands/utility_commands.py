@@ -161,7 +161,7 @@ class UtilityCommands(TAPCommandSet):
 
     @with_argparser(TAPCmdParsers.parser_vol_to_steps)  # type: ignore[arg-type]
     def do_vol_to_steps(self, args: VolToStepsArgs) -> None:
-        """Convert a volume in µL to motor steps.
+        """Convert a volume in μL to motor steps.
 
         Calculates the number of motor steps required to move the given
         volume based on the active liquid's calibration curve.
@@ -171,10 +171,10 @@ class UtilityCommands(TAPCommandSet):
 
         Example:
             >>> vol_to_steps 100
-            100.0 µL = 4523 steps
+            100.0 μL = 4523 steps
 
             >>> vol_to_steps 250
-            250.0 µL = 11307 steps
+            250.0 μL = 11307 steps
         """
         try:
             result = self.service.vol_to_steps(args)
@@ -184,21 +184,21 @@ class UtilityCommands(TAPCommandSet):
 
             data = result.data or {}
             rprint(
-                f"[cyan]{args.vol} µL[/cyan] = [green]{data.get('steps')} steps[/green]"
+                f"[cyan]{args.vol} μL[/cyan] = [green]{data.get('steps')} steps[/green]"
             )
 
             # Show reverse conversion to surface any rounding difference
             actual_vol = data.get("round_trip_vol")
             if actual_vol is not None and abs(actual_vol - args.vol) > 0.01:
                 rprint(
-                    f"[dim]Note: {data.get('steps')} steps → {actual_vol:.2f} µL "
+                    f"[dim]Note: {data.get('steps')} steps → {actual_vol:.2f} μL "
                     f"(rounding difference)[/dim]"
                 )
         except Exception as e:
             rprint(f"[red]Conversion error: {e}[/red]")
 
     def do_steps_to_vol(self, arg: str) -> None:
-        """Convert motor steps to volume in µL.
+        """Convert motor steps to volume in μL.
 
         Inverse of ``vol_to_steps``. Calculates the volume that would be
         displaced by the given number of motor steps under the active
@@ -212,7 +212,7 @@ class UtilityCommands(TAPCommandSet):
 
         Example:
             >>> steps_to_vol 4523
-            4523 steps = 100.00 µL
+            4523 steps = 100.00 μL
 
         Note:
             A ``StepsToVolArgs`` parser will be added to TAPCmdParsers in
@@ -239,6 +239,6 @@ class UtilityCommands(TAPCommandSet):
                 return
 
             vol = (result.data or {}).get("vol")
-            rprint(f"[cyan]{steps} steps[/cyan] = [green]{vol:.2f} µL[/green]")
+            rprint(f"[cyan]{steps} steps[/cyan] = [green]{vol:.2f} μL[/green]")
         except Exception as e:
             rprint(f"[red]Conversion error: {e}[/red]")

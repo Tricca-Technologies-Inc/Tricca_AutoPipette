@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-"""
-Read VOLUME_CONV from test.conf, build VolumeConverter,
+"""Read VOLUME_CONV from test.conf, build VolumeConverter,
 plot Volume (uL) vs Steps (x-axis), and report slopes.
 """
+
 import sys
 from configparser import ConfigParser, ExtendedInterpolation
-import numpy as np
+
 import matplotlib.pyplot as plt
+import numpy as np
 from numpy.polynomial import Polynomial
+
 from tricca_autopipette.core.volume_converter import VolumeConverter
 
 
@@ -16,8 +18,7 @@ def parse_float_list(s: str) -> list[float]:
 
 
 def volume_from_steps(s, a0, a1, a2, max_vol):
-    """
-    Invert steps = a0 + a1*v + a2*v^2  ->  v(s).
+    """Invert steps = a0 + a1*v + a2*v^2  ->  v(s).
     Picks the physically valid root in [0, max_vol].
     Falls back to linear inversion if a2 ~ 0.
     """
@@ -44,7 +45,7 @@ def volume_from_steps(s, a0, a1, a2, max_vol):
 def main(conf_path: str = "test.conf") -> None:
     # --- load config ---
     cfg = ConfigParser(interpolation=ExtendedInterpolation())
-    with open(conf_path, "r") as f:
+    with open(conf_path) as f:
         cfg.read_file(f)
 
     vols = parse_float_list(cfg["VOLUME_CONV"]["volumes"])  # uL
@@ -73,7 +74,7 @@ def main(conf_path: str = "test.conf") -> None:
     a1 = float(coefs[1]) if len(coefs) > 1 else 0.0
     a2 = float(coefs[2]) if len(coefs) > 2 else 0.0
 
-    # --- plot Volume (µL) vs Steps (flip axes) ---
+    # --- plot Volume (μL) vs Steps (flip axes) ---
     s_min, s_max = float(np.min(steps)), float(np.max(steps))
     s_grid = np.linspace(s_min, s_max, 600)
     v_grid = volume_from_steps(s_grid, a0, a1, a2, max_vol=max_vol)
@@ -81,8 +82,8 @@ def main(conf_path: str = "test.conf") -> None:
     plt.figure()
     plt.plot(s_grid, v_grid, label="Model: uL(steps)")
     plt.scatter(steps, vols, s=24, label="Calibration")
-    plt.xlabel("Motor steps (µsteps)")
-    plt.ylabel("Volume (µL)")
+    plt.xlabel("Motor steps (μsteps)")
+    plt.ylabel("Volume (μL)")
     plt.title("Volume vs Steps")
     plt.legend()
     plt.tight_layout()
@@ -90,11 +91,11 @@ def main(conf_path: str = "test.conf") -> None:
     plt.show()
 
     # --- Slopes ---
-    # ds/duL (instantaneous steps per µL) from the derivative of steps=f(uL)
+    # ds/duL (instantaneous steps per μL) from the derivative of steps=f(uL)
     dP = P.deriv()
     slopes_ds_dv_at_cal = dP(np.array(vols))
 
-    print("\nInstantaneous steps/µL (ds/duL) at calibration points:")
+    print("\nInstantaneous steps/μL (ds/duL) at calibration points:")
     print(" idx |   volume (uL) |   ds/duL")
     print("-----+---------------+-----------")
     for i, (v, m) in enumerate(zip(vols, slopes_ds_dv_at_cal), start=1):
@@ -102,7 +103,7 @@ def main(conf_path: str = "test.conf") -> None:
 
     # duL/dstep = 1 / (ds/duL) evaluated at the same volumes
     inv_slopes_duL_ds_at_cal = 1.0 / slopes_ds_dv_at_cal
-    print("\nInstantaneous µL/step (duL/dstep) at calibration points:")
+    print("\nInstantaneous μL/step (duL/dstep) at calibration points:")
     print(" idx |   volume (uL) |  duL/dstep")
     print("-----+---------------+------------")
     for i, (v, m) in enumerate(zip(vols, inv_slopes_duL_ds_at_cal), start=1):
@@ -116,9 +117,9 @@ def main(conf_path: str = "test.conf") -> None:
 
     plt.figure()
     plt.plot(s_grid, inv_slopes_duL_ds_grid, label="duL/dstep")
-    plt.xlabel("Motor steps (µsteps)")
-    plt.ylabel("µL per step")
-    plt.title("Instantaneous µL per Step vs Steps")
+    plt.xlabel("Motor steps (μsteps)")
+    plt.ylabel("μL per step")
+    plt.title("Instantaneous μL per Step vs Steps")
     plt.legend()
     plt.tight_layout()
     # plt.savefig("ul_per_step_vs_steps.png", dpi=200, bbox_inches="tight")

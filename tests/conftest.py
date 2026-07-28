@@ -113,6 +113,9 @@ def service(tmp_path: Path) -> AutoPipetteService:
     starts as a ``FakeMoonrakerState`` (unhomed) rather than the real
     ``None``-until-connected value, so gated commands' homed checks are
     directly controllable per test instead of always failing closed.
+    ``save_locations``/``load_locations`` are likewise redirected to
+    ``tmp_path``, so dispatching them can't leave stray files in the repo's
+    real ``config/locations/``.
     """
     svc = AutoPipetteService(
         config_system=DefaultPaths.DIR_CONFIG_SYSTEM / DefaultFilenames.CONFIG_SYSTEM,
@@ -124,6 +127,7 @@ def service(tmp_path: Path) -> AutoPipetteService:
     )
     svc.gcode_manager.gcode_path = tmp_path
     svc.moonraker_state = FakeMoonrakerState(homed=False)  # type: ignore[assignment]
+    svc._autopipette.location_manager.locations_dir = tmp_path
     return svc
 
 
