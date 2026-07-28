@@ -8,9 +8,9 @@ configuration.
 from __future__ import annotations
 
 from enum import IntEnum, StrEnum
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from pydantic.dataclasses import dataclass
 
 
@@ -515,6 +515,96 @@ class LiquidProfile(BaseModel):
 
 
 # ============================================================================
+# LOCATIONS
+# ============================================================================
+
+
+class LocationsConfig(BaseModel):
+    """The deck layout a system config declares, as an ordered source list.
+
+    A protocol's system file names the plates and coordinates it needs, so one
+    editable file describes a run. The ``locations`` key accepts three shapes,
+    all normalized here to an ordered list of sources:
+
+    ```json
+    "locations": "deck_a.json"
+    "locations": { "coordinates": [...], "plates": [...] }
+    "locations": ["standard_deck.json", { "plates": [...] }]
+    ```
+
+    Sources are applied in order and later ones win on a name collision, so a
+    protocol can pull in a shared deck file and then override one plate inline.
+
+    Note:
+        Entries are kept unresolved and unparsed on purpose. Filenames stay
+        filenames so `LocationManager` can record where each location came from
+        for its duplicate-name warnings, and inline payloads stay raw dicts so
+        `LocationManager` remains the single parser for plate geometry --
+        duplicating that parsing into pydantic models here would create two
+        sources of truth for what a plate entry may contain.
+
+    Attributes:
+        sources: Ordered locations sources -- each a filename (resolved against
+            ``config/locations/``) or an inline payload.
+
+    Example:
+        >>> LocationsConfig.model_validate("deck_a.json").sources
+        ['deck_a.json']
+    """
+
+    sources: list[str | dict[str, Any]] = Field(
+        default_factory=list[str | dict[str, Any]],
+        description="Ordered locations sources: filenames or inline payloads",
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def _normalize(cls, value: object) -> dict[str, Any]:
+        """Accept a filename, an inline payload, or a list of either.
+
+        Args:
+            value: The raw ``locations`` value from JSON.
+
+        Returns:
+            A mapping with a normalized ``sources`` list.
+
+        Raises:
+            ValueError: If the value is neither a filename, a mapping, nor a
+                list of those.
+        """
+        if value is None:
+            return {"sources": []}
+        if isinstance(value, str):
+            return {"sources": [value]}
+        if isinstance(value, list):
+            return {"sources": cast("list[Any]", value)}
+        if isinstance(value, dict):
+            typed = cast("dict[str, Any]", value)
+            # An empty mapping means "nothing declared". Treating it as one
+            # empty inline source would make `is_empty` False and silently
+            # suppress the caller's default-locations fallback.
+            if not typed:
+                return {"sources": []}
+            # Already-normalized form, e.g. re-validating a dumped model.
+            if set(typed) == {"sources"}:
+                return typed
+            return {"sources": [typed]}
+        raise ValueError(
+            f"'locations' must be a filename, an object, or a list of those, "
+            f"got {type(value).__name__}"
+        )
+
+    def is_empty(self) -> bool:
+        """Report whether any locations source was declared.
+
+        Returns:
+            True if there is nothing to load, so callers can fall back to the
+            default locations file.
+        """
+        return not self.sources
+
+
+# ============================================================================
 # COMPLETE SYSTEM CONFIGURATION
 # ============================================================================
 
@@ -523,7 +613,7 @@ class SystemConfig(BaseModel):
     """Complete autopipette system configuration.
 
     Top-level configuration that ties together all components including
-    gantry, pipette model, liquid profiles, and network settings.
+    gantry, pipette model, liquid profiles, locations, and network settings.
 
     Attributes:
         version: Configuration schema version.
@@ -531,6 +621,7 @@ class SystemConfig(BaseModel):
         gantry: Gantry motion system configuration.
         pipette: Currently active pipette model.
         liquids: Available liquid profiles keyed by name.
+        locations: Deck layout for this system/protocol.
         network: Network connection settings (hostname and port).
 
     Example:
@@ -558,6 +649,11 @@ class SystemConfig(BaseModel):
         default_factory=dict, description="Available liquid profiles keyed by name"
     )
 
+    # Deck layout (see LocationsConfig for the accepted shapes)
+    locations: LocationsConfig = Field(
+        default_factory=LocationsConfig, description="Deck layout for this system"
+    )
+
     # Network (for Moonraker connection)
     network: dict[str, str] = Field(
         default_factory=lambda: {"hostname": "localhost", "port": "7125"},
@@ -581,6 +677,8 @@ __all__ = [  # noqa: RUF022  (grouped by domain, which reads better than sorted)
     "PipetteModel",
     # Liquids
     "LiquidProfile",
+    # Locations
+    "LocationsConfig",
     # System
     "SystemConfig",
     # State

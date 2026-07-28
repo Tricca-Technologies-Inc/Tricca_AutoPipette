@@ -11,12 +11,13 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any
+from typing import Any, cast
 
 from tricca_autopipette.core.pipette_constants import DefaultFilenames, DefaultPaths
 from tricca_autopipette.core.pipette_models import (
     GantryKinematics,
     LiquidProfile,
+    LocationsConfig,
     PipetteModel,
     SystemConfig,
 )
@@ -25,6 +26,14 @@ CONFIG_SYSTEM = DefaultFilenames.CONFIG_SYSTEM
 CONFIG_GANTRY = DefaultFilenames.CONFIG_GANTRY
 CONFIG_PIPETTE = DefaultFilenames.CONFIG_PIPETTE
 CONFIG_LIQUIDS = DefaultFilenames.CONFIG_LIQUIDS
+
+#: Key a system config uses to inherit from another, so a per-protocol file
+#: need only carry what differs (usually just ``locations``).
+KEY_EXTENDS = "extends"
+
+#: Guard against a pathological inheritance chain. Nothing legitimate needs
+#: more than a machine config, a lab config, and a protocol config.
+MAX_EXTENDS_DEPTH = 10
 
 
 logger = logging.getLogger(__name__)
@@ -148,13 +157,8 @@ class JsonConfigManager:
         default_pipettes = self._load_default_pipettes()
         default_liquids = self._load_default_liquids()
 
-        # 2. Load user config
-        try:
-            with path_system.open("r", encoding="utf-8") as f:
-                user_data = json.load(f)
-        except json.JSONDecodeError as e:
-            logger.error("Invalid JSON in system config: %s", path_system)
-            raise ValueError(f"Invalid JSON in {path_system}: {e}") from e
+        # 2. Load user config, resolving any "extends" chain first
+        user_data = self._load_system_data(filename)
 
         # 3. Merge gantry config (user overrides defaults)
         gantry_data = {**default_gantry.model_dump(), **user_data.get("gantry", {})}
@@ -198,6 +202,7 @@ class JsonConfigManager:
             gantry=merged_gantry,
             pipette=merged_pipette,
             liquids=merged_liquids,
+            locations=LocationsConfig.model_validate(user_data.get("locations")),
             network=user_data.get("network", {"hostname": "localhost", "port": "7125"}),
         )
 
@@ -205,8 +210,119 @@ class JsonConfigManager:
         logger.info("  System: %s", self.system_config.system_name)
         logger.info("  Pipette: %s", self.system_config.pipette.name)
         logger.info("  Liquids:  %d profile(s)", len(self.system_config.liquids))
+        logger.info(
+            "  Locations: %d source(s)", len(self.system_config.locations.sources)
+        )
 
         return self.system_config
+
+    def _load_system_data(self, filename: str) -> dict[str, Any]:
+        """Read a system config file, applying any ``extends`` chain.
+
+        A protocol's system file usually differs from the machine's only in its
+        ``locations`` section. ``extends`` lets it inherit the rest rather than
+        copying gantry, network, and pipette settings that would then drift:
+
+        ```json
+        { "extends": "default_system.json", "locations": { ... } }
+        ```
+
+        The merge is shallow and per top-level key, matching how a user's
+        ``gantry`` block already overrides the defaults wholesale -- a child's
+        ``gantry`` replaces the parent's rather than merging field by field.
+
+        Args:
+            filename: Name of the system config file in ``config/system/``.
+
+        Returns:
+            The merged configuration data, with ``extends`` removed.
+
+        Raises:
+            FileNotFoundError: If the file or any parent doesn't exist.
+            ValueError: If any file is invalid JSON, ``extends`` is not a
+                string, or the chain is cyclic or too deep.
+        """
+        data = self._read_system_file(filename)
+
+        parent_ref = data.pop(KEY_EXTENDS, None)
+        if parent_ref is None:
+            return data
+
+        if not isinstance(parent_ref, str):
+            raise ValueError(
+                f"'{KEY_EXTENDS}' in {filename} must be a filename string, got "
+                f"{type(parent_ref).__name__}"
+            )
+
+        # Walk the chain iteratively so a cycle is caught by name rather than
+        # blowing the stack.
+        merged: dict[str, Any] = {}
+        chain: list[str] = [filename]
+        current: str | None = parent_ref
+
+        while current is not None:
+            if current in chain:
+                cycle = " -> ".join([*chain, current])
+                raise ValueError(f"Cyclic 'extends' in system config: {cycle}")
+            if len(chain) > MAX_EXTENDS_DEPTH:
+                raise ValueError(
+                    f"'{KEY_EXTENDS}' chain deeper than {MAX_EXTENDS_DEPTH} "
+                    f"levels: {' -> '.join(chain)}"
+                )
+
+            chain.append(current)
+            parent_data = self._read_system_file(current)
+            next_ref = parent_data.pop(KEY_EXTENDS, None)
+
+            if next_ref is not None and not isinstance(next_ref, str):
+                raise ValueError(
+                    f"'{KEY_EXTENDS}' in {current} must be a filename string"
+                )
+
+            # Ancestors are visited child-to-parent, so an already-set key came
+            # from a nearer descendant and must win.
+            merged = {**parent_data, **merged}
+            current = next_ref
+
+        merged.update(data)
+        logger.info("Resolved 'extends' chain: %s", " -> ".join(chain))
+        return merged
+
+    @staticmethod
+    def _read_system_file(filename: str) -> dict[str, Any]:
+        """Read and parse one system config file.
+
+        Args:
+            filename: Name of the file in ``config/system/``.
+
+        Returns:
+            The parsed JSON object.
+
+        Raises:
+            FileNotFoundError: If the file doesn't exist.
+            ValueError: If the file is invalid JSON or is not a JSON object.
+        """
+        path = DefaultPaths.DIR_CONFIG_SYSTEM / filename
+
+        if not path.exists():
+            raise FileNotFoundError(
+                f"System config not found: {filename} (searched in {path.parent})"
+            )
+
+        try:
+            with path.open("r", encoding="utf-8") as f:
+                data: Any = json.load(f)
+        except json.JSONDecodeError as e:
+            logger.error("Invalid JSON in system config: %s", path)
+            raise ValueError(f"Invalid JSON in {path}: {e}") from e
+
+        if not isinstance(data, dict):
+            raise ValueError(
+                f"System config {filename} must contain a JSON object, got "
+                f"{type(data).__name__}"
+            )
+
+        return cast("dict[str, Any]", data)
 
     # ========================================================================
     # DYNAMIC LOADING - For interactive shell

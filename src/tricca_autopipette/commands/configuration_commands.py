@@ -7,27 +7,41 @@ configuration state.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from cmd2 import Statement, with_argparser
 from rich import print as rprint
+
+if TYPE_CHECKING:
+    # Type-only: importing daemon.service at runtime would be a genuine
+    # circular import -- it imports tap_cmd_parsers, which triggers this
+    # package's __init__. Same reason ProtocolAbortedError lives in
+    # core/pipette_exceptions.py rather than in the service module.
+    from tricca_autopipette.daemon.service import CommandResult
 
 from tricca_autopipette.cli.report_tables import (
     build_liquids_table,
     build_locations_table,
     build_plates_table,
     build_system_table,
+    build_tipbox_map,
 )
 from tricca_autopipette.commands.base_command_set import TAPCommandSet
 
 from .tap_cmd_parsers import (
     CoorArgs,
     DelLocArgs,
+    LoadLocationsArgs,
     LsArgs,
     PlateArgs,
     ResetPlateArgs,
+    ResetTipsArgs,
     SetArgs,
+    SetTipsArgs,
     TAPCmdParsers,
+    TipsArgs,
+    UnloadLocationsArgs,
+    args_from_namespace,
 )
 
 
@@ -316,31 +330,121 @@ class ConfigurationCommands(TAPCommandSet):
         except Exception as e:
             rprint(f"[red]Error saving locations: {e}[/red]")
 
-    def do_load_locations(self, statement: Statement) -> None:
-        """Load locations from a JSON file.
-
-        Clears all existing locations before loading.
+    @with_argparser(TAPCmdParsers.parser_load_locations)  # type: ignore[arg-type]
+    def do_load_locations(self, args: LoadLocationsArgs) -> None:
+        """Load locations from a JSON file, adding to the current deck.
 
         Args:
-            statement: Filename to load.
+            args: Filename to load and whether to replace the deck.
 
         Example:
             >>> load_locations my_setup.json
+            >>> load_locations my_setup.json --replace
         """
-        filename = statement.arg_list[0] if statement.arg_list else None
-
-        if not filename:
-            rprint("[red]Error: Please specify a filename.[/red]")
-            rprint("[cyan]Usage: load_locations <filename.json>[/cyan]")
-            return
-
         try:
-            result = self.service.load_locations(filename)
+            result = self.service.load_locations(
+                args_from_namespace(LoadLocationsArgs, args)
+            )
             rprint(f"[green]✓ {result.message}[/green]")
         except FileNotFoundError as e:
             rprint(f"[red]Error: {e}[/red]")
         except ValueError as e:
             rprint(f"[red]Error: Invalid locations file — {e}[/red]")
+
+    @with_argparser(TAPCmdParsers.parser_unload_locations)  # type: ignore[arg-type]
+    def do_unload_locations(self, args: UnloadLocationsArgs) -> None:
+        """Unload a single location from the deck by name.
+
+        Args:
+            args: Name of the location to unload.
+
+        Example:
+            >>> unload_locations tipbox_a
+        """
+        self._render(
+            self.service.unload_locations(
+                args_from_namespace(UnloadLocationsArgs, args)
+            )
+        )
+
+    # =========================================================================
+    # TIP INVENTORY
+    # =========================================================================
+
+    @with_argparser(TAPCmdParsers.parser_reset_tips)  # type: ignore[arg-type]
+    def do_reset_tips(self, args: ResetTipsArgs) -> None:
+        """Mark a tipbox as full, after physically reloading it.
+
+        Args:
+            args: Name of the tipbox to reset.
+
+        Example:
+            >>> reset_tips tipbox_a
+        """
+        self._render(self.service.reset_tips(args_from_namespace(ResetTipsArgs, args)))
+
+    def do_reset_tips_all(self, _: Statement) -> None:
+        """Mark every loaded tipbox as full.
+
+        Args:
+            _: Unused; the command takes no arguments.
+
+        Example:
+            >>> reset_tips_all
+        """
+        self._render(self.service.reset_tips_all())
+
+    @with_argparser(TAPCmdParsers.parser_set_tips)  # type: ignore[arg-type]
+    def do_set_tips(self, args: SetTipsArgs) -> None:
+        """Declare which tip positions of a box are consumed.
+
+        Args:
+            args: Tipbox name, well ranges, and whether the ranges list the
+                available positions rather than the consumed ones.
+
+        Example:
+            >>> set_tips tipbox_a A1:C12
+            >>> set_tips tipbox_a D1:H12 --available
+        """
+        self._render(self.service.set_tips(args_from_namespace(SetTipsArgs, args)))
+
+    @with_argparser(TAPCmdParsers.parser_tips)  # type: ignore[arg-type]
+    def do_tips(self, args: TipsArgs) -> None:
+        """Show tip availability per tipbox, as an ASCII map.
+
+        Args:
+            args: Optional tipbox name, and whether to compare against the
+                state persisted in Moonraker's database.
+
+        Example:
+            >>> tips
+            >>> tips tipbox_a --db
+        """
+        result = self.service.tips(args_from_namespace(TipsArgs, args))
+        if not result.ok:
+            rprint(f"[red]✗ {result.message}[/red]")
+            return
+
+        data = result.data or {}
+        boxes: list[dict[str, Any]] = data.get("boxes") or []
+        if not boxes:
+            rprint("[yellow]No tipboxes are loaded.[/yellow]")
+            return
+
+        persisted: dict[str, Any] = data.get("persisted") or {}
+        for box in boxes:
+            rprint(build_tipbox_map(box, persisted.get(box["name"])))
+
+    def _render(self, result: CommandResult) -> None:
+        """Print a command result with the shell's usual ok/error styling.
+
+        Args:
+            result: The result to render.
+        """
+        if result.ok:
+            rprint(f"[green]✓ {result.message}[/green]")
+        else:
+            rprint(f"[red]✗ {result.message}[/red]")
 
     # =========================================================================
     # LISTING COMMANDS

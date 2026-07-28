@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from tricca_autopipette.core.coordinate import Coordinate
 from tricca_autopipette.core.pipette_constants import (
@@ -25,6 +25,15 @@ from tricca_autopipette.core.plates import (
     PlateParams,
     TipBox,
     WasteContainer,
+)
+from tricca_autopipette.core.tipbox_manager import TipBoxManager
+from tricca_autopipette.core.traversal import (
+    TraversalOrder,
+    TraversalRegistry,
+    WellMask,
+    coerce_traversal_order,
+    compress_to_ranges,
+    parse_well_ranges,
 )
 from tricca_autopipette.core.well import StrategyType, Well
 
@@ -45,7 +54,9 @@ class LocationManager:
     Attributes:
         locations: Dictionary mapping location names to Coordinates or Plates.
         waste_container: The designated waste container (if configured).
-        tipboxes: The primary tipbox or linked tipboxes (if configured).
+        tipbox_manager: Owns every registered tipbox and decides which supplies
+            the next tip. Replaces an earlier single `tipboxes` attribute that
+            merged extra boxes into the first one.
         locations_dir: Directory `load_from_json`/`save_to_json` resolve
             their filenames against.
 
@@ -76,7 +87,10 @@ class LocationManager:
         self.locations_dir: Path = locations_dir or DIR_CONFIG_LOCATIONS
         self.locations: dict[str, Coordinate | Plate] = {}
         self.waste_container: WasteContainer | None = None
-        self.tipboxes: TipBox | None = None
+        self.tipbox_manager: TipBoxManager = TipBoxManager()
+        # name -> originating file, so a duplicate-name warning can name both
+        # sides and `ls` can show where a location came from.
+        self._sources: dict[str, str] = {}
 
     def clear(self) -> None:
         """Clear all locations, tipboxes, and waste container.
@@ -87,7 +101,8 @@ class LocationManager:
         """
         self.locations.clear()
         self.waste_container = None
-        self.tipboxes = None
+        self.tipbox_manager.clear()
+        self._sources.clear()
 
     def set_coordinate(self, name: str, coord: Coordinate) -> None:
         """Create or update a named coordinate location.
@@ -117,12 +132,14 @@ class LocationManager:
 
         Raises:
             TypeError: If the plate factory creates an incorrect plate type.
-            RuntimeError: If appending to the tipbox and it is not a tipbox
 
         Note:
             - Removes any existing location with the same name
             - Waste containers are automatically set as the default waste location
-            - Tipboxes are added to the tipbox pool
+            - Tipboxes are registered with `tipbox_manager`, which draws from
+              them in registration order. Each stays a separate object with its
+              own consumed-tip state, so one can be unloaded without disturbing
+              the others.
 
         Example:
             >>> from well import Well
@@ -132,8 +149,9 @@ class LocationManager:
             ... )
             >>> manager.set_plate("96_well_plate", params)
         """
-        # Remove any existing location with this name
-        self.locations.pop(name, None)
+        # Drop any prior location under this name, including its tipbox
+        # registration, so replacing a plate never leaves a stale box behind.
+        self.remove_location(name)
 
         # Create the plate using factory
         plate = PlateFactory.create(plate_params)
@@ -147,7 +165,6 @@ class LocationManager:
                     f"factory created {type(plate).__name__}"
                 )
             self.waste_container = plate
-            self.locations["waste_container"] = self.waste_container
             logger.info(f"Set waste container: {name}")
         elif plate_params.plate_type == PlateType.TIPBOX.value:
             if not isinstance(plate, TipBox):
@@ -155,14 +172,8 @@ class LocationManager:
                     f"Plate type is '{PlateType.TIPBOX.value}' but "
                     f"factory created {type(plate).__name__}"
                 )
-            if self.tipboxes is None:
-                self.tipboxes = plate
-                logger.info(f"Set primary tipbox: {name}")
-            else:
-                if not isinstance(self.tipboxes, TipBox):
-                    raise RuntimeError("Existing tipboxes is not a TipBox instance")
-                self.tipboxes.append_box(plate)  # type: ignore[attr-defined]
-                logger.info(f"Added additional tipbox: {name}")
+            self.tipbox_manager.register(name, plate)
+            logger.info(f"Registered tipbox: {name}")
 
     def has_location(self, name: str) -> bool:
         """Check if a named location exists.
@@ -284,7 +295,9 @@ class LocationManager:
 
         Note:
             Does nothing if the location doesn't exist.
-            If removing a waste container or tipbox, those references are cleared.
+            If removing a waste container or tipbox, those references are
+            cleared. Unloading one tipbox leaves every other box's consumed-tip
+            state untouched.
 
         Example:
             >>> manager.remove_location("old_plate")
@@ -297,36 +310,245 @@ class LocationManager:
         # Clear special references
         if location is self.waste_container:
             self.waste_container = None
-            self.locations.pop("waste_container", None)
 
-        if location is self.tipboxes:
-            self.tipboxes = None
+        self.tipbox_manager.unregister(name)
 
         # Remove from locations
         self.locations.pop(name)
 
-    def load_from_json(self, filename: str = CONFIG_LOCATIONS) -> None:
-        """Load all locations from a JSON configuration file.
+    def unload(self, name: str) -> bool:
+        """Remove a single location by name.
+
+        The counterpart to additive loading: a deck composed from several
+        groups can have one item taken off it without reloading the rest.
+
+        Args:
+            name: Name of the location to unload.
+
+        Returns:
+            True if a location was removed, False if no such name was loaded.
+
+        Note:
+            Unloading a tipbox leaves every other box's consumed-tip state
+            untouched.
+
+        Example:
+            >>> manager.unload("tipbox_a")
+            True
+        """
+        if name not in self.locations:
+            return False
+
+        self.remove_location(name)
+        self._sources.pop(name, None)
+        logger.info(f"Unloaded location: {name}")
+        return True
+
+    def source_of(self, name: str) -> str | None:
+        """Report which file a location was loaded from.
+
+        Args:
+            name: Name of the location.
+
+        Returns:
+            The source description recorded at load time, or None for
+            locations created interactively (via `set_coordinate`/`set_plate`)
+            or not loaded at all.
+
+        Example:
+            >>> manager.source_of("tipbox_a")
+            'deck_a.json'
+        """
+        return self._sources.get(name)
+
+    def load_from_json(
+        self, filename: str = CONFIG_LOCATIONS, *, replace: bool = False
+    ) -> None:
+        """Load locations from a JSON configuration file.
 
         Loads locations from `self.locations_dir / filename`.
 
         Args:
             filename: Name of locations JSON file. Defaults to
                      'default_locations.json'.
+            replace: If True, clear all existing locations first. Defaults to
+                False, so groups compose -- loading a second file adds to the
+                deck rather than replacing it.
 
         Raises:
             FileNotFoundError: If locations file doesn't exist.
-            ValueError: If JSON is invalid.
+            ValueError: If JSON is invalid, or an entry is malformed.
 
         Note:
-            Clears existing locations before loading.
+            The file is fully read and parsed *before* anything is applied, so
+            a missing file or a malformed entry leaves the existing deck
+            untouched. An earlier version cleared first and validated second,
+            which wiped the deck on a mistyped filename.
 
         Example:
             >>> manager = LocationManager(Path("config"))
             >>> manager.load_from_json("my_locations.json")
+            >>> manager.load_from_json("extra_plates.json")  # adds to the deck
         """
-        self.clear()
+        locations_data = self._read_locations_file(filename)
+        self.apply_locations_data(locations_data, source=filename, replace=replace)
 
+    def load_group(self, filenames: list[str], *, replace: bool = False) -> None:
+        """Load several locations files in order, composing one deck.
+
+        Args:
+            filenames: Locations filenames to load, in order. Later files win
+                on a name collision.
+            replace: If True, clear existing locations before the first file.
+
+        Raises:
+            FileNotFoundError: If any file doesn't exist.
+            ValueError: If any file is invalid.
+
+        Note:
+            Every file is read and parsed before any is applied, so one bad
+            file in the group aborts the whole load rather than leaving the
+            deck half-built.
+
+        Example:
+            >>> manager.load_group(["standard_deck.json", "assay_a.json"])
+        """
+        parsed = [(name, self._read_locations_file(name)) for name in filenames]
+
+        if replace:
+            self.clear()
+        for name, data in parsed:
+            self.apply_locations_data(data, source=name, replace=False)
+
+    def load_spec(
+        self, sources: list[str | dict[str, Any]], *, replace: bool = False
+    ) -> None:
+        """Load an ordered list of locations sources.
+
+        The runtime counterpart of a system config's ``locations`` section (see
+        `pipette_models.LocationsConfig`): each entry is either a filename to
+        resolve against `locations_dir` or an inline payload.
+
+        Args:
+            sources: Filenames and/or inline payloads, applied in order. Later
+                entries win on a name collision.
+            replace: If True, clear existing locations before the first source.
+
+        Raises:
+            FileNotFoundError: If a referenced file doesn't exist.
+            ValueError: If a source's contents are invalid.
+
+        Note:
+            Every source is read and validated before any is applied, so a
+            broken entry leaves the existing deck untouched.
+
+        Example:
+            >>> manager.load_spec(["standard_deck.json", {"plates": [...]}])
+        """
+        # Resolve everything up front so the commit below cannot fail halfway.
+        # Entry types are already validated by `LocationsConfig`, so a
+        # non-string here is an inline payload.
+        resolved: list[tuple[str, dict[str, Any]]] = []
+        for index, entry in enumerate(sources):
+            if isinstance(entry, str):
+                resolved.append((entry, self._read_locations_file(entry)))
+            else:
+                resolved.append((f"<inline #{index + 1}>", entry))
+
+        if replace:
+            self.clear()
+        for source, data in resolved:
+            self.apply_locations_data(data, source=source, replace=False)
+
+    def apply_locations_data(
+        self,
+        locations_data: dict[str, Any],
+        *,
+        source: str = "<inline>",
+        replace: bool = False,
+    ) -> None:
+        """Apply an already-parsed locations payload.
+
+        Shared by file loading and by the ``locations`` section of a system
+        config, which carries the same shape inline. Everything is validated
+        before anything is applied.
+
+        Args:
+            locations_data: Mapping with optional ``coordinates`` and
+                ``plates`` lists, each entry carrying a unique ``name``.
+            source: Human-readable origin, used in duplicate-name warnings and
+                recorded for `source_of`.
+            replace: If True, clear existing locations before applying.
+
+        Raises:
+            ValueError: If an entry is malformed or names a plate type that is
+                not registered.
+
+        Example:
+            >>> manager.apply_locations_data(
+            ...     {"coordinates": [{"name": "home", "x": 0, "y": 0, "z": 0}]},
+            ...     source="system.json",
+            ... )
+        """
+        coordinates = self._parse_coordinates(locations_data, source)
+        plates = self._parse_plates(locations_data, source)
+
+        # Nothing above mutates state, so a failure here leaves the deck as it
+        # was. Only past this point do we commit.
+        if replace:
+            self.clear()
+
+        for name, coord in coordinates:
+            self._warn_on_duplicate(name, source)
+            self.set_coordinate(name, coord)
+            self._sources[name] = source
+
+        for name, params, consumed in plates:
+            self._warn_on_duplicate(name, source)
+            self.set_plate(name, params)
+            self._sources[name] = source
+            if consumed is not None:
+                self.tipbox_manager.set_consumed(name, consumed)
+
+        logger.info(
+            f"Applied {len(coordinates)} coordinate(s) and {len(plates)} "
+            f"plate(s) from {source}; deck now holds {len(self.locations)} "
+            f"location(s)"
+        )
+
+    def _warn_on_duplicate(self, name: str, source: str) -> None:
+        """Log when an incoming location overwrites an existing one.
+
+        Names are unique identifiers, so a collision means one definition is
+        being discarded. Last load wins, but silently retargeting a pipetting
+        step at a different deck position would be dangerous, so it is logged
+        with both origins.
+
+        Args:
+            name: The location name being applied.
+            source: Origin of the incoming definition.
+        """
+        if name not in self.locations:
+            return
+
+        previous = self._sources.get(name, "an earlier definition")
+        logger.warning(
+            "Location %r from %s overwrites the one from %s", name, source, previous
+        )
+
+    def _read_locations_file(self, filename: str) -> dict[str, Any]:
+        """Read and parse a locations JSON file.
+
+        Args:
+            filename: Name of the file, resolved against `locations_dir`.
+
+        Returns:
+            The parsed JSON object.
+
+        Raises:
+            FileNotFoundError: If the file doesn't exist.
+            ValueError: If the file is not valid JSON, or is not a JSON object.
+        """
         locations_file = self.locations_dir / filename
 
         if not locations_file.exists():
@@ -335,67 +557,201 @@ class LocationManager:
 
         try:
             with locations_file.open("r", encoding="utf-8") as f:
-                locations_data: dict[str, Any] = json.load(f)
+                data: Any = json.load(f)
         except json.JSONDecodeError as e:
             logger.error(f"Invalid JSON in locations file: {e}")
             raise ValueError(f"Invalid JSON in {filename}: {e}") from e
 
-        # Load coordinates
-        for coord_data in locations_data.get("coordinates", []):
-            name = coord_data["name"]
-            coord = Coordinate(x=coord_data["x"], y=coord_data["y"], z=coord_data["z"])
-            self.set_coordinate(name, coord)
-            logger.debug(f"Loaded coordinate: {name}")
+        if not isinstance(data, dict):
+            raise ValueError(
+                f"Locations file {filename} must contain a JSON object, got "
+                f"{type(data).__name__}"
+            )
 
-        # Load plates
-        for plate_data in locations_data.get("plates", []):
-            name = plate_data["name"]
+        return cast("dict[str, Any]", data)
 
-            # Load plate definition from separate file if referenced
+    def _parse_coordinates(
+        self, locations_data: dict[str, Any], source: str
+    ) -> list[tuple[str, Coordinate]]:
+        """Build coordinate entries without applying them.
+
+        Args:
+            locations_data: The locations payload.
+            source: Origin, for error messages.
+
+        Returns:
+            List of ``(name, Coordinate)`` pairs in file order.
+
+        Raises:
+            ValueError: If an entry lacks a name or has invalid geometry.
+        """
+        parsed: list[tuple[str, Coordinate]] = []
+
+        for entry in locations_data.get("coordinates", []):
+            coord_data = cast("dict[str, Any]", entry)
+            name = self._require_name(coord_data, source, "coordinate")
+            try:
+                coord = Coordinate(
+                    x=coord_data["x"], y=coord_data["y"], z=coord_data["z"]
+                )
+            except (KeyError, ValueError) as e:
+                raise ValueError(f"Invalid coordinate {name!r} in {source}: {e}") from e
+            parsed.append((name, coord))
+
+        return parsed
+
+    def _parse_plates(
+        self, locations_data: dict[str, Any], source: str
+    ) -> list[tuple[str, PlateParams, set[int] | None]]:
+        """Build plate entries without applying them.
+
+        Args:
+            locations_data: The locations payload.
+            source: Origin, for error messages.
+
+        Returns:
+            List of ``(name, PlateParams, consumed_indices)`` triples in file
+            order. ``consumed_indices`` is None unless the entry declares a
+            partially-used tipbox via a ``tips`` block.
+
+        Raises:
+            ValueError: If an entry is malformed, names an unregistered plate
+                type, or declares tip ranges outside the plate.
+        """
+        parsed: list[tuple[str, PlateParams, set[int] | None]] = []
+
+        for entry in locations_data.get("plates", []):
+            plate_data = cast("dict[str, Any]", entry)
+            name = self._require_name(plate_data, source, "plate")
+
+            # A referenced template supplies geometry; the locations entry
+            # supplies placement and any per-deck overrides.
             if "plate_file" in plate_data:
                 plate_def = self._load_plate_definition(
                     DIR_CONFIG_PLATES / plate_data["plate_file"]
                 )
-                # Override coordinate from locations file
-                plate_def["x"] = plate_data["x"]
-                plate_def["y"] = plate_data["y"]
-                plate_def["z"] = plate_data["z"]
+                plate_def.update({
+                    key: value
+                    for key, value in plate_data.items()
+                    if key not in {"name", "plate_file"}
+                })
             else:
                 plate_def = plate_data
 
-            # Create well template
-            well = Well(
-                coor=Coordinate(x=plate_def["x"], y=plate_def["y"], z=plate_def["z"]),
-                dip_top=float(plate_def.get("dip_top", 0)),
-                dip_btm=(
-                    float(plate_def["dip_btm"]) if plate_def.get("dip_btm") else None
-                ),
-                strategy_type=StrategyType(plate_def.get("dip_func", "simple")),
-                well_diameter=(
-                    float(plate_def["well_diameter"])
-                    if plate_def.get("well_diameter")
-                    else None
-                ),
-            )
+            try:
+                params = self._build_plate_params(plate_def)
+            except ValueError as e:
+                raise ValueError(f"Invalid plate {name!r} in {source}: {e}") from e
 
-            # Create plate parameters
-            plate_params = PlateParams(
-                plate_type=plate_def.get("type", "array"),
-                well_template=well,
-                num_row=int(plate_def.get("num_row", 1)),
-                num_col=int(plate_def.get("num_col", 1)),
-                spacing_row=float(plate_def.get("spacing_row", 0)),
-                spacing_col=float(plate_def.get("spacing_col", 0)),
-            )
+            parsed.append((name, params, self._parse_tips(plate_def, params, name)))
 
-            self.set_plate(name, plate_params)
-            logger.debug(f"Loaded plate: {name}")
+        return parsed
 
-        logger.info(
-            f"Loaded {len(self.locations)} location(s) from {filename}: "
-            f"{len(self.get_coordinate_names())} coordinates, "
-            f"{len(self.get_plate_names())} plates"
+    @staticmethod
+    def _require_name(entry: dict[str, Any], source: str, kind: str) -> str:
+        """Extract an entry's name, which is its unique identifier.
+
+        Args:
+            entry: The raw entry mapping.
+            source: Origin, for error messages.
+            kind: ``"coordinate"`` or ``"plate"``, for error messages.
+
+        Returns:
+            The entry's name.
+
+        Raises:
+            ValueError: If the entry has no non-empty string name.
+        """
+        name = entry.get("name")
+        if not isinstance(name, str) or not name.strip():
+            raise ValueError(f"Every {kind} in {source} needs a non-empty 'name'")
+        return name
+
+    @staticmethod
+    def _build_plate_params(plate_def: dict[str, Any]) -> PlateParams:
+        """Build validated plate parameters from a merged plate definition.
+
+        Args:
+            plate_def: Plate geometry merged with its placement, i.e. a plate
+                template overlaid with the locations entry.
+
+        Returns:
+            Validated `PlateParams`.
+
+        Raises:
+            ValueError: If geometry, traversal order, or mask is invalid.
+        """
+        well = Well(
+            coor=Coordinate(x=plate_def["x"], y=plate_def["y"], z=plate_def["z"]),
+            dip_top=float(plate_def.get("dip_top", 0)),
+            dip_btm=(float(plate_def["dip_btm"]) if plate_def.get("dip_btm") else None),
+            strategy_type=StrategyType(plate_def.get("dip_func", "simple")),
+            well_diameter=(
+                float(plate_def["well_diameter"])
+                if plate_def.get("well_diameter")
+                else None
+            ),
         )
+
+        mask_data = plate_def.get("mask")
+        order_data = plate_def.get("order")
+        return PlateParams(
+            plate_type=plate_def.get("type", "array"),
+            well_template=well,
+            num_row=int(plate_def.get("num_row", 1)),
+            num_col=int(plate_def.get("num_col", 1)),
+            spacing_row=float(plate_def.get("spacing_row", 0)),
+            spacing_col=float(plate_def.get("spacing_col", 0)),
+            order=(
+                coerce_traversal_order(order_data)
+                if order_data is not None
+                else TraversalOrder()
+            ),
+            mask=WellMask(**mask_data) if mask_data else None,
+            on_exhaust=plate_def.get("on_exhaust", "wrap"),
+        )
+
+    @staticmethod
+    def _parse_tips(
+        plate_def: dict[str, Any], params: PlateParams, name: str
+    ) -> set[int] | None:
+        """Resolve a ``tips`` block into consumed well indices.
+
+        Lets a locations file declare a partially-used tipbox, e.g. a box that
+        was half consumed before the deck was set up.
+
+        Args:
+            plate_def: The merged plate definition.
+            params: The plate's validated parameters, for its dimensions.
+            name: Plate name, for error messages.
+
+        Returns:
+            Set of consumed flat well indices, or None if the entry declares no
+            tip state (in which case the box is assumed full).
+
+        Raises:
+            ValueError: If ``tips`` is declared on a non-tipbox, is malformed,
+                or names wells outside the plate.
+        """
+        tips = plate_def.get("tips")
+        if tips is None:
+            return None
+
+        if params.plate_type != PlateType.TIPBOX.value:
+            raise ValueError(f"Plate {name!r} declares 'tips' but is not a tipbox")
+        if not isinstance(tips, dict):
+            raise ValueError(f"Plate {name!r} has a malformed 'tips' block")
+
+        consumed = cast("dict[str, Any]", tips).get("consumed", [])
+        if not isinstance(consumed, list):
+            raise ValueError(f"Plate {name!r} has a malformed 'tips.consumed' list")
+
+        try:
+            return parse_well_ranges(
+                cast("list[str]", consumed), params.num_row, params.num_col
+            )
+        except ValueError as e:
+            raise ValueError(f"Invalid 'tips.consumed' for plate {name!r}: {e}") from e
 
     def save_to_json(self, filename: str = "custom_locations.json") -> None:
         """Save all locations to a JSON configuration file.
@@ -461,6 +817,7 @@ class LocationManager:
                     if first_well.well_diameter is not None:
                         plate_data["well_diameter"] = first_well.well_diameter
 
+                self._save_traversal_fields(location, plate_data)
                 data["plates"].append(plate_data)
 
         # Write to file
@@ -468,6 +825,38 @@ class LocationManager:
             json.dump(data, f, indent=2)
 
         logger.info(f"Saved {len(self.locations)} location(s) to {filename}")
+
+    @staticmethod
+    def _save_traversal_fields(plate: Plate, plate_data: dict[str, Any]) -> None:
+        """Add traversal order, mask, exhaustion policy, and tip state.
+
+        Omits anything left at its default, so a hand-written file that used no
+        traversal options round-trips unchanged rather than growing noise.
+
+        Args:
+            plate: The plate being serialized.
+            plate_data: The entry being built, modified in place.
+        """
+        # A plate written with a preset name saves back as that name; an
+        # unnamed combination falls back to the explicit descriptor.
+        preset = TraversalRegistry.name_for(plate.order)
+        if preset is not None:
+            if preset != "row_major":
+                plate_data["order"] = preset
+        else:
+            plate_data["order"] = plate.order.model_dump(mode="json")
+
+        if plate.mask is not None and not plate.mask.is_noop():
+            plate_data["mask"] = plate.mask.model_dump(mode="json", exclude_none=True)
+
+        if isinstance(plate, TipBox):
+            # Forced to "error" by TipBox itself, so writing it back would only
+            # add noise -- but the consumed map is real state worth preserving.
+            consumed = compress_to_ranges(plate.consumed_indices(), plate.num_col)
+            if consumed:
+                plate_data["tips"] = {"consumed": consumed}
+        elif plate.on_exhaust != "wrap":
+            plate_data["on_exhaust"] = plate.on_exhaust
 
     def _load_plate_definition(self, plate_file: Path) -> dict[str, Any]:
         """Load plate definition from JSON file.
@@ -539,11 +928,11 @@ class LocationManager:
         Example:
             >>> manager = LocationManager()
             >>> repr(manager)
-            'LocationManager(locations=5, tipboxes=yes, waste=yes)'
+            'LocationManager(locations=5, tipboxes=2, waste=yes)'
         """
         return (
             f"LocationManager("
             f"locations={len(self.locations)}, "
-            f"tipboxes={'yes' if self.tipboxes else 'no'}, "
+            f"tipboxes={len(self.tipbox_manager.boxes)}, "
             f"waste={'yes' if self.waste_container else 'no'})"
         )

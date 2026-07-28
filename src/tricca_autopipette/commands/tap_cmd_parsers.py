@@ -291,6 +291,72 @@ class DelLocArgs:
 
 
 @dataclass
+class UnloadLocationsArgs:
+    """Arguments for the ``unload_locations`` command.
+
+    Attributes:
+        name: Name of the location to unload from the deck.
+    """
+
+    name: str
+
+
+@dataclass
+class LoadLocationsArgs:
+    """Arguments for the ``load_locations`` command.
+
+    Attributes:
+        filename: Locations file to load from ``config/locations/``.
+        replace: Whether to clear the deck first. Defaults to False, so
+            loading composes groups rather than replacing the deck.
+    """
+
+    filename: str
+    replace: bool = False
+
+
+@dataclass
+class ResetTipsArgs:
+    """Arguments for the ``reset_tips`` command.
+
+    Attributes:
+        name: Name of the tipbox to mark full.
+    """
+
+    name: str
+
+
+@dataclass
+class SetTipsArgs:
+    """Arguments for the ``set_tips`` command.
+
+    Attributes:
+        name: Name of the tipbox to update.
+        ranges: Well IDs and/or ranges (e.g. ``A1``, ``A1:D6``).
+        available: If True, `ranges` lists the positions that still hold a
+            tip; otherwise they list the consumed ones.
+    """
+
+    name: str
+    ranges: list[str]
+    available: bool = False
+
+
+@dataclass
+class TipsArgs:
+    """Arguments for the ``tips`` command.
+
+    Attributes:
+        name: Tipbox to report on, or None for every registered box.
+        db: Whether to also show the state persisted in Moonraker's database
+            alongside the live state, so drift is visible.
+    """
+
+    name: str | None = None
+    db: bool = False
+
+
+@dataclass
 class LsArgs:
     """Arguments for the ``ls`` command.
 
@@ -731,6 +797,69 @@ class TAPCmdParsers:
         description="Delete a named location or plate."
     )
     parser_del_loc.add_argument("name", type=str, help="Name of the location to delete")
+
+    parser_unload_locations: Cmd2ArgumentParser = Cmd2ArgumentParser(
+        description="Unload a single location from the deck by name."
+    )
+    parser_unload_locations.add_argument(
+        "name", type=str, help="Name of the location to unload"
+    )
+
+    parser_load_locations: Cmd2ArgumentParser = Cmd2ArgumentParser(
+        description=(
+            "Load locations from a file. Adds to the deck by default so "
+            "groups compose; use --replace to clear it first."
+        )
+    )
+    parser_load_locations.add_argument(
+        "filename", type=str, help="Locations file under config/locations/"
+    )
+    parser_load_locations.add_argument(
+        "--replace",
+        action="store_true",
+        help="Clear all existing locations before loading",
+    )
+
+    parser_reset_tips: Cmd2ArgumentParser = Cmd2ArgumentParser(
+        description="Mark a tipbox as full, after physically reloading it."
+    )
+    parser_reset_tips.add_argument("name", type=str, help="Tipbox location name")
+
+    parser_set_tips: Cmd2ArgumentParser = Cmd2ArgumentParser(
+        description=(
+            "Declare which tip positions of a box are consumed (or, with "
+            "--available, which still hold a tip). Replaces the box's current "
+            "state rather than adding to it."
+        )
+    )
+    parser_set_tips.add_argument("name", type=str, help="Tipbox location name")
+    parser_set_tips.add_argument(
+        "ranges",
+        type=str,
+        nargs="+",
+        help="Well IDs and/or ranges, e.g. A1 or A1:D6",
+    )
+    parser_set_tips.add_argument(
+        "--available",
+        action="store_true",
+        help="Treat the ranges as the positions that still hold a tip",
+    )
+
+    parser_tips: Cmd2ArgumentParser = Cmd2ArgumentParser(
+        description="Show tip availability, as a per-box map."
+    )
+    parser_tips.add_argument(
+        "name",
+        type=str,
+        nargs="?",
+        default=None,
+        help="Tipbox to report on (default: all)",
+    )
+    parser_tips.add_argument(
+        "--db",
+        action="store_true",
+        help="Also show the state persisted in Moonraker's database",
+    )
 
     parser_ls: Cmd2ArgumentParser = Cmd2ArgumentParser(
         description="List configuration state by category."

@@ -34,6 +34,11 @@ DB_KEY_TIP_STATE = "tip_state"
 DB_KEY_HAS_LIQUID = "has_liquid"
 DB_KEY_CURRENT_LIQUID = "current_liquid"
 
+#: Per-tipbox consumed-position maps, keyed by location name. Klipper has no
+#: notion of which tip positions are empty, so like the tip/liquid keys above
+#: this is a durability layer rather than live-hardware truth.
+DB_KEY_TIP_PRESENCE = "tip_presence"
+
 #: Axes that must all be reported homed by Klipper for the interlock to pass.
 REQUIRED_HOMED_AXES = frozenset({"x", "y", "z"})
 
@@ -194,3 +199,46 @@ class MoonrakerStateTracker:
             self.client.send_jsonrpc(
                 self.mrr.server_database_post_item(DB_NAMESPACE, key, value)
             )
+
+    def load_tip_presence(self) -> dict[str, Any]:
+        """Read persisted per-tipbox consumed-position maps.
+
+        Returns:
+            Mapping of tipbox location name to its stored record, as produced
+            by ``TipBoxManager.snapshot``. Empty on the first run, or if the
+            stored value is not a mapping.
+
+        Note:
+            Never raises. A tipbox with no stored state is simply treated as
+            full, which is the safe direction -- the operator is told a box is
+            fuller than it is, not emptier.
+        """
+        try:
+            response = self.client.send_jsonrpc(
+                self.mrr.server_database_get_item(DB_NAMESPACE, DB_KEY_TIP_PRESENCE)
+            )
+            value = response["result"]["value"]
+        except Exception:
+            logger.info("No persisted tip presence (first run?)")
+            return {}
+
+        if not isinstance(value, dict):
+            logger.warning("Persisted tip presence is not a mapping; ignoring")
+            return {}
+
+        return cast("dict[str, Any]", value)
+
+    def save_tip_presence(self, snapshot: dict[str, Any]) -> None:
+        """Persist per-tipbox consumed-position maps.
+
+        Args:
+            snapshot: Mapping of tipbox location name to its record, as
+                produced by ``TipBoxManager.snapshot``. Each record carries the
+                plate dimensions alongside the presence map so a reshaped box
+                can be detected on restore rather than silently misapplied.
+        """
+        self.client.send_jsonrpc(
+            self.mrr.server_database_post_item(
+                DB_NAMESPACE, DB_KEY_TIP_PRESENCE, snapshot
+            )
+        )

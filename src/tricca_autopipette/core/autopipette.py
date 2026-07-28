@@ -38,7 +38,6 @@ from tricca_autopipette.core.pipette_constants import (
     PhysicalConstants,
 )
 from tricca_autopipette.core.pipette_exceptions import (
-    NoTipboxError,
     NoWasteContainerError,
     TipAlreadyOnError,
 )
@@ -540,22 +539,26 @@ class AutoPipette:
         return self.gcode_buffers.get_header()
 
     def next_tip(self) -> None:
-        """Pick up the next available tip from the configured tipbox.
+        """Pick up the next available tip from the configured tipboxes.
+
+        Boxes are drawn from in the order they appear in the locations config,
+        each in its own traversal order, and a consumed position is never
+        offered again.
 
         Raises:
             NoTipboxError: If no tipbox has been configured.
+            OutOfTipsError: If every configured tipbox is exhausted. Reload the
+                boxes and run ``reset_tips`` rather than reusing a tip.
             TipAlreadyOnError: If a tip is already attached.
         """
-        if self.location_manager.tipboxes is None:
-            raise NoTipboxError()
         if self.state.tip_state == TipState.ATTACHED:
             raise TipAlreadyOnError()
 
-        loc_tip = self.location_manager.tipboxes.next()
+        # The supplying box comes back with the coordinate: boxes may sit at
+        # different heights, so the dip distance must come from *that* box.
+        _name, box, loc_tip = self.location_manager.tipbox_manager.next_tip()
         self.move_to(loc_tip)
-        self.dip_z_down(
-            loc_tip, self.location_manager.tipboxes.get_dip_distance(vol=None)
-        )
+        self.dip_z_down(loc_tip, box.get_dip_distance(vol=None))
         self.dip_z_return(loc_tip)
         self.state.tip_state = TipState.ATTACHED
 

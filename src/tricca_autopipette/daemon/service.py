@@ -43,15 +43,20 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     DispenseArgs,
     GcodePrintArgs,
     HomeArgs,
+    LoadLocationsArgs,
     MoveArgs,
     MoveLocArgs,
     MoveRelArgs,
     PipetteArgs,
     PlateArgs,
     ResetPlateArgs,
+    ResetTipsArgs,
     SetArgs,
+    SetTipsArgs,
     TAPCmdParsers,
+    TipsArgs,
     TriggerArgs,
+    UnloadLocationsArgs,
     VolToStepsArgs,
     WaitArgs,
     args_from_namespace,
@@ -70,11 +75,13 @@ from tricca_autopipette.core.pipette_constants import (
     TriggerChannels,
 )
 from tricca_autopipette.core.pipette_exceptions import (
+    NotALocationError,
     NotHomedError,
     ProtocolAbortedError,
 )
-from tricca_autopipette.core.pipette_models import TipState
+from tricca_autopipette.core.pipette_models import SystemConfig, TipState
 from tricca_autopipette.core.plates import Plate, PlateParams
+from tricca_autopipette.core.traversal import parse_well_ranges
 from tricca_autopipette.core.well import StrategyType, Well
 from tricca_autopipette.daemon.moonraker_state import MoonrakerStateTracker
 from tricca_autopipette.moonraker.moonraker_requests import MoonrakerRequests
@@ -236,6 +243,45 @@ def persist_tip_liquid_state(
     return wrapper
 
 
+def persist_tip_presence(
+    func: Callable[..., CommandResult],
+) -> Callable[..., CommandResult]:
+    """Decorator: persist per-tipbox consumed positions if they changed.
+
+    The sibling of :func:`persist_tip_liquid_state`, for the *other* piece of
+    state Klipper has no notion of: which tip positions are still occupied.
+    Applied directly to the methods that consume or redeclare tips, so every
+    call path -- control-plane RPC, protocol-file line, interactive shell --
+    persists identically, the same reason the interlock is a decorator rather
+    than a cmd2 hook.
+
+    Runs in a ``finally`` block: a transfer that picks up a tip and then fails
+    has still physically consumed that tip, and the record must reflect it.
+
+    Args:
+        func: The ``AutoPipetteService`` method to wrap.
+
+    Returns:
+        The wrapped method.
+    """
+
+    @functools.wraps(func)
+    def wrapper(self: AutoPipetteService, *args: Any, **kwargs: Any) -> CommandResult:  # noqa: ANN401
+        try:
+            return func(self, *args, **kwargs)
+        finally:
+            # Same rationale as persist_tip_liquid_state: this decorator is
+            # part of AutoPipetteService's own implementation.
+            if self.moonraker_state is not None:
+                manager = self._autopipette.location_manager.tipbox_manager  # pyright: ignore[reportPrivateUsage]
+                snapshot = manager.snapshot()
+                if snapshot != self._persisted_tip_presence:  # pyright: ignore[reportPrivateUsage]
+                    self._persisted_tip_presence = snapshot  # pyright: ignore[reportPrivateUsage]
+                    self.moonraker_state.save_tip_presence(snapshot)
+
+    return wrapper
+
+
 class AutoPipetteService:
     """Owns the Moonraker connection, domain layer, and run lifecycle.
 
@@ -287,17 +333,14 @@ class AutoPipetteService:
         fn_pipette = (
             config_pipette.name if config_pipette else DefaultFilenames.CONFIG_PIPETTE
         )
-        fn_locations = (
-            config_locations.name
-            if config_locations
-            else DefaultFilenames.CONFIG_LOCATIONS
-        )
         fn_liquids = (
             config_liquids.name if config_liquids else DefaultFilenames.CONFIG_LIQUIDS
         )
-        json_config_manager.load_configs(fn_system, fn_gantry, fn_pipette, fn_liquids)
+        system_config = json_config_manager.load_configs(
+            fn_system, fn_gantry, fn_pipette, fn_liquids
+        )
         location_manager = LocationManager()
-        location_manager.load_from_json(fn_locations)
+        self._load_locations(location_manager, system_config, config_locations)
         self._autopipette = AutoPipette(json_config_manager, location_manager)
 
         self.hostname = self._get_hostname()
@@ -319,6 +362,9 @@ class AutoPipetteService:
 
         self.breakpoint_handler: Callable[[], bool] | None = None
         self._last_persisted_state: tuple[str, bool, str | None] | None = None
+        # Last snapshot written to Moonraker's DB, so the decorator can skip
+        # a round trip when nothing about tip occupancy changed.
+        self._persisted_tip_presence: dict[str, Any] | None = None
 
         self._lock = asyncio.Lock()
         self._current = RunStatus(status="idle")
@@ -328,6 +374,40 @@ class AutoPipetteService:
         self._breakpoint_proceed = False
         self._background_tasks: set[asyncio.Task[None]] = set()
         self._raw_subscriptions: set[str] = set()
+
+    @staticmethod
+    def _load_locations(
+        location_manager: LocationManager,
+        system_config: SystemConfig,
+        config_locations: Path | None,
+    ) -> None:
+        """Populate the deck from the system config and the CLI override.
+
+        Precedence, applied in order so later sources win on a name collision:
+
+        1. The system config's ``locations`` section, if it declares any.
+           Otherwise ``default_locations.json``, preserving the historical boot.
+        2. ``--config-locations``, if given. This is *additive* -- it layers a
+           protocol's deck on top of the machine's standing one rather than
+           replacing it. Pass a full ``locations`` section in the system config
+           instead if you want sole control.
+
+        Args:
+            location_manager: The manager to populate.
+            system_config: The loaded system configuration.
+            config_locations: Path from ``--config-locations``, or None.
+
+        Raises:
+            FileNotFoundError: If a referenced locations file doesn't exist.
+            ValueError: If a locations source is invalid.
+        """
+        if system_config.locations.is_empty():
+            location_manager.load_from_json(DefaultFilenames.CONFIG_LOCATIONS)
+        else:
+            location_manager.load_spec(system_config.locations.sources)
+
+        if config_locations is not None:
+            location_manager.load_from_json(config_locations.name)
 
     def _get_hostname(self) -> str:
         """Retrieve hostname from the loaded system configuration.
@@ -390,6 +470,7 @@ class AutoPipetteService:
             self.moonraker_state.on_print_state_change(self._handle_print_state_change)
             persisted = self.moonraker_state.load_tip_liquid_state()
             self._apply_persisted_state(persisted)
+            self._apply_persisted_tip_presence(self.moonraker_state.load_tip_presence())
 
         self._run_startup_script()
         return connected
@@ -431,6 +512,38 @@ class AutoPipetteService:
             state.has_liquid,
             self._autopipette.active_liquid,
         )
+
+    def _apply_persisted_tip_presence(self, values: dict[str, Any]) -> None:
+        """Rehydrate per-tipbox consumed positions from a prior run.
+
+        Runs after the deck has been built from config, so it layers stored
+        consumption onto boxes that are already registered. A box the config
+        declared as partially used keeps that declaration only if no stored
+        state exists for it -- the database is the more recent truth, since it
+        reflects tips actually consumed since the file was written.
+
+        Args:
+            values: Mapping as returned by
+                ``MoonrakerStateTracker.load_tip_presence``. Boxes absent from
+                it stay as configured.
+        """
+        if not values:
+            return
+
+        manager = self._autopipette.location_manager.tipbox_manager
+        skipped = manager.restore(values)
+
+        if skipped:
+            # Surfaced loudly: the operator's tip state is not what the
+            # database thought, so those boxes are now assumed full.
+            logger.warning(
+                "Tipbox(es) %s were reconfigured since their state was saved; "
+                "treating them as full. Run 'tips' to check, 'set_tips' to "
+                "correct.",
+                ", ".join(skipped),
+            )
+
+        self._persisted_tip_presence = manager.snapshot()
 
     def _run_startup_script(self) -> None:
         """Replay ``core/.init_pipette`` once, mirroring interactive startup.
@@ -731,6 +844,7 @@ class AutoPipetteService:
 
     @require_homed("pipette")
     @persist_tip_liquid_state
+    @persist_tip_presence
     def transfer(self, args: PipetteArgs) -> CommandResult:
         """Transfer liquid from source to destination (the ``pipette`` command).
 
@@ -807,6 +921,7 @@ class AutoPipetteService:
 
     @require_homed("next_tip")
     @persist_tip_liquid_state
+    @persist_tip_presence
     def next_tip(self) -> CommandResult:
         """Pick up the next available tip from the tipbox.
 
@@ -876,6 +991,7 @@ class AutoPipetteService:
 
     @require_homed("change_tip")
     @persist_tip_liquid_state
+    @persist_tip_presence
     def change_tip(self) -> CommandResult:
         """Dispose the current tip (if any) and pick up a fresh one.
 
@@ -1144,29 +1260,178 @@ class AutoPipetteService:
         self._autopipette.location_manager.save_to_json(filename)
         return CommandResult(ok=True, message=f"Saved locations to {filename}")
 
-    def load_locations(self, filename: str) -> CommandResult:
-        """Load locations from a JSON file, replacing all existing ones.
+    @persist_tip_presence
+    def load_locations(self, args: LoadLocationsArgs) -> CommandResult:
+        """Load locations from a JSON file, adding to the current deck.
+
+        Loading is additive so a deck can be composed from reusable groups;
+        pass ``--replace`` for the old wipe-then-load behavior.
 
         Args:
-            filename: Input filename under ``config/locations/``.
+            args: Filename under ``config/locations/`` and the replace flag.
 
         Returns:
-            Result summarizing how many coordinates/plates were loaded.
+            Result summarizing how many coordinates/plates are now loaded.
 
         Raises:
             FileNotFoundError: If the file doesn't exist.
             ValueError: If the file's contents are invalid.
+
+        Note:
+            A failed load leaves the existing deck untouched -- the file is
+            fully parsed before anything is applied.
         """
         location_manager = self._autopipette.location_manager
-        location_manager.load_from_json(filename)
+        location_manager.load_from_json(args.filename, replace=args.replace)
         coords = location_manager.get_coordinate_names()
         plates = location_manager.get_plate_names()
+        verb = "Replaced deck with" if args.replace else "Loaded"
         return CommandResult(
             ok=True,
             message=(
-                f"Loaded locations from {filename} "
-                f"({len(coords)} coordinate(s), {len(plates)} plate(s))"
+                f"{verb} locations from {args.filename}; deck now holds "
+                f"{len(coords)} coordinate(s), {len(plates)} plate(s)"
             ),
+        )
+
+    @persist_tip_presence
+    def unload_locations(self, args: UnloadLocationsArgs) -> CommandResult:
+        """Remove a single location from the deck by name.
+
+        Args:
+            args: Name of the location to unload.
+
+        Returns:
+            Result naming the unloaded location, or an ``ok=False`` result if
+            no location by that name is loaded.
+        """
+        if not self._autopipette.location_manager.unload(args.name):
+            return CommandResult(ok=False, message=f"No such location: {args.name}")
+        return CommandResult(ok=True, message=f"Unloaded location: {args.name}")
+
+    # ==================== Tip inventory ====================
+    #
+    # Klipper has no notion of which tip positions are occupied, so these
+    # commands are how an operator reconciles the daemon's record with the
+    # physical boxes after reloading or swapping one.
+
+    @persist_tip_presence
+    def reset_tips(self, args: ResetTipsArgs) -> CommandResult:
+        """Mark one tipbox as full, after physically reloading it.
+
+        Args:
+            args: Name of the tipbox to reset.
+
+        Returns:
+            Result naming the box and its tip count, or an ``ok=False`` result
+            if no tipbox by that name is registered.
+        """
+        manager = self._autopipette.location_manager.tipbox_manager
+        try:
+            manager.reset_tips(args.name)
+        except NotALocationError:
+            return CommandResult(ok=False, message=f"No such tipbox: {args.name}")
+
+        box = manager.boxes[args.name]
+        return CommandResult(
+            ok=True, message=f"Reset {args.name}: {box.remaining} tip(s) available"
+        )
+
+    @persist_tip_presence
+    def reset_tips_all(self) -> CommandResult:
+        """Mark every registered tipbox as full.
+
+        Returns:
+            Result summarizing the boxes reset and the total tips available.
+        """
+        manager = self._autopipette.location_manager.tipbox_manager
+        if not manager.has_boxes():
+            return CommandResult(ok=False, message="No tipboxes are loaded.")
+
+        manager.reset_all()
+        return CommandResult(
+            ok=True,
+            message=(
+                f"Reset {len(manager.boxes)} tipbox(es): "
+                f"{manager.remaining} tip(s) available"
+            ),
+        )
+
+    @persist_tip_presence
+    def set_tips(self, args: SetTipsArgs) -> CommandResult:
+        """Declare exactly which positions of a tipbox hold tips.
+
+        Replaces the box's state rather than adding to it, so it can both
+        consume and restore positions -- the intended way to correct drift
+        between the daemon's record and the physical box.
+
+        Args:
+            args: Tipbox name, well ranges, and whether the ranges name the
+                available positions rather than the consumed ones.
+
+        Returns:
+            Result summarizing the box's new tip count, or an ``ok=False``
+            result if the box is unknown or a range is invalid.
+        """
+        manager = self._autopipette.location_manager.tipbox_manager
+        box = manager.boxes.get(args.name)
+        if box is None:
+            return CommandResult(ok=False, message=f"No such tipbox: {args.name}")
+
+        try:
+            listed = parse_well_ranges(args.ranges, box.num_row, box.num_col)
+        except ValueError as e:
+            return CommandResult(ok=False, message=str(e))
+
+        # --available names what remains, so invert to get the consumed set.
+        consumed = set(range(len(box.wells))) - listed if args.available else listed
+        manager.set_consumed(args.name, consumed)
+
+        return CommandResult(
+            ok=True,
+            message=(f"{args.name}: {box.remaining}/{box.capacity} tip(s) available"),
+        )
+
+    def tips(self, args: TipsArgs) -> CommandResult:
+        """Report tip availability per box.
+
+        Data only -- the ASCII map is rendered by ``cli/report_tables.py`` so
+        the local and remote shells display it identically.
+
+        Args:
+            args: Optional box name to narrow to, and whether to include the
+                state persisted in Moonraker's database for comparison.
+
+        Returns:
+            Result whose ``data`` holds a ``boxes`` list of per-box records
+            and, when requested, a ``persisted`` mapping to diff against.
+        """
+        manager = self._autopipette.location_manager.tipbox_manager
+
+        if args.name is not None:
+            if args.name not in manager.boxes:
+                return CommandResult(ok=False, message=f"No such tipbox: {args.name}")
+            boxes = [manager.describe(args.name)]
+        else:
+            boxes = manager.describe_all()
+
+        data: dict[str, Any] = {
+            "boxes": boxes,
+            "total_remaining": manager.remaining,
+            "total_capacity": manager.capacity,
+        }
+
+        if args.db:
+            data["persisted"] = (
+                self.moonraker_state.load_tip_presence()
+                if self.moonraker_state is not None
+                else {}
+            )
+
+        return CommandResult(
+            ok=True,
+            message=f"{manager.remaining}/{manager.capacity} tip(s) available",
+            data=data,
         )
 
     # ==================== Utility commands ====================
@@ -1976,9 +2241,11 @@ class AutoPipetteService:
         rather than an error; that tolerance is preserved explicitly here
         now that cmd2 itself is gone. A handful of commands that take a
         single bare string argument (``switch_liquid``, ``load_liquid``,
-        ``save_locations``, ``load_locations``) are looked up in
-        :data:`_STR_ARG_DISPATCH` instead of :data:`_LINE_DISPATCH`, since
-        they don't have an argparse parser/``*Args`` dataclass pair. Any
+        ``save_locations``) are looked up in :data:`_STR_ARG_DISPATCH`
+        instead of :data:`_LINE_DISPATCH`, since they don't have an argparse
+        parser/``*Args`` dataclass pair. (``load_locations`` used to be one
+        of them; it moved to :data:`_LINE_DISPATCH` when it gained
+        ``--replace``.) Any
         other command name not found in either table -- a typo, or a
         genuinely nonexistent command -- is reported as an ``ok=False``
         result rather than raised, preserving the tolerant (error-but-
@@ -2378,6 +2645,24 @@ _LINE_DISPATCH: dict[str, _LineCommand] = {
         TAPCmdParsers.parser_del_loc, DelLocArgs, AutoPipetteService.del_loc
     ),
     "clear_locs": _LineCommand(None, None, AutoPipetteService.clear_locs),
+    "load_locations": _LineCommand(
+        TAPCmdParsers.parser_load_locations,
+        LoadLocationsArgs,
+        AutoPipetteService.load_locations,
+    ),
+    "unload_locations": _LineCommand(
+        TAPCmdParsers.parser_unload_locations,
+        UnloadLocationsArgs,
+        AutoPipetteService.unload_locations,
+    ),
+    "reset_tips": _LineCommand(
+        TAPCmdParsers.parser_reset_tips, ResetTipsArgs, AutoPipetteService.reset_tips
+    ),
+    "reset_tips_all": _LineCommand(None, None, AutoPipetteService.reset_tips_all),
+    "set_tips": _LineCommand(
+        TAPCmdParsers.parser_set_tips, SetTipsArgs, AutoPipetteService.set_tips
+    ),
+    "tips": _LineCommand(TAPCmdParsers.parser_tips, TipsArgs, AutoPipetteService.tips),
     "wait": _LineCommand(TAPCmdParsers.parser_wait, WaitArgs, AutoPipetteService.wait),
     "trigger": _LineCommand(
         TAPCmdParsers.parser_trigger, TriggerArgs, AutoPipetteService.trigger
@@ -2399,5 +2684,4 @@ _STR_ARG_DISPATCH: dict[str, Callable[[AutoPipetteService, str], CommandResult]]
     "switch_liquid": AutoPipetteService.switch_liquid,
     "load_liquid": AutoPipetteService.load_liquid,
     "save_locations": AutoPipetteService.save_locations,
-    "load_locations": AutoPipetteService.load_locations,
 }

@@ -72,6 +72,35 @@ class NoTipboxError(AutoPipetteError):
         super().__init__("No tipbox configured.")
 
 
+class OutOfTipsError(AutoPipetteError):
+    """Raised when every configured tipbox has been exhausted.
+
+    Deliberately an error rather than a wrap-around to the first position: a
+    tipbox that silently recycled positions would hand back an already-used
+    tip, cross-contaminating the run. Reload the boxes and clear the consumed
+    map with ``reset_tips``/``reset_tips_all`` to continue.
+
+    Attributes:
+        boxes: Names of the tipboxes that were checked, in draw order. Empty
+            only if no tipbox is configured at all, which `NoTipboxError`
+            normally reports first.
+
+    Example:
+        >>> pipette.next_tip()  # 97th tip from a single 96-tip box
+        OutOfTipsError: No tips remaining in tipbox_a. Reload and run reset_tips.
+    """
+
+    def __init__(self, boxes: list[str]) -> None:
+        """Initialize the error with the exhausted tipbox names.
+
+        Args:
+            boxes: Names of the tipboxes that were checked, in draw order.
+        """
+        self.boxes = boxes
+        named = ", ".join(boxes) if boxes else "any configured tipbox"
+        super().__init__(f"No tips remaining in {named}. Reload and run reset_tips.")
+
+
 class MissingConfigError(AutoPipetteError):
     """Raised when required configuration sections are missing from config file.
 
