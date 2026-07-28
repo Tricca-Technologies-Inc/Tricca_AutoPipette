@@ -7,6 +7,7 @@ used throughout the pipette control system.
 
 from __future__ import annotations
 
+import os
 from enum import Enum
 from pathlib import Path
 
@@ -185,8 +186,14 @@ class DefaultPaths:
         DEFAULT_CONFIG: Default configuration filename.
     """
 
-    # Four levels up: core -> tricca_autopipette -> src -> repo root.
-    DIR_REPO_ROOT: Path = Path(__file__).parents[3]
+    # Four levels up: core -> tricca_autopipette -> src -> repo root. Only
+    # correct when running from a src-layout checkout; installed packages
+    # (Nix, pip, wheel) drop the "src" segment, so this lands one directory
+    # too high with no config/protocols/gcode underneath it. Override with
+    # AUTOPIPETTE_REPO_ROOT wherever the package is actually installed.
+    DIR_REPO_ROOT: Path = Path(
+        os.environ.get("AUTOPIPETTE_REPO_ROOT", str(Path(__file__).parents[3]))
+    )
 
     DIR_SHELL: Path = Path(__file__).parent
     DIR_GCODE: Path = DIR_REPO_ROOT / "gcode"
