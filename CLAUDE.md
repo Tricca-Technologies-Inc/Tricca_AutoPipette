@@ -83,6 +83,20 @@ Tipboxes are registered with `core/tipbox_manager.py`'s `TipBoxManager` (see bel
 
 Because Klipper has no notion of tip occupancy, the operator reconciles the daemon's record with the physical boxes via `tips` (ASCII map; `--db` diffs it against the persisted state and flags divergent cells), `reset_tips <box>`/`reset_tips_all` (a fresh box was loaded), and `set_tips <box> <ranges> [--available]` (declare exact state — absolute, not additive, so it can restore positions too). A locations entry may also declare a partially-used box up front with `"tips": {"consumed": ["A1:C12"]}`.
 
+#### Planned: tip disposal falls back to the tip's origin
+Not implemented yet — described here so work in this area moves toward it rather than entrenching the current behavior.
+
+Today `AutoPipette.pipette()` ends with a bare `if not keep_tip: self.dispose_tip()`, and `dispose_tip` raises `NoWasteContainerError` when none is configured — so a deck without a waste container **aborts mid-transfer with a tip still attached**. The only alternative, `eject_tip`, drops the tip wherever the head currently is, which after a transfer is over the destination well. So the fallback isn't merely missing, it's unsafe.
+
+The intended behavior is:
+1. Verify a waste container exists up front for any run that will discard tips, rather than discovering it mid-protocol.
+2. With none configured, return the used tip to the exact tipbox position it came from.
+3. Replace the `keep_tip` boolean with an explicit disposition flag on every function that decides where a tip goes after a transfer — `keep_tip: bool` can't express the three real outcomes (keep it on / send it to waste / put it back). Something like `tip_disposition: "keep" | "waste" | "return"`, threaded through `PipetteArgs`, `AutoPipette.pipette`, and `change_tip`.
+
+The prerequisite already exists: `TipBoxManager.next_tip` returns `(box_name, box, coordinate)` and `TipBox.take_tip` returns `(flat_index, coordinate)`, so the current tip's origin is knowable and `TipBox.present[index]` can be flipped back. This was impossible under the old `append_box` design, which erased per-box provenance. Record the origin on `PipetteState` at pickup, clear it on eject/dispose.
+
+Two open questions to settle before implementing: `keep_tip` is public surface (`PipetteArgs`, the `pipette` parser, the `pipette.transfer` RPC, committed `.pipette` files), so it likely needs to stay as a deprecated alias for `--tip_disposition keep`; and a *returned* tip is a used tip, so marking its slot plainly `present` again would let a later `next_tip` hand out a contaminated tip — that may need a distinct returned/dirty state rather than a bool. Do not add a "just eject it here" fallback; dropping a used tip over a sample plate is the failure mode this removes.
+
 ### Shell composition (`cli/tap_shell.py`)
 `TriccaAutoPipetteShell` (a `cmd2.Cmd` subclass, for standalone/local-scripting use only — **not** used by `tap`/the daemon) constructs its own `AutoPipetteService` (`self.service`, `daemon/service.py`) in `__init__` — the exact same class the daemon builds directly, so this shell and `tapd` share one business-logic implementation, differing only in lifecycle: this shell calls `self.service.connect()`/`disconnect()` (plain sync) from its `preloop`/`postloop` hooks, while the daemon awaits `service.start()`/`stop()` (non-blocking wrappers around the same steps) from its own event loop.
 
