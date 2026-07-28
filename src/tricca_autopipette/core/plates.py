@@ -77,10 +77,10 @@ class PlateParams(SmartDefaultModel):
 
     plate_type: str
     well_template: Well
-    num_row: int = Field(1, ge=1)
-    num_col: int = Field(1, ge=1)
-    spacing_row: float = Field(0.0, ge=0)
-    spacing_col: float = Field(0.0, ge=0)
+    num_row: int = Field(default=1, ge=1)
+    num_col: int = Field(default=1, ge=1)
+    spacing_row: float = Field(default=0.0, ge=0)
+    spacing_col: float = Field(default=0.0, ge=0)
 
     @field_validator("plate_type")
     @classmethod
@@ -489,7 +489,7 @@ class PlateArray(Plate):
         Returns:
             List of Well objects positioned in a rectangular grid.
         """
-        wells = []
+        wells: list[Well] = []
 
         for row in range(num_row):
             for col in range(num_col):

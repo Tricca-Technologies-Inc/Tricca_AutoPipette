@@ -347,9 +347,9 @@ class WellParams(BaseModel):
 
     coor: Coordinate
     dip_top: float = Field(..., gt=0)
-    dip_btm: float | None = Field(None, gt=0)
+    dip_btm: float | None = Field(default=None, gt=0)
     strategy_type: StrategyType = StrategyType.SIMPLE
-    well_diameter: float | None = Field(None, gt=0)
+    well_diameter: float | None = Field(default=None, gt=0)
 
     @model_validator(mode="after")
     def validate_strategy_requirements(self) -> WellParams:

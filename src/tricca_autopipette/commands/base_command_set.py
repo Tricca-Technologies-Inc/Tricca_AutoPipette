@@ -10,8 +10,17 @@ if TYPE_CHECKING:
     from tricca_autopipette.cli.tap_shell import TriccaAutoPipetteShell
     from tricca_autopipette.daemon.service import AutoPipetteService
 
+    # cmd2 4.0's CommandSet is generic over the Cmd subclass it loads into,
+    # and parameterizing it is what gives `self._cmd` a real type. It can
+    # only be subscripted under TYPE_CHECKING: tap_shell imports the command
+    # sets, so importing TriccaAutoPipetteShell at runtime here would close
+    # an import cycle.
+    _CommandSetBase = CommandSet[TriccaAutoPipetteShell]
+else:
+    _CommandSetBase = CommandSet
 
-class TAPCommandSet(CommandSet):
+
+class TAPCommandSet(_CommandSetBase):
     """Base class for Tricca AutoPipette command sets.
 
     Provides type-safe access to the parent shell instance.
@@ -25,14 +34,14 @@ class TAPCommandSet(CommandSet):
             The TriccaAutoPipetteShell instance.
 
         Raises:
-            RuntimeError: If command set has not been registered with a shell.
+            CommandSetRegistrationError: If this command set has not been
+                registered with a shell (raised by cmd2's own ``_cmd``
+                property, which never returns None).
         """
         from tricca_autopipette.cli.tap_shell import TriccaAutoPipetteShell
 
-        if self._cmd is None:
-            raise RuntimeError("CommandSet not registered with a shell")
-
-        # Type assertion - we know this is TriccaAutoPipetteShell
+        # Guards against registration into some *other* cmd2 app; the
+        # unregistered case is already handled by cmd2's _cmd property.
         assert isinstance(self._cmd, TriccaAutoPipetteShell)
         return self._cmd
 

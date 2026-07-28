@@ -569,7 +569,7 @@ class SystemConfig(BaseModel):
 # EXPORTS
 # ============================================================================
 
-__all__ = [
+__all__ = [  # noqa: RUF022  (grouped by domain, which reads better than sorted)
     # Enums
     "TipState",
     "FluidDisplacement",

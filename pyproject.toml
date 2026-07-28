@@ -139,6 +139,10 @@ allowed-confusables = ["×"]
 # annotations on every test function.
 "tests/**" = ["D", "ANN"]
 
+# ASCII-art banners: the "lines" are rows of a picture, and rich markup
+# tags make them long. Wrapping them would break the art.
+"src/tricca_autopipette/resources/string_constants.py" = ["E501"]
+
 
 [tool.ruff.lint.isort]
 
@@ -172,6 +176,13 @@ docstring-code-format = true
 
 [tool.pyright]
 
+# Resolve imports against the project virtualenv, not whatever interpreter
+# pyright happens to find. Without this, pydantic/pytest/aiohttp/fastapi are
+# all unresolved and strict mode cascades every value flowing out of them
+# into reportUnknown* -- which inflated the error count from 187 to 648.
+venvPath = "."
+venv = ".venv"
+
 pythonVersion = "3.12"
 
 typeCheckingMode = "strict"
@@ -184,6 +195,18 @@ reportUnknownParameterType = true
 reportUnknownVariableType = true
 
 extraPaths = ["src"]
+
+# The service/daemon tests are deliberately white-box: they assert against
+# `service._autopipette`, drive `ControlServer._call` directly, and check
+# `_dispatch_protocol_line`. Reaching into those internals is the point of
+# those tests, not an encapsulation break, so don't flag it under tests/.
+[[tool.pyright.executionEnvironments]]
+root = "tests"
+reportPrivateUsage = false
+
+# Everything else keeps the strict defaults from above.
+[[tool.pyright.executionEnvironments]]
+root = "."
 
 
 # ============================================================================

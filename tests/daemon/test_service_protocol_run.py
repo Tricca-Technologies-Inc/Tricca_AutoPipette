@@ -22,8 +22,11 @@ from tricca_autopipette.daemon.service import AutoPipetteService, ProtocolAborte
 FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures" / "protocols"
 
 
+# pyright doesn't model autouse fixtures, so it sees this as never called.
 @pytest.fixture(autouse=True)
-def _use_fixture_protocols_dir(monkeypatch: pytest.MonkeyPatch) -> None:
+def _use_fixture_protocols_dir(  # pyright: ignore[reportUnusedFunction]
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setattr(DefaultPaths, "DIR_PROTOCOL", FIXTURES_DIR)
 
 

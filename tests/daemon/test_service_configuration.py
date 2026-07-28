@@ -18,7 +18,9 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     ResetPlateArgs,
     SetArgs,
 )
+from tricca_autopipette.core.coordinate import Coordinate
 from tricca_autopipette.core.pipette_constants import DefaultFilenames, DefaultPaths
+from tricca_autopipette.core.plates import Plate
 from tricca_autopipette.daemon.service import AutoPipetteService
 
 
@@ -105,6 +107,7 @@ class TestCoor:
 
         assert result.ok is True
         location = service._autopipette.location_manager.locations["bench"]
+        assert isinstance(location, Coordinate)
         assert location.x == pytest.approx(1.0)
         assert location.y == pytest.approx(2.0)
         assert location.z == pytest.approx(3.0)
@@ -149,6 +152,7 @@ class TestResetPlate:
         service.plate(_plate_args())
         loc_mgr = service._autopipette.location_manager
         plate = loc_mgr.locations["my_plate"]
+        assert isinstance(plate, Plate)
         plate.curr = 5
 
         result = service.reset_plate(ResetPlateArgs(name="my_plate"))
@@ -167,15 +171,19 @@ class TestResetPlates:
         service.plate(_plate_args(name="plate_a"))
         service.plate(_plate_args(name="plate_b"))
         loc_mgr = service._autopipette.location_manager
-        loc_mgr.locations["plate_a"].curr = 3
-        loc_mgr.locations["plate_b"].curr = 7
+        plate_a = loc_mgr.locations["plate_a"]
+        plate_b = loc_mgr.locations["plate_b"]
+        assert isinstance(plate_a, Plate)
+        assert isinstance(plate_b, Plate)
+        plate_a.curr = 3
+        plate_b.curr = 7
 
         result = service.reset_plates()
 
         assert result.ok is True
         assert "2 plate" in result.message
-        assert loc_mgr.locations["plate_a"].curr == 0
-        assert loc_mgr.locations["plate_b"].curr == 0
+        assert plate_a.curr == 0
+        assert plate_b.curr == 0
 
 
 class TestDelLoc:

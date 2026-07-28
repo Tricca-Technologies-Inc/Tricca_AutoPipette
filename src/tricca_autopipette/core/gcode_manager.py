@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 from tricca_autopipette.core.gcode_buffer import GCodeBuffer
 
 if TYPE_CHECKING:
-    from autopipette import AutoPipette
+    from tricca_autopipette.core.autopipette import AutoPipette
 
 # Constants
 GCODE_TIMESTAMP_FORMAT = "%Y-%m-%d-%H-%M-%S-%f.gcode"
@@ -70,8 +70,7 @@ class GCodeManager:
             List of accumulated G-code commands.
         """
         self._batch_mode = False
-        result = self._buffer.get_commands()  # Gets and clears
-        return result
+        return self._buffer.get_commands()  # Gets and clears
 
     @contextmanager
     def batch_mode(self) -> Iterator[GCodeManager]:

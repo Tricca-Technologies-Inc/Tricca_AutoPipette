@@ -51,7 +51,6 @@ from tricca_autopipette.core.pipette_models import (
     SystemConfig,
     TipState,
 )
-from tricca_autopipette.core.plates import Plate
 from tricca_autopipette.core.volume_converter import VolumeConverter
 
 
@@ -326,10 +325,7 @@ class AutoPipette:
             >>> pipette.move_to(Coordinate(x=10, y=10, z=5))
         """
         # Convert enum to string if needed
-        if isinstance(mode, CoordinateSystem):
-            mode_str = mode.value
-        else:
-            mode_str = mode.lower()
+        mode_str = mode.value if isinstance(mode, CoordinateSystem) else mode.lower()
 
         if mode_str == CoordinateSystem.ABSOLUTE.value:
             self.gcode_buffers.add(f"{GCodeCommand.ABSOLUTE_MODE}\n")
@@ -737,12 +733,6 @@ class AutoPipette:
                 f"Aspiration requires a plate with dipping strategy."
             )
 
-        if not isinstance(loc_source, Plate):
-            raise ValueError(
-                f"Source '{source}' has invalid type. "
-                f"Expected Plate, got {type(loc_source).__name__}."
-            )
-
         self.move_to(coor_source)
         self.home_pipette_stepper()
 
@@ -798,12 +788,6 @@ class AutoPipette:
             raise ValueError(
                 f"Destination '{dest}' is a coordinate, not a plate. "
                 f"Dispensing requires a plate with dipping strategy."
-            )
-
-        if not isinstance(loc_dest, Plate):
-            raise ValueError(
-                f"Destination '{dest}' has invalid type. "
-                f"Expected Plate, got {type(loc_dest).__name__}."
             )
 
         self.move_to(coor_dest)

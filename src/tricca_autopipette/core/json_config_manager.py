@@ -175,7 +175,7 @@ class JsonConfigManager:
             merged_pipette = PipetteModel(**pipette_ref)
 
         # 5. Merge liquid profiles (user overrides defaults)
-        merged_liquids = {}
+        merged_liquids: dict[str, LiquidProfile] = {}
 
         # Start with all default liquids
         for liquid_name, default_liquid in default_liquids.items():
@@ -450,7 +450,7 @@ class JsonConfigManager:
             >>> print(pipettes)
             ['p1000_vertical', 'p200_horizontal', 'p10_vertical']
         """
-        pipettes = []
+        pipettes: list[str] = []
 
         # Check user pipettes
         user_pipettes_dir = DefaultPaths.DIR_CONFIG_PIPETTE

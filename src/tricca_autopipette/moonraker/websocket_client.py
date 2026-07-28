@@ -596,8 +596,7 @@ class WebSocketClient:
         await self.ws.send_str(json.dumps(payload))
 
         # Wait for response
-        result = await asyncio.wait_for(fut, timeout)
-        return result
+        return await asyncio.wait_for(fut, timeout)
 
     def send_jsonrpc(
         self,

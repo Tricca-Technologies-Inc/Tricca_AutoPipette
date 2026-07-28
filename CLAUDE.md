@@ -106,7 +106,7 @@ The kiosk (`autopipette_kiosk/main.py`) takes its `REPO_ROOT` from `DefaultPaths
 ### Domain model (`core/`)
 - `autopipette.py` — `AutoPipette`: central controller tying config, location manager, G-code buffer, and volume converter together; owns `pipette()`/`aspirate()`/`dispense()`/tip-handling and multi-liquid switching (`switch_liquid`).
 - `pipette_models.py` — pydantic-style dataclasses for `SystemConfig`, `GantryKinematics`, `PipetteModel`, `PipetteSyringeKinematics`, `PipetteState`, `TipState`, `FluidDisplacement`.
-- `volume_converter.py` / `print_volume_equation.py` — volume↔motor-step conversion, including calibration-curve-based conversion.
+- `volume_converter.py` — volume↔motor-step conversion, including calibration-curve-based conversion.
 - `coordinate.py` — `Coordinate`, used throughout for absolute/relative XYZ positions.
 - `well.py` — `Well`, `StrategyType` (dipping/aspirate strategies per well).
 - `plates.py` — plate class hierarchy + `PlateFactory` registry (`@PlateFactory.register(...)`-style pattern — check the file before adding a new plate type).

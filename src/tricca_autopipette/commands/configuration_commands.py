@@ -7,6 +7,8 @@ configuration state.
 
 from __future__ import annotations
 
+from typing import Any
+
 from cmd2 import Statement, with_argparser
 from rich import print as rprint
 
@@ -115,7 +117,7 @@ class ConfigurationCommands(TAPCommandSet):
         """
         result = self.service.list_liquids()
         data = result.data or {}
-        liquids = data.get("liquids") or []
+        liquids: list[dict[str, Any]] = data.get("liquids") or []
         if not liquids:
             rprint(f"[yellow]{result.message}[/yellow]")
             return
@@ -377,7 +379,7 @@ class ConfigurationCommands(TAPCommandSet):
     def _ls_locs(self) -> None:
         """Display all defined locations (coordinates and plates)."""
         result = self.service.list_locations()
-        locations = (result.data or {}).get("locations") or []
+        locations: list[dict[str, Any]] = (result.data or {}).get("locations") or []
         if not locations:
             rprint(f"[yellow]{result.message}[/yellow]")
             return
@@ -386,7 +388,7 @@ class ConfigurationCommands(TAPCommandSet):
     def _ls_plates(self) -> None:
         """Display all defined plates with full detail."""
         result = self.service.list_plates()
-        plates = (result.data or {}).get("plates") or []
+        plates: list[dict[str, Any]] = (result.data or {}).get("plates") or []
         if not plates:
             rprint(f"[yellow]{result.message}[/yellow]")
             return
@@ -396,7 +398,7 @@ class ConfigurationCommands(TAPCommandSet):
         """Display all liquid profiles."""
         result = self.service.list_liquids()
         data = result.data or {}
-        liquids = data.get("liquids") or []
+        liquids: list[dict[str, Any]] = data.get("liquids") or []
         if not liquids:
             rprint(f"[yellow]{result.message}[/yellow]")
             return

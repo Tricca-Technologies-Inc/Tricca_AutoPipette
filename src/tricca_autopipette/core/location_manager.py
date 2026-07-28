@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
+from typing import Any
 
 from tricca_autopipette.core.coordinate import Coordinate
 from tricca_autopipette.core.pipette_constants import (
@@ -201,7 +202,8 @@ class LocationManager:
 
         Raises:
             NotALocationError: If the location name doesn't exist.
-            ValueError: If only one of row/col is provided.
+            ValueError: If only one of row/col is provided, or if row/col
+                address a cell outside the plate.
 
         Example:
             >>> # Get simple coordinate
@@ -222,16 +224,13 @@ class LocationManager:
             if row is None and col is None:
                 return location.next()
             if row is not None and col is not None:
-                coor = location.get_coor(row, col)
-                if coor is not None:
-                    return coor
-                raise ValueError("Coordinate returned from location is None.")
+                # get_coor raises ValueError for an out-of-bounds cell; it
+                # never returns None.
+                return location.get_coor(row, col)
             raise ValueError(
                 "Both row and col must be provided together, or both must be None"
             )
-        if isinstance(location, Coordinate):
-            return location
-        raise NotALocationError(name)
+        return location
 
     def get_plate_names(self) -> list[str]:
         """Get names of all locations that are plates.
@@ -336,7 +335,7 @@ class LocationManager:
 
         try:
             with locations_file.open("r", encoding="utf-8") as f:
-                locations_data = json.load(f)
+                locations_data: dict[str, Any] = json.load(f)
         except json.JSONDecodeError as e:
             logger.error(f"Invalid JSON in locations file: {e}")
             raise ValueError(f"Invalid JSON in {filename}: {e}") from e
@@ -419,7 +418,7 @@ class LocationManager:
         locations_file = locations_dir / filename
 
         # Build JSON structure
-        data = {"coordinates": [], "plates": []}
+        data: dict[str, list[dict[str, Any]]] = {"coordinates": [], "plates": []}
 
         # Save coordinates
         for name in self.get_coordinate_names():
@@ -436,7 +435,7 @@ class LocationManager:
         for name in self.get_plate_names():
             location = self.locations[name]
             if isinstance(location, Plate):
-                plate_data = {
+                plate_data: dict[str, Any] = {
                     "name": name,
                     "type": PlateFactory.type_name_for(location),
                     "x": location.wells[0].coor.x if location.wells else 0,
@@ -470,7 +469,7 @@ class LocationManager:
 
         logger.info(f"Saved {len(self.locations)} location(s) to {filename}")
 
-    def _load_plate_definition(self, plate_file: Path) -> dict:
+    def _load_plate_definition(self, plate_file: Path) -> dict[str, Any]:
         """Load plate definition from JSON file.
 
         Args:
@@ -521,17 +520,15 @@ class LocationManager:
                 "y": str(location.y),
                 "z": str(location.z),
             }
-        if isinstance(location, Plate):
-            info: dict[str, str] = {
-                "type": "plate",
-                "rows": str(location.num_row),
-                "cols": str(location.num_col),
-            }
-            if hasattr(location, "current_row") and hasattr(location, "current_col"):
-                info["current_row"] = str(location.current_row)
-                info["current_col"] = str(location.current_col)
-            return info
-        return {"type": "unknown"}
+        info: dict[str, str] = {
+            "type": "plate",
+            "rows": str(location.num_row),
+            "cols": str(location.num_col),
+        }
+        if hasattr(location, "current_row") and hasattr(location, "current_col"):
+            info["current_row"] = str(location.current_row)
+            info["current_col"] = str(location.current_col)
+        return info
 
     def __repr__(self) -> str:
         """Return string representation of LocationManager.

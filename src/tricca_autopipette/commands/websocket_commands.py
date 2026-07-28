@@ -87,7 +87,7 @@ class WebSocketCommands(TAPCommandSet):
         else:
             rprint("[dim]📭 No queued messages[/dim]")
 
-        handlers = data.get("handlers") or []
+        handlers: list[str] = data.get("handlers") or []
         if handlers:
             rprint(f"[cyan]🔔 {len(handlers)} notification handler(s):[/cyan]")
             for method in handlers:

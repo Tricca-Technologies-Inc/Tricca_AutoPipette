@@ -11,6 +11,7 @@ dataclass built from the wire `params` dict.
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 
 from fakes.fake_moonraker_state import FakeMoonrakerState
 
@@ -20,7 +21,10 @@ from tricca_autopipette.daemon.control_server import ControlServer
 from tricca_autopipette.daemon.service import AutoPipetteService
 
 
-def _call(server: ControlServer, method: str, params: dict[str, object]) -> object:
+def _call(
+    server: ControlServer, method: str, params: dict[str, object]
+) -> dict[str, Any]:
+    """Dispatch one control-plane RPC, returning its CommandResult-shaped dict."""
     return asyncio.run(server._call(method, params))
 
 

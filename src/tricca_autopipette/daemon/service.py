@@ -217,16 +217,20 @@ def persist_tip_liquid_state(
         try:
             return func(self, *args, **kwargs)
         finally:
+            # This decorator is part of AutoPipetteService's own implementation
+            # (same module, applied only to its methods), so reaching into the
+            # service's privates here is deliberate rather than an outside
+            # caller breaking encapsulation.
             if self.moonraker_state is not None:
-                autopipette = self._autopipette
+                autopipette = self._autopipette  # pyright: ignore[reportPrivateUsage]
                 state = autopipette.state
                 snapshot = (
                     state.tip_state.value,
                     state.has_liquid,
                     autopipette.active_liquid,
                 )
-                if snapshot != self._last_persisted_state:
-                    self._last_persisted_state = snapshot
+                if snapshot != self._last_persisted_state:  # pyright: ignore[reportPrivateUsage]
+                    self._last_persisted_state = snapshot  # pyright: ignore[reportPrivateUsage]
                     self.moonraker_state.save_tip_liquid_state(*snapshot)
 
     return wrapper
@@ -613,7 +617,7 @@ class AutoPipetteService:
         autopipette.set_coor_sys(CoordinateSystem.ABSOLUTE)
         self.output_gcode(autopipette.get_gcode())
 
-        parts = []
+        parts: list[str] = []
         if args.x != 0:
             parts.append(f"X{args.x:+.2f}")
         if args.y != 0:
@@ -778,7 +782,7 @@ class AutoPipetteService:
             keep_tip=args.keep_tip,
         )
 
-        features = []
+        features: list[str] = []
         if args.prewet:
             features.append(f"prewet×{args.prewet}")
         if args.wiggle:
@@ -793,7 +797,7 @@ class AutoPipetteService:
             comment += f" [{', '.join(features)}]"
         comment += "\n"
 
-        self.output_gcode([comment] + autopipette.get_gcode() + ["\n"])
+        self.output_gcode([comment, *autopipette.get_gcode(), "\n"])
         return CommandResult(
             ok=True,
             message=(
@@ -1695,7 +1699,7 @@ class AutoPipetteService:
             ``name``/``type``/``x``/``y``/``z``/``details`` keys.
         """
         loc_mgr = self._autopipette.location_manager
-        rows = []
+        rows: list[dict[str, Any]] = []
         for name in sorted(loc_mgr.get_all_names()):
             location = loc_mgr.locations[name]
             if isinstance(location, Plate):
@@ -1711,7 +1715,7 @@ class AutoPipetteService:
                         f"[{location.current_row},{location.current_col}]"
                     ),
                 })
-            elif isinstance(location, Coordinate):
+            else:
                 rows.append({
                     "name": name,
                     "type": "Coordinate",
@@ -1734,7 +1738,7 @@ class AutoPipetteService:
             ``name``/``type``/``dimensions``/``current``/``wells`` keys.
         """
         loc_mgr = self._autopipette.location_manager
-        rows = []
+        rows: list[dict[str, Any]] = []
         for name in sorted(loc_mgr.get_plate_names()):
             plate = loc_mgr.locations[name]
             if not isinstance(plate, Plate):

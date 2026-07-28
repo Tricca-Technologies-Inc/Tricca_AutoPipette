@@ -355,7 +355,7 @@ class RemoteTapShell(Cmd):
             response = self._send(self.requests.list_locations())
             data = self._result_data(response)
             if data is not None:
-                rows = data.get("locations") or []
+                rows: list[dict[str, Any]] = data.get("locations") or []
                 self.poutput(
                     build_locations_table(rows) if rows else "No locations defined."
                 )
@@ -363,7 +363,7 @@ class RemoteTapShell(Cmd):
             response = self._send(self.requests.list_plates())
             data = self._result_data(response)
             if data is not None:
-                rows = data.get("plates") or []
+                rows: list[dict[str, Any]] = data.get("plates") or []
                 self.poutput(build_plates_table(rows) if rows else "No plates defined.")
         elif var == "liquids":
             self._print_liquids()
@@ -387,7 +387,7 @@ class RemoteTapShell(Cmd):
         data = self._result_data(response)
         if data is None:
             return
-        rows = data.get("liquids") or []
+        rows: list[dict[str, Any]] = data.get("liquids") or []
         if not rows:
             self.poutput("No liquid profiles loaded.")
             return
