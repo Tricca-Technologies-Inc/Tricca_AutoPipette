@@ -8,7 +8,7 @@ Tricca AutoPipette controls an automated liquid handling system (ALHS) built on 
 
 The root `README.md` is stale (marked `(OUTDATED!!!)`, describes a flat pre-`src/` layout) — do not trust it for current structure; this file supersedes it.
 
-This file describes the system as it **is**. Planned-but-unimplemented work lives in `docs/TODO.md` — check it before starting anything non-trivial, since several entries record decisions already taken and open questions that must be settled first. It also flags problems that are true of the code *today*: a possible steps-vs-millimetres confusion in the syringe G-code, and the non-atomic/lossy config writer. Note that neither `tapd`'s control plane nor the kiosk has **any** authentication — both are protected solely by binding loopback, so treat any change to a bind address as a security decision (see `systemd/README.md`).
+This file describes the system as it **is**. Planned-but-unimplemented work lives in `docs/TODO.md` — check it before starting anything non-trivial, since several entries record decisions already taken and open questions that must be settled first. It also flags problems that are true of the code *today*: the "steps" vocabulary in `VolumeConverter`/`vol_to_steps` actually denotes **millimetres** (Klipper's `MANUAL_STEPPER` takes `MOVE` in mm, `SPEED` in mm/s, `ACCEL` in mm/s²) — a naming bug rather than a correctness one, but the names lie; and the non-atomic/lossy config writer. Note that neither `tapd`'s control plane nor the kiosk has **any** authentication — both are protected solely by binding loopback, so treat any change to a bind address as a security decision (see `systemd/README.md`).
 
 ## Commands
 

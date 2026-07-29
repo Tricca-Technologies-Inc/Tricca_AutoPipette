@@ -30,12 +30,13 @@ researching other items and are worth triaging on their own:
    `0.0.0.0` until the unit is re-copied and reloaded. Audit deployed hosts.
    `tapd`'s control plane still has no authentication either, protected only by
    its own loopback default.
-2. **The "steps" vocabulary may already mean millimetres** (item 15).
-   `VolumeConverter.vol_to_steps` is documented as returning microsteps, but its
-   output feeds straight into `MANUAL_STEPPER … MOVE=`, which Klipper reads in
-   mm. Either the naming is a long-standing misnomer, or the emitted G-code is
-   wrong on every syringe move. **Resolve before any renaming** — the two
-   outcomes call for completely different work.
+2. **The "steps" vocabulary already means millimetres** (item 15) — confirmed
+   2026-07-29 against Klipper's docs: `MANUAL_STEPPER`'s `MOVE`/`SET_POSITION`
+   are mm, `SPEED` is mm/s, `ACCEL` is mm/s². `VolumeConverter.vol_to_steps`
+   returns mm despite its name and docstring. **A naming bug, not a correctness
+   bug** — the emitted G-code is fine. The rename touches public RPC and `tap`
+   surface. A related unverified point: the code passes `STOP_ON_ENDSTOP`
+   numeric values that current Klipper documents only as strings.
 3. **The only config writer is non-atomic and lossy** (item 19).
    `LocationManager.save_to_json` is a bare `open("w")` + `json.dump` that
    reconstructs plates from `wells[0]` via `hasattr` probing, and `extends`
@@ -52,7 +53,8 @@ Most items are independent. These interlock:
                                           10 (dep pinning) ─┘
 
 15 (travel-not-volume) ──> 16 (G-code library) ──> 15's rename executes through it
-   └─ settle the mm/steps question FIRST (may be a bug, not a refactor)
+   └─ mm/steps question RESOLVED: units are mm; it's a naming bug, not a
+      correctness bug, so 15 is a refactor and is not urgent
 
 19 (config write-back) ──> 13 (pipette max volume; subsumed by 19)
                        └─> 12 (a fitted calibration curve is a config write)
@@ -80,7 +82,7 @@ Most items are independent. These interlock:
 | 12 | [Calibration procedure + wizard](#12-calibration-procedure--kiosk-wizard) | no backend yet |
 | 13 | [Writable pipette configuration](#13-writable-pipette-configuration-max-volume--safety-sensitive) | ⚠️ safety-sensitive; subsumed by 19 |
 | 14 | [Kiosk/CLI capability parity](#14-capability-parity-between-the-kiosk-and-the-cli) | standing rule |
-| 15 | [Syringe limit as travel, not volume](#15-model-the-syringe-limit-as-travel-distance-not-volume) | ⚠️ investigate units first |
+| 15 | [Syringe limit as travel, not volume](#15-model-the-syringe-limit-as-travel-distance-not-volume) | units confirmed mm; naming bug |
 | 16 | [Typed G-code command library](#16-a-typed-g-code-command-library) | |
 | 17 | [Fleet browser tool](#17-fleet-browser-tool-mainsail-like-network-connected) | large; needs 18 |
 | 18 | [Kiosk is network-exposed](#18-the-kiosk-is-network-exposed-with-no-authentication) | default fixed; ⚠️ audit deployed hosts |
@@ -691,42 +693,63 @@ Both want a distance for a homing move and route through volume to get one.
   API (`aspirate --vol`, `dispense`, `pipette`) is deliberately untouched:
   protocols should ask for µL.
 
-**⚠️ Investigate first: the "steps" vocabulary appears to already be millimetres.**
-This changes the shape of the item and must be settled before any renaming.
+**✅ RESOLVED 2026-07-29: the "steps" vocabulary already means millimetres.**
+Checked against Klipper's own documentation. This is a **naming bug, not a
+correctness bug** — the emitted G-code is fine.
 
-`VolumeConverter.vol_to_steps` is documented as returning "motor microsteps"
-(`core/volume_converter.py:81–99`), and its output is fed **directly** into
-`MANUAL_STEPPER … MOVE=`. Klipper reads `MOVE=` in mm. Both cannot be true.
+Klipper's [G-Codes reference](https://www.klipper3d.org/G-Codes.html) documents
+`MANUAL_STEPPER STEPPER=config_name [ENABLE=[0|1]] [SET_POSITION=<pos>]
+[SPEED=<speed>] [ACCEL=<accel>] [MOVE=<pos>] [SYNC=0]`, with **`MOVE` and
+`SET_POSITION` in millimetres, `SPEED` in mm/s, and `ACCEL` in mm/s²**. The
+[config reference](https://www.klipper3d.org/Config_Reference.html) confirms the
+mechanism: `[manual_stepper]`'s `rotation_distance` is "the distance (in
+millimeters) that the axis travels with one complete rotation of the stepper
+motor," and that is what converts a millimetre `MOVE` into step pulses.
 
-The calibration table supports the mm reading: `_consts` maps 100 µL → 39.25.
-If that's mm, the implied bore area is 100 µL / 39.25 mm ≈ 2.55 mm², a diameter
-of ≈1.8 mm — entirely plausible for a 100 µL glass syringe. As a microstep count
-for 100 µL it would be implausibly coarse.
+So `VolumeConverter.vol_to_steps` — documented as returning "motor microsteps"
+(`core/volume_converter.py:81–99`) — feeds its output **directly** into a
+parameter Klipper reads as millimetres. Since the machine dispenses correct
+volumes in practice, the polynomial is empirically a µL→**mm** fit that has
+simply been labelled "steps" throughout.
 
-Corroborating evidence — `core/autopipette.py:425–427` has, in a *single*
-docstring:
+The calibration table agrees: `_consts` maps 100 µL → 39.25. As mm, the implied
+bore area is 100 µL / 39.25 mm ≈ 2.55 mm² — a diameter of ≈1.8 mm, entirely
+plausible for a 100 µL glass syringe. As a microstep count for 100 µL it would
+be implausibly coarse.
+
+`core/autopipette.py:425–427` shows the confusion in a *single* docstring:
 
 ```
 speed: Homing speed in steps/s, or None for default.
 accel: Homing acceleration in mm/s², or None for default.
 ```
 
-Two units for two parameters of the same `MANUAL_STEPPER` call. Klipper takes
-`SPEED=` in mm/s.
+Two different units for two parameters of the same call. `speed` is mm/s.
 
-**If confirmed**, this item grows: the whole "steps" vocabulary is a misnomer
-already denoting mm, and the rename covers `vol_to_steps`/`steps_to_vol`, the
-`vol_to_steps`/`steps_to_vol` shell commands and control-plane RPCs, the
-`VolToStepsArgs` dataclass, and the "μsteps" docstrings. That is a **public
-surface break** (both RPCs and both `tap` commands), so it needs the same
+**Consequently this item grows a rename.** The whole "steps" vocabulary denotes
+mm and should say so: `vol_to_steps`/`steps_to_vol`, the matching shell commands
+and control-plane RPCs, `VolToStepsArgs`, and every "μsteps" docstring. Both RPCs
+and both `tap` commands are **public surface**, so this needs the same
 deprecation-alias treatment item 1 needs for `keep_tip`.
 
-**If disconfirmed** — the value really is steps — then the emitted G-code is
-feeding a step count into a millimetre parameter, which is a live correctness
-bug affecting every syringe move, and that becomes the urgent item rather than
-this refactor. **Resolve this before doing anything else here.** Confirm against
-Klipper's `MANUAL_STEPPER` documentation, the machine's `printer.cfg`
-(`rotation_distance` for the syringe stepper), and a measured test move.
+**Quick win available now:** the `core/autopipette.py:425` docstring is
+confirmed wrong and can be corrected independently of the full rename.
+
+**Unrelated finding from the same check — worth verifying against your Klipper
+version.** The code emits `STOP_ON_ENDSTOP` with **numeric** values: `=1`
+(`core/autopipette.py:444`, `:685`), `=-1` (`:447`), and `=2` (`:515`). Current
+Klipper documents that parameter as taking **string** values — `probe`, `home`,
+`inverted_probe`, `inverted_home`, and `try_*` variants — with no numeric form
+mentioned.
+
+The numeric form is the older API, and the mapping is presumably
+`1`→`probe`, `2`→`home`, `-1`→`inverted_probe`, `-2`→`inverted_home` (note `home`
+additionally sets the final position so the trigger point matches `MOVE`, which
+matters for `:515`). It is most likely still accepted for backwards
+compatibility — the machine works — but this was **not** confirmed, and it is
+exactly the kind of thing a Klipper upgrade drops. Verify against the Klipper
+version actually deployed, and note this would be caught automatically by item
+16's typed `MANUAL_STEPPER` builder.
 
 **Open questions.**
 - Deriving capacity from travel routes `usable_capacity_ul()` through
