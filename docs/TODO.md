@@ -35,8 +35,9 @@ researching other items and are worth triaging on their own:
    are mm, `SPEED` is mm/s, `ACCEL` is mm/s². `VolumeConverter.vol_to_steps`
    returns mm despite its name and docstring. **A naming bug, not a correctness
    bug** — the emitted G-code is fine. The rename touches public RPC and `tap`
-   surface. A related unverified point: the code passes `STOP_ON_ENDSTOP`
-   numeric values that current Klipper documents only as strings.
+   surface. Related: the code passes `STOP_ON_ENDSTOP` numeric values that
+   current Klipper documents only as strings; they still work via an explicit
+   backwards-compatibility map, but it is the deprecated form.
 3. **The only config writer is non-atomic and lossy** (item 19).
    `LocationManager.save_to_json` is a bare `open("w")` + `json.dump` that
    reconstructs plates from `wells[0]` via `hasattr` probing, and `extends`
@@ -735,21 +736,53 @@ deprecation-alias treatment item 1 needs for `keep_tip`.
 **Quick win available now:** the `core/autopipette.py:425` docstring is
 confirmed wrong and can be corrected independently of the full rename.
 
-**Unrelated finding from the same check — worth verifying against your Klipper
-version.** The code emits `STOP_ON_ENDSTOP` with **numeric** values: `=1`
-(`core/autopipette.py:444`, `:685`), `=-1` (`:447`), and `=2` (`:515`). Current
-Klipper documents that parameter as taking **string** values — `probe`, `home`,
-`inverted_probe`, `inverted_home`, and `try_*` variants — with no numeric form
-mentioned.
+**Related finding: `STOP_ON_ENDSTOP` uses the deprecated numeric form.**
+Checked 2026-07-29 against Klipper's source
+([`klippy/extras/manual_stepper.py`](https://github.com/Klipper3d/klipper/blob/master/klippy/extras/manual_stepper.py)).
 
-The numeric form is the older API, and the mapping is presumably
-`1`→`probe`, `2`→`home`, `-1`→`inverted_probe`, `-2`→`inverted_home` (note `home`
-additionally sets the final position so the trigger point matches `MOVE`, which
-matters for `:515`). It is most likely still accepted for backwards
-compatibility — the machine works — but this was **not** confirmed, and it is
-exactly the kind of thing a Klipper upgrade drops. Verify against the Klipper
-version actually deployed, and note this would be caught automatically by item
-16's typed `MANUAL_STEPPER` builder.
+The code emits numeric values — `=1` (`core/autopipette.py:444`, `:685`), `=-1`
+(`:447`), `=2` (`:515`) — while current Klipper documents only string values
+(`probe`, `home`, `inverted_probe`, `inverted_home`, `try_*`).
+
+**Still accepted.** `cmd_MANUAL_STEPPER` reads the parameter with `gcmd.get()`
+and applies a backwards-compatibility table before validating:
+
+```python
+old_map = {'-2': 'try_inverted_home', '-1': 'inverted_home',
+           '1': 'home', '2': 'try_home'}.get(homing_move)
+```
+
+So nothing is broken today. But it is explicitly the *old* mapping, kept for
+compatibility, and is the kind of thing a future Klipper release drops.
+
+**⚠️ Correction to an earlier revision of this entry**, which guessed the mapping
+as `1`→`probe`, `2`→`home`. That was wrong. The real mapping has **no `probe`
+variants at all** — every numeric value maps to a *home* form, which stops on
+trigger *and* sets the final position so the trigger point matches `MOVE`. The
+actual semantics in use are:
+
+| Emitted | Means | Where |
+|---|---|---|
+| `1` | `home` | `:444`, `:685` — home the plunger |
+| `-1` | `inverted_home` | `:447` — stop when the endstop reads *not* triggered |
+| `2` | `try_home` | `:515` — as `home`, but no error if the move completes without triggering |
+
+These are the right semantics for what the call sites do, so this is a
+modernization rather than a bug fix. Migrating to the string form is cheap and
+would be caught automatically by item 16's typed `MANUAL_STEPPER` builder.
+
+**Not verified: the Klipper version actually deployed.** `tap-tyson.local` was
+not resolvable from the development host, so this rests on current master. If
+the machine runs an *older* Klipper, confirm the string forms are supported
+before migrating — `try_home` in particular is newer than the plain numeric API.
+Check with:
+
+```bash
+curl -s http://tap-tyson.local:7125/printer/info | python3 -m json.tool
+```
+
+(`software_version` is the Klipper version; Moonraker's port is `7125` per
+`config/system/system.json`.)
 
 **Open questions.**
 - Deriving capacity from travel routes `usable_capacity_ul()` through
