@@ -1,8 +1,21 @@
 #!/usr/bin/env python3
-"""Volume converter for translating between microliters and motor steps.
+"""Volume converter for translating between microliters and plunger travel.
 
 This module provides conversion between liquid volumes (microliters) and
-stepper motor positions (microsteps) for precise pipetting control.
+syringe plunger positions for precise pipetting control.
+
+.. warning::
+   Everything here named "steps" is actually **millimetres**. The values
+   returned by :meth:`VolumeConverter.vol_to_steps` are passed straight to
+   Klipper's ``MANUAL_STEPPER ... MOVE=``, which takes millimetres (the
+   ``[manual_stepper]`` ``rotation_distance`` setting is what converts mm to
+   step pulses). The calibration table below is therefore a μL -> mm fit: 100 μL
+   maps to 39.25 mm of travel, implying a bore of roughly 1.8 mm.
+
+   The names are wrong, not the numbers -- the emitted G-code is correct.
+   Renaming ``vol_to_steps``/``steps_to_vol`` is tracked as item 15 in
+   docs/TODO.md; it is deferred because both are public control-plane RPC and
+   ``tap`` command surface and so need a deprecation alias.
 """
 
 from __future__ import annotations

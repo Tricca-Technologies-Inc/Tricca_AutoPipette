@@ -110,7 +110,7 @@ class ConfigurationCommands(TAPCommandSet):
             rprint(f"[green]✓ {result.message}[/green]")
             rprint(f"  Viscosity: {data.get('viscosity_cP')} cP")
             if data.get("speed_aspirate"):
-                rprint(f"  Aspirate speed: {data['speed_aspirate']} steps/s")
+                rprint(f"  Aspirate speed: {data['speed_aspirate']} mm/s")
             if data.get("prewet_cycles"):
                 rprint(f"  Prewet: {data['prewet_cycles']} cycles")
             pre_gap = data.get("pre_air_gap_ul")

@@ -422,7 +422,7 @@ class AutoPipette:
 
         Args:
             stepper: Name of stepper, or None to use configured stepper.
-            speed: Homing speed in steps/s, or None for default.
+            speed: Homing speed in mm/s, or None for default.
             accel: Homing acceleration in mm/s², or None for default.
         """
         if stepper is None:
@@ -497,9 +497,9 @@ class AutoPipette:
         """Move the plunger stepper motor a specific distance.
 
         Args:
-            distance: Distance to move in motor steps.
+            distance: Distance to move in millimetres.
             stepper: Name of stepper, or None for configured stepper.
-            speed: Movement speed in steps/s, or None for default.
+            speed: Movement speed in mm/s, or None for default.
             accel: Movement acceleration in mm/s², or None for default.
         """
         if stepper is None:
@@ -637,7 +637,7 @@ class AutoPipette:
             direction: Direction to move the syringe plunger.
             vol_ul: Volume to aspirate or dispense in microliters.
             stepper: Name of stepper, or None for configured stepper.
-            speed: Plunger movement speed in steps/s, or None for default.
+            speed: Plunger movement speed in mm/s, or None for default.
             accel: Plunger movement acceleration, or None for default.
         """
         if stepper is None:
@@ -665,7 +665,7 @@ class AutoPipette:
 
         Args:
             stepper: Name of stepper, or None for configured stepper.
-            speed: Homing speed in steps/s, or None for default.
+            speed: Homing speed in mm/s, or None for default.
             accel: Homing acceleration, or None for default.
         """
         if stepper is None:

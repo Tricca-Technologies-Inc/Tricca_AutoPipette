@@ -214,9 +214,12 @@ class PipetteSyringeKinematics(BaseModel):
         min_volume_ul: Minimum reliable volume in microliters.
         capacity_margin_ul: Headroom kept below ``max_volume_ul`` in μL.
         calibration_volumes: Calibration volume points in μL.
-        calibration_steps: Corresponding motor steps.
-        speed_aspirate: Aspiration speed in steps/s.
-        speed_dispense: Dispense speed in steps/s.
+        calibration_steps: Corresponding plunger travel. Despite the name these
+            are millimetres, not motor steps -- they are fed to Klipper's
+            ``MANUAL_STEPPER ... MOVE=``, which takes mm. See docs/TODO.md
+            item 15 for the pending rename.
+        speed_aspirate: Aspiration speed in mm/s.
+        speed_dispense: Dispense speed in mm/s.
         accel_home: Homing acceleration in mm/s².
         accel_move: Movement acceleration in mm/s².
         wait_aspirate_ms: Wait after aspiration in milliseconds.
@@ -280,13 +283,13 @@ class PipetteSyringeKinematics(BaseModel):
         description="Corresponding motor steps (overrides pipette default)",
     )
 
-    # Speed parameters (steps/s)
+    # Speed parameters (mm/s -- these reach Klipper's MANUAL_STEPPER SPEED=)
     speed_aspirate: float = Field(
-        default=200.0, gt=0, description="Aspiration speed in steps/s"
+        default=200.0, gt=0, description="Aspiration speed in mm/s"
     )
 
     speed_dispense: float = Field(
-        default=200.0, gt=0, description="Dispense speed in steps/s"
+        default=200.0, gt=0, description="Dispense speed in mm/s"
     )
 
     # Acceleration (mm/s²)
@@ -427,8 +430,8 @@ class LiquidProfile(BaseModel):
         description: Human-readable description.
         viscosity_cP: Dynamic viscosity in centipoise (optional).
         density_g_ml: Density in g/mL (optional).
-        speed_aspirate: Override aspiration speed in steps/s.
-        speed_dispense: Override dispense speed in steps/s.
+        speed_aspirate: Override aspiration speed in mm/s.
+        speed_dispense: Override dispense speed in mm/s.
         wait_aspirate_ms: Override aspiration wait time in milliseconds.
         wait_dispense_ms: Override dispense wait time in milliseconds.
         prewet_cycles: Prewet cycles to run before aspirating, or None.
@@ -468,11 +471,11 @@ class LiquidProfile(BaseModel):
 
     # Pipetting overrides (None = use pipette defaults)
     speed_aspirate: float | None = Field(
-        default=None, gt=0, description="Override aspiration speed in steps/s"
+        default=None, gt=0, description="Override aspiration speed in mm/s"
     )
 
     speed_dispense: float | None = Field(
-        default=None, gt=0, description="Override dispense speed in steps/s"
+        default=None, gt=0, description="Override dispense speed in mm/s"
     )
 
     wait_aspirate_ms: int | None = Field(
