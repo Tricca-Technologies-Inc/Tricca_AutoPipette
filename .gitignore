@@ -36,8 +36,13 @@ logs/
 temp/
 gcode/temp
 docs/_build
-Tricca_AutoPipette/.tap_history
-Tricca_AutoPipette/flycheck_autopipette.py
+
+# cmd2 writes the interactive shell's history next to the shell module
+# (DefaultPaths.DIR_SHELL). It's a per-developer runtime artifact, and cmd2
+# stores it XZ-compressed, so tracking it produced an unreviewable binary
+# diff on every session. Unanchored so it stays ignored if DIR_SHELL moves.
+.tap_history
+flycheck_*.py
 
 # Environment / local config
 .env
