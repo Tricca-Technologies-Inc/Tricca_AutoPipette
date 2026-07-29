@@ -696,12 +696,36 @@ class JsonConfigManager:
                 if liquid.calibration_steps is not None
                 else syringe.calibration_steps
             ),
+            # Technique parameters (liquid overrides syringe). Tested with
+            # `is not None` rather than `or`, so a liquid that deliberately
+            # sets a gap to 0 wins over a non-zero pipette default.
+            "prewet_cycles": (
+                liquid.prewet_cycles
+                if liquid.prewet_cycles is not None
+                else syringe.prewet_cycles
+            ),
+            "prewet_vol_ul": (
+                liquid.prewet_vol_ul
+                if liquid.prewet_vol_ul is not None
+                else syringe.prewet_vol_ul
+            ),
+            "pre_air_gap_ul": (
+                liquid.pre_air_gap_ul
+                if liquid.pre_air_gap_ul is not None
+                else syringe.pre_air_gap_ul
+            ),
+            "post_air_gap_ul": (
+                liquid.post_air_gap_ul
+                if liquid.post_air_gap_ul is not None
+                else syringe.post_air_gap_ul
+            ),
             # Motor configuration (from syringe only, no liquid override)
             "stepper_name": syringe.stepper_name,
             "motor_orientation": syringe.motor_orientation,
             # Volume limits (from syringe only, no liquid override)
             "max_volume_ul": syringe.max_volume_ul,
             "min_volume_ul": syringe.min_volume_ul,
+            "capacity_margin_ul": syringe.capacity_margin_ul,
         }
 
     # ========================================================================

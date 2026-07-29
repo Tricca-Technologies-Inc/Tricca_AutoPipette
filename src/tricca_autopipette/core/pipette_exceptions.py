@@ -169,6 +169,40 @@ class NoWasteContainerError(AutoPipetteError):
         super().__init__("No waste container configured.")
 
 
+class VolumeCapacityError(AutoPipetteError):
+    """Raised when a requested liquid volume exceeds the syringe's capacity.
+
+    Raised only when the *liquid* alone cannot fit. Air gaps that don't fit
+    are shrunk to the available headroom (with a warning) rather than
+    raising, since a reduced air cushion still performs the transfer whereas
+    a reduced liquid volume would silently deliver the wrong amount.
+
+    Attributes:
+        volume_ul: The requested liquid volume in microliters.
+        usable_ul: The usable capacity in microliters, i.e. the syringe's
+            maximum less its safety margin.
+
+    Example:
+        >>> pipette.aspirate_volume(150, "reservoir")  # 100 μL syringe
+        VolumeCapacityError: Cannot aspirate 150 μL: exceeds usable syringe
+        capacity of 98.0 μL.
+    """
+
+    def __init__(self, volume_ul: float, usable_ul: float) -> None:
+        """Initialize the error with the requested and usable volumes.
+
+        Args:
+            volume_ul: The requested liquid volume in microliters.
+            usable_ul: The usable capacity in microliters.
+        """
+        self.volume_ul = volume_ul
+        self.usable_ul = usable_ul
+        super().__init__(
+            f"Cannot aspirate {volume_ul} μL: exceeds usable syringe "
+            f"capacity of {usable_ul} μL."
+        )
+
+
 class ProtocolAbortedError(AutoPipetteError):
     """Raised when a ``break`` line's breakpoint is answered "abort".
 

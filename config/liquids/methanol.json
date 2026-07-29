@@ -7,10 +7,10 @@
   "speed_dispense": 150.0,
   "wait_aspirate_ms": 300,
   "wait_dispense_ms": 200,
-  "prewet_recommended": true,
   "prewet_cycles": 2,
-  "air_gap_ul": 5.0,
-  "blowout_recommended": false,
+  "prewet_vol_ul": 10.0,
+  "pre_air_gap_ul": 5.0,
+  "post_air_gap_ul": 2.0,
   "calibration_volumes": null,
   "calibration_steps": null
 }

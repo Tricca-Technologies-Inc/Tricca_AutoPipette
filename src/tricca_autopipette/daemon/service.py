@@ -81,6 +81,7 @@ from tricca_autopipette.core.pipette_exceptions import (
 )
 from tricca_autopipette.core.pipette_models import SystemConfig, TipState
 from tricca_autopipette.core.plates import Plate, PlateParams
+from tricca_autopipette.core.splits import parse_splits_spec
 from tricca_autopipette.core.traversal import parse_well_ranges
 from tricca_autopipette.core.well import StrategyType, Well
 from tricca_autopipette.daemon.moonraker_state import MoonrakerStateTracker
@@ -792,10 +793,10 @@ class AutoPipetteService:
             source=args.source,
             src_row=args.src_row,
             src_col=args.src_col,
-            pre_aspirate_air=args.pre_aspirate_air,
-            post_aspirate_air=args.post_aspirate_air,
-            prewet=args.prewet,
-            prewet_vol=args.prewet_vol,
+            pre_air_gap_ul=args.pre_air_gap_ul,
+            post_air_gap_ul=args.post_air_gap_ul,
+            prewet_cycles=args.prewet_cycles,
+            prewet_vol_ul=args.prewet_vol_ul,
         )
         self.output_gcode(autopipette.get_gcode())
         return CommandResult(
@@ -833,7 +834,6 @@ class AutoPipetteService:
             dest_col=args.dest_col,
             volume=args.volume,
             wiggle=args.wiggle,
-            touch=args.touch,
         )
         self.output_gcode(autopipette.get_gcode())
         if args.volume is not None:
@@ -853,8 +853,8 @@ class AutoPipetteService:
         command name stays ``pipette``.
 
         Args:
-            args: Full transfer parameters (volume, source, dest, tip/prewet/
-                wiggle/touch options).
+            args: Full transfer parameters (volume, source, dest, tip/prewet_cycles/
+                wiggle options).
 
         Returns:
             Result describing the completed transfer, or an ``ok=False``
@@ -869,44 +869,77 @@ class AutoPipetteService:
             TipAlreadyOnError: If a tip is already attached when one is
                 needed.
             NoWasteContainerError: If the transfer disposes of its tip (i.e.
-                ``keep_tip`` is False) and no waste container is configured.
-            NotALocationError: If ``args.source``/``args.dest`` is not a
-                defined location.
+                ``keep_tip`` is False) and no waste container is configured,
+                or if ``args.leftover`` is ``"waste"`` and there is none.
+            NotALocationError: If ``args.source``/``args.dest`` (or a
+                ``--splits`` destination) is not a defined location.
+            ValueError: If a ``--splits`` spec fails validation against the
+                deck -- see ``AutoPipette.resolve_splits``.
+            VolumeCapacityError: If the requested volume exceeds usable
+                syringe capacity.
         """
         if args.vol_ul <= 0:
             return CommandResult(ok=False, message="Volume must be greater than zero.")
 
         autopipette = self._autopipette
-        autopipette.pipette(
-            vol_ul=args.vol_ul,
-            source=args.source,
-            dest=args.dest,
-            disp_vol_ul=args.disp_vol_ul,
-            src_row=args.src_row,
-            src_col=args.src_col,
-            dest_row=args.dest_row,
-            dest_col=args.dest_col,
-            tipbox_name=args.tipbox_name,
-            pre_aspirate_air=args.pre_aspirate_air,
-            post_aspirate_air=args.post_aspirate_air,
-            prewet=args.prewet,
-            prewet_vol=args.prewet_vol,
-            wiggle=args.wiggle,
-            touch=args.touch,
-            keep_tip=args.keep_tip,
-        )
+
+        if args.splits:
+            try:
+                splits = parse_splits_spec(args.splits)
+            except ValueError as exc:
+                return CommandResult(ok=False, message=str(exc))
+
+            autopipette.pipette_splits(
+                vol_ul=args.vol_ul,
+                source=args.source,
+                splits=splits,
+                src_row=args.src_row,
+                src_col=args.src_col,
+                tipbox_name=args.tipbox_name,
+                pre_air_gap_ul=args.pre_air_gap_ul,
+                post_air_gap_ul=args.post_air_gap_ul,
+                prewet_cycles=args.prewet_cycles,
+                prewet_vol_ul=args.prewet_vol_ul,
+                wiggle=args.wiggle,
+                leftover=args.leftover,
+                keep_tip=args.keep_tip,
+            )
+            destination = ", ".join(f"{s.dest}:{s.vol_ul}" for s in splits)
+            split_count = len(splits)
+        else:
+            autopipette.pipette(
+                vol_ul=args.vol_ul,
+                source=args.source,
+                dest=args.dest,
+                disp_vol_ul=args.disp_vol_ul,
+                src_row=args.src_row,
+                src_col=args.src_col,
+                dest_row=args.dest_row,
+                dest_col=args.dest_col,
+                tipbox_name=args.tipbox_name,
+                pre_air_gap_ul=args.pre_air_gap_ul,
+                post_air_gap_ul=args.post_air_gap_ul,
+                prewet_cycles=args.prewet_cycles,
+                prewet_vol_ul=args.prewet_vol_ul,
+                wiggle=args.wiggle,
+                keep_tip=args.keep_tip,
+            )
+            destination = args.dest
+            split_count = 0
 
         features: list[str] = []
-        if args.prewet:
-            features.append(f"prewet×{args.prewet}")
+        if args.prewet_cycles:
+            features.append(f"prewet×{args.prewet_cycles}")
         if args.wiggle:
             features.append("wiggle")
-        if args.touch:
-            features.append("touch")
         if args.keep_tip:
             features.append("keep-tip")
+        if split_count:
+            features.append(f"splits×{split_count}")
+        if args.leftover:
+            features.append(f"leftover={args.leftover}")
 
-        comment = f"\n; Pipette {args.vol_ul} μL from {args.source} to {args.dest}"
+        comment = f"\n; Pipette {args.vol_ul} μL from {args.source} to {destination}"
         if features:
             comment += f" [{', '.join(features)}]"
         comment += "\n"
@@ -915,7 +948,7 @@ class AutoPipetteService:
         return CommandResult(
             ok=True,
             message=(
-                f"Pipetting complete ({args.vol_ul} μL: {args.source} → {args.dest})"
+                f"Pipetting complete ({args.vol_ul} μL: {args.source} → {destination})"
             ),
         )
 
@@ -1030,7 +1063,7 @@ class AutoPipetteService:
 
         Returns:
             Result naming the new liquid, with its key parameters
-            (viscosity, aspirate speed, prewet recommendation) in ``data``
+            (viscosity, aspirate speed, prewet_cycles recommendation) in ``data``
             for adapters that want to render them individually.
 
         Raises:
@@ -1046,8 +1079,9 @@ class AutoPipetteService:
             data={
                 "viscosity_cP": liquid.viscosity_cP,
                 "speed_aspirate": liquid.speed_aspirate,
-                "prewet_recommended": liquid.prewet_recommended,
                 "prewet_cycles": liquid.prewet_cycles,
+                "pre_air_gap_ul": liquid.pre_air_gap_ul,
+                "post_air_gap_ul": liquid.post_air_gap_ul,
             },
         )
 
@@ -2027,7 +2061,7 @@ class AutoPipetteService:
         Returns:
             Result with ``data["liquids"]`` (list of dicts with
             ``name``/``active``/``viscosity_cP``/``has_custom_speed``/
-            ``prewet_cycles`` keys) and ``data["active_liquid"]``.
+            ``prewet_cycles``/``air_gap`` keys) and ``data["active_liquid"]``.
         """
         liquids = self._autopipette.system_config.liquids
         active = self._autopipette.active_liquid
@@ -2037,9 +2071,9 @@ class AutoPipetteService:
                 "active": name == active,
                 "viscosity_cP": liquid.viscosity_cP,
                 "has_custom_speed": bool(liquid.speed_aspirate),
-                "prewet_cycles": (
-                    liquid.prewet_cycles if liquid.prewet_recommended else 0
-                ),
+                "prewet_cycles": liquid.prewet_cycles or 0,
+                "pre_air_gap_ul": liquid.pre_air_gap_ul,
+                "post_air_gap_ul": liquid.post_air_gap_ul,
             }
             for name, liquid in sorted(liquids.items())
         ]

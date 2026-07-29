@@ -120,13 +120,49 @@ The actual `tap` CLI. A `cmd2.Cmd` with no `CommandSet`s and no domain/Moonraker
 - `config/system/*.json` — top-level, references network settings, gantry, pipette model, liquids, and the deck layout (`locations`). A config may `extends` another system file, shallow-merged per top-level key (cycle- and depth-guarded), so a per-protocol config carries only what differs — usually just `locations` — instead of duplicating machine settings that would then drift.
 - `config/gantry/*.json` — kinematics (speeds/accel)
 - `config/pipettes/*.json` — syringe kinematics, servo angles, volume capacity
-- `config/liquids/*.json` — per-liquid overrides (viscosity, prewet/air-gap/blowout technique, optional custom calibration curve) merged on top of the pipette's base syringe kinematics
+- `config/liquids/*.json` — per-liquid overrides (viscosity, speeds/waits, prewet and air-gap technique, optional custom calibration curve) merged on top of the pipette's base syringe kinematics — see "Pipetting technique" below
 - `config/locations/*.json` (parsed by `LocationManager`, `core/location_manager.py`) — named coordinates and plate placements, including special `tipbox`/`waste_container` plate types, plus per-plate `order`/`mask`/`on_exhaust`/`tips`
 - `config/plates/*.json` — reusable plate templates (dimensions, well layout, dipping strategy), instantiated via `PlateFactory` in `core/plates.py` (registry-based: `Plate` → `PlateArray`/`PlateSingleton` → `TipBox`/`WasteContainer`)
 
 Filenames not paths are passed around at the shell/CLI layer — `DefaultPaths`/`DefaultFilenames` (`core/pipette_constants.py`) resolve them against `DefaultPaths.DIR_REPO_ROOT` — four levels up from `pipette_constants.py`, which is only correct for a src-layout checkout, so installed packages (Nix, pip, wheel) must set `AUTOPIPETTE_REPO_ROOT` to an absolute path (a relative one raises at import; both systemd units set it, see `systemd/README.md`). `ConfigKey` centralizes JSON key name constants; use those instead of hardcoding strings when touching config parsing.
 
 The kiosk (`autopipette_kiosk/main.py`) takes its `REPO_ROOT` from `DefaultPaths.DIR_REPO_ROOT` rather than recomputing it from `__file__` — it used to do the latter, and the copy silently diverged (it missed the `AUTOPIPETTE_REPO_ROOT` override); don't reintroduce a second resolution path. `PROTOCOLS_DIR` (default `REPO_ROOT / "protocols"`, overridable via `AUTOPIPETTE_PROTOCOLS_DIR`) is resolved once at module import time, so changing the env var requires a process restart to take effect.
+
+### Pipetting technique (air gaps, prewet, capacity)
+Technique parameters resolve **explicit CLI flag > active liquid profile > pipette default > 0**, in `AutoPipette.resolve_technique`. The per-command flags (`--pre_air_gap`, `--post_air_gap`, `--prewet`, `--prewet_vol`) and their `*Args` fields are `| None`-typed and default to `None`, so "flag omitted" is distinguishable from an explicit `0` — with plain zero-defaulted floats, `--pre_air_gap 0` could not override a non-zero profile value. For the same reason `get_merged_syringe_params` tests these with `is not None` rather than the `or` used for the older speed/wait keys.
+
+**Naming:** the concept is an *air gap* everywhere — `pre_air_gap`/`post_air_gap`, never `aspirate_air`. It names the thing (a gap of air that persists in the tip through the dispense) rather than the action that created it, and it's the term protocol authors already know. An earlier `pre_aspirate_air`/`post_aspirate_air` spelling from the merged `aspirate-air` branch was renamed out; don't reintroduce it. Microlitre quantities carry a `_ul` suffix on model/dataclass/parameter names but **not** on user-facing flags, which is why `--pre_air_gap`, `--post_air_gap` and `--prewet_vol` set explicit `dest=`s (`pre_air_gap_ul`, …) — the same pattern as the pre-existing `--dispense_vol` → `disp_vol_ul`.
+
+`LiquidProfile` carries `pre_air_gap_ul`/`post_air_gap_ul`/`prewet_cycles`/`prewet_vol_ul` (all `| None` = "defer to the pipette"), and `PipetteSyringeKinematics` carries the non-optional fallbacks. `_update_syringe_params` must copy every one of these onto `self.syringe` — it silently dropping fields is what previously made `air_gap_ul` and `prewet_recommended` inert config that `ls` displayed but nothing applied.
+
+`AutoPipette.fit_air_volumes` reconciles `pre + volume + post` against `usable_capacity_ul()` (`max_volume_ul - capacity_margin_ul`, the latter a config field replacing an earlier hard-coded `+2` µL fudge). It fits the **post**-gap first — that is the anti-drip cushion at the tip orifice — and shrinks the pre-gap for whatever is left, logging a WARNING naming requested vs applied. It raises `VolumeCapacityError` only when the *liquid alone* doesn't fit, since shrinking air can't rescue that and quietly aspirating less would deliver the wrong amount. `pipette()`'s chunking subtracts the air overhead from the per-chunk budget, or every full chunk would overflow by exactly that much.
+
+Because the post-aspirate cushion sits between the liquid and the orifice, a metered dispense has to drive it out ahead of the liquid — `dispense_volume(purge_air_gap_ul=...)`. The dispense-everything path (`clear_syringe()`) doesn't need this.
+
+There is deliberately **no** blowout support and **no** touch-off: both existed as config/flags (`speed_blowout`, `blowout_recommended`, `--touch` wired to a `pass  # TODO`) that nothing implemented, and were removed rather than left looking live. Neither legacy branch has a real implementation to port.
+
+#### Multi-dispense (`--splits`)
+`pipette --splits 'plate_a:12@A1;plate_b:8@C3'` does one aspirate then N metered dispenses (`AutoPipette.pipette_splits`), saving a tip pickup and a source trip per destination. Ported from `origin/sticky-test-scott`'s `pipette_splits`, but addressing wells by ID through `traversal.well_id_to_rc` rather than that branch's `@ROW,COL` integers; `@WELL` is optional and omitting it defers to the plate's own `TraversalOrder`. Parsing is in `core/splits.py` (syntax only); `AutoPipette.resolve_splits` validates against the deck and runs **before any G-code is emitted**, matching `LocationManager.load_from_json`'s parse-then-apply rule — a bad spec must not strand a half-dispensed tip mid-plate.
+
+Unlike `pipette`, this never chunks: the whole volume must fit in the syringe at once, since a single aspirate is the point.
+
+Leftover liquid requires an explicit `--leftover keep|waste`; omitting it is an error rather than the silent `keep` the original defaulted to. `waste` verifies the waste container up front. A tip still holding liquid (`keep`) is always retained regardless of `keep_tip` — never send a tip with liquid in it to the bin.
+
+#### Planned: make `trigger` do something
+Not implemented — noted here so nobody mistakes the stub for a working command.
+
+`AutoPipetteService.trigger` (`daemon/service.py`) validates its channel and state against `TriggerChannels` in `core/pipette_constants.py` and then returns an `ok=False` "not yet implemented" result. `AutoPipette` has no trigger method at all. The control-plane RPC and the `trigger` shell command both route to that stub, so the auxiliary hardware (air, shake, lid) cannot currently be driven from a protocol.
+
+A working implementation exists on `origin/sticky-test-scott` (`Tricca_AutoPipette/autopipette.py`, `set_trigger`): it emits a `SET_PIN`-style command followed by `M400`, and maps channel names to Klipper object names from config rather than hardcoding them — Murphy's `conf/murphy-100.conf` has
+
+```ini
+[TRIGGERS]
+shake = arduino_trigger
+lid   = arduino_trigger2
+air   = arduino_trigger3
+```
+
+Two things to settle when picking this up. The channel→object map belongs in the JSON config (probably on `SystemConfig`, since it is machine wiring rather than pipette or liquid), which makes `TriggerChannels`'s hardcoded `VALID_CHANNELS` set redundant — validate against the configured map instead, so a machine without a lid servo rejects `trigger lid` rather than silently accepting it. And a triggered device is state the daemon does not track: decide whether `trigger air on` left set at the end of a protocol is an error, a warning, or fine, before protocols start depending on either answer.
 
 ### Domain model (`core/`)
 - `autopipette.py` — `AutoPipette`: central controller tying config, location manager, G-code buffer, and volume converter together; owns `pipette()`/`aspirate()`/`dispense()`/tip-handling and multi-liquid switching (`switch_liquid`).
@@ -136,6 +172,7 @@ The kiosk (`autopipette_kiosk/main.py`) takes its `REPO_ROOT` from `DefaultPaths
 - `well.py` — `Well`, `StrategyType` (dipping/aspirate strategies per well).
 - `plates.py` — plate class hierarchy + `PlateFactory` registry (`@PlateFactory.register(...)`-style pattern, generic in the decorated subclass so `TipBox`-specific methods stay visible to type checkers — check the file before adding a new plate type). Wells are always stored row-major in `Plate.wells`; the *visiting* order is a separate `Plate.sequence` of flat indices, and `Plate.curr` is a cursor into that sequence, not into `wells`. With the defaults (`row_major`, no mask) the sequence is the identity, which is what keeps existing behavior unchanged.
 - `traversal.py` — well addressing (`A1`/`H12`/`A1:D6` ↔ flat indices), `TraversalOrder` (four orthogonal fields: `major`/`row_dir`/`col_dir`/`serpentine`, covering every raster and serpentine walk as *data* rather than code), `TraversalRegistry` of readable preset names for config files, and `WellMask` for restricting a plate to a sub-region. Ordering decides sequence, masking decides membership — masking never reorders the survivors.
+- `splits.py` — `Split`, `LeftoverAction`, and `parse_splits_spec` for the `pipette --splits` mini-language. Syntax only; deck validation lives in `AutoPipette.resolve_splits` (see "Multi-dispense" above). Kept out of `commands/tap_cmd_parsers.py` because the domain layer is what validates against the deck, and `commands/` imports from `core/`, not the reverse.
 - `tipbox_manager.py` — `TipBoxManager`: owns several independent `TipBox`es and decides which supplies the next tip, drawing in registration order (which `LocationManager` takes from config-file order). Boxes are never merged: an earlier `TipBox.append_box` spliced their well lists together, which destroyed per-box provenance and made unloading, per-box counts, and persistence impossible. Each box tracks per-position tip presence and raises `OutOfTipsError` rather than reissuing a used tip; `snapshot`/`restore` move that state through Moonraker's DB, and `restore` refuses a record whose plate dimensions no longer match rather than misaligning consumed positions onto different physical wells.
 - `pipette_exceptions.py` — domain exceptions (`NoTipboxError`, `OutOfTipsError`, `TipAlreadyOnError`, `NotALocationError`, etc.), plus two daemon/service-lifecycle signals kept here to avoid an import cycle with `commands/*.py` (see that module's docstrings for why): `NotHomedError` (the homed-interlock's exception) and `ProtocolAbortedError` (raised when a `break` line's breakpoint is answered "abort"). Prefer raising/catching these over generic exceptions in this layer.
 - `gcode_buffer.py` — low-level G-code line accumulation used by `GCodeManager`'s batch mode.

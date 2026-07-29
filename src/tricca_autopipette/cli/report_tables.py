@@ -88,15 +88,19 @@ def build_liquids_table(liquids: list[dict[str, Any]]) -> Table:
     table.add_column("Viscosity (cP)", justify="right")
     table.add_column("Custom Speed", justify="center")
     table.add_column("Prewet", justify="center")
+    table.add_column("Air gap (μL)", justify="center")
 
     for row in liquids:
         viscosity = row.get("viscosity_cP")
+        pre_gap = row.get("pre_air_gap_ul")
+        post_gap = row.get("post_air_gap_ul")
         table.add_row(
             row["name"],
             "●" if row["active"] else "",
             f"{viscosity:.2f}" if viscosity else "—",
             "✓" if row["has_custom_speed"] else "",
             f"{row['prewet_cycles']}×" if row["prewet_cycles"] else "",
+            f"{pre_gap or 0:g}/{post_gap or 0:g}" if pre_gap or post_gap else "",
         )
     return table
 

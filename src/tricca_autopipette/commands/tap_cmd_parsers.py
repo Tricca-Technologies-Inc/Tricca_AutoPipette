@@ -19,6 +19,8 @@ from typing import Any
 
 from cmd2 import Cmd2ArgumentParser
 
+from tricca_autopipette.core.splits import LeftoverAction
+
 
 def args_from_namespace[ArgsT](
     args_cls: type[ArgsT],
@@ -121,20 +123,22 @@ class AspirateArgs:
         source: Source location name.
         src_row: Source row index for plate locations.
         src_col: Source column index for plate locations.
-        pre_aspirate_air: Volume of air to aspirate before liquid (μL).
-        post_aspirate_air: Volume of air to aspirate after liquid (μL).
-        prewet: Number of prewet cycles before aspirating.
-        prewet_vol: Volume to use for each prewet cycle (μL).
+        pre_air_gap_ul: Air before the liquid (μL), or None for the active
+            liquid profile's value.
+        post_air_gap_ul: Air after the liquid (μL), or None for the active
+            liquid profile's value.
+        prewet_cycles: Prewet cycles, or None for the profile's value.
+        prewet_vol_ul: Volume per prewet cycle (μL), or None for the profile's.
     """
 
     vol_ul: float
     source: str
     src_row: int | None
     src_col: int | None
-    pre_aspirate_air: float
-    post_aspirate_air: float
-    prewet: int
-    prewet_vol: float
+    pre_air_gap_ul: float | None
+    post_air_gap_ul: float | None
+    prewet_cycles: int | None
+    prewet_vol_ul: float | None
 
 
 @dataclass
@@ -147,7 +151,6 @@ class DispenseArgs:
         dest_col: Destination column index for plate locations.
         volume: Volume to dispense in μL, or None to dispense all.
         wiggle: If True, wiggle tip during dispensing.
-        touch: If True, touch tip to well side after dispensing.
     """
 
     dest: str
@@ -155,7 +158,6 @@ class DispenseArgs:
     dest_col: int | None
     volume: float | None
     wiggle: bool
-    touch: bool
 
 
 @dataclass
@@ -172,12 +174,20 @@ class PipetteArgs:
         dest_row: Destination row index for plate locations.
         dest_col: Destination column index for plate locations.
         tipbox_name: Name of specific tipbox to use.
-        aspirate_air: Volume of air to aspirate before liquid (μL).
-        prewet: Number of prewet cycles before aspirating.
-        prewet_vol: Volume to use for each prewet cycle (μL).
+        pre_air_gap_ul: Air before the liquid (μL), or None for the active
+            liquid profile's value.
+        post_air_gap_ul: Air after the liquid (μL), or None for the active
+            liquid profile's value.
+        prewet_cycles: Prewet cycles, or None for the profile's value.
+        prewet_vol_ul: Volume per prewet cycle (μL), or None for the profile's.
         wiggle: If True, wiggle tip during dispensing.
-        touch: If True, touch tip to well side after dispensing.
         keep_tip: If True, retain tip after the full operation.
+        splits: Multi-dispense spec (``DEST:VOL[@WELL];...``), or None for a
+            plain single-destination transfer. Takes over from ``dest`` and
+            the ``dest_row``/``dest_col`` pair when given.
+        leftover: What to do with liquid left after the splits dispense --
+            ``keep`` or ``waste``. Required when the splits do not consume
+            the whole aspirate.
     """
 
     vol_ul: float
@@ -189,13 +199,14 @@ class PipetteArgs:
     dest_row: int | None
     dest_col: int | None
     tipbox_name: str | None
-    pre_aspirate_air: float
-    post_aspirate_air: float
-    prewet: int
-    prewet_vol: float
+    pre_air_gap_ul: float | None
+    post_air_gap_ul: float | None
+    prewet_cycles: int | None
+    prewet_vol_ul: float | None
     wiggle: bool
-    touch: bool
     keep_tip: bool
+    splits: str | None
+    leftover: LeftoverAction | None
 
 
 # ===========================================================================
@@ -570,28 +581,32 @@ class TAPCmdParsers:
         help="Source column index (for plate locations)",
     )
     parser_aspirate.add_argument(
-        "--pre_aspirate_air",
-        default=0.0,
+        "--pre_air_gap",
+        dest="pre_air_gap_ul",
+        default=None,
         type=float,
-        help="Volume of air to aspirate before liquid in μL (default: 0.0)",
+        help="Air drawn before the liquid in μL (default: active liquid profile)",
     )
     parser_aspirate.add_argument(
-        "--post_aspirate_air",
-        default=0.0,
+        "--post_air_gap",
+        dest="post_air_gap_ul",
+        default=None,
         type=float,
-        help="Volume of air to aspirate before liquid in μL (default: 0.0)",
+        help="Air drawn after the liquid in μL (default: active liquid profile)",
     )
     parser_aspirate.add_argument(
         "--prewet",
-        default=0,
+        dest="prewet_cycles",
+        default=None,
         type=int,
-        help="Number of prewet cycles before aspirating (default: 0)",
+        help="Prewet cycles before aspirating (default: active liquid profile)",
     )
     parser_aspirate.add_argument(
         "--prewet_vol",
-        default=10.0,
+        dest="prewet_vol_ul",
+        default=None,
         type=float,
-        help="Volume per prewet cycle in μL (default: 10.0)",
+        help="Volume per prewet cycle in μL (default: active liquid profile)",
     )
 
     parser_dispense: Cmd2ArgumentParser = Cmd2ArgumentParser(
@@ -621,11 +636,6 @@ class TAPCmdParsers:
         "--wiggle",
         action="store_true",
         help="Wiggle tip during dispensing to dislodge residual droplets",
-    )
-    parser_dispense.add_argument(
-        "--touch",
-        action="store_true",
-        help="Touch tip to well side after dispensing",
     )
 
     parser_pipette: Cmd2ArgumentParser = Cmd2ArgumentParser(
@@ -676,28 +686,32 @@ class TAPCmdParsers:
         help="Name of the tipbox to draw from (e.g. tipbox, tipbox2)",
     )
     parser_pipette.add_argument(
-        "--pre_aspirate_air",
-        default=0.0,
+        "--pre_air_gap",
+        dest="pre_air_gap_ul",
+        default=None,
         type=float,
-        help="Volume of air to aspirate before liquid in μL (default: 0.0)",
+        help="Air drawn before the liquid in μL (default: active liquid profile)",
     )
     parser_pipette.add_argument(
-        "--post_aspirate_air",
-        default=0.0,
+        "--post_air_gap",
+        dest="post_air_gap_ul",
+        default=None,
         type=float,
-        help="Volume of air to aspirate after liquid in μL (default: 0.0)",
+        help="Air drawn after the liquid in μL (default: active liquid profile)",
     )
     parser_pipette.add_argument(
         "--prewet",
-        default=0,
+        dest="prewet_cycles",
+        default=None,
         type=int,
-        help="Number of prewet cycles before aspirating (default: 0)",
+        help="Prewet cycles before aspirating (default: active liquid profile)",
     )
     parser_pipette.add_argument(
         "--prewet_vol",
-        default=10.0,
+        dest="prewet_vol_ul",
+        default=None,
         type=float,
-        help="Volume per prewet cycle in μL (default: 10.0)",
+        help="Volume per prewet cycle in μL (default: active liquid profile)",
     )
     parser_pipette.add_argument(
         "--wiggle",
@@ -705,14 +719,27 @@ class TAPCmdParsers:
         help="Wiggle tip during dispensing to dislodge residual droplets",
     )
     parser_pipette.add_argument(
-        "--touch",
-        action="store_true",
-        help="Touch tip to well side after dispensing",
-    )
-    parser_pipette.add_argument(
         "--keep_tip",
         action="store_true",
         help="Keep tip attached after the operation (default: eject tip)",
+    )
+    parser_pipette.add_argument(
+        "--splits",
+        default=None,
+        type=str,
+        help=(
+            "Multi-dispense from one aspirate: 'DEST:VOL[@WELL];...', e.g. "
+            "'plate_a:12@A1;plate_b:8@C3'. Overrides the dest argument."
+        ),
+    )
+    parser_pipette.add_argument(
+        "--leftover",
+        default=None,
+        choices=("keep", "waste"),
+        help=(
+            "What to do with liquid left after --splits dispense. Required "
+            "when the splits do not consume the whole aspirated volume."
+        ),
     )
 
     # -----------------------------------------------------------------------

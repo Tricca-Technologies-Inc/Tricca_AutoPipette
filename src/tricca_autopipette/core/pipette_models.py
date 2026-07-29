@@ -212,15 +212,19 @@ class PipetteSyringeKinematics(BaseModel):
         motor_orientation: Motor direction (1 for normal, -1 for reversed).
         max_volume_ul: Maximum pipette volume in microliters.
         min_volume_ul: Minimum reliable volume in microliters.
+        capacity_margin_ul: Headroom kept below ``max_volume_ul`` in μL.
         calibration_volumes: Calibration volume points in μL.
         calibration_steps: Corresponding motor steps.
         speed_aspirate: Aspiration speed in steps/s.
         speed_dispense: Dispense speed in steps/s.
-        speed_blowout: Blowout speed for residual liquid in steps/s.
         accel_home: Homing acceleration in mm/s².
         accel_move: Movement acceleration in mm/s².
         wait_aspirate_ms: Wait after aspiration in milliseconds.
         wait_dispense_ms: Wait after dispense in milliseconds.
+        prewet_cycles: Default prewet cycles before aspirating.
+        prewet_vol_ul: Default volume drawn per prewet cycle in μL.
+        pre_air_gap_ul: Default air drawn before the liquid in μL.
+        post_air_gap_ul: Default air drawn after the liquid in μL.
 
     Example:
         >>> syringe = PipetteSyringeKinematics(
@@ -256,6 +260,15 @@ class PipetteSyringeKinematics(BaseModel):
         default=0.0, gt=0, description="Minimum reliable volume in microliters"
     )
 
+    capacity_margin_ul: float = Field(
+        default=2.0,
+        ge=0,
+        description=(
+            "Headroom kept below max_volume_ul so a full aspirate never "
+            "drives the plunger to its hard stop"
+        ),
+    )
+
     # Volume Curve
     calibration_volumes: list[float] | None = Field(
         default=None,
@@ -276,10 +289,6 @@ class PipetteSyringeKinematics(BaseModel):
         default=200.0, gt=0, description="Dispense speed in steps/s"
     )
 
-    speed_blowout: float = Field(
-        default=50.0, gt=0, description="Blowout speed for residual liquid in steps/s"
-    )
-
     # Acceleration (mm/s²)
     accel_home: float = Field(
         default=800.0, gt=0, description="Homing acceleration in mm/s²"
@@ -296,6 +305,27 @@ class PipetteSyringeKinematics(BaseModel):
 
     wait_dispense_ms: int = Field(
         default=200, ge=0, description="Wait after dispense for droplet formation"
+    )
+
+    # Default technique, overridable per liquid and again per command
+    prewet_cycles: int = Field(
+        default=0, ge=0, description="Prewet cycles to run before aspirating"
+    )
+
+    prewet_vol_ul: float = Field(
+        default=10.0, ge=0, description="Volume drawn per prewet cycle (μL)"
+    )
+
+    pre_air_gap_ul: float = Field(
+        default=0.0,
+        ge=0,
+        description="Air drawn before the liquid, as a trailing cushion (μL)",
+    )
+
+    post_air_gap_ul: float = Field(
+        default=0.0,
+        ge=0,
+        description="Air drawn after the liquid, to stop it dripping (μL)",
     )
 
     def model_post_init(self, __context: Any) -> None:  # noqa: ANN401
@@ -401,10 +431,10 @@ class LiquidProfile(BaseModel):
         speed_dispense: Override dispense speed in steps/s.
         wait_aspirate_ms: Override aspiration wait time in milliseconds.
         wait_dispense_ms: Override dispense wait time in milliseconds.
-        prewet_recommended: Whether pre-wetting is recommended.
-        prewet_cycles: Recommended number of prewet cycles.
-        air_gap_ul: Recommended air gap to prevent dripping in μL.
-        blowout_recommended: Whether blowout is recommended.
+        prewet_cycles: Prewet cycles to run before aspirating, or None.
+        prewet_vol_ul: Volume drawn per prewet cycle in μL, or None.
+        pre_air_gap_ul: Air drawn before the liquid in μL, or None.
+        post_air_gap_ul: Air drawn after the liquid in μL, or None.
         calibration_volumes: Calibration volume points in μL (overrides pipette).
         calibration_steps: Corresponding motor steps (overrides pipette).
 
@@ -414,10 +444,10 @@ class LiquidProfile(BaseModel):
         ...     name="glycerol",
         ...     viscosity_cP=1400.0,
         ...     speed_aspirate=50.0,
-        ...     prewet_recommended=True,
+        ...     prewet_cycles=2,
         ... )
-        >>> print(glycerol.prewet_recommended)
-        True
+        >>> print(glycerol.prewet_cycles)
+        2
     """
 
     # Metadata
@@ -453,21 +483,27 @@ class LiquidProfile(BaseModel):
         default=None, ge=0, description="Override dispense wait time in milliseconds"
     )
 
-    # Advanced techniques
-    prewet_recommended: bool = Field(
-        default=False, description="Whether pre-wetting is recommended for this liquid"
+    # Advanced techniques (None = use the pipette's default)
+    prewet_cycles: int | None = Field(
+        default=None,
+        ge=0,
+        description="Prewet cycles to run before aspirating this liquid",
     )
 
-    prewet_cycles: int = Field(
-        default=1, ge=0, description="Recommended number of prewet cycles"
+    prewet_vol_ul: float | None = Field(
+        default=None, ge=0, description="Volume drawn per prewet cycle (μL)"
     )
 
-    air_gap_ul: float = Field(
-        default=0.0, ge=0, description="Recommended air gap to prevent dripping (μL)"
+    pre_air_gap_ul: float | None = Field(
+        default=None,
+        ge=0,
+        description="Air drawn before the liquid, as a trailing cushion (μL)",
     )
 
-    blowout_recommended: bool = Field(
-        default=False, description="Whether blowout is recommended"
+    post_air_gap_ul: float | None = Field(
+        default=None,
+        ge=0,
+        description="Air drawn after the liquid, to stop it dripping (μL)",
     )
 
     # Volume Curve

@@ -111,11 +111,12 @@ class ConfigurationCommands(TAPCommandSet):
             rprint(f"  Viscosity: {data.get('viscosity_cP')} cP")
             if data.get("speed_aspirate"):
                 rprint(f"  Aspirate speed: {data['speed_aspirate']} steps/s")
-            if data.get("prewet_recommended"):
-                rprint(
-                    f"  [yellow]⚠ Prewet recommended "
-                    f"({data['prewet_cycles']} cycles)[/yellow]"
-                )
+            if data.get("prewet_cycles"):
+                rprint(f"  Prewet: {data['prewet_cycles']} cycles")
+            pre_gap = data.get("pre_air_gap_ul")
+            post_gap = data.get("post_air_gap_ul")
+            if pre_gap or post_gap:
+                rprint(f"  Air gap: {pre_gap or 0} μL pre / {post_gap or 0} μL post")
 
         except ValueError as e:
             # The domain layer's message already lists available liquids.

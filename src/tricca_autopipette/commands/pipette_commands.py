@@ -32,7 +32,7 @@ class PipetteCommands(TAPCommandSet):
     Provides shell commands for:
     - Complete liquid transfer (aspirate, dispense, tip disposal)
     - Tip management (pickup, eject, dispose, change)
-    - Advanced features (prewet, wiggle, touch-off, air gap)
+    - Advanced features (prewet, wiggle, air gap)
 
     Example:
         >>> next_tip
@@ -133,7 +133,7 @@ class PipetteCommands(TAPCommandSet):
 
         Example:
             >>> pipette 100 plate_a plate_b
-            >>> pipette 200 source dest --prewet 2 --wiggle --touch
+            >>> pipette 200 source dest --prewet 2 --wiggle
             >>> pipette 150 src dest --keep_tip
             >>> pipette 300 src dest --dispense_vol 100 --src_row 0 --src_col 0
         """
