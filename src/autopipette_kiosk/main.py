@@ -8,7 +8,12 @@ run. One `WebSocketClient` connection is held for the app's lifetime;
 `print_stats` transitions) are re-broadcast to connected browser clients.
 
 Run with:
-    uvicorn autopipette_kiosk.main:app --host 0.0.0.0 --port 8000
+    uvicorn autopipette_kiosk.main:app --host 127.0.0.1 --port 8000
+
+This app has no authentication of any kind, so bind loopback only: the
+touchscreen runs a browser on the same host. Binding another interface
+publishes unauthenticated control of a gantry and syringe to the network.
+See systemd/README.md before exposing it.
 """
 
 import asyncio

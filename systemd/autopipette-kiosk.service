@@ -9,7 +9,13 @@ Type=simple
 # same repo root. Must be an absolute path. See systemd/README.md.
 Environment=AUTOPIPETTE_REPO_ROOT=/opt/tricca-autopipette
 # Adjust to the venv/user for your host; see systemd/README.md.
-ExecStart=/opt/tricca-autopipette/venv/bin/uvicorn autopipette_kiosk.main:app --host 0.0.0.0 --port 8000
+#
+# Bind loopback only. The kiosk has NO authentication of any kind -- no login,
+# no token, no origin check -- so any interface it listens on is an unauthenticated
+# control surface for a machine that moves a gantry and drives a syringe. The
+# touchscreen runs a browser on this host, so it does not need more than this.
+# Do not change to 0.0.0.0 to get remote access; see systemd/README.md.
+ExecStart=/opt/tricca-autopipette/venv/bin/uvicorn autopipette_kiosk.main:app --host 127.0.0.1 --port 8000
 Restart=on-failure
 RestartSec=2
 

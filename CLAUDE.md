@@ -8,7 +8,7 @@ Tricca AutoPipette controls an automated liquid handling system (ALHS) built on 
 
 The root `README.md` is stale (marked `(OUTDATED!!!)`, describes a flat pre-`src/` layout) — do not trust it for current structure; this file supersedes it.
 
-This file describes the system as it **is**. Planned-but-unimplemented work lives in `docs/TODO.md` — check it before starting anything non-trivial, since several entries record decisions already taken and open questions that must be settled first. It also flags three problems that are true of the code *today*: the kiosk's unauthenticated `0.0.0.0` bind, a possible steps-vs-millimetres confusion in the syringe G-code, and the non-atomic/lossy config writer.
+This file describes the system as it **is**. Planned-but-unimplemented work lives in `docs/TODO.md` — check it before starting anything non-trivial, since several entries record decisions already taken and open questions that must be settled first. It also flags problems that are true of the code *today*: a possible steps-vs-millimetres confusion in the syringe G-code, and the non-atomic/lossy config writer. Note that neither `tapd`'s control plane nor the kiosk has **any** authentication — both are protected solely by binding loopback, so treat any change to a bind address as a security decision (see `systemd/README.md`).
 
 ## Commands
 
@@ -30,8 +30,9 @@ tap                           # connects to ws://127.0.0.1:8765/control by defau
 tap --control-uri <uri>       # point at a different tapd instance
 tap --log-level DEBUG
 
-# Run the kiosk web backend (also a tapd client)
-uvicorn autopipette_kiosk.main:app --host 0.0.0.0 --port 8000
+# Run the kiosk web backend (also a tapd client).
+# Loopback only -- the kiosk has no authentication; see systemd/README.md.
+uvicorn autopipette_kiosk.main:app --host 127.0.0.1 --port 8000
 
 # Lint / format / type-check
 ruff check .

@@ -24,11 +24,12 @@ become. Keep that split: architecture facts there, backlog here.
 Three things below are true of the code *now*, not proposals. They surfaced while
 researching other items and are worth triaging on their own:
 
-1. **The kiosk is network-exposed with no authentication** (item 18).
-   `systemd/autopipette-kiosk.service` binds `0.0.0.0:8000` and the app has no
-   auth of any kind, so anyone on the network can `POST /home` and `POST /run` on
-   a machine with a moving gantry and a syringe. Possibly a one-line fix
-   (`--host 127.0.0.1`) if the touchscreen is physically attached.
+1. **The kiosk was network-exposed with no authentication** (item 18) — the
+   shipped unit binds `127.0.0.1` as of 2026-07-29, **but the fix is not
+   retroactive**: machines provisioned from an earlier revision keep serving on
+   `0.0.0.0` until the unit is re-copied and reloaded. Audit deployed hosts.
+   `tapd`'s control plane still has no authentication either, protected only by
+   its own loopback default.
 2. **The "steps" vocabulary may already mean millimetres** (item 15).
    `VolumeConverter.vol_to_steps` is documented as returning microsteps, but its
    output feeds straight into `MANUAL_STEPPER … MOVE=`, which Klipper reads in
@@ -82,7 +83,7 @@ Most items are independent. These interlock:
 | 15 | [Syringe limit as travel, not volume](#15-model-the-syringe-limit-as-travel-distance-not-volume) | ⚠️ investigate units first |
 | 16 | [Typed G-code command library](#16-a-typed-g-code-command-library) | |
 | 17 | [Fleet browser tool](#17-fleet-browser-tool-mainsail-like-network-connected) | large; needs 18 |
-| 18 | [Kiosk is network-exposed](#18-the-kiosk-is-network-exposed-with-no-authentication) | ⚠️ present-day exposure |
+| 18 | [Kiosk is network-exposed](#18-the-kiosk-is-network-exposed-with-no-authentication) | default fixed; ⚠️ audit deployed hosts |
 | 19 | [Editable/saveable configuration](#19-editable-and-saveable-configuration-from-every-client) | supersedes 13 |
 
 ---
@@ -888,19 +889,39 @@ own auth or borrows one.
 
 ## 18. The kiosk is network-exposed with no authentication
 
-**Status:** **present-day exposure — triage before item 17**
+**Status:** **default fixed 2026-07-29** — the shipped unit now binds loopback.
+Remaining work below; still read before item 17.
 **Touches:** `systemd/autopipette-kiosk.service`, `systemd/README.md`, `src/autopipette_kiosk/main.py`, `daemon/control_server.py`
 
-**Problem.** `systemd/autopipette-kiosk.service:12` runs:
+**Problem (as shipped before the fix).** `systemd/autopipette-kiosk.service` ran:
 
 ```
-ExecStart=/opt/tricca-autopipette/venv/bin/uvicorn autopipette_kiosk.main:app --host 0.0.0.0 --port 8000
+ExecStart=… uvicorn autopipette_kiosk.main:app --host 0.0.0.0 --port 8000
 ```
 
 `0.0.0.0` binds every interface, and the kiosk app has **no authentication of any
-kind** — no login, no token, no origin check. Anyone who can reach that host on
-the network can `POST /home` and `POST /run`, and answer breakpoints. On a lab or
-office network, that is every device on it.
+kind** — no login, no token, no origin check. Anyone who could reach that host on
+the network could `POST /home` and `POST /run`, and answer breakpoints. On a lab
+or office network, that is every device on it.
+
+**Fixed:** the unit now passes `--host 127.0.0.1`, with the reasoning recorded in
+the unit itself and a "Network exposure" section in `systemd/README.md` covering
+why, and what to do instead of reverting to `0.0.0.0`.
+
+**⚠️ Still outstanding — the fix is not retroactive:**
+
+1. **Already-deployed machines stay exposed.** The installed copy under
+   `/etc/systemd/system/` is unaffected until someone re-copies the unit and runs
+   `systemctl daemon-reload && systemctl restart autopipette-kiosk`. Audit every
+   machine that was provisioned from an earlier revision.
+2. **`tapd`'s control plane still has no authentication.** It is protected only
+   by its own `127.0.0.1:8765` default bind — the same single control, one
+   `--host` flag away from being removed. Item 17 proposes exactly that.
+3. **Nothing prevents reintroducing the exposure.** A `--host 0.0.0.0` is still
+   a valid, silently-accepted configuration for both processes.
+4. The public repo now documents this exposure (this file), so any machine still
+   running an old unit is described in public before it is fixed. That raises the
+   priority of point 1 rather than changing what the fix is.
 
 The control plane behind it has no auth either — no token, TLS, or origin
 checking anywhere in `daemon/control_server.py` or `daemon/main.py`. Its only
