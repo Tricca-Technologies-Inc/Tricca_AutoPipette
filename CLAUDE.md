@@ -8,6 +8,8 @@ Tricca AutoPipette controls an automated liquid handling system (ALHS) built on 
 
 The root `README.md` is stale (marked `(OUTDATED!!!)`, describes a flat pre-`src/` layout) — do not trust it for current structure; this file supersedes it.
 
+This file describes the system as it **is**. Planned-but-unimplemented work lives in `docs/TODO.md` — check it before starting anything non-trivial, since several entries record decisions already taken and open questions that must be settled first. It also flags three problems that are true of the code *today*: the kiosk's unauthenticated `0.0.0.0` bind, a possible steps-vs-millimetres confusion in the syringe G-code, and the non-atomic/lossy config writer.
+
 ## Commands
 
 ```bash
@@ -52,6 +54,8 @@ Inside the `tap` shell, protocol files (`.pipette`, plain text — one shell com
 - `src/autopipette_kiosk/` — a thin FastAPI app (`main.py` + a static `index.html`) exposing `GET /protocols` (lists `.pipette` files via a local directory glob — the one thing it still does without the daemon), `POST /run` (calls the daemon's `run.start`), `POST /home` (calls `movement.init`), `POST /breakpoint/respond`, `GET /status`, and `WS /ws/status` (re-broadcasts the daemon's `notify_run_status`/`notify_breakpoint` pushes to connected browsers, event-driven rather than polled). It holds one persistent `WebSocketClient` connected to `tapd`'s control plane for the app's lifetime (FastAPI `lifespan`), and reports real completion — driven by Moonraker `print_stats` transitions — rather than inferring it from a subprocess's exit code.
 - `systemd/` — unit files for both processes (`tapd.service`, `autopipette-kiosk.service`, the latter `Requires=`/`After=` the former) plus an install README.
 
+**Client parity rule.** Every capability reachable from the kiosk must also be reachable from `tap`, and vice versa — neither client may be the only way to do something. This is nearly free if capability lands as an `AutoPipetteService` method plus a `ControlRequests` builder: both clients are thin adapters over the same control-plane RPCs, and `tap` picks it up by appending one row to `_STRUCTURED_COMMANDS` (`cli/remote_shell.py`). The way to break it is adding logic directly in `autopipette_kiosk/main.py`, which produces a kiosk-only capability with no RPC behind it, invisible to `tap` and to protocol files. `main.py` holds exactly one such thing today — the `/protocols` directory glob — and that is the shape to avoid repeating. Current gaps are tracked as `docs/TODO.md` item 14.
+
 ### The `tapd` daemon (`daemon/`)
 - `service.py` — `AutoPipetteService`: the single business-logic/application-service object. Builds its own `AutoPipette` (domain layer), `WebSocketClient`/`MoonrakerRequests` (the one Moonraker connection), and `GCodeManager` directly in `__init__` — there is no intermediate shell object of any kind. Every command (`move`, `aspirate`, `switch_liquid`, `ls`-equivalents, WebSocket diagnostics, run lifecycle, ...) is a plain typed method here, taking one of `commands/tap_cmd_parsers.py`'s `*Args` dataclasses (or a bare value) and returning a `CommandResult` (`ok`/`message`/`data`). `control_server.py` dispatches control-plane RPCs straight to these methods (via `dataclasses.asdict`), and `commands/*.py`'s cmd2 adapters call them too (via `self.service`, see "Shell composition") — one implementation, two driving adapters.
   - Async, non-blocking API for the daemon (used by `control_server.py`): `start`/`stop` (connect/disconnect without blocking the event loop, via `asyncio.to_thread`), `start_run`/`cancel_run`/`pause_run`/`resume_run`/`stop_run`, `dispatch` (runs a sync method under the service's lock, in a worker thread), `request_breakpoint`/`confirm_breakpoint`, `ping`.
@@ -83,19 +87,7 @@ Tipboxes are registered with `core/tipbox_manager.py`'s `TipBoxManager` (see bel
 
 Because Klipper has no notion of tip occupancy, the operator reconciles the daemon's record with the physical boxes via `tips` (ASCII map; `--db` diffs it against the persisted state and flags divergent cells), `reset_tips <box>`/`reset_tips_all` (a fresh box was loaded), and `set_tips <box> <ranges> [--available]` (declare exact state — absolute, not additive, so it can restore positions too). A locations entry may also declare a partially-used box up front with `"tips": {"consumed": ["A1:C12"]}`.
 
-#### Planned: tip disposal falls back to the tip's origin
-Not implemented yet — described here so work in this area moves toward it rather than entrenching the current behavior.
-
-Today `AutoPipette.pipette()` ends with a bare `if not keep_tip: self.dispose_tip()`, and `dispose_tip` raises `NoWasteContainerError` when none is configured — so a deck without a waste container **aborts mid-transfer with a tip still attached**. The only alternative, `eject_tip`, drops the tip wherever the head currently is, which after a transfer is over the destination well. So the fallback isn't merely missing, it's unsafe.
-
-The intended behavior is:
-1. Verify a waste container exists up front for any run that will discard tips, rather than discovering it mid-protocol.
-2. With none configured, return the used tip to the exact tipbox position it came from.
-3. Replace the `keep_tip` boolean with an explicit disposition flag on every function that decides where a tip goes after a transfer — `keep_tip: bool` can't express the three real outcomes (keep it on / send it to waste / put it back). Something like `tip_disposition: "keep" | "waste" | "return"`, threaded through `PipetteArgs`, `AutoPipette.pipette`, and `change_tip`.
-
-The prerequisite already exists: `TipBoxManager.next_tip` returns `(box_name, box, coordinate)` and `TipBox.take_tip` returns `(flat_index, coordinate)`, so the current tip's origin is knowable and `TipBox.present[index]` can be flipped back. This was impossible under the old `append_box` design, which erased per-box provenance. Record the origin on `PipetteState` at pickup, clear it on eject/dispose.
-
-Two open questions to settle before implementing: `keep_tip` is public surface (`PipetteArgs`, the `pipette` parser, the `pipette.transfer` RPC, committed `.pipette` files), so it likely needs to stay as a deprecated alias for `--tip_disposition keep`; and a *returned* tip is a used tip, so marking its slot plainly `present` again would let a later `next_tip` hand out a contaminated tip — that may need a distinct returned/dirty state rather than a bool. Do not add a "just eject it here" fallback; dropping a used tip over a sample plate is the failure mode this removes.
+**⚠️ Tip disposal is currently unsafe on a deck with no waste container.** `AutoPipette.pipette()` ends with a bare `if not keep_tip: self.dispose_tip()`, and `dispose_tip` raises `NoWasteContainerError` when none is configured — so the run **aborts mid-transfer with a tip still attached**. The planned fix (verify the waste container up front; otherwise return the tip to the exact tipbox position it came from; replace the `keep_tip` boolean with an explicit `tip_disposition` flag) is `docs/TODO.md` item 1. Do not add a "just eject it here" fallback — dropping a used tip over a sample plate is the failure mode that work removes.
 
 ### Shell composition (`cli/tap_shell.py`)
 `TriccaAutoPipetteShell` (a `cmd2.Cmd` subclass, for standalone/local-scripting use only — **not** used by `tap`/the daemon) constructs its own `AutoPipetteService` (`self.service`, `daemon/service.py`) in `__init__` — the exact same class the daemon builds directly, so this shell and `tapd` share one business-logic implementation, differing only in lifecycle: this shell calls `self.service.connect()`/`disconnect()` (plain sync) from its `preloop`/`postloop` hooks, while the daemon awaits `service.start()`/`stop()` (non-blocking wrappers around the same steps) from its own event loop.
@@ -148,21 +140,7 @@ Unlike `pipette`, this never chunks: the whole volume must fit in the syringe at
 
 Leftover liquid requires an explicit `--leftover keep|waste`; omitting it is an error rather than the silent `keep` the original defaulted to. `waste` verifies the waste container up front. A tip still holding liquid (`keep`) is always retained regardless of `keep_tip` — never send a tip with liquid in it to the bin.
 
-#### Planned: make `trigger` do something
-Not implemented — noted here so nobody mistakes the stub for a working command.
-
-`AutoPipetteService.trigger` (`daemon/service.py`) validates its channel and state against `TriggerChannels` in `core/pipette_constants.py` and then returns an `ok=False` "not yet implemented" result. `AutoPipette` has no trigger method at all. The control-plane RPC and the `trigger` shell command both route to that stub, so the auxiliary hardware (air, shake, lid) cannot currently be driven from a protocol.
-
-A working implementation exists on `origin/sticky-test-scott` (`Tricca_AutoPipette/autopipette.py`, `set_trigger`): it emits a `SET_PIN`-style command followed by `M400`, and maps channel names to Klipper object names from config rather than hardcoding them — Murphy's `conf/murphy-100.conf` has
-
-```ini
-[TRIGGERS]
-shake = arduino_trigger
-lid   = arduino_trigger2
-air   = arduino_trigger3
-```
-
-Two things to settle when picking this up. The channel→object map belongs in the JSON config (probably on `SystemConfig`, since it is machine wiring rather than pipette or liquid), which makes `TriggerChannels`'s hardcoded `VALID_CHANNELS` set redundant — validate against the configured map instead, so a machine without a lid servo rejects `trigger lid` rather than silently accepting it. And a triggered device is state the daemon does not track: decide whether `trigger air on` left set at the end of a protocol is an error, a warning, or fine, before protocols start depending on either answer.
+**`trigger` is a stub — don't mistake it for a working command.** `AutoPipetteService.trigger` (`daemon/service.py`) validates its channel and state against `TriggerChannels` (`core/pipette_constants.py`) and then returns an `ok=False` "not yet implemented" result; `AutoPipette` has no trigger method at all. Both the control-plane RPC and the `trigger` shell command route to that stub, so auxiliary hardware (air, shake, lid) cannot be driven from a protocol. The planned implementation — including the working `set_trigger` on `origin/sticky-test-scott` to port from — is `docs/TODO.md` item 2.
 
 ### Domain model (`core/`)
 - `autopipette.py` — `AutoPipette`: central controller tying config, location manager, G-code buffer, and volume converter together; owns `pipette()`/`aspirate()`/`dispense()`/tip-handling and multi-liquid switching (`switch_liquid`).
