@@ -771,18 +771,22 @@ These are the right semantics for what the call sites do, so this is a
 modernization rather than a bug fix. Migrating to the string form is cheap and
 would be caught automatically by item 16's typed `MANUAL_STEPPER` builder.
 
-**Not verified: the Klipper version actually deployed.** `tap-tyson.local` was
-not resolvable from the development host, so this rests on current master. If
-the machine runs an *older* Klipper, confirm the string forms are supported
-before migrating — `try_home` in particular is newer than the plain numeric API.
-Check with:
+**Not verified: the Klipper version actually deployed.** The above rests on
+current Klipper master. Since the numeric form still works, nothing is blocked —
+this only needs answering **at migration time**, because `try_home` (the `=2`
+case at `:515`) is newer than the plain numeric API, so an older Klipper could
+accept the numeric form but not its string equivalent.
 
-```bash
-curl -s http://tap-tyson.local:7125/printer/info | python3 -m json.tool
+No external tooling needed: with `tapd` running, ask the machine through the
+daemon that is already connected to it —
+
+```
+tap> send printer.info
 ```
 
-(`software_version` is the Klipper version; Moonraker's port is `7125` per
-`config/system/system.json`.)
+`software_version` in the response is the Klipper version. (`ws.send` relays an
+arbitrary Moonraker method; `MoonrakerRequests.printer_info` at
+`moonraker/moonraker_requests.py:388` is the same call.)
 
 **Open questions.**
 - Deriving capacity from travel routes `usable_capacity_ul()` through
