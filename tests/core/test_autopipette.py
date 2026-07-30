@@ -7,6 +7,7 @@ exercise it directly against the repo's real default config, with no mocks.
 
 from __future__ import annotations
 
+import logging
 from unittest.mock import patch
 
 import pytest
@@ -17,6 +18,7 @@ from tricca_autopipette.core.pipette_exceptions import (
     NoTipboxError,
     NoWasteContainerError,
     TipAlreadyOnError,
+    VolumeCapacityError,
 )
 from tricca_autopipette.core.pipette_models import TipState
 
@@ -171,6 +173,150 @@ class TestAspirateDispenseVolume:
         assert pipette_with_plates.state.has_liquid is False
 
 
+class TestResolveTechnique:
+    """water.json sets both gaps to 0; methanol.json sets 5/2 and 2 prewets."""
+
+    def test_unset_takes_the_active_profile_value(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        pipette_with_plates.switch_liquid("methanol")
+
+        pre, post, prewet_cycles, prewet_vol_ul = (
+            pipette_with_plates.resolve_technique()
+        )
+
+        assert pre == pytest.approx(5.0)
+        assert post == pytest.approx(2.0)
+        assert prewet_cycles == 2
+        assert prewet_vol_ul == pytest.approx(10.0)
+
+    def test_explicit_argument_beats_the_profile(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        pipette_with_plates.switch_liquid("methanol")
+
+        pre, post, _, _ = pipette_with_plates.resolve_technique(
+            pre_air_gap_ul=12.0, post_air_gap_ul=1.0
+        )
+
+        assert pre == pytest.approx(12.0)
+        assert post == pytest.approx(1.0)
+
+    def test_explicit_zero_beats_a_non_zero_profile(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        # The regression the `float | None` signatures exist to prevent: with
+        # zero-defaulted floats, "--pre_air_gap_ul 0" was indistinguishable
+        # from "flag omitted" and the profile's 5uL would silently win.
+        pipette_with_plates.switch_liquid("methanol")
+
+        pre, post, prewet_cycles, _ = pipette_with_plates.resolve_technique(
+            pre_air_gap_ul=0.0, post_air_gap_ul=0.0, prewet_cycles=0
+        )
+
+        assert pre == pytest.approx(0.0)
+        assert post == pytest.approx(0.0)
+        assert prewet_cycles == 0
+
+    def test_profile_without_technique_falls_back_to_pipette_defaults(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        pipette_with_plates.switch_liquid("water")
+
+        pre, post, prewet_cycles, _ = pipette_with_plates.resolve_technique()
+
+        assert pre == pytest.approx(0.0)
+        assert post == pytest.approx(0.0)
+        assert prewet_cycles == 0
+
+    def test_switching_liquid_changes_the_resolved_technique(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        pipette_with_plates.switch_liquid("water")
+        assert pipette_with_plates.resolve_technique()[0] == pytest.approx(0.0)
+
+        pipette_with_plates.switch_liquid("methanol")
+        assert pipette_with_plates.resolve_technique()[0] == pytest.approx(5.0)
+
+    def test_aspirate_volume_uses_the_profile_when_flags_are_omitted(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        pipette_with_plates.switch_liquid("methanol")
+
+        with patch.object(
+            pipette_with_plates,
+            "fit_air_volumes",
+            wraps=pipette_with_plates.fit_air_volumes,
+        ) as spy_fit:
+            pipette_with_plates.aspirate_volume(20.0, "plate_a")
+
+        assert spy_fit.call_args.args == pytest.approx((20.0, 5.0, 2.0))
+
+
+class TestFitAirVolumes:
+    """The p100_vertical fixture is a 100uL syringe with a 2uL margin."""
+
+    def test_usable_capacity_excludes_the_margin(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        assert pipette_with_plates.usable_capacity_ul() == pytest.approx(98.0)
+
+    def test_air_that_fits_is_left_alone(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        assert pipette_with_plates.fit_air_volumes(50.0, 30.0, 2.0) == pytest.approx((
+            30.0,
+            2.0,
+        ))
+
+    def test_post_air_is_preserved_and_pre_air_shrunk(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        # 90uL of liquid leaves 8uL of headroom: the 2uL anti-drip cushion
+        # survives intact and the pre-gap absorbs the shortfall.
+        pre, post = pipette_with_plates.fit_air_volumes(90.0, 30.0, 2.0)
+
+        assert post == pytest.approx(2.0)
+        assert pre == pytest.approx(6.0)
+
+    def test_both_gaps_collapse_when_liquid_fills_the_syringe(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        assert pipette_with_plates.fit_air_volumes(98.0, 30.0, 2.0) == pytest.approx((
+            0.0,
+            0.0,
+        ))
+
+    def test_shrinking_a_gap_is_logged_as_a_warning(
+        self, pipette_with_plates: AutoPipette, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        with caplog.at_level(logging.WARNING):
+            pipette_with_plates.fit_air_volumes(90.0, 30.0, 2.0)
+
+        assert "pre_air_gap reduced from 30.0 μL to 6.0 μL" in caplog.text
+
+    def test_liquid_beyond_usable_capacity_raises(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        # Shrinking air cannot rescue this -- aspirating less liquid would
+        # silently deliver the wrong amount, so it has to be an error.
+        with pytest.raises(VolumeCapacityError, match="exceeds usable syringe"):
+            pipette_with_plates.fit_air_volumes(99.0, 0.0, 0.0)
+
+    def test_aspirate_volume_applies_the_clamp(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        pipette_with_plates.aspirate_volume(
+            90.0, "plate_a", pre_air_gap_ul=30.0, post_air_gap_ul=2.0
+        )
+
+        # 6uL pre-gap + 90uL liquid + 2uL post-gap == the 98uL usable
+        # capacity; the unclamped 30uL pre-gap would have overrun it.
+        gcode = "\n".join(pipette_with_plates.get_gcode())
+        assert "MOVE=" in gcode
+        assert pipette_with_plates.state.has_liquid is True
+
+
 class TestPipetteTransfer:
     def test_negative_volume_raises_value_error(
         self, pipette_with_plates: AutoPipette
@@ -203,8 +349,9 @@ class TestPipetteTransfer:
     def test_large_volume_is_chunked_by_max_syringe_capacity(
         self, pipette_with_plates: AutoPipette
     ) -> None:
-        # max_volume_ul is 100.0 for p100_vertical -- a 250uL transfer should
-        # split into chunks of [100, 100, 50].
+        # p100_vertical is a 100uL syringe with a 2uL capacity margin, so a
+        # chunk is 98uL of usable capacity -- a 250uL transfer splits into
+        # [98, 98, 54] rather than [100, 100, 50].
         pipette_with_plates.state.tip_state = TipState.ATTACHED
 
         with patch.object(
@@ -217,4 +364,29 @@ class TestPipetteTransfer:
             )
 
         aspirated_volumes = [call.args[0] for call in spy_aspirate.call_args_list]
-        assert aspirated_volumes == [100.0, 100.0, 50.0]
+        assert aspirated_volumes == pytest.approx([98.0, 98.0, 54.0])
+
+    def test_air_gaps_come_out_of_the_per_chunk_budget(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        # 98uL usable, less a 30uL pre-gap and a 2uL post-gap, leaves 66uL of
+        # liquid per chunk. Chunking on max_volume_ul alone would overflow the
+        # syringe by the air overhead on every full chunk.
+        pipette_with_plates.state.tip_state = TipState.ATTACHED
+
+        with patch.object(
+            pipette_with_plates,
+            "aspirate_volume",
+            wraps=pipette_with_plates.aspirate_volume,
+        ) as spy_aspirate:
+            pipette_with_plates.pipette(
+                vol_ul=100.0,
+                source="plate_a",
+                dest="plate_a",
+                pre_air_gap_ul=30.0,
+                post_air_gap_ul=2.0,
+                keep_tip=True,
+            )
+
+        aspirated_volumes = [call.args[0] for call in spy_aspirate.call_args_list]
+        assert aspirated_volumes == pytest.approx([66.0, 34.0])

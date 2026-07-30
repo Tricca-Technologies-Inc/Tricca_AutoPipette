@@ -1,13 +1,15 @@
 """A minimal duck-typed stand-in for ``daemon.moonraker_state.MoonrakerStateTracker``.
 
 Exposes ``is_homed()`` -- called by ``daemon/service.py``'s ``require_homed``
-decorator -- and ``save_tip_liquid_state()`` -- called by its
-``persist_tip_liquid_state`` decorator -- so tests can control homed state
-and assert on persisted state directly, without subscribing to a real
-Moonraker connection.
+decorator -- plus ``save_tip_liquid_state()`` and ``save_tip_presence()`` --
+called by its ``persist_tip_liquid_state`` and ``persist_tip_presence``
+decorators -- so tests can control homed state and assert on persisted state
+directly, without subscribing to a real Moonraker connection.
 """
 
 from __future__ import annotations
+
+from typing import Any
 
 
 class FakeMoonrakerState:
@@ -21,6 +23,10 @@ class FakeMoonrakerState:
         """
         self._homed = homed
         self.saved_states: list[tuple[str, bool, str | None]] = []
+        self.saved_tip_presence: list[dict[str, Any]] = []
+        #: What ``load_tip_presence`` should return; set by a test to simulate
+        #: state persisted by a previous daemon run.
+        self.stored_tip_presence: dict[str, Any] = {}
 
     def is_homed(self) -> bool:
         """Return the fake's configured homed state."""
@@ -45,3 +51,21 @@ class FakeMoonrakerState:
             current_liquid: Name of the active liquid profile, or None.
         """
         self.saved_states.append((tip_state, has_liquid, current_liquid))
+
+    def save_tip_presence(self, snapshot: dict[str, Any]) -> None:
+        """Record a persisted tip-presence call for later assertion.
+
+        Args:
+            snapshot: Per-tipbox records as produced by
+                ``TipBoxManager.snapshot``.
+        """
+        self.saved_tip_presence.append(snapshot)
+
+    def load_tip_presence(self) -> dict[str, Any]:
+        """Return the tip presence a previous run would have persisted.
+
+        Returns:
+            Whatever a test assigned to ``stored_tip_presence``; empty by
+            default, matching a first run.
+        """
+        return self.stored_tip_presence

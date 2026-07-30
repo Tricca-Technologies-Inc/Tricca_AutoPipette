@@ -8,9 +8,9 @@ configuration.
 from __future__ import annotations
 
 from enum import IntEnum, StrEnum
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from pydantic.dataclasses import dataclass
 
 
@@ -212,15 +212,22 @@ class PipetteSyringeKinematics(BaseModel):
         motor_orientation: Motor direction (1 for normal, -1 for reversed).
         max_volume_ul: Maximum pipette volume in microliters.
         min_volume_ul: Minimum reliable volume in microliters.
+        capacity_margin_ul: Headroom kept below ``max_volume_ul`` in μL.
         calibration_volumes: Calibration volume points in μL.
-        calibration_steps: Corresponding motor steps.
-        speed_aspirate: Aspiration speed in steps/s.
-        speed_dispense: Dispense speed in steps/s.
-        speed_blowout: Blowout speed for residual liquid in steps/s.
+        calibration_steps: Corresponding plunger travel. Despite the name these
+            are millimetres, not motor steps -- they are fed to Klipper's
+            ``MANUAL_STEPPER ... MOVE=``, which takes mm. See issue #29 for the
+            pending rename.
+        speed_aspirate: Aspiration speed in mm/s.
+        speed_dispense: Dispense speed in mm/s.
         accel_home: Homing acceleration in mm/s².
         accel_move: Movement acceleration in mm/s².
         wait_aspirate_ms: Wait after aspiration in milliseconds.
         wait_dispense_ms: Wait after dispense in milliseconds.
+        prewet_cycles: Default prewet cycles before aspirating.
+        prewet_vol_ul: Default volume drawn per prewet cycle in μL.
+        pre_air_gap_ul: Default air drawn before the liquid in μL.
+        post_air_gap_ul: Default air drawn after the liquid in μL.
 
     Example:
         >>> syringe = PipetteSyringeKinematics(
@@ -256,6 +263,15 @@ class PipetteSyringeKinematics(BaseModel):
         default=0.0, gt=0, description="Minimum reliable volume in microliters"
     )
 
+    capacity_margin_ul: float = Field(
+        default=2.0,
+        ge=0,
+        description=(
+            "Headroom kept below max_volume_ul so a full aspirate never "
+            "drives the plunger to its hard stop"
+        ),
+    )
+
     # Volume Curve
     calibration_volumes: list[float] | None = Field(
         default=None,
@@ -267,17 +283,13 @@ class PipetteSyringeKinematics(BaseModel):
         description="Corresponding motor steps (overrides pipette default)",
     )
 
-    # Speed parameters (steps/s)
+    # Speed parameters (mm/s -- these reach Klipper's MANUAL_STEPPER SPEED=)
     speed_aspirate: float = Field(
-        default=200.0, gt=0, description="Aspiration speed in steps/s"
+        default=200.0, gt=0, description="Aspiration speed in mm/s"
     )
 
     speed_dispense: float = Field(
-        default=200.0, gt=0, description="Dispense speed in steps/s"
-    )
-
-    speed_blowout: float = Field(
-        default=50.0, gt=0, description="Blowout speed for residual liquid in steps/s"
+        default=200.0, gt=0, description="Dispense speed in mm/s"
     )
 
     # Acceleration (mm/s²)
@@ -296,6 +308,27 @@ class PipetteSyringeKinematics(BaseModel):
 
     wait_dispense_ms: int = Field(
         default=200, ge=0, description="Wait after dispense for droplet formation"
+    )
+
+    # Default technique, overridable per liquid and again per command
+    prewet_cycles: int = Field(
+        default=0, ge=0, description="Prewet cycles to run before aspirating"
+    )
+
+    prewet_vol_ul: float = Field(
+        default=10.0, ge=0, description="Volume drawn per prewet cycle (μL)"
+    )
+
+    pre_air_gap_ul: float = Field(
+        default=0.0,
+        ge=0,
+        description="Air drawn before the liquid, as a trailing cushion (μL)",
+    )
+
+    post_air_gap_ul: float = Field(
+        default=0.0,
+        ge=0,
+        description="Air drawn after the liquid, to stop it dripping (μL)",
     )
 
     def model_post_init(self, __context: Any) -> None:  # noqa: ANN401
@@ -397,14 +430,14 @@ class LiquidProfile(BaseModel):
         description: Human-readable description.
         viscosity_cP: Dynamic viscosity in centipoise (optional).
         density_g_ml: Density in g/mL (optional).
-        speed_aspirate: Override aspiration speed in steps/s.
-        speed_dispense: Override dispense speed in steps/s.
+        speed_aspirate: Override aspiration speed in mm/s.
+        speed_dispense: Override dispense speed in mm/s.
         wait_aspirate_ms: Override aspiration wait time in milliseconds.
         wait_dispense_ms: Override dispense wait time in milliseconds.
-        prewet_recommended: Whether pre-wetting is recommended.
-        prewet_cycles: Recommended number of prewet cycles.
-        air_gap_ul: Recommended air gap to prevent dripping in μL.
-        blowout_recommended: Whether blowout is recommended.
+        prewet_cycles: Prewet cycles to run before aspirating, or None.
+        prewet_vol_ul: Volume drawn per prewet cycle in μL, or None.
+        pre_air_gap_ul: Air drawn before the liquid in μL, or None.
+        post_air_gap_ul: Air drawn after the liquid in μL, or None.
         calibration_volumes: Calibration volume points in μL (overrides pipette).
         calibration_steps: Corresponding motor steps (overrides pipette).
 
@@ -414,10 +447,10 @@ class LiquidProfile(BaseModel):
         ...     name="glycerol",
         ...     viscosity_cP=1400.0,
         ...     speed_aspirate=50.0,
-        ...     prewet_recommended=True,
+        ...     prewet_cycles=2,
         ... )
-        >>> print(glycerol.prewet_recommended)
-        True
+        >>> print(glycerol.prewet_cycles)
+        2
     """
 
     # Metadata
@@ -438,11 +471,11 @@ class LiquidProfile(BaseModel):
 
     # Pipetting overrides (None = use pipette defaults)
     speed_aspirate: float | None = Field(
-        default=None, gt=0, description="Override aspiration speed in steps/s"
+        default=None, gt=0, description="Override aspiration speed in mm/s"
     )
 
     speed_dispense: float | None = Field(
-        default=None, gt=0, description="Override dispense speed in steps/s"
+        default=None, gt=0, description="Override dispense speed in mm/s"
     )
 
     wait_aspirate_ms: int | None = Field(
@@ -453,21 +486,27 @@ class LiquidProfile(BaseModel):
         default=None, ge=0, description="Override dispense wait time in milliseconds"
     )
 
-    # Advanced techniques
-    prewet_recommended: bool = Field(
-        default=False, description="Whether pre-wetting is recommended for this liquid"
+    # Advanced techniques (None = use the pipette's default)
+    prewet_cycles: int | None = Field(
+        default=None,
+        ge=0,
+        description="Prewet cycles to run before aspirating this liquid",
     )
 
-    prewet_cycles: int = Field(
-        default=1, ge=0, description="Recommended number of prewet cycles"
+    prewet_vol_ul: float | None = Field(
+        default=None, ge=0, description="Volume drawn per prewet cycle (μL)"
     )
 
-    air_gap_ul: float = Field(
-        default=0.0, ge=0, description="Recommended air gap to prevent dripping (μL)"
+    pre_air_gap_ul: float | None = Field(
+        default=None,
+        ge=0,
+        description="Air drawn before the liquid, as a trailing cushion (μL)",
     )
 
-    blowout_recommended: bool = Field(
-        default=False, description="Whether blowout is recommended"
+    post_air_gap_ul: float | None = Field(
+        default=None,
+        ge=0,
+        description="Air drawn after the liquid, to stop it dripping (μL)",
     )
 
     # Volume Curve
@@ -515,6 +554,96 @@ class LiquidProfile(BaseModel):
 
 
 # ============================================================================
+# LOCATIONS
+# ============================================================================
+
+
+class LocationsConfig(BaseModel):
+    """The deck layout a system config declares, as an ordered source list.
+
+    A protocol's system file names the plates and coordinates it needs, so one
+    editable file describes a run. The ``locations`` key accepts three shapes,
+    all normalized here to an ordered list of sources:
+
+    ```json
+    "locations": "deck_a.json"
+    "locations": { "coordinates": [...], "plates": [...] }
+    "locations": ["standard_deck.json", { "plates": [...] }]
+    ```
+
+    Sources are applied in order and later ones win on a name collision, so a
+    protocol can pull in a shared deck file and then override one plate inline.
+
+    Note:
+        Entries are kept unresolved and unparsed on purpose. Filenames stay
+        filenames so `LocationManager` can record where each location came from
+        for its duplicate-name warnings, and inline payloads stay raw dicts so
+        `LocationManager` remains the single parser for plate geometry --
+        duplicating that parsing into pydantic models here would create two
+        sources of truth for what a plate entry may contain.
+
+    Attributes:
+        sources: Ordered locations sources -- each a filename (resolved against
+            ``config/locations/``) or an inline payload.
+
+    Example:
+        >>> LocationsConfig.model_validate("deck_a.json").sources
+        ['deck_a.json']
+    """
+
+    sources: list[str | dict[str, Any]] = Field(
+        default_factory=list[str | dict[str, Any]],
+        description="Ordered locations sources: filenames or inline payloads",
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def _normalize(cls, value: object) -> dict[str, Any]:
+        """Accept a filename, an inline payload, or a list of either.
+
+        Args:
+            value: The raw ``locations`` value from JSON.
+
+        Returns:
+            A mapping with a normalized ``sources`` list.
+
+        Raises:
+            ValueError: If the value is neither a filename, a mapping, nor a
+                list of those.
+        """
+        if value is None:
+            return {"sources": []}
+        if isinstance(value, str):
+            return {"sources": [value]}
+        if isinstance(value, list):
+            return {"sources": cast("list[Any]", value)}
+        if isinstance(value, dict):
+            typed = cast("dict[str, Any]", value)
+            # An empty mapping means "nothing declared". Treating it as one
+            # empty inline source would make `is_empty` False and silently
+            # suppress the caller's default-locations fallback.
+            if not typed:
+                return {"sources": []}
+            # Already-normalized form, e.g. re-validating a dumped model.
+            if set(typed) == {"sources"}:
+                return typed
+            return {"sources": [typed]}
+        raise ValueError(
+            f"'locations' must be a filename, an object, or a list of those, "
+            f"got {type(value).__name__}"
+        )
+
+    def is_empty(self) -> bool:
+        """Report whether any locations source was declared.
+
+        Returns:
+            True if there is nothing to load, so callers can fall back to the
+            default locations file.
+        """
+        return not self.sources
+
+
+# ============================================================================
 # COMPLETE SYSTEM CONFIGURATION
 # ============================================================================
 
@@ -523,7 +652,7 @@ class SystemConfig(BaseModel):
     """Complete autopipette system configuration.
 
     Top-level configuration that ties together all components including
-    gantry, pipette model, liquid profiles, and network settings.
+    gantry, pipette model, liquid profiles, locations, and network settings.
 
     Attributes:
         version: Configuration schema version.
@@ -531,6 +660,7 @@ class SystemConfig(BaseModel):
         gantry: Gantry motion system configuration.
         pipette: Currently active pipette model.
         liquids: Available liquid profiles keyed by name.
+        locations: Deck layout for this system/protocol.
         network: Network connection settings (hostname and port).
 
     Example:
@@ -558,6 +688,11 @@ class SystemConfig(BaseModel):
         default_factory=dict, description="Available liquid profiles keyed by name"
     )
 
+    # Deck layout (see LocationsConfig for the accepted shapes)
+    locations: LocationsConfig = Field(
+        default_factory=LocationsConfig, description="Deck layout for this system"
+    )
+
     # Network (for Moonraker connection)
     network: dict[str, str] = Field(
         default_factory=lambda: {"hostname": "localhost", "port": "7125"},
@@ -581,6 +716,8 @@ __all__ = [  # noqa: RUF022  (grouped by domain, which reads better than sorted)
     "PipetteModel",
     # Liquids
     "LiquidProfile",
+    # Locations
+    "LocationsConfig",
     # System
     "SystemConfig",
     # State

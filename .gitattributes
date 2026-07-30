@@ -1,0 +1,16 @@
+# Line-ending policy.
+#
+# Normalize every text file to LF, both in the repository and in the working
+# tree. This repo had no policy until 2026-07-29, and the result was a slow
+# divergence: core/autopipette.py was uniformly CRLF from its first commit in
+# 2024 (the src/ refactor carried the endings across to the new path),
+# core/coordinate.py likewise, plus several single-line __init__.py files.
+# A CRLF file makes every edit to it produce a whole-file diff, which buries
+# the actual change under hundreds of lines of ending churn.
+#
+# `text=auto` still lets git detect binary content and leave it alone, so this
+# stays safe if binary assets are ever tracked again.
+* text=auto eol=lf
+
+# Windows batch files are read by cmd.exe, which requires CRLF.
+*.bat text eol=crlf

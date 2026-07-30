@@ -19,6 +19,8 @@ from typing import Any
 
 from cmd2 import Cmd2ArgumentParser
 
+from tricca_autopipette.core.splits import LeftoverAction
+
 
 def args_from_namespace[ArgsT](
     args_cls: type[ArgsT],
@@ -121,20 +123,22 @@ class AspirateArgs:
         source: Source location name.
         src_row: Source row index for plate locations.
         src_col: Source column index for plate locations.
-        pre_aspirate_air: Volume of air to aspirate before liquid (μL).
-        post_aspirate_air: Volume of air to aspirate after liquid (μL).
-        prewet: Number of prewet cycles before aspirating.
-        prewet_vol: Volume to use for each prewet cycle (μL).
+        pre_air_gap_ul: Air before the liquid (μL), or None for the active
+            liquid profile's value.
+        post_air_gap_ul: Air after the liquid (μL), or None for the active
+            liquid profile's value.
+        prewet_cycles: Prewet cycles, or None for the profile's value.
+        prewet_vol_ul: Volume per prewet cycle (μL), or None for the profile's.
     """
 
     vol_ul: float
     source: str
     src_row: int | None
     src_col: int | None
-    pre_aspirate_air: float
-    post_aspirate_air: float
-    prewet: int
-    prewet_vol: float
+    pre_air_gap_ul: float | None
+    post_air_gap_ul: float | None
+    prewet_cycles: int | None
+    prewet_vol_ul: float | None
 
 
 @dataclass
@@ -147,7 +151,6 @@ class DispenseArgs:
         dest_col: Destination column index for plate locations.
         volume: Volume to dispense in μL, or None to dispense all.
         wiggle: If True, wiggle tip during dispensing.
-        touch: If True, touch tip to well side after dispensing.
     """
 
     dest: str
@@ -155,7 +158,6 @@ class DispenseArgs:
     dest_col: int | None
     volume: float | None
     wiggle: bool
-    touch: bool
 
 
 @dataclass
@@ -172,12 +174,20 @@ class PipetteArgs:
         dest_row: Destination row index for plate locations.
         dest_col: Destination column index for plate locations.
         tipbox_name: Name of specific tipbox to use.
-        aspirate_air: Volume of air to aspirate before liquid (μL).
-        prewet: Number of prewet cycles before aspirating.
-        prewet_vol: Volume to use for each prewet cycle (μL).
+        pre_air_gap_ul: Air before the liquid (μL), or None for the active
+            liquid profile's value.
+        post_air_gap_ul: Air after the liquid (μL), or None for the active
+            liquid profile's value.
+        prewet_cycles: Prewet cycles, or None for the profile's value.
+        prewet_vol_ul: Volume per prewet cycle (μL), or None for the profile's.
         wiggle: If True, wiggle tip during dispensing.
-        touch: If True, touch tip to well side after dispensing.
         keep_tip: If True, retain tip after the full operation.
+        splits: Multi-dispense spec (``DEST:VOL[@WELL];...``), or None for a
+            plain single-destination transfer. Takes over from ``dest`` and
+            the ``dest_row``/``dest_col`` pair when given.
+        leftover: What to do with liquid left after the splits dispense --
+            ``keep`` or ``waste``. Required when the splits do not consume
+            the whole aspirate.
     """
 
     vol_ul: float
@@ -189,13 +199,14 @@ class PipetteArgs:
     dest_row: int | None
     dest_col: int | None
     tipbox_name: str | None
-    pre_aspirate_air: float
-    post_aspirate_air: float
-    prewet: int
-    prewet_vol: float
+    pre_air_gap_ul: float | None
+    post_air_gap_ul: float | None
+    prewet_cycles: int | None
+    prewet_vol_ul: float | None
     wiggle: bool
-    touch: bool
     keep_tip: bool
+    splits: str | None
+    leftover: LeftoverAction | None
 
 
 # ===========================================================================
@@ -288,6 +299,72 @@ class DelLocArgs:
     """
 
     name: str
+
+
+@dataclass
+class UnloadLocationsArgs:
+    """Arguments for the ``unload_locations`` command.
+
+    Attributes:
+        name: Name of the location to unload from the deck.
+    """
+
+    name: str
+
+
+@dataclass
+class LoadLocationsArgs:
+    """Arguments for the ``load_locations`` command.
+
+    Attributes:
+        filename: Locations file to load from ``config/locations/``.
+        replace: Whether to clear the deck first. Defaults to False, so
+            loading composes groups rather than replacing the deck.
+    """
+
+    filename: str
+    replace: bool = False
+
+
+@dataclass
+class ResetTipsArgs:
+    """Arguments for the ``reset_tips`` command.
+
+    Attributes:
+        name: Name of the tipbox to mark full.
+    """
+
+    name: str
+
+
+@dataclass
+class SetTipsArgs:
+    """Arguments for the ``set_tips`` command.
+
+    Attributes:
+        name: Name of the tipbox to update.
+        ranges: Well IDs and/or ranges (e.g. ``A1``, ``A1:D6``).
+        available: If True, `ranges` lists the positions that still hold a
+            tip; otherwise they list the consumed ones.
+    """
+
+    name: str
+    ranges: list[str]
+    available: bool = False
+
+
+@dataclass
+class TipsArgs:
+    """Arguments for the ``tips`` command.
+
+    Attributes:
+        name: Tipbox to report on, or None for every registered box.
+        db: Whether to also show the state persisted in Moonraker's database
+            alongside the live state, so drift is visible.
+    """
+
+    name: str | None = None
+    db: bool = False
 
 
 @dataclass
@@ -504,28 +581,32 @@ class TAPCmdParsers:
         help="Source column index (for plate locations)",
     )
     parser_aspirate.add_argument(
-        "--pre_aspirate_air",
-        default=0.0,
+        "--pre_air_gap",
+        dest="pre_air_gap_ul",
+        default=None,
         type=float,
-        help="Volume of air to aspirate before liquid in μL (default: 0.0)",
+        help="Air drawn before the liquid in μL (default: active liquid profile)",
     )
     parser_aspirate.add_argument(
-        "--post_aspirate_air",
-        default=0.0,
+        "--post_air_gap",
+        dest="post_air_gap_ul",
+        default=None,
         type=float,
-        help="Volume of air to aspirate before liquid in μL (default: 0.0)",
+        help="Air drawn after the liquid in μL (default: active liquid profile)",
     )
     parser_aspirate.add_argument(
         "--prewet",
-        default=0,
+        dest="prewet_cycles",
+        default=None,
         type=int,
-        help="Number of prewet cycles before aspirating (default: 0)",
+        help="Prewet cycles before aspirating (default: active liquid profile)",
     )
     parser_aspirate.add_argument(
         "--prewet_vol",
-        default=10.0,
+        dest="prewet_vol_ul",
+        default=None,
         type=float,
-        help="Volume per prewet cycle in μL (default: 10.0)",
+        help="Volume per prewet cycle in μL (default: active liquid profile)",
     )
 
     parser_dispense: Cmd2ArgumentParser = Cmd2ArgumentParser(
@@ -555,11 +636,6 @@ class TAPCmdParsers:
         "--wiggle",
         action="store_true",
         help="Wiggle tip during dispensing to dislodge residual droplets",
-    )
-    parser_dispense.add_argument(
-        "--touch",
-        action="store_true",
-        help="Touch tip to well side after dispensing",
     )
 
     parser_pipette: Cmd2ArgumentParser = Cmd2ArgumentParser(
@@ -610,28 +686,32 @@ class TAPCmdParsers:
         help="Name of the tipbox to draw from (e.g. tipbox, tipbox2)",
     )
     parser_pipette.add_argument(
-        "--pre_aspirate_air",
-        default=0.0,
+        "--pre_air_gap",
+        dest="pre_air_gap_ul",
+        default=None,
         type=float,
-        help="Volume of air to aspirate before liquid in μL (default: 0.0)",
+        help="Air drawn before the liquid in μL (default: active liquid profile)",
     )
     parser_pipette.add_argument(
-        "--post_aspirate_air",
-        default=0.0,
+        "--post_air_gap",
+        dest="post_air_gap_ul",
+        default=None,
         type=float,
-        help="Volume of air to aspirate after liquid in μL (default: 0.0)",
+        help="Air drawn after the liquid in μL (default: active liquid profile)",
     )
     parser_pipette.add_argument(
         "--prewet",
-        default=0,
+        dest="prewet_cycles",
+        default=None,
         type=int,
-        help="Number of prewet cycles before aspirating (default: 0)",
+        help="Prewet cycles before aspirating (default: active liquid profile)",
     )
     parser_pipette.add_argument(
         "--prewet_vol",
-        default=10.0,
+        dest="prewet_vol_ul",
+        default=None,
         type=float,
-        help="Volume per prewet cycle in μL (default: 10.0)",
+        help="Volume per prewet cycle in μL (default: active liquid profile)",
     )
     parser_pipette.add_argument(
         "--wiggle",
@@ -639,14 +719,27 @@ class TAPCmdParsers:
         help="Wiggle tip during dispensing to dislodge residual droplets",
     )
     parser_pipette.add_argument(
-        "--touch",
-        action="store_true",
-        help="Touch tip to well side after dispensing",
-    )
-    parser_pipette.add_argument(
         "--keep_tip",
         action="store_true",
         help="Keep tip attached after the operation (default: eject tip)",
+    )
+    parser_pipette.add_argument(
+        "--splits",
+        default=None,
+        type=str,
+        help=(
+            "Multi-dispense from one aspirate: 'DEST:VOL[@WELL];...', e.g. "
+            "'plate_a:12@A1;plate_b:8@C3'. Overrides the dest argument."
+        ),
+    )
+    parser_pipette.add_argument(
+        "--leftover",
+        default=None,
+        choices=("keep", "waste"),
+        help=(
+            "What to do with liquid left after --splits dispense. Required "
+            "when the splits do not consume the whole aspirated volume."
+        ),
     )
 
     # -----------------------------------------------------------------------
@@ -731,6 +824,69 @@ class TAPCmdParsers:
         description="Delete a named location or plate."
     )
     parser_del_loc.add_argument("name", type=str, help="Name of the location to delete")
+
+    parser_unload_locations: Cmd2ArgumentParser = Cmd2ArgumentParser(
+        description="Unload a single location from the deck by name."
+    )
+    parser_unload_locations.add_argument(
+        "name", type=str, help="Name of the location to unload"
+    )
+
+    parser_load_locations: Cmd2ArgumentParser = Cmd2ArgumentParser(
+        description=(
+            "Load locations from a file. Adds to the deck by default so "
+            "groups compose; use --replace to clear it first."
+        )
+    )
+    parser_load_locations.add_argument(
+        "filename", type=str, help="Locations file under config/locations/"
+    )
+    parser_load_locations.add_argument(
+        "--replace",
+        action="store_true",
+        help="Clear all existing locations before loading",
+    )
+
+    parser_reset_tips: Cmd2ArgumentParser = Cmd2ArgumentParser(
+        description="Mark a tipbox as full, after physically reloading it."
+    )
+    parser_reset_tips.add_argument("name", type=str, help="Tipbox location name")
+
+    parser_set_tips: Cmd2ArgumentParser = Cmd2ArgumentParser(
+        description=(
+            "Declare which tip positions of a box are consumed (or, with "
+            "--available, which still hold a tip). Replaces the box's current "
+            "state rather than adding to it."
+        )
+    )
+    parser_set_tips.add_argument("name", type=str, help="Tipbox location name")
+    parser_set_tips.add_argument(
+        "ranges",
+        type=str,
+        nargs="+",
+        help="Well IDs and/or ranges, e.g. A1 or A1:D6",
+    )
+    parser_set_tips.add_argument(
+        "--available",
+        action="store_true",
+        help="Treat the ranges as the positions that still hold a tip",
+    )
+
+    parser_tips: Cmd2ArgumentParser = Cmd2ArgumentParser(
+        description="Show tip availability, as a per-box map."
+    )
+    parser_tips.add_argument(
+        "name",
+        type=str,
+        nargs="?",
+        default=None,
+        help="Tipbox to report on (default: all)",
+    )
+    parser_tips.add_argument(
+        "--db",
+        action="store_true",
+        help="Also show the state persisted in Moonraker's database",
+    )
 
     parser_ls: Cmd2ArgumentParser = Cmd2ArgumentParser(
         description="List configuration state by category."

@@ -5,6 +5,8 @@ ports-and-adapters migration, PipetteCommands group -- see CLAUDE.md).
 
 from __future__ import annotations
 
+from unittest.mock import patch
+
 import pytest
 from fakes.fake_moonraker_state import FakeMoonrakerState
 
@@ -20,6 +22,7 @@ from tricca_autopipette.core.pipette_exceptions import (
     TipAlreadyOnError,
 )
 from tricca_autopipette.core.pipette_models import TipState
+from tricca_autopipette.core.splits import Split
 from tricca_autopipette.daemon.service import AutoPipetteService
 
 
@@ -29,10 +32,10 @@ def _aspirate_args(**overrides: object) -> AspirateArgs:
         "source": "plate_a",
         "src_row": None,
         "src_col": None,
-        "pre_aspirate_air": 0.0,
-        "post_aspirate_air": 0.0,
-        "prewet": 0,
-        "prewet_vol": 10.0,
+        "pre_air_gap_ul": 0.0,
+        "post_air_gap_ul": 0.0,
+        "prewet_cycles": 0,
+        "prewet_vol_ul": 10.0,
     }
     defaults.update(overrides)
     return AspirateArgs(**defaults)  # type: ignore[arg-type]
@@ -45,7 +48,6 @@ def _dispense_args(**overrides: object) -> DispenseArgs:
         "dest_col": None,
         "volume": 20.0,
         "wiggle": False,
-        "touch": False,
     }
     defaults.update(overrides)
     return DispenseArgs(**defaults)  # type: ignore[arg-type]
@@ -62,13 +64,14 @@ def _pipette_args(**overrides: object) -> PipetteArgs:
         "dest_row": None,
         "dest_col": None,
         "tipbox_name": None,
-        "pre_aspirate_air": 0.0,
-        "post_aspirate_air": 0.0,
-        "prewet": 0,
-        "prewet_vol": 10.0,
+        "pre_air_gap_ul": 0.0,
+        "post_air_gap_ul": 0.0,
+        "prewet_cycles": 0,
+        "prewet_vol_ul": 10.0,
         "wiggle": False,
-        "touch": False,
         "keep_tip": True,
+        "splits": None,
+        "leftover": None,
     }
     defaults.update(overrides)
     return PipetteArgs(**defaults)  # type: ignore[arg-type]
@@ -203,6 +206,98 @@ class TestTransfer:
 
         with pytest.raises(NoWasteContainerError):
             service_with_plates.transfer(_pipette_args(keep_tip=False))
+
+
+class TestTransferSplits:
+    """``--splits`` routes ``transfer`` to ``AutoPipette.pipette_splits``."""
+
+    def test_splits_dispatch_to_pipette_splits(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        _set_homed(service_with_plates, True)
+        autopipette = service_with_plates._autopipette
+
+        with patch.object(
+            autopipette, "pipette_splits", wraps=autopipette.pipette_splits
+        ) as spy_splits:
+            result = service_with_plates.transfer(
+                _pipette_args(
+                    vol_ul=20.0,
+                    splits="plate_a:12@A1;plate_a:8@A3",
+                    keep_tip=True,
+                )
+            )
+
+        assert result.ok is True
+        assert spy_splits.call_count == 1
+        assert spy_splits.call_args.kwargs["splits"] == [
+            Split(dest="plate_a", vol_ul=12.0, well_id="A1"),
+            Split(dest="plate_a", vol_ul=8.0, well_id="A3"),
+        ]
+
+    def test_message_and_gcode_comment_name_every_destination(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        _set_homed(service_with_plates, True)
+
+        result = service_with_plates.transfer(
+            _pipette_args(
+                vol_ul=20.0, splits="plate_a:12@A1;plate_a:8@A3", keep_tip=True
+            )
+        )
+
+        assert "plate_a:12.0" in result.message
+        assert "plate_a:8.0" in result.message
+
+    def test_malformed_spec_returns_not_ok_rather_than_raising(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        _set_homed(service_with_plates, True)
+
+        result = service_with_plates.transfer(_pipette_args(splits="plate_a"))
+
+        assert result.ok is False
+        assert "expected 'DEST:VOL'" in result.message
+
+    def test_leftover_omitted_on_a_short_dispense_raises(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        _set_homed(service_with_plates, True)
+
+        with pytest.raises(ValueError, match="--leftover keep or --leftover waste"):
+            service_with_plates.transfer(
+                _pipette_args(vol_ul=20.0, splits="plate_a:12@A1", keep_tip=True)
+            )
+
+    def test_leftover_waste_without_a_container_raises(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        _set_homed(service_with_plates, True)
+        service_with_plates._autopipette.location_manager.remove_location("waste")
+
+        with pytest.raises(NoWasteContainerError):
+            service_with_plates.transfer(
+                _pipette_args(
+                    vol_ul=20.0,
+                    splits="plate_a:12@A1",
+                    leftover="waste",
+                    keep_tip=True,
+                )
+            )
+
+    def test_plain_transfer_still_takes_the_single_dispense_path(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        _set_homed(service_with_plates, True)
+        autopipette = service_with_plates._autopipette
+
+        with patch.object(
+            autopipette, "pipette_splits", wraps=autopipette.pipette_splits
+        ) as spy_splits:
+            result = service_with_plates.transfer(_pipette_args(keep_tip=True))
+
+        assert result.ok is True
+        assert spy_splits.call_count == 0
 
 
 class TestTipManagement:

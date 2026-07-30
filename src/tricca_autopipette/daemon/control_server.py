@@ -27,14 +27,19 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     DispenseArgs,
     GcodePrintArgs,
     HomeArgs,
+    LoadLocationsArgs,
     MoveArgs,
     MoveLocArgs,
     MoveRelArgs,
     PipetteArgs,
     PlateArgs,
     ResetPlateArgs,
+    ResetTipsArgs,
     SetArgs,
+    SetTipsArgs,
+    TipsArgs,
     TriggerArgs,
+    UnloadLocationsArgs,
     VolToStepsArgs,
     WaitArgs,
 )
@@ -338,7 +343,35 @@ class ControlServer:
         if method == "config.load_locations":
             return dataclasses.asdict(
                 await self.service.dispatch(
-                    lambda: self.service.load_locations(params["filename"])
+                    lambda: self.service.load_locations(LoadLocationsArgs(**params))
+                )
+            )
+        if method == "config.unload_locations":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.unload_locations(UnloadLocationsArgs(**params))
+                )
+            )
+        if method == "config.reset_tips":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.reset_tips(ResetTipsArgs(**params))
+                )
+            )
+        if method == "config.reset_tips_all":
+            return dataclasses.asdict(
+                await self.service.dispatch(self.service.reset_tips_all)
+            )
+        if method == "config.set_tips":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.set_tips(SetTipsArgs(**params))
+                )
+            )
+        if method == "config.tips":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.tips(TipsArgs(**params))
                 )
             )
         if method == "util.wait":

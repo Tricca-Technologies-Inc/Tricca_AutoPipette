@@ -14,9 +14,11 @@ import pytest
 from tricca_autopipette.commands.tap_cmd_parsers import (
     CoorArgs,
     DelLocArgs,
+    LoadLocationsArgs,
     PlateArgs,
     ResetPlateArgs,
     SetArgs,
+    UnloadLocationsArgs,
 )
 from tricca_autopipette.core.coordinate import Coordinate
 from tricca_autopipette.core.pipette_constants import DefaultFilenames, DefaultPaths
@@ -130,7 +132,50 @@ class TestPlate:
         )
 
         assert result.ok is True
-        assert service._autopipette.location_manager.tipboxes is not None
+        manager = service._autopipette.location_manager.tipbox_manager
+        assert manager.names() == ["tips"]
+        assert manager.remaining == 2
+
+    def test_tipboxes_stay_independent(self, service: AutoPipetteService) -> None:
+        """Two boxes must not merge -- the reason append_box was removed."""
+        service.plate(
+            _plate_args(name="tips_a", plate_type="tipbox", num_row=1, num_col=2)
+        )
+        service.plate(
+            _plate_args(name="tips_b", plate_type="tipbox", num_row=1, num_col=2)
+        )
+
+        manager = service._autopipette.location_manager.tipbox_manager
+        assert manager.names() == ["tips_a", "tips_b"]
+        assert manager.capacity == 4
+
+    def test_unloading_one_tipbox_leaves_the_other(
+        self, service: AutoPipetteService
+    ) -> None:
+        service.plate(
+            _plate_args(name="tips_a", plate_type="tipbox", num_row=1, num_col=2)
+        )
+        service.plate(
+            _plate_args(name="tips_b", plate_type="tipbox", num_row=1, num_col=2)
+        )
+        service.del_loc(DelLocArgs(name="tips_a"))
+
+        manager = service._autopipette.location_manager.tipbox_manager
+        assert manager.names() == ["tips_b"]
+        assert manager.remaining == 2
+
+    def test_waste_container_has_no_alias_entry(
+        self, service: AutoPipetteService
+    ) -> None:
+        """A location's name is its only identifier; the alias broke that."""
+        result = service.plate(
+            _plate_args(name="bin", plate_type="waste_container", num_row=1, num_col=1)
+        )
+
+        assert result.ok is True
+        loc_mgr = service._autopipette.location_manager
+        assert loc_mgr.waste_container is not None
+        assert loc_mgr.get_all_names() == ["bin"]
 
 
 class TestResetPlate:
@@ -233,17 +278,77 @@ class TestSaveAndLoadLocations:
         assert (loc_mgr.locations_dir / filename).exists()
 
         service.clear_locs()
-        load_result = service.load_locations(filename)
+        load_result = service.load_locations(LoadLocationsArgs(filename=filename))
 
         assert load_result.ok is True
         assert loc_mgr.has_location("bench")
         assert loc_mgr.has_location("my_plate")
 
+    def test_load_is_additive_by_default(self, service: AutoPipetteService) -> None:
+        """Groups compose: a second load adds to the deck, not replaces it."""
+        loc_mgr = service._autopipette.location_manager
+        service.coor(CoorArgs(name="bench", x=1.0, y=2.0, z=3.0))
+        service.save_locations("first.json")
+        service.clear_locs()
+        service.coor(CoorArgs(name="sink", x=4.0, y=5.0, z=6.0))
+
+        service.load_locations(LoadLocationsArgs(filename="first.json"))
+
+        assert loc_mgr.has_location("bench")
+        assert loc_mgr.has_location("sink")
+
+    def test_load_with_replace_clears_first(self, service: AutoPipetteService) -> None:
+        loc_mgr = service._autopipette.location_manager
+        service.coor(CoorArgs(name="bench", x=1.0, y=2.0, z=3.0))
+        service.save_locations("first.json")
+        service.clear_locs()
+        service.coor(CoorArgs(name="sink", x=4.0, y=5.0, z=6.0))
+
+        service.load_locations(LoadLocationsArgs(filename="first.json", replace=True))
+
+        assert loc_mgr.has_location("bench")
+        assert not loc_mgr.has_location("sink")
+
     def test_load_missing_file_raises_file_not_found(
         self, service: AutoPipetteService
     ) -> None:
         with pytest.raises(FileNotFoundError):
-            service.load_locations("does_not_exist_at_all.json")
+            service.load_locations(
+                LoadLocationsArgs(filename="does_not_exist_at_all.json")
+            )
+
+    def test_failed_load_leaves_the_deck_intact(
+        self, service: AutoPipetteService
+    ) -> None:
+        """Loading used to clear() before checking the file existed."""
+        loc_mgr = service._autopipette.location_manager
+        service.coor(CoorArgs(name="bench", x=1.0, y=2.0, z=3.0))
+
+        with pytest.raises(FileNotFoundError):
+            service.load_locations(LoadLocationsArgs(filename="nope.json"))
+
+        assert loc_mgr.has_location("bench")
+
+
+class TestUnloadLocations:
+    def test_unloads_one_location(self, service: AutoPipetteService) -> None:
+        loc_mgr = service._autopipette.location_manager
+        service.coor(CoorArgs(name="bench", x=1.0, y=2.0, z=3.0))
+        service.coor(CoorArgs(name="sink", x=4.0, y=5.0, z=6.0))
+
+        result = service.unload_locations(UnloadLocationsArgs(name="bench"))
+
+        assert result.ok is True
+        assert not loc_mgr.has_location("bench")
+        assert loc_mgr.has_location("sink")
+
+    def test_unknown_location_reports_failure(
+        self, service: AutoPipetteService
+    ) -> None:
+        result = service.unload_locations(UnloadLocationsArgs(name="nope"))
+
+        assert result.ok is False
+        assert "nope" in result.message
 
 
 def test_default_filenames_sanity() -> None:

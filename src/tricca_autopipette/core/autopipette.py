@@ -27,6 +27,7 @@ Example:
 from __future__ import annotations
 
 import logging
+from collections.abc import Sequence
 
 from tricca_autopipette.core.coordinate import Coordinate
 from tricca_autopipette.core.gcode_buffer import GCodeBuffer
@@ -38,9 +39,10 @@ from tricca_autopipette.core.pipette_constants import (
     PhysicalConstants,
 )
 from tricca_autopipette.core.pipette_exceptions import (
-    NoTipboxError,
+    NotALocationError,
     NoWasteContainerError,
     TipAlreadyOnError,
+    VolumeCapacityError,
 )
 from tricca_autopipette.core.pipette_models import (
     FluidDisplacement,
@@ -51,6 +53,8 @@ from tricca_autopipette.core.pipette_models import (
     SystemConfig,
     TipState,
 )
+from tricca_autopipette.core.splits import LeftoverAction, Split
+from tricca_autopipette.core.traversal import well_id_to_rc
 from tricca_autopipette.core.volume_converter import VolumeConverter
 
 
@@ -150,12 +154,17 @@ class AutoPipette:
             motor_orientation=merged["motor_orientation"],
             max_volume_ul=merged["max_volume_ul"],
             min_volume_ul=merged["min_volume_ul"],
+            capacity_margin_ul=merged["capacity_margin_ul"],
             calibration_volumes=merged["calibration_volumes"],
             calibration_steps=merged["calibration_steps"],
             speed_aspirate=merged["speed_aspirate"],
             speed_dispense=merged["speed_dispense"],
             wait_aspirate_ms=merged["wait_aspirate_ms"],
             wait_dispense_ms=merged["wait_dispense_ms"],
+            prewet_cycles=merged["prewet_cycles"],
+            prewet_vol_ul=merged["prewet_vol_ul"],
+            pre_air_gap_ul=merged["pre_air_gap_ul"],
+            post_air_gap_ul=merged["post_air_gap_ul"],
         )
 
     def switch_liquid(self, liquid_name: str) -> None:
@@ -413,7 +422,7 @@ class AutoPipette:
 
         Args:
             stepper: Name of stepper, or None to use configured stepper.
-            speed: Homing speed in steps/s, or None for default.
+            speed: Homing speed in mm/s, or None for default.
             accel: Homing acceleration in mm/s², or None for default.
         """
         if stepper is None:
@@ -488,9 +497,9 @@ class AutoPipette:
         """Move the plunger stepper motor a specific distance.
 
         Args:
-            distance: Distance to move in motor steps.
+            distance: Distance to move in millimetres.
             stepper: Name of stepper, or None for configured stepper.
-            speed: Movement speed in steps/s, or None for default.
+            speed: Movement speed in mm/s, or None for default.
             accel: Movement acceleration in mm/s², or None for default.
         """
         if stepper is None:
@@ -540,22 +549,26 @@ class AutoPipette:
         return self.gcode_buffers.get_header()
 
     def next_tip(self) -> None:
-        """Pick up the next available tip from the configured tipbox.
+        """Pick up the next available tip from the configured tipboxes.
+
+        Boxes are drawn from in the order they appear in the locations config,
+        each in its own traversal order, and a consumed position is never
+        offered again.
 
         Raises:
             NoTipboxError: If no tipbox has been configured.
+            OutOfTipsError: If every configured tipbox is exhausted. Reload the
+                boxes and run ``reset_tips`` rather than reusing a tip.
             TipAlreadyOnError: If a tip is already attached.
         """
-        if self.location_manager.tipboxes is None:
-            raise NoTipboxError()
         if self.state.tip_state == TipState.ATTACHED:
             raise TipAlreadyOnError()
 
-        loc_tip = self.location_manager.tipboxes.next()
+        # The supplying box comes back with the coordinate: boxes may sit at
+        # different heights, so the dip distance must come from *that* box.
+        _name, box, loc_tip = self.location_manager.tipbox_manager.next_tip()
         self.move_to(loc_tip)
-        self.dip_z_down(
-            loc_tip, self.location_manager.tipboxes.get_dip_distance(vol=None)
-        )
+        self.dip_z_down(loc_tip, box.get_dip_distance(vol=None))
         self.dip_z_return(loc_tip)
         self.state.tip_state = TipState.ATTACHED
 
@@ -624,7 +637,7 @@ class AutoPipette:
             direction: Direction to move the syringe plunger.
             vol_ul: Volume to aspirate or dispense in microliters.
             stepper: Name of stepper, or None for configured stepper.
-            speed: Plunger movement speed in steps/s, or None for default.
+            speed: Plunger movement speed in mm/s, or None for default.
             accel: Plunger movement acceleration, or None for default.
         """
         if stepper is None:
@@ -652,7 +665,7 @@ class AutoPipette:
 
         Args:
             stepper: Name of stepper, or None for configured stepper.
-            speed: Homing speed in steps/s, or None for default.
+            speed: Homing speed in mm/s, or None for default.
             accel: Homing acceleration, or None for default.
         """
         if stepper is None:
@@ -698,16 +711,126 @@ class AutoPipette:
             target = base_coor.generate_offset(dx, dy, 0)
             self.move_to(target)
 
+    def resolve_technique(
+        self,
+        pre_air_gap_ul: float | None = None,
+        post_air_gap_ul: float | None = None,
+        prewet_cycles: int | None = None,
+        prewet_vol_ul: float | None = None,
+    ) -> tuple[float, float, int, float]:
+        """Fill unset technique parameters in from the active liquid profile.
+
+        Resolution order is **explicit argument > active liquid profile >
+        pipette default**, with the last two already merged onto
+        ``self.syringe`` by ``_update_syringe_params``. ``None`` means
+        "unset"; an explicit ``0`` is a real value and overrides a non-zero
+        profile default, which is why these are ``| None`` rather than
+        zero-defaulted floats.
+
+        Args:
+            pre_air_gap_ul: Air before the liquid in μL, or None.
+            post_air_gap_ul: Air after the liquid in μL, or None.
+            prewet_cycles: Number of prewet cycles, or None.
+            prewet_vol_ul: Volume per prewet cycle in μL, or None.
+
+        Returns:
+            The resolved ``(pre_air_gap_ul, post_air_gap_ul, prewet_cycles,
+            prewet_vol_ul)``.
+
+        Example:
+            >>> pipette.switch_liquid("methanol")  # profile sets a 5 μL gap
+            >>> pipette.resolve_technique()[0]
+            5.0
+            >>> pipette.resolve_technique(pre_air_gap_ul=0.0)[0]
+            0.0
+        """
+        return (
+            self.syringe.pre_air_gap_ul if pre_air_gap_ul is None else pre_air_gap_ul,
+            self.syringe.post_air_gap_ul
+            if post_air_gap_ul is None
+            else post_air_gap_ul,
+            self.syringe.prewet_cycles if prewet_cycles is None else prewet_cycles,
+            self.syringe.prewet_vol_ul if prewet_vol_ul is None else prewet_vol_ul,
+        )
+
+    def usable_capacity_ul(self) -> float:
+        """Return the volume the syringe may hold, less its safety margin.
+
+        Returns:
+            ``max_volume_ul - capacity_margin_ul`` in microliters, floored at
+            zero.
+        """
+        return max(0.0, self.syringe.max_volume_ul - self.syringe.capacity_margin_ul)
+
+    def fit_air_volumes(
+        self, volume: float, pre_air_gap_ul: float, post_air_gap_ul: float
+    ) -> tuple[float, float]:
+        """Shrink air gaps so liquid plus air fits inside the syringe.
+
+        The post-aspirate gap is fitted first: it is the anti-drip cushion
+        that sits at the tip orifice, so it is the one worth preserving when
+        headroom is tight. Whatever headroom survives goes to the
+        pre-aspirate gap.
+
+        Reducing a gap is logged at WARNING naming requested versus applied,
+        rather than being applied silently -- a quietly shortened air cushion
+        changes transfer technique without the operator knowing.
+
+        Args:
+            volume: The liquid volume to be aspirated, in microliters.
+            pre_air_gap_ul: Requested air volume before the liquid, in μL.
+            post_air_gap_ul: Requested air volume after the liquid, in μL.
+
+        Returns:
+            The ``(pre_air_gap_ul, post_air_gap_ul)`` volumes that
+            actually fit, in microliters.
+
+        Raises:
+            VolumeCapacityError: If the liquid alone exceeds usable capacity.
+                Shrinking air cannot rescue this case, and silently
+                aspirating less liquid would deliver the wrong amount.
+
+        Example:
+            >>> # 100 μL syringe, 2 μL margin, 90 μL of liquid requested
+            >>> pipette.fit_air_volumes(90.0, 30.0, 2.0)
+            (6.0, 2.0)
+        """
+        usable = self.usable_capacity_ul()
+        headroom = usable - volume
+
+        if headroom < -PhysicalConstants.VOLUME_TOLERANCE_UL:
+            raise VolumeCapacityError(volume, usable)
+
+        headroom = max(0.0, headroom)
+
+        fitted_post = min(post_air_gap_ul, headroom)
+        fitted_pre = min(pre_air_gap_ul, headroom - fitted_post)
+
+        if post_air_gap_ul - fitted_post > PhysicalConstants.VOLUME_TOLERANCE_UL:
+            self.logger.warning(
+                f"post_air_gap reduced from {post_air_gap_ul} μL to "
+                f"{fitted_post} μL: {volume} μL of liquid leaves only "
+                f"{headroom} μL of headroom in a {usable} μL usable syringe."
+            )
+        if pre_air_gap_ul - fitted_pre > PhysicalConstants.VOLUME_TOLERANCE_UL:
+            self.logger.warning(
+                f"pre_air_gap reduced from {pre_air_gap_ul} μL to "
+                f"{fitted_pre} μL: {volume} μL of liquid leaves only "
+                f"{headroom} μL of headroom in a {usable} μL usable syringe."
+            )
+
+        return fitted_pre, fitted_post
+
     def aspirate_volume(
         self,
         volume: float,
         source: str,
         src_row: int | None = None,
         src_col: int | None = None,
-        pre_aspirate_air: float = 0.0,
-        post_aspirate_air: float = 0.0,
-        prewet: int = 0,
-        prewet_vol: float = 10.0,
+        pre_air_gap_ul: float | None = None,
+        post_air_gap_ul: float | None = None,
+        prewet_cycles: int | None = None,
+        prewet_vol_ul: float | None = None,
     ) -> None:
         """Aspirate liquid from a source location into the pipette tip.
 
@@ -716,13 +839,18 @@ class AutoPipette:
             source: Name of source location or plate.
             src_row: Row index for plate wells, or None for next well.
             src_col: Column index for plate wells, or None for next well.
-            pre_aspirate_air: Volume of air to aspirate before liquid.
-            post_aspirate_air: Volume of air to aspirate after liquid.
-            prewet: Number of prewet cycles before aspiration.
-            prewet_vol: Volume to use for prewet cycles.
+            pre_air_gap_ul: Air before the liquid in μL, or None to take
+                the active liquid profile's value.
+            post_air_gap_ul: Air after the liquid in μL, or None to take
+                the active liquid profile's value.
+            prewet_cycles: Number of prewet cycles, or None for the profile's value.
+            prewet_vol_ul: Volume per prewet cycle in μL, or None for the
+                profile's value.
 
         Raises:
             ValueError: If source is not a plate with dipping strategy.
+            VolumeCapacityError: If ``volume`` alone exceeds usable syringe
+                capacity.
         """
         coor_source = self.location_manager.get_coordinate(source, src_row, src_col)
         loc_source = self.location_manager.locations[source]
@@ -733,20 +861,33 @@ class AutoPipette:
                 f"Aspiration requires a plate with dipping strategy."
             )
 
+        pre_air_gap_ul, post_air_gap_ul, prewet_cycles, prewet_vol_ul = (
+            self.resolve_technique(
+                pre_air_gap_ul, post_air_gap_ul, prewet_cycles, prewet_vol_ul
+            )
+        )
+        pre_air_gap_ul, post_air_gap_ul = self.fit_air_volumes(
+            volume, pre_air_gap_ul, post_air_gap_ul
+        )
+        # A prewet cycle draws on top of the pre-aspirate gap already in the
+        # tip, so it gets the headroom left over from that -- not the whole
+        # syringe.
+        prewet_vol_ul = min(prewet_vol_ul, self.usable_capacity_ul() - pre_air_gap_ul)
+
         self.move_to(coor_source)
         self.home_pipette_stepper()
 
-        if pre_aspirate_air:
-            self.operate_syringe(FluidDisplacement.aspiration, pre_aspirate_air)
+        if pre_air_gap_ul:
+            self.operate_syringe(FluidDisplacement.aspiration, pre_air_gap_ul)
 
         self.dip_z_down(coor_source, loc_source.get_dip_distance(volume))
 
         # Prewetting cycle
-        if prewet:
-            for _ in range(prewet):
-                self.operate_syringe(FluidDisplacement.aspiration, prewet_vol)
+        if prewet_cycles and prewet_vol_ul > PhysicalConstants.VOLUME_TOLERANCE_UL:
+            for _ in range(prewet_cycles):
+                self.operate_syringe(FluidDisplacement.aspiration, prewet_vol_ul)
                 self.gcode_wait(self.syringe.wait_aspirate_ms)
-                self.operate_syringe(FluidDisplacement.dispense, prewet_vol)
+                self.operate_syringe(FluidDisplacement.dispense, prewet_vol_ul)
                 self.gcode_wait(self.syringe.wait_aspirate_ms)
 
         # Aspirate liquid
@@ -756,8 +897,8 @@ class AutoPipette:
 
         self.dip_z_return(coor_source)
 
-        if post_aspirate_air:
-            self.operate_syringe(FluidDisplacement.aspiration, post_aspirate_air)
+        if post_air_gap_ul:
+            self.operate_syringe(FluidDisplacement.aspiration, post_air_gap_ul)
 
     def dispense_volume(
         self,
@@ -766,7 +907,8 @@ class AutoPipette:
         dest_col: int | None = None,
         volume: float | None = None,
         wiggle: bool = False,
-        touch: bool = False,
+        purge_air_gap_ul: float = 0.0,
+        empties_tip: bool = True,
     ) -> None:
         """Dispense liquid from the pipette tip into a destination.
 
@@ -776,7 +918,12 @@ class AutoPipette:
             dest_col: Column index for plate wells, or None for next well.
             volume: Volume to dispense, or None for all.
             wiggle: If True, shake tip to dislodge residual droplets.
-            touch: If True, touch tip to well side after dispensing.
+            purge_air_gap_ul: Extra plunger travel in μL to push out a
+                post-aspirate air cushion ahead of the liquid. Ignored when
+                `volume` is None, since that path empties the tip anyway.
+            empties_tip: Whether this dispense leaves the tip empty. False
+                for a partial dispense that will be followed by more, so
+                ``state.has_liquid`` stays true.
 
         Raises:
             ValueError: If destination is not a plate with dipping strategy.
@@ -794,7 +941,10 @@ class AutoPipette:
         self.dip_z_down(coor_dest, loc_dest.get_dip_distance(volume))
 
         if volume:
-            self.operate_syringe(FluidDisplacement.dispense, volume)
+            # The post-aspirate cushion sits between the liquid and the tip
+            # orifice, so it has to be driven out ahead of the liquid or the
+            # well receives `purge_air_gap_ul` less than it was asked for.
+            self.operate_syringe(FluidDisplacement.dispense, volume + purge_air_gap_ul)
         else:
             self.clear_syringe()
 
@@ -803,10 +953,7 @@ class AutoPipette:
         if wiggle:
             self.wiggle(coor_dest, loc_dest.get_dip_distance(volume))
 
-        if touch:
-            pass  # TODO: Implement touch-off
-
-        self.state.has_liquid = False
+        self.state.has_liquid = not empties_tip
         self.dip_z_return(coor_dest)
 
         if not volume:
@@ -823,12 +970,11 @@ class AutoPipette:
         dest_row: int | None = None,
         dest_col: int | None = None,
         tipbox_name: str | None = None,
-        pre_aspirate_air: float = 0.0,
-        post_aspirate_air: float = 0.0,
-        prewet: int = 0,
-        prewet_vol: float = 10.0,
+        pre_air_gap_ul: float | None = None,
+        post_air_gap_ul: float | None = None,
+        prewet_cycles: int | None = None,
+        prewet_vol_ul: float | None = None,
         wiggle: bool = False,
-        touch: bool = False,
         keep_tip: bool = False,
     ) -> None:
         """Transfer liquid between locations.
@@ -849,16 +995,19 @@ class AutoPipette:
             dest_row: Destination plate row index (0-based).
             dest_col: Destination plate column index (0-based).
             tipbox_name: Name of specific tipbox to use.
-            pre_aspirate_air: Volume of air to aspirate before liquid.
-            post_aspirate_air: Volume of air to aspirate after liquid.
-            prewet: Number of prewet cycles.
-            prewet_vol: Volume in μL to prewet the tip with.
+            pre_air_gap_ul: Air before the liquid in μL, or None to take
+                the active liquid profile's value.
+            post_air_gap_ul: Air after the liquid in μL, or None to take
+                the active liquid profile's value.
+            prewet_cycles: Number of prewet cycles, or None for the profile's value.
+            prewet_vol_ul: Volume per prewet cycle in μL, or None for the
+                profile's value.
             wiggle: If True, shake tip during dispensing.
-            touch: If True, touch tip to side after dispensing.
             keep_tip: If True, retain tip after operation.
 
         Raises:
             ValueError: If requested volume is negative.
+            VolumeCapacityError: If the air gaps leave no room for liquid.
 
         Example:
             >>> # Simple transfer
@@ -877,13 +1026,28 @@ class AutoPipette:
         if vol_ul < 0:
             raise ValueError(f"Invalid volume: {vol_ul}μL. Volume must be positive.")
 
+        # Resolve here as well as in aspirate_volume: chunking below needs the
+        # real air overhead, and passing the resolved values down keeps every
+        # chunk on the same technique even if the liquid were switched.
+        pre_air_gap_ul, post_air_gap_ul, prewet_cycles, prewet_vol_ul = (
+            self.resolve_technique(
+                pre_air_gap_ul, post_air_gap_ul, prewet_cycles, prewet_vol_ul
+            )
+        )
+
         # Pick up tip if needed
         if self.state.tip_state == TipState.DETACHED:
             _ = tipbox_name
             self.next_tip()  # TODO: Pass in preferred tipbox
 
-        # Calculate transfer chunks based on max pipette capacity
-        max_vol = self.syringe.max_volume_ul
+        # Calculate transfer chunks based on max pipette capacity. The air
+        # gaps ride along inside the same syringe, so they come out of the
+        # per-chunk budget -- chunking on max_volume_ul alone would overflow
+        # by exactly the air overhead on every full chunk.
+        max_vol = self.usable_capacity_ul() - pre_air_gap_ul - post_air_gap_ul
+        if max_vol <= PhysicalConstants.VOLUME_TOLERANCE_UL:
+            raise VolumeCapacityError(vol_ul, self.usable_capacity_ul())
+
         chunks = int(vol_ul // max_vol)
         remainder = vol_ul - (chunks * max_vol)
         transfer_volumes: list[float] = [float(max_vol)] * chunks
@@ -899,10 +1063,10 @@ class AutoPipette:
                 source,
                 src_row=src_row,
                 src_col=src_col,
-                pre_aspirate_air=pre_aspirate_air,
-                post_aspirate_air=post_aspirate_air,
-                prewet=prewet,
-                prewet_vol=prewet_vol,
+                pre_air_gap_ul=pre_air_gap_ul,
+                post_air_gap_ul=post_air_gap_ul,
+                prewet_cycles=prewet_cycles,
+                prewet_vol_ul=prewet_vol_ul,
             )
 
             # Only dispense the passed in amount if present
@@ -913,7 +1077,7 @@ class AutoPipette:
                     dest_col=dest_col,
                     volume=disp_vol_ul,
                     wiggle=wiggle,
-                    touch=touch,
+                    purge_air_gap_ul=post_air_gap_ul,
                 )
                 break
             self.dispense_volume(
@@ -921,9 +1085,226 @@ class AutoPipette:
                 dest_row=dest_row,
                 dest_col=dest_col,
                 wiggle=wiggle,
-                touch=touch,
             )
 
         # Dispose of tip unless explicitly keeping it
         if not keep_tip:
             self.dispose_tip()
+
+    def resolve_splits(
+        self, vol_ul: float, splits: Sequence[Split], leftover: LeftoverAction | None
+    ) -> list[tuple[Split, int | None, int | None]]:
+        """Validate a parsed splits spec against the deck.
+
+        Runs every check that can be made without moving, so a bad spec is
+        rejected before a single G-code line is emitted rather than stranding
+        a half-dispensed tip partway through a plate. This mirrors
+        ``LocationManager.load_from_json``'s parse-everything-then-apply rule.
+
+        Args:
+            vol_ul: The volume that will be aspirated once, in microliters.
+            splits: The parsed splits, in dispense order.
+            leftover: What to do with liquid remaining after the last split,
+                or None if the caller did not say.
+
+        Returns:
+            One ``(split, dest_row, dest_col)`` triple per split. The row and
+            column are None where the split named no well, meaning the
+            plate's own traversal order picks it.
+
+        Raises:
+            ValueError: If `splits` is empty, a destination is not a plate,
+                a well ID is outside its plate, the splits together exceed
+                `vol_ul`, or liquid would be left over without `leftover`
+                saying what to do with it.
+            NoWasteContainerError: If `leftover` is ``"waste"`` and no waste
+                container is configured. Checked here rather than at the end
+                of the run, so the failure surfaces before any liquid moves.
+            VolumeCapacityError: If `vol_ul` exceeds usable syringe capacity.
+        """
+        if not splits:
+            raise ValueError("No splits given.")
+
+        resolved: list[tuple[Split, int | None, int | None]] = []
+        for split in splits:
+            if not self.location_manager.has_location(split.dest):
+                raise NotALocationError(split.dest)
+
+            loc = self.location_manager.locations[split.dest]
+            if isinstance(loc, Coordinate):
+                raise ValueError(
+                    f"Split destination '{split.dest}' is a coordinate, not a "
+                    f"plate. Dispensing requires a plate with dipping strategy."
+                )
+
+            if split.well_id is None:
+                resolved.append((split, None, None))
+                continue
+
+            # Raises ValueError naming the plate's dimensions if out of range.
+            row, col = well_id_to_rc(split.well_id, loc.num_row, loc.num_col)
+            resolved.append((split, row, col))
+
+        total = sum(split.vol_ul for split in splits)
+        if total - vol_ul > PhysicalConstants.VOLUME_TOLERANCE_UL:
+            raise ValueError(
+                f"Split volumes total {total} μL, which exceeds the "
+                f"{vol_ul} μL aspirated."
+            )
+
+        # Confirm the aspirate itself is physically possible before moving.
+        self.fit_air_volumes(vol_ul, 0.0, 0.0)
+
+        remaining = vol_ul - total
+        if remaining > PhysicalConstants.VOLUME_TOLERANCE_UL:
+            if leftover is None:
+                raise ValueError(
+                    f"Splits dispense {total} μL of the {vol_ul} μL aspirated, "
+                    f"leaving {remaining} μL in the tip. Pass --leftover keep "
+                    f"or --leftover waste to say what should happen to it."
+                )
+            if leftover == "waste" and self.location_manager.waste_container is None:
+                raise NoWasteContainerError()
+
+        return resolved
+
+    def pipette_splits(
+        self,
+        vol_ul: float,
+        source: str,
+        splits: Sequence[Split],
+        src_row: int | None = None,
+        src_col: int | None = None,
+        tipbox_name: str | None = None,
+        pre_air_gap_ul: float | None = None,
+        post_air_gap_ul: float | None = None,
+        prewet_cycles: int | None = None,
+        prewet_vol_ul: float | None = None,
+        wiggle: bool = False,
+        leftover: LeftoverAction | None = None,
+        keep_tip: bool = False,
+    ) -> None:
+        """Aspirate once, then dispense to several destinations in turn.
+
+        Saves a tip pickup and a trip to the source per destination compared
+        with one ``pipette`` call per well, which matters most when the
+        source is a shared reagent reservoir.
+
+        Unlike ``pipette``, this never chunks: the whole `vol_ul` must fit in
+        the syringe at once, since the point is a single aspirate.
+
+        Args:
+            vol_ul: Volume to aspirate once, in microliters.
+            source: Name of source location/plate.
+            splits: Destinations and their volumes, in dispense order.
+            src_row: Source plate row index (0-based).
+            src_col: Source plate column index (0-based).
+            tipbox_name: Name of specific tipbox to use.
+            pre_air_gap_ul: Air before the liquid in μL, or None for the
+                active liquid profile's value.
+            post_air_gap_ul: Air after the liquid in μL, or None for the
+                active liquid profile's value.
+            prewet_cycles: Number of prewet cycles, or None for the profile's value.
+            prewet_vol_ul: Volume per prewet cycle in μL, or None for the
+                profile's value.
+            wiggle: If True, shake tip during each dispense.
+            leftover: What to do with liquid remaining after the last split.
+                Required when the splits do not consume the whole aspirate.
+            keep_tip: If True, retain tip after the operation. A tip still
+                holding liquid (``leftover="keep"``) is always retained
+                regardless, rather than being discarded with liquid inside.
+
+        Raises:
+            ValueError: If `vol_ul` is not positive, or the spec fails
+                validation -- see ``resolve_splits``.
+            NoWasteContainerError: If the tip or its leftover must go to
+                waste and no waste container is configured.
+            VolumeCapacityError: If `vol_ul` exceeds usable syringe capacity.
+
+        Example:
+            >>> # 12 μL to plate_a's A1 and 8 μL to plate_b's C3, one aspirate
+            >>> pipette.pipette_splits(
+            ...     vol_ul=20,
+            ...     source="reservoir",
+            ...     splits=parse_splits_spec("plate_a:12@A1;plate_b:8@C3"),
+            ... )
+        """
+        if vol_ul <= 0:
+            raise ValueError(f"Invalid volume: {vol_ul}μL. Volume must be positive.")
+
+        resolved = self.resolve_splits(vol_ul, splits, leftover)
+
+        pre_air_gap_ul, post_air_gap_ul, prewet_cycles, prewet_vol_ul = (
+            self.resolve_technique(
+                pre_air_gap_ul, post_air_gap_ul, prewet_cycles, prewet_vol_ul
+            )
+        )
+
+        if self.state.tip_state == TipState.DETACHED:
+            _ = tipbox_name
+            self.next_tip()  # TODO: Pass in preferred tipbox
+
+        self.aspirate_volume(
+            vol_ul,
+            source,
+            src_row=src_row,
+            src_col=src_col,
+            pre_air_gap_ul=pre_air_gap_ul,
+            post_air_gap_ul=post_air_gap_ul,
+            prewet_cycles=prewet_cycles,
+            prewet_vol_ul=prewet_vol_ul,
+        )
+        # fit_air_volumes may have shrunk the cushion during the aspirate; the
+        # first dispense has to purge exactly what actually went in.
+        _, applied_post_air = self.fit_air_volumes(
+            vol_ul, pre_air_gap_ul, post_air_gap_ul
+        )
+
+        dispensed = 0.0
+        for index, (split, dest_row, dest_col) in enumerate(resolved):
+            dispensed += split.vol_ul
+            self.dispense_volume(
+                split.dest,
+                dest_row=dest_row,
+                dest_col=dest_col,
+                volume=split.vol_ul,
+                wiggle=wiggle,
+                purge_air_gap_ul=applied_post_air if index == 0 else 0.0,
+                empties_tip=False,
+            )
+
+        remaining = vol_ul - dispensed
+        has_leftover = remaining > PhysicalConstants.VOLUME_TOLERANCE_UL
+
+        if has_leftover and leftover == "waste":
+            self.empty_tip_to_waste()
+            has_leftover = False
+
+        self.state.has_liquid = has_leftover
+
+        # Never send a tip holding liquid to the bin: `leftover="keep"` is an
+        # explicit instruction to hang on to it, so it outranks keep_tip.
+        if not keep_tip and not has_leftover:
+            self.dispose_tip()
+
+    def empty_tip_to_waste(self) -> None:
+        """Expel whatever is left in the tip into the waste container.
+
+        Leaves the tip attached -- disposal is a separate decision, made by
+        the caller.
+
+        Raises:
+            NoWasteContainerError: If no waste container is configured.
+        """
+        waste = self.location_manager.waste_container
+        if waste is None:
+            raise NoWasteContainerError()
+
+        curr_coor = waste.next()
+        self.move_to(curr_coor)
+        self.dip_z_down(curr_coor, waste.get_dip_distance(vol=None))
+        self.clear_syringe()
+        self.gcode_wait(self.syringe.wait_dispense_ms)
+        self.dip_z_return(curr_coor)
+        self.home_pipette_stepper()
+        self.state.has_liquid = False

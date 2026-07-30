@@ -24,6 +24,7 @@ from tricca_autopipette.cli.report_tables import (
     build_locations_table,
     build_plates_table,
     build_system_table,
+    build_tipbox_map,
 )
 from tricca_autopipette.commands.tap_cmd_parsers import (
     AspirateArgs,
@@ -32,6 +33,7 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     DispenseArgs,
     GcodePrintArgs,
     HomeArgs,
+    LoadLocationsArgs,
     LsArgs,
     MoveArgs,
     MoveLocArgs,
@@ -40,10 +42,14 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     PipetteArgs,
     PlateArgs,
     ResetPlateArgs,
+    ResetTipsArgs,
     SendArgs,
     SetArgs,
+    SetTipsArgs,
     TAPCmdParsers,
+    TipsArgs,
     TriggerArgs,
+    UnloadLocationsArgs,
     UploadArgs,
     VolToStepsArgs,
     WaitArgs,
@@ -199,13 +205,22 @@ class RemoteTapShell(Cmd):
         )
         self._call_and_print(self.requests.save_locations(filename))
 
-    def do_load_locations(self, statement: Statement) -> None:
-        """Load locations from a JSON file: load_locations <filename>."""
-        filename = statement.arg_list[0] if statement.arg_list else None
-        if not filename:
-            self.perror("Usage: load_locations <filename.json>")
+    @with_argparser(TAPCmdParsers.parser_tips)  # type: ignore[arg-type]
+    def do_tips(self, args: TipsArgs) -> None:
+        """Show tip availability per tipbox, as an ASCII map."""
+        response = self._send(self.requests.tips(args_from_namespace(TipsArgs, args)))
+        data = self._result_data(response)
+        if data is None:
             return
-        self._call_and_print(self.requests.load_locations(filename))
+
+        boxes: list[dict[str, Any]] = data.get("boxes") or []
+        if not boxes:
+            self.poutput("No tipboxes are loaded.")
+            return
+
+        persisted: dict[str, Any] = data.get("persisted") or {}
+        for box in boxes:
+            self.poutput(build_tipbox_map(box, persisted.get(box["name"])))
 
     def do_webcam(self, _: Statement) -> None:
         """Print the webcam stream URL for this pipette."""
@@ -526,6 +541,27 @@ _STRUCTURED_COMMANDS: list[
         lambda r, a: r.del_loc(args_from_namespace(DelLocArgs, a)),
     ),
     ("clear_locs", None, lambda r, _args: r.clear_locs()),
+    (
+        "load_locations",
+        TAPCmdParsers.parser_load_locations,
+        lambda r, a: r.load_locations(args_from_namespace(LoadLocationsArgs, a)),
+    ),
+    (
+        "unload_locations",
+        TAPCmdParsers.parser_unload_locations,
+        lambda r, a: r.unload_locations(args_from_namespace(UnloadLocationsArgs, a)),
+    ),
+    (
+        "reset_tips",
+        TAPCmdParsers.parser_reset_tips,
+        lambda r, a: r.reset_tips(args_from_namespace(ResetTipsArgs, a)),
+    ),
+    ("reset_tips_all", None, lambda r, _args: r.reset_tips_all()),
+    (
+        "set_tips",
+        TAPCmdParsers.parser_set_tips,
+        lambda r, a: r.set_tips(args_from_namespace(SetTipsArgs, a)),
+    ),
     (
         "wait",
         TAPCmdParsers.parser_wait,

@@ -38,6 +38,35 @@ directory, if it lives somewhere other than `$AUTOPIPETTE_REPO_ROOT/protocols`.
 Note the kiosk resolves it once at import time, so changing it needs a
 service restart.
 
+## Network exposure
+
+Both services bind **loopback only**, and that is deliberate.
+
+- `tapd` defaults to `127.0.0.1:8765` for its control plane.
+- `autopipette-kiosk` passes `--host 127.0.0.1` to uvicorn.
+
+**Neither has any authentication** — no login, no token, no TLS, no origin
+check. Their only protection is that nothing off-host can reach them. The
+touchscreen runs a browser on the same host, so it needs nothing more.
+
+This matters more here than for a typical web service: an unauthenticated
+`POST /run` moves a gantry and drives a syringe. Klipper-world convention
+often runs Moonraker and Mainsail unauthenticated on a trusted LAN; do not
+carry that assumption over to a machine handling liquids in a lab.
+
+If you need access from another machine, **do not** simply change the bind to
+`0.0.0.0` — that publishes full unauthenticated hardware control to every
+device on the network. Put it behind something that authenticates: an SSH
+tunnel or a reverse proxy requiring credentials for a one-off, or a tailnet
+interface with ACLs restricting which devices may connect. Real
+authentication in the application, and a fleet-facing browser tool, are
+tracked as issues [#31](https://github.com/Tricca-Technologies-Inc/Tricca_AutoPipette/issues/31)
+and [#32](https://github.com/Tricca-Technologies-Inc/Tricca_AutoPipette/issues/32).
+
+Earlier revisions of `autopipette-kiosk.service` shipped `--host 0.0.0.0`. If
+you installed from one of those, re-copy the unit and reload — the exposure
+persists in `/etc/systemd/system/` until you do.
+
 ## Install
 
 ```bash

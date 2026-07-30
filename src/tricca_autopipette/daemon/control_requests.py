@@ -26,14 +26,19 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     DispenseArgs,
     GcodePrintArgs,
     HomeArgs,
+    LoadLocationsArgs,
     MoveArgs,
     MoveLocArgs,
     MoveRelArgs,
     PipetteArgs,
     PlateArgs,
     ResetPlateArgs,
+    ResetTipsArgs,
     SetArgs,
+    SetTipsArgs,
+    TipsArgs,
     TriggerArgs,
+    UnloadLocationsArgs,
     VolToStepsArgs,
     WaitArgs,
 )
@@ -292,16 +297,71 @@ class ControlRequests:
         """
         return self.gen_request("config.save_locations", {"filename": filename})
 
-    def load_locations(self, filename: str) -> dict[str, Any]:
+    def load_locations(self, args: LoadLocationsArgs) -> dict[str, Any]:
         """Build a request to load locations from a JSON file.
 
         Args:
-            filename: Input filename under ``config/locations/``.
+            args: Filename under ``config/locations/`` and whether to clear the
+                deck first (loading is additive by default).
 
         Returns:
             Request to load locations.
         """
-        return self.gen_request("config.load_locations", {"filename": filename})
+        return self.gen_request("config.load_locations", dataclasses.asdict(args))
+
+    def unload_locations(self, args: UnloadLocationsArgs) -> dict[str, Any]:
+        """Build a request to unload a single location by name.
+
+        Args:
+            args: Name of the location to unload.
+
+        Returns:
+            Request to unload the location.
+        """
+        return self.gen_request("config.unload_locations", dataclasses.asdict(args))
+
+    def reset_tips(self, args: ResetTipsArgs) -> dict[str, Any]:
+        """Build a request to mark one tipbox as full.
+
+        Args:
+            args: Name of the tipbox to reset.
+
+        Returns:
+            Request to reset the tipbox.
+        """
+        return self.gen_request("config.reset_tips", dataclasses.asdict(args))
+
+    def reset_tips_all(self) -> dict[str, Any]:
+        """Build a request to mark every tipbox as full.
+
+        Returns:
+            Request to reset all tipboxes.
+        """
+        return self.gen_request("config.reset_tips_all", {})
+
+    def set_tips(self, args: SetTipsArgs) -> dict[str, Any]:
+        """Build a request to declare a tipbox's consumed positions.
+
+        Args:
+            args: Tipbox name, well ranges, and whether the ranges name the
+                available positions rather than the consumed ones.
+
+        Returns:
+            Request to set the tipbox's state.
+        """
+        return self.gen_request("config.set_tips", dataclasses.asdict(args))
+
+    def tips(self, args: TipsArgs) -> dict[str, Any]:
+        """Build a request for tip availability per box.
+
+        Args:
+            args: Optional box name, and whether to include the state
+                persisted in Moonraker's database.
+
+        Returns:
+            Request for the tip report.
+        """
+        return self.gen_request("config.tips", dataclasses.asdict(args))
 
     def wait(self, args: WaitArgs) -> dict[str, Any]:
         """Build a request to insert a timed pause into the G-code output.
