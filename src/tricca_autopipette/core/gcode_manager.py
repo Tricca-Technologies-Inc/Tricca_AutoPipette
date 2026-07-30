@@ -5,7 +5,7 @@ This module provides G-code generation, buffering, and file operations.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
@@ -73,7 +73,7 @@ class GCodeManager:
         return self._buffer.get_commands()  # Gets and clears
 
     @contextmanager
-    def batch_mode(self) -> Iterator[GCodeManager]:
+    def batch_mode(self) -> Generator[GCodeManager]:
         """Context manager for batch G-code generation.
 
         Yields:
