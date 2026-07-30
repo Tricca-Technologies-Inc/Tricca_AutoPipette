@@ -16,11 +16,11 @@ absence; don't suggest creating them upfront. The `/domain-modeling` skill
 (reached via `/grill-with-docs` and `/improve-codebase-architecture`) creates
 them lazily when terms or decisions actually get resolved.
 
-Neither `CONTEXT.md` nor `docs/adr/` exists yet. `CLAUDE.md` currently carries
-the glossary-shaped content that would otherwise live in `CONTEXT.md` — the
-naming rules (air gap vs `aspirate_air`, `_ul` suffixes), the client parity rule,
-and the "steps means millimetres" correction. Read it as the glossary until a
-real one exists.
+`CONTEXT.md` and `docs/adr/` were created 2026-07-30 in a `/grill-with-docs`
+domain-modeling session — read both. `CLAUDE.md` still carries glossary-shaped
+content not yet migrated (the naming rules: air gap vs `aspirate_air`, `_ul`
+suffixes, the client parity rule, the "steps means millimetres" correction) —
+treat `CLAUDE.md` and `CONTEXT.md` as complementary until that content moves.
 
 ## File structure
 
@@ -29,9 +29,9 @@ This is a **single-context** repo:
 ```
 /
 ├── CLAUDE.md
-├── CONTEXT.md          ← not yet created
+├── CONTEXT.md
 ├── docs/
-│   ├── adr/            ← not yet created
+│   ├── adr/
 │   └── agents/         ← this directory
 └── src/
     ├── tricca_autopipette/
