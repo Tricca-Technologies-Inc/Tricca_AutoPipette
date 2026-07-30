@@ -13,9 +13,9 @@ syringe plunger positions for precise pipetting control.
    maps to 39.25 mm of travel, implying a bore of roughly 1.8 mm.
 
    The names are wrong, not the numbers -- the emitted G-code is correct.
-   Renaming ``vol_to_steps``/``steps_to_vol`` is tracked as item 15 in
-   docs/TODO.md; it is deferred because both are public control-plane RPC and
-   ``tap`` command surface and so need a deprecation alias.
+   Renaming ``vol_to_steps``/``steps_to_vol`` is tracked as issue #29; it is
+   deferred because both are public control-plane RPC and ``tap`` command
+   surface and so need a deprecation alias.
 """
 
 from __future__ import annotations

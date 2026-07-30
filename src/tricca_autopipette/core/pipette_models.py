@@ -216,8 +216,8 @@ class PipetteSyringeKinematics(BaseModel):
         calibration_volumes: Calibration volume points in μL.
         calibration_steps: Corresponding plunger travel. Despite the name these
             are millimetres, not motor steps -- they are fed to Klipper's
-            ``MANUAL_STEPPER ... MOVE=``, which takes mm. See docs/TODO.md
-            item 15 for the pending rename.
+            ``MANUAL_STEPPER ... MOVE=``, which takes mm. See issue #29 for the
+            pending rename.
         speed_aspirate: Aspiration speed in mm/s.
         speed_dispense: Dispense speed in mm/s.
         accel_home: Homing acceleration in mm/s².

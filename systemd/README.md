@@ -60,7 +60,8 @@ device on the network. Put it behind something that authenticates: an SSH
 tunnel or a reverse proxy requiring credentials for a one-off, or a tailnet
 interface with ACLs restricting which devices may connect. Real
 authentication in the application, and a fleet-facing browser tool, are
-tracked as items 17–18 in [`docs/TODO.md`](../docs/TODO.md).
+tracked as issues [#31](https://github.com/Tricca-Technologies-Inc/Tricca_AutoPipette/issues/31)
+and [#32](https://github.com/Tricca-Technologies-Inc/Tricca_AutoPipette/issues/32).
 
 Earlier revisions of `autopipette-kiosk.service` shipped `--host 0.0.0.0`. If
 you installed from one of those, re-copy the unit and reload — the exposure
