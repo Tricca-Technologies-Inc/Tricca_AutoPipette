@@ -359,7 +359,7 @@ class Plate(ABC):
 
     @property
     def current_index(self) -> int:
-        """Get the flat well index the cursor currently points at.
+        """The flat well index the cursor currently points at.
 
         Returns:
             Zero-based index into `wells`. Equals `curr` for a default
@@ -382,7 +382,7 @@ class Plate(ABC):
 
     @property
     def current_row(self) -> int:
-        """Get the current row index based on current well position.
+        """The current row index based on current well position.
 
         Returns:
             Zero-indexed row number of the current well.
@@ -403,7 +403,7 @@ class Plate(ABC):
 
     @property
     def current_col(self) -> int:
-        """Get the current column index based on current well position.
+        """The current column index based on current well position.
 
         Returns:
             Zero-indexed column number of the current well.
@@ -489,7 +489,7 @@ class Plate(ABC):
 
     @property
     def total_wells(self) -> int:
-        """Return the total number of wells.
+        """The total number of wells.
 
         Returns:
             Total count of wells in the plate.
@@ -666,11 +666,11 @@ class PlateArray(Plate):
             row: Zero-indexed row number.
             col: Zero-indexed column number.
 
-        Raises:
-            ValueError: If row and/or col is invalid
-
         Returns:
             Coordinate at the specified position, or None if out of bounds.
+
+        Raises:
+            ValueError: If row and/or col is invalid
         """
         if not self._is_valid_position(row, col):
             raise ValueError(f"row:{row} and col:{col} is invalid.")

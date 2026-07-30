@@ -28,7 +28,7 @@ class TAPCommandSet(_CommandSetBase):
 
     @property
     def shell(self) -> TriccaAutoPipetteShell:
-        """Get the parent shell instance.
+        """The parent shell instance.
 
         Returns:
             The TriccaAutoPipetteShell instance.

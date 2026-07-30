@@ -931,7 +931,7 @@ class MoonrakerRequests:
         self,
         namespace: str,
         key: str,
-        value: Any,  # noqa: ANN401
+        value: Any,  # ruff:ignore[any-type]
     ) -> dict[str, Any]:
         """Set database item.
 
