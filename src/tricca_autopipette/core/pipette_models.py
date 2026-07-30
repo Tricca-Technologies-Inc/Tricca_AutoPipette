@@ -331,7 +331,7 @@ class PipetteSyringeKinematics(BaseModel):
         description="Air drawn after the liquid, to stop it dripping (μL)",
     )
 
-    def model_post_init(self, __context: Any) -> None:  # noqa: ANN401
+    def model_post_init(self, __context: Any) -> None:  # ruff:ignore[any-type]
         """Validate calibration data after initialization.
 
         Raises:
@@ -520,7 +520,7 @@ class LiquidProfile(BaseModel):
         description="Corresponding motor steps (overrides pipette default)",
     )
 
-    def model_post_init(self, __context: Any) -> None:  # noqa: ANN401
+    def model_post_init(self, __context: Any) -> None:  # ruff:ignore[any-type]
         """Validate calibration data after initialization.
 
         Raises:
@@ -704,7 +704,7 @@ class SystemConfig(BaseModel):
 # EXPORTS
 # ============================================================================
 
-__all__ = [  # noqa: RUF022  (grouped by domain, which reads better than sorted)
+__all__ = [  # ruff:ignore[unsorted-dunder-all]  (grouped by domain, which reads better than sorted)
     # Enums
     "TipState",
     "FluidDisplacement",

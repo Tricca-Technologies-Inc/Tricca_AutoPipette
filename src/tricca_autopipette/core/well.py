@@ -482,7 +482,7 @@ class Well:
 
     @property
     def strategy_type(self) -> StrategyType:
-        """Get the name of the current strategy.
+        """The name of the current strategy.
 
         Returns:
             StrategyType enum identifying the current dip strategy.

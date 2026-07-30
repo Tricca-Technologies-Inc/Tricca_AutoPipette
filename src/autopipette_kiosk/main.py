@@ -119,10 +119,11 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
         logger.error("Failed to connect to tapd control plane at %s", TAPD_CONTROL_URI)
     _control_client = client
 
-    yield
-
-    _control_client = None
-    await asyncio.to_thread(client.stop)
+    try:
+        yield
+    finally:
+        _control_client = None
+        await asyncio.to_thread(client.stop)
 
 
 app = FastAPI(title="AutoPipette Kiosk", lifespan=lifespan)
@@ -277,7 +278,7 @@ def _extract_error_type(exc: RuntimeError) -> str | None:
     return match.group(1) if match else None
 
 
-def _on_run_status_notification(params: Any) -> None:  # noqa: ANN401
+def _on_run_status_notification(params: Any) -> None:  # ruff:ignore[any-type]
     """Handle a `notify_run_status` push from the tapd control daemon.
 
     Args:
@@ -305,7 +306,7 @@ def _on_run_status_notification(params: Any) -> None:  # noqa: ANN401
         asyncio.run_coroutine_threadsafe(_broadcast_status(), _main_loop)
 
 
-def _on_breakpoint_notification(params: Any) -> None:  # noqa: ANN401
+def _on_breakpoint_notification(params: Any) -> None:  # ruff:ignore[any-type]
     """Handle a `notify_breakpoint` push from the tapd control daemon.
 
     Args:

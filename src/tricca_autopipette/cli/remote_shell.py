@@ -63,7 +63,7 @@ logger = logging.getLogger(__name__)
 WEBSOCKET_TIMEOUT_SECONDS = 10
 
 
-def _as_dict(value: Any) -> dict[str, Any]:  # noqa: ANN401
+def _as_dict(value: Any) -> dict[str, Any]:  # ruff:ignore[any-type]
     """Narrow a loosely-typed JSON-RPC result/params value to a dict.
 
     Args:
@@ -124,7 +124,7 @@ class RemoteTapShell(Cmd):
 
     # ==================== notification handlers ====================
 
-    def _on_run_status(self, params: Any) -> None:  # noqa: ANN401
+    def _on_run_status(self, params: Any) -> None:  # ruff:ignore[any-type]
         """Show a live run-status update without disrupting the prompt.
 
         Args:
@@ -138,7 +138,7 @@ class RemoteTapShell(Cmd):
         message = notification.get("message", "")
         self.add_alert(msg=f"[run:{status}] {message}")
 
-    def _on_breakpoint(self, params: Any) -> None:  # noqa: ANN401
+    def _on_breakpoint(self, params: Any) -> None:  # ruff:ignore[any-type]
         """Prompt the user to answer a pending breakpoint.
 
         Args:
@@ -597,8 +597,8 @@ def _register_structured_commands() -> None:
 
         def handler(
             self: RemoteTapShell,
-            args: Any,  # noqa: ANN401
-            build_request: Any = build_request,  # noqa: ANN401
+            args: Any,  # ruff:ignore[any-type]
+            build_request: Any = build_request,  # ruff:ignore[any-type]
         ) -> None:
             # _call_and_print is a same-class method reached through a
             # properly-typed `self` -- pyright still flags it because this

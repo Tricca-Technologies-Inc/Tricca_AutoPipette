@@ -73,7 +73,8 @@ class TestExtends:
         config = JsonConfigManager().load_system_config(child)
 
         assert config.system_name == "Protocol"  # child wins
-        assert config.gantry.speed_xy == 1234.0  # inherited
+        # inherited; exact JSON round-trip of a literal, not a computed value
+        assert config.gantry.speed_xy == 1234.0  # ruff:ignore[float-equality-comparison]
         assert config.network["hostname"] == "bench.local"  # inherited
 
     def test_child_overrides_parent(self, write_system_config: Any) -> None:
@@ -87,7 +88,8 @@ class TestExtends:
 
         config = JsonConfigManager().load_system_config(child)
 
-        assert config.gantry.speed_xy == 9999.0
+        # Exact JSON round-trip of a literal, not a computed value.
+        assert config.gantry.speed_xy == 9999.0  # ruff:ignore[float-equality-comparison]
 
     def test_multi_level_chain(self, write_system_config: Any) -> None:
         write_system_config("a.json", {"system_name": "A", "pipette": "p100_vertical"})
@@ -99,7 +101,8 @@ class TestExtends:
         config = JsonConfigManager().load_system_config(child)
 
         assert config.system_name == "A"
-        assert config.gantry.speed_z == 42.0
+        # Exact JSON round-trip of a literal, not a computed value.
+        assert config.gantry.speed_z == 42.0  # ruff:ignore[float-equality-comparison]
 
     def test_nearest_ancestor_wins(self, write_system_config: Any) -> None:
         """A grandparent must not override the parent."""

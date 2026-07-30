@@ -24,7 +24,7 @@ from tricca_autopipette.core.splits import LeftoverAction
 
 def args_from_namespace[ArgsT](
     args_cls: type[ArgsT],
-    ns: Any,  # noqa: ANN401
+    ns: Any,  # ruff:ignore[any-type]
 ) -> ArgsT:
     """Build one of this module's ``*Args`` dataclasses from a parsed Namespace.
 

@@ -120,8 +120,8 @@ select = [
 
 ignore = [
     # Google-style docstrings
-    "D203",
-    "D213",
+    "incorrect-blank-line-before-class",
+    "multi-line-summary-second-line",
 ]
 
 external = ["DOC"]
@@ -141,7 +141,7 @@ allowed-confusables = ["×"]
 
 # ASCII-art banners: the "lines" are rows of a picture, and rich markup
 # tags make them long. Wrapping them would break the art.
-"src/tricca_autopipette/resources/string_constants.py" = ["E501"]
+"src/tricca_autopipette/resources/string_constants.py" = ["line-too-long"]
 
 
 [tool.ruff.lint.isort]

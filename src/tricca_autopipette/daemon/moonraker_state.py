@@ -43,7 +43,7 @@ DB_KEY_TIP_PRESENCE = "tip_presence"
 REQUIRED_HOMED_AXES = frozenset({"x", "y", "z"})
 
 
-def _as_dict(value: Any) -> dict[str, Any]:  # noqa: ANN401
+def _as_dict(value: Any) -> dict[str, Any]:  # ruff:ignore[any-type]
     """Narrow a loosely-typed JSON value to a dict, defaulting to empty.
 
     Args:
@@ -104,7 +104,7 @@ class MoonrakerStateTracker:
 
     @property
     def print_state(self) -> str:
-        """Return the last known Klipper ``print_stats.state`` value."""
+        """The last known Klipper ``print_stats.state`` value."""
         return self._print_state
 
     def on_print_state_change(self, callback: Callable[[str], None]) -> None:
@@ -118,7 +118,7 @@ class MoonrakerStateTracker:
         """
         self._print_state_callbacks.append(callback)
 
-    def _on_status_update(self, params: Any) -> None:  # noqa: ANN401
+    def _on_status_update(self, params: Any) -> None:  # ruff:ignore[any-type]
         """Handle a ``notify_status_update`` push from Moonraker.
 
         Args:

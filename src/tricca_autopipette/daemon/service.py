@@ -178,8 +178,8 @@ def require_homed(
         @functools.wraps(func)
         def wrapper(
             self: AutoPipetteService,
-            *args: Any,  # noqa: ANN401
-            **kwargs: Any,  # noqa: ANN401
+            *args: Any,  # ruff:ignore[any-type]
+            **kwargs: Any,  # ruff:ignore[any-type]
         ) -> CommandResult:
             homed = self.moonraker_state is not None and self.moonraker_state.is_homed()
             if not homed:
@@ -221,7 +221,7 @@ def persist_tip_liquid_state(
     """
 
     @functools.wraps(func)
-    def wrapper(self: AutoPipetteService, *args: Any, **kwargs: Any) -> CommandResult:  # noqa: ANN401
+    def wrapper(self: AutoPipetteService, *args: Any, **kwargs: Any) -> CommandResult:  # ruff:ignore[any-type]
         try:
             return func(self, *args, **kwargs)
         finally:
@@ -267,7 +267,7 @@ def persist_tip_presence(
     """
 
     @functools.wraps(func)
-    def wrapper(self: AutoPipetteService, *args: Any, **kwargs: Any) -> CommandResult:  # noqa: ANN401
+    def wrapper(self: AutoPipetteService, *args: Any, **kwargs: Any) -> CommandResult:  # ruff:ignore[any-type]
         try:
             return func(self, *args, **kwargs)
         finally:
@@ -718,7 +718,15 @@ class AutoPipetteService:
                 all-zero-offset no-op case, unlike the pre-Phase-3 behavior --
                 see ``require_homed``'s docstring).
         """
-        if args.x == 0.0 and args.y == 0.0 and args.z == 0.0:
+        # Exact sentinel check, not an arithmetic result: args.x/y/z are the
+        # literal user-supplied offsets (default 0.0 when omitted), and an
+        # isclose() tolerance would silently swallow a genuinely tiny
+        # requested move as a no-op.
+        if (
+            args.x == 0.0  # ruff:ignore[float-equality-comparison]
+            and args.y == 0.0  # ruff:ignore[float-equality-comparison]
+            and args.z == 0.0  # ruff:ignore[float-equality-comparison]
+        ):
             return CommandResult(
                 ok=False, message="No movement — all offsets are zero."
             )
@@ -1850,7 +1858,7 @@ class AutoPipetteService:
             )
         return CommandResult(ok=True, message=f"Subscribed to '{method}'.")
 
-    def _forward_raw_notification(self, method: str, params: Any) -> None:  # noqa: ANN401
+    def _forward_raw_notification(self, method: str, params: Any) -> None:  # ruff:ignore[any-type]
         """Re-broadcast a subscribed raw Moonraker notification.
 
         Args:
