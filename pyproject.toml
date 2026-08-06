@@ -54,6 +54,7 @@ license-files = ["LICENSE"]
 # Development tools.
 dev = [
     "coverage",
+    "httpx2",  # starlette.testclient.TestClient's transport, for kiosk tests
     "pyright",
     "pytest",
     "ruff",
@@ -232,10 +233,9 @@ addopts = "-ra"
 
 branch = true
 
-# TODO:
-# Replace with your package name.
 source = [
     "tricca_autopipette",
+    "autopipette_kiosk",
 ]
 
 [project.scripts]
