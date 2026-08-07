@@ -313,3 +313,194 @@ def test_plate_is_abstract() -> None:
     """Plate stays abstract so every subclass defines its own traversal."""
     with pytest.raises(TypeError):
         Plate(_params())  # type: ignore[abstract]
+
+
+# ==================== PlateParams validation ====================
+
+
+class TestPlateParamsValidation:
+    def test_unregistered_plate_type_rejected(self) -> None:
+        with pytest.raises(ValueError, match="Invalid plate type"):
+            PlateParams(plate_type="not_a_real_type", well_template=_well())
+
+    def test_explicit_none_order_resolves_to_row_major(self) -> None:
+        params = PlateParams(
+            plate_type="array",
+            well_template=_well(),
+            order=None,  # pyright: ignore[reportArgumentType]
+        )
+        assert params.order == TraversalOrder()
+
+
+# ==================== Plate base-class dunders and helpers ====================
+
+
+class TestPlateDunders:
+    def test_repr(self) -> None:
+        plate = PlateArray(_params(num_row=2, num_col=3))
+        assert repr(plate) == "PlateArray(rows=2, cols=3, wells=6)"
+
+    def test_iter_yields_wells_in_row_major_order(self) -> None:
+        plate = PlateArray(_params(num_row=2, num_col=3))
+        assert list(plate) == plate.wells
+
+    def test_getitem_supports_negative_indexing(self) -> None:
+        plate = PlateArray(_params(num_row=2, num_col=3))
+        assert plate[-1] is plate.wells[-1]
+        assert plate[0] is plate.wells[0]
+
+
+class TestGetWell:
+    def test_valid_position_returns_the_well(self) -> None:
+        plate = PlateArray(_params(num_row=2, num_col=3))
+        assert plate.get_well(1, 2) is plate.wells[1 * 3 + 2]
+
+    def test_out_of_bounds_returns_none(self) -> None:
+        plate = PlateArray(_params(num_row=2, num_col=3))
+        assert plate.get_well(99, 99) is None
+
+
+class TestTotalWells:
+    def test_matches_well_count(self) -> None:
+        plate = PlateArray(_params(num_row=2, num_col=3))
+        assert plate.total_wells == 6
+
+
+class TestGetCoorInvalidPosition:
+    def test_out_of_bounds_raises(self) -> None:
+        plate = PlateArray(_params(num_row=2, num_col=3))
+        with pytest.raises(ValueError, match="is invalid"):
+            plate.get_coor(99, 99)
+
+
+class TestNextWrapsWhenAlreadyPastTheEnd:
+    def test_cursor_manually_advanced_past_the_end_still_wraps(self) -> None:
+        """Covers the top-of-`next()` wrap reset, distinct from the
+
+        bottom-of-`next()` reset that ordinarily keeps `curr` from ever
+        reaching this state in normal use.
+        """
+        plate = PlateArray(_params(num_row=2, num_col=3))
+        plate.curr = len(plate.sequence)  # simulate an already-past-the-end cursor
+
+        first = plate.wells[plate.sequence[0]].coor
+
+        assert plate.next() == first
+
+
+# ==================== Plate base-class abstract-method bodies ====================
+
+
+class _AbstractBodyPlate(Plate):
+    """A concrete `Plate` whose `get_coor`/`get_dip_distance`/`next` delegate
+
+    to `super()` rather than overriding fully, so the base class's own (if
+    normally unreachable) `NotImplementedError` bodies can be exercised --
+    the same pattern `test_well.py` uses for `DipStrategy`. Subclasses `Plate`
+    directly (not `PlateArray`) so `super()` resolves to `Plate`'s own
+    methods rather than a concrete sibling implementation.
+    """
+
+    def _gen_wells(
+        self,
+        start_coor: Coordinate,
+        well_template: Well,
+        num_row: int,
+        num_col: int,
+        spacing_row: float,
+        spacing_col: float,
+    ) -> list[Well]:
+        del start_coor, num_row, num_col, spacing_row, spacing_col
+        return [well_template]
+
+    def get_coor(self, row: int, col: int) -> Coordinate:
+        return super().get_coor(row, col)  # pyright: ignore[reportAbstractUsage]
+
+    def get_dip_distance(self, vol: float | None) -> float:
+        return super().get_dip_distance(vol)  # pyright: ignore[reportAbstractUsage]
+
+    def next(self) -> Coordinate:
+        return super().next()  # pyright: ignore[reportAbstractUsage]
+
+
+class _GenWellsPassThrough(Plate):
+    """A minimal `Plate` whose `_gen_wells` delegates to `super()`, so the
+
+    abstract base body raises during construction itself.
+    """
+
+    def _gen_wells(
+        self,
+        start_coor: Coordinate,
+        well_template: Well,
+        num_row: int,
+        num_col: int,
+        spacing_row: float,
+        spacing_col: float,
+    ) -> list[Well]:
+        return super()._gen_wells(  # pyright: ignore[reportAbstractUsage]
+            start_coor, well_template, num_row, num_col, spacing_row, spacing_col
+        )
+
+    def get_coor(self, row: int, col: int) -> Coordinate:
+        raise NotImplementedError
+
+    def get_dip_distance(self, vol: float | None) -> float:
+        raise NotImplementedError
+
+    def next(self) -> Coordinate:
+        raise NotImplementedError
+
+
+class TestPlateAbstractMethodBodies:
+    def test_gen_wells_base_raises(self) -> None:
+        with pytest.raises(NotImplementedError, match="_gen_wells"):
+            _GenWellsPassThrough(_params(num_row=1, num_col=1))
+
+    def test_get_coor_base_raises(self) -> None:
+        plate = _AbstractBodyPlate(_params(num_row=1, num_col=1))
+        with pytest.raises(NotImplementedError, match="get_coor"):
+            plate.get_coor(0, 0)
+
+    def test_get_dip_distance_base_raises(self) -> None:
+        plate = _AbstractBodyPlate(_params(num_row=1, num_col=1))
+        with pytest.raises(NotImplementedError, match="get_dip_distance"):
+            plate.get_dip_distance(0.0)
+
+    def test_next_base_raises(self) -> None:
+        plate = _AbstractBodyPlate(_params(num_row=1, num_col=1))
+        with pytest.raises(NotImplementedError, match="next"):
+            plate.next()
+
+
+# ==================== PlateFactory registration/creation edges ====================
+
+
+class _DummyPlate(PlateArray):
+    """A throwaway `Plate` subclass, registered/unregistered per-test below."""
+
+
+class TestPlateFactoryRegistration:
+    def test_duplicate_registration_raises(self) -> None:
+        PlateFactory.register("pytest_tmp_dup")(_DummyPlate)
+        assert PlateFactory._registry["pytest_tmp_dup"] is _DummyPlate
+
+        try:
+            with pytest.raises(ValueError, match="already registered"):
+                PlateFactory.register("pytest_tmp_dup")(_DummyPlate)
+        finally:
+            del PlateFactory._registry["pytest_tmp_dup"]
+
+
+class TestPlateFactoryCreateUnregistered:
+    def test_since_unregistered_type_raises(self) -> None:
+        """`PlateParams` normally guarantees a registered type; this covers
+
+        the factory's own defensive check for a type deregistered (or
+        mutated past validation) after the params were built.
+        """
+        params = _params(plate_type="array")
+        params.plate_type = "not_a_real_type"  # bypasses validate_plate_type
+
+        with pytest.raises(InvalidPlateTypeError):
+            PlateFactory.create(params)
