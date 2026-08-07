@@ -64,7 +64,7 @@ class WellParams(BaseModel):
     coor: Coordinate
     dip_top: confloat(gt=0)
     dip_btm: Optional[confloat(gt=0)] = None
-    dip_vol: Optional[confloat(gt=0)] = None
+    max_vol: Optional[confloat(gt=0)] = None
     dip_func: Optional[Callable[[Well, float], float]] = \
         DipStrategies.simple
     well_diameter: Optional[confloat(gt=0)] = None
@@ -103,7 +103,7 @@ class Well:
                  coor: Coordinate,
                  dip_top: float,
                  dip_btm: Optional[float] = None,
-                 dip_vol: Optional[float] = None,
+                 max_vol: Optional[float] = None,
                  dip_func:
                      Optional[Callable[[Well, float], float]] = None,
                  diameter: Optional[float] = None):
@@ -112,7 +112,7 @@ class Well:
         self.dip_top = dip_top
         self.dip_btm = dip_btm
         #initialize the starting volume
-        self.dip_vol = dip_vol
+        self.dip_vol = max_vol
         # Always start at the top of the well
         self.dip_curr = dip_top
         self.dip_func = dip_func
