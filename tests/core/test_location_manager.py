@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from pathlib import Path
 from typing import Any
 
@@ -17,7 +18,9 @@ import pytest
 
 from tricca_autopipette.core.coordinate import Coordinate
 from tricca_autopipette.core.location_manager import LocationManager
-from tricca_autopipette.core.plates import PlateParams, TipBox
+from tricca_autopipette.core.pipette_constants import DefaultPaths
+from tricca_autopipette.core.pipette_exceptions import NotALocationError
+from tricca_autopipette.core.plates import Plate, PlateFactory, PlateParams, TipBox
 from tricca_autopipette.core.well import StrategyType, Well
 
 
@@ -57,6 +60,21 @@ def _tipbox_entry(name: str, cols: int = 3, **extra: Any) -> dict[str, Any]:
         "num_row": 1,
         "num_col": cols,
         "spacing_col": 9.0,
+        "dip_top": 5.0,
+    }
+    entry.update(extra)
+    return entry
+
+
+def _array_entry(name: str, cols: int = 3, **extra: Any) -> dict[str, Any]:
+    entry: dict[str, Any] = {
+        "name": name,
+        "type": "array",
+        "x": 150.0,
+        "y": 20.0,
+        "z": 5.0,
+        "num_row": 1,
+        "num_col": cols,
         "dip_top": 5.0,
     }
     entry.update(extra)
@@ -584,3 +602,403 @@ class TestSaveRoundTrip:
         assert "order" not in entry
         assert "mask" not in entry
         assert "on_exhaust" not in entry
+
+    def test_custom_non_preset_order_is_saved_as_a_full_descriptor(
+        self, manager: LocationManager, locations_dir: Path
+    ) -> None:
+        """A combination that matches no preset name round-trips explicitly."""
+        _write(
+            locations_dir,
+            "t.json",
+            {"plates": [_array_entry("plate", order={"row_dir": "bottom_up"})]},
+        )
+        manager.load_from_json("t.json")
+
+        manager.save_to_json("out.json")
+
+        saved = json.loads((locations_dir / "out.json").read_text(encoding="utf-8"))
+        entry = saved["plates"][0]
+        assert entry["order"] == {
+            "major": "row",
+            "row_dir": "bottom_up",
+            "col_dir": "left_right",
+            "serpentine": False,
+        }
+
+    def test_non_default_on_exhaust_is_saved_for_a_non_tipbox_plate(
+        self, manager: LocationManager, locations_dir: Path
+    ) -> None:
+        _write(
+            locations_dir,
+            "t.json",
+            {"plates": [_array_entry("plate", on_exhaust="error")]},
+        )
+        manager.load_from_json("t.json")
+
+        manager.save_to_json("out.json")
+
+        saved = json.loads((locations_dir / "out.json").read_text(encoding="utf-8"))
+        entry = saved["plates"][0]
+        assert entry["on_exhaust"] == "error"
+
+
+# ==================== Plate-file references ====================
+
+
+class TestPlateFileReference:
+    """`plate_file` supplies geometry from a reusable template; the locations
+
+    entry supplies placement and any per-deck overrides. Uses the real
+    `config/plates/96_well_standard.json` template (read-only, like the
+    default system/pipette/liquid configs used elsewhere) rather than a
+    scratch file, since `location_manager.DIR_CONFIG_PLATES` isn't an
+    injection point.
+    """
+
+    def test_plate_file_supplies_geometry_and_entry_overrides_placement(
+        self, manager: LocationManager, locations_dir: Path
+    ) -> None:
+        _write(
+            locations_dir,
+            "t.json",
+            {
+                "plates": [
+                    {
+                        "name": "assay",
+                        "plate_file": "96_well_standard.json",
+                        "x": 150.0,
+                        "y": 20.0,
+                        "z": 5.0,
+                    }
+                ]
+            },
+        )
+
+        manager.load_from_json("t.json")
+
+        plate = manager.locations["assay"]
+        assert isinstance(plate, Plate)
+        assert plate.num_row == 8
+        assert plate.num_col == 12
+        # Placement from the entry, not the file; exact JSON round-trip of a
+        # literal, not a computed value.
+        assert plate.wells[0].coor.x == 150.0  # ruff:ignore[float-equality-comparison]
+
+    def test_dip_btm_and_well_diameter_round_trip(
+        self, manager: LocationManager, locations_dir: Path
+    ) -> None:
+        _write(
+            locations_dir,
+            "t.json",
+            {
+                "plates": [
+                    {
+                        "name": "assay",
+                        "plate_file": "96_well_standard.json",
+                        "x": 150.0,
+                        "y": 20.0,
+                        "z": 5.0,
+                    }
+                ]
+            },
+        )
+        manager.load_from_json("t.json")
+
+        manager.save_to_json("out.json")
+
+        saved = json.loads((locations_dir / "out.json").read_text(encoding="utf-8"))
+        entry = saved["plates"][0]
+        # Exact JSON round-trip of a literal, not a computed value.
+        assert entry["dip_btm"] == 11.0  # ruff:ignore[float-equality-comparison]
+        assert entry["well_diameter"] == 6.86  # ruff:ignore[float-equality-comparison]
+
+
+class TestPlateFileErrors:
+    def test_missing_plate_file_raises(
+        self, manager: LocationManager, locations_dir: Path
+    ) -> None:
+        _write(
+            locations_dir,
+            "t.json",
+            {
+                "plates": [
+                    {
+                        "name": "assay",
+                        "plate_file": "does_not_exist.json",
+                        "x": 0,
+                        "y": 0,
+                        "z": 0,
+                    }
+                ]
+            },
+        )
+
+        with pytest.raises(FileNotFoundError, match="Plate definition not found"):
+            manager.load_from_json("t.json")
+
+    def test_invalid_json_plate_file_raises(
+        self, manager: LocationManager, locations_dir: Path
+    ) -> None:
+        # `DIR_CONFIG_PLATES` isn't an injection point, so this scratch file
+        # is written into the real repo directory and removed afterwards,
+        # matching the convention `test_json_config_manager.py` established.
+        bad_file = DefaultPaths.DIR_CONFIG_PLATES / "pytest_tmp_bad_plate.json"
+        bad_file.write_text("{not valid json")
+        _write(
+            locations_dir,
+            "t.json",
+            {
+                "plates": [
+                    {
+                        "name": "assay",
+                        "plate_file": bad_file.name,
+                        "x": 0,
+                        "y": 0,
+                        "z": 0,
+                    }
+                ]
+            },
+        )
+
+        try:
+            with pytest.raises(ValueError, match="Invalid plate definition JSON"):
+                manager.load_from_json("t.json")
+        finally:
+            bad_file.unlink(missing_ok=True)
+
+
+# ==================== Tips-block validation ====================
+
+
+class TestTipsBlockValidation:
+    def test_malformed_tips_block_rejected(
+        self, manager: LocationManager, locations_dir: Path
+    ) -> None:
+        _write(
+            locations_dir,
+            "t.json",
+            {"plates": [_tipbox_entry("tips", tips=["not", "a", "dict"])]},
+        )
+
+        with pytest.raises(ValueError, match="malformed 'tips' block"):
+            manager.load_from_json("t.json")
+
+    def test_malformed_consumed_list_rejected(
+        self, manager: LocationManager, locations_dir: Path
+    ) -> None:
+        _write(
+            locations_dir,
+            "t.json",
+            {"plates": [_tipbox_entry("tips", tips={"consumed": "A1"})]},
+        )
+
+        with pytest.raises(
+            ValueError, match=re.escape("malformed 'tips.consumed' list")
+        ):
+            manager.load_from_json("t.json")
+
+    def test_out_of_bounds_range_rejected(
+        self, manager: LocationManager, locations_dir: Path
+    ) -> None:
+        _write(
+            locations_dir,
+            "t.json",
+            {"plates": [_tipbox_entry("tips", cols=3, tips={"consumed": ["Z99"]})]},
+        )
+
+        with pytest.raises(
+            ValueError, match=re.escape("Invalid 'tips.consumed' for plate 'tips'")
+        ):
+            manager.load_from_json("t.json")
+
+
+# ==================== load_spec / load_group(replace=True) ====================
+
+
+class TestLoadSpec:
+    def test_filename_source(
+        self, manager: LocationManager, locations_dir: Path
+    ) -> None:
+        _write(locations_dir, "a.json", _coord_file(["bench"]))
+
+        manager.load_spec(["a.json"])
+
+        assert manager.get_all_names() == ["bench"]
+        assert manager.source_of("bench") == "a.json"
+
+    def test_inline_payload_source(self, manager: LocationManager) -> None:
+        manager.load_spec([_coord_file(["inline_bench"])])
+
+        assert manager.get_all_names() == ["inline_bench"]
+        assert manager.source_of("inline_bench") == "<inline #1>"
+
+    def test_mixed_sources_apply_in_order(
+        self, manager: LocationManager, locations_dir: Path
+    ) -> None:
+        _write(locations_dir, "a.json", _coord_file(["bench"]))
+
+        manager.load_spec(["a.json", _coord_file(["sink"])])
+
+        assert sorted(manager.get_all_names()) == ["bench", "sink"]
+
+    def test_replace_clears_first(
+        self, manager: LocationManager, locations_dir: Path
+    ) -> None:
+        _write(locations_dir, "a.json", _coord_file(["bench"]))
+        manager.load_from_json("a.json")
+
+        manager.load_spec([_coord_file(["sink"])], replace=True)
+
+        assert manager.get_all_names() == ["sink"]
+
+    def test_missing_file_in_spec_raises_and_leaves_deck_untouched(
+        self, manager: LocationManager, locations_dir: Path
+    ) -> None:
+        _write(locations_dir, "a.json", _coord_file(["bench"]))
+        manager.load_from_json("a.json")
+
+        with pytest.raises(FileNotFoundError):
+            manager.load_spec(["a.json", "missing.json"])
+
+        assert manager.get_all_names() == ["bench"]
+
+
+class TestLoadGroupReplace:
+    def test_replace_clears_before_the_group(
+        self, manager: LocationManager, locations_dir: Path
+    ) -> None:
+        _write(locations_dir, "old.json", _coord_file(["stale"]))
+        manager.load_from_json("old.json")
+        _write(locations_dir, "a.json", _coord_file(["bench"]))
+        _write(locations_dir, "b.json", _coord_file(["sink"]))
+
+        manager.load_group(["a.json", "b.json"], replace=True)
+
+        assert sorted(manager.get_all_names()) == ["bench", "sink"]
+
+
+# ==================== get_coordinate row/col validation ====================
+
+
+class TestGetCoordinateRowColValidation:
+    def test_only_row_given_raises(
+        self, manager: LocationManager, locations_dir: Path
+    ) -> None:
+        _write(locations_dir, "t.json", {"plates": [_array_entry("plate")]})
+        manager.load_from_json("t.json")
+
+        with pytest.raises(ValueError, match="must be provided together"):
+            manager.get_coordinate("plate", row=0)
+
+    def test_only_col_given_raises(
+        self, manager: LocationManager, locations_dir: Path
+    ) -> None:
+        _write(locations_dir, "t.json", {"plates": [_array_entry("plate")]})
+        manager.load_from_json("t.json")
+
+        with pytest.raises(ValueError, match="must be provided together"):
+            manager.get_coordinate("plate", col=0)
+
+
+# ==================== set_plate factory-mismatch guards ====================
+
+
+class TestSetPlateTypeMismatch:
+    """Guards against a misregistered factory entry -- exercised here by
+
+    monkeypatching `PlateFactory.create` to return a plate of the wrong
+    class for the declared `plate_type`.
+    """
+
+    @staticmethod
+    def _well() -> Well:
+        return Well(
+            coor=Coordinate(x=0, y=0, z=0),
+            dip_top=5.0,
+            strategy_type=StrategyType.SIMPLE,
+        )
+
+    def _array_plate(self) -> Plate:
+        params = PlateParams(plate_type="array", well_template=self._well())
+        return PlateFactory.create(params)
+
+    def _stub_create(self, _params: PlateParams) -> Plate:
+        return self._wrong_plate
+
+    def test_waste_container_type_mismatch_raises(
+        self, manager: LocationManager, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        self._wrong_plate = self._array_plate()
+        monkeypatch.setattr(PlateFactory, "create", self._stub_create)
+        params = PlateParams(plate_type="waste_container", well_template=self._well())
+
+        with pytest.raises(TypeError, match="factory created"):
+            manager.set_plate("waste", params)
+
+    def test_tipbox_type_mismatch_raises(
+        self, manager: LocationManager, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        self._wrong_plate = self._array_plate()
+        monkeypatch.setattr(PlateFactory, "create", self._stub_create)
+        params = PlateParams(plate_type="tipbox", well_template=self._well())
+
+        with pytest.raises(TypeError, match="factory created"):
+            manager.set_plate("box", params)
+
+
+# ==================== get_location_info / __repr__ ====================
+
+
+class TestGetLocationInfo:
+    def test_unknown_location_raises(self, manager: LocationManager) -> None:
+        with pytest.raises(NotALocationError):
+            manager.get_location_info("nope")
+
+    def test_coordinate_info(self, manager: LocationManager) -> None:
+        manager.set_coordinate("home", Coordinate(x=1.0, y=2.0, z=3.0))
+
+        info = manager.get_location_info("home")
+
+        assert info == {"type": "coordinate", "x": "1.0", "y": "2.0", "z": "3.0"}
+
+    def test_plate_info_includes_current_position(
+        self, manager: LocationManager, locations_dir: Path
+    ) -> None:
+        _write(locations_dir, "t.json", {"plates": [_array_entry("plate", cols=3)]})
+        manager.load_from_json("t.json")
+
+        info = manager.get_location_info("plate")
+
+        assert info["type"] == "plate"
+        assert info["rows"] == "1"
+        assert info["cols"] == "3"
+        assert "current_row" in info
+        assert "current_col" in info
+
+
+class TestRepr:
+    def test_reflects_empty_manager(self, manager: LocationManager) -> None:
+        assert repr(manager) == "LocationManager(locations=0, tipboxes=0, waste=no)"
+
+    def test_reflects_populated_manager(
+        self, manager: LocationManager, locations_dir: Path
+    ) -> None:
+        _write(
+            locations_dir,
+            "t.json",
+            {
+                "plates": [
+                    _tipbox_entry("tips"),
+                    {
+                        "name": "waste",
+                        "type": "waste_container",
+                        "x": 0,
+                        "y": 0,
+                        "z": 0,
+                    },
+                ]
+            },
+        )
+        manager.load_from_json("t.json")
+
+        assert repr(manager) == "LocationManager(locations=2, tipboxes=1, waste=yes)"
