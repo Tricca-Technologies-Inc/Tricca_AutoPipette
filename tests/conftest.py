@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 from fakes.fake_moonraker_state import FakeMoonrakerState
 from fakes.fake_websocket_client import FakeWebSocketClient
+from support.live_control_plane import LiveControlPlane
 
 from tricca_autopipette.core.autopipette import AutoPipette
 from tricca_autopipette.core.coordinate import Coordinate
@@ -140,3 +142,37 @@ def service_with_plates(service: AutoPipetteService) -> AutoPipetteService:
     """
     _add_tipbox_waste_and_plate(service._autopipette)
     return service
+
+
+@pytest.fixture
+def live_control_plane(service: AutoPipetteService) -> Iterator[LiveControlPlane]:
+    """A real ``ControlServer`` wrapping ``service``, listening on a real socket.
+
+    For control-plane-level tests (``tests/cli/``, and ``tests/kiosk/`` once
+    it exists) that need a genuine client<->daemon round trip -- the real
+    JSON-RPC envelope, real ``notify_run_status``/``notify_breakpoint`` push
+    timing -- rather than calling a service method directly or mocking
+    ``send_jsonrpc``. See ``tests/support/live_control_plane.py``. Starts
+    with the same unhomed, plate-less ``service`` as the ``service`` fixture;
+    use ``live_control_plane.service`` to reach in and adjust it (e.g.
+    ``.moonraker_state.set_homed(True)``) before issuing requests.
+    """
+    plane = LiveControlPlane(service)
+    plane.start()
+    yield plane
+    plane.stop()
+
+
+@pytest.fixture
+def live_control_plane_with_plates(
+    service_with_plates: AutoPipetteService,
+) -> Iterator[LiveControlPlane]:
+    """A ``live_control_plane`` whose service has a tipbox/waste/plate wired up.
+
+    For structured movement/pipette command tests that need real locations
+    to operate on, the control-plane counterpart of ``service_with_plates``.
+    """
+    plane = LiveControlPlane(service_with_plates)
+    plane.start()
+    yield plane
+    plane.stop()
