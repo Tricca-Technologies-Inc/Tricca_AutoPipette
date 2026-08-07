@@ -382,7 +382,6 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 coor=loc_coor,
                 dip_top=params.get("dip_top"),
                 dip_btm=params.get("dip_btm"),
-                max_vol=params.get("max_vol"),
                 dip_func=Well.NAME_TO_STRAT[dip_func_str],
                 well_diameter=params.get("well_diameter"),
             )
@@ -390,7 +389,6 @@ class AutoPipette(metaclass=AutoPipetteMeta):
                 coor=config_well.coor,
                 dip_top=config_well.dip_top,
                 dip_btm=config_well.dip_btm,
-                max_vol=config_well.max_vol,
                 dip_func=config_well.dip_func,
                 diameter=config_well.well_diameter,
             )
@@ -794,9 +792,6 @@ class AutoPipette(metaclass=AutoPipetteMeta):
         self.config.set(conf_key,
                         "dip_btm",
                         str(plate_params.well_template.dip_btm))
-        self.config.set(conf_key,
-                        "max_vol",
-                        str(plate_params.well_template.max_vol))
         self.config.set(conf_key,
                         "dip_func",
                         str(Well.STRAT_TO_NAME[
