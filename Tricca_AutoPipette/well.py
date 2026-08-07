@@ -38,24 +38,23 @@ class DipStrategies:
     def FStube(well: Well, volume: float) -> float:
         """Return the dip distance of a liquid in the cone section of a 0.5mL screw cap tube."""
         # Make sure dip_btm is defined and return just the top if not
-        if well.dip_btm is None or well.dip_vol is None:
+        if well.dip_btm is None:
             raise ValueError(
-                "FStube strategy requires dip_btm and dip_vol")
-        # Calculate the current height of liquid in the tube
-        height_current = 2.61+0.0836*well.dip_vol+1e-4*(well.dip_vol**2)-1.83e-6*(well.dip_vol**3)
-        # Calculate and update the new volume in the tube
-        well.dip_vol = well.dip_vol - volume
-        if well.dip_vol < 0:
-            well.dip_vol = 0
+                "FStube strategy requires dip_btm")
+        # Calculate the current height of liquid in the tube from the bottom of the tube
+        height_current = (well.dip_top + 11.17) - well.dip_curr
+        # Calculate the current volume in the tube -97.8 + 50.8x + -6.85x^2 + 0.373x^3
+        vol_current = -97.8+50.8*height_current-6.85*height_current**2+0.373*height_current**3
+        vol_new = vol_current - volume
         # Calculate the new height of the liquid in the vial
-        height_new = 2.61+0.0836*well.dip_vol+1e-4*(well.dip_vol**2)-1.83e-6*(well.dip_vol**3)
+        height_new = 2.61+0.0836*vol_new+1e-4*(vol_new**2)-1.83e-6*(vol_new**3)
         # Find the change in height of the liquid
         height_change = height_current - height_new # all already in mm
         well.dip_curr += height_change
         # Make sure to never dip further than dip_btm
         if well.dip_curr > well.dip_btm:
             well.dip_curr = well.dip_btm
-        return well.dip_curr, well.dip_vol
+        return well.dip_curr
 
 
 class WellParams(BaseModel):
