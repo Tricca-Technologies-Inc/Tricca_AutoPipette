@@ -13,10 +13,9 @@ class AutoPipetteError(Exception):
     making it easy to catch any pipette-specific error.
 
     Example:
-        >>> try:
-        ...     pipette.some_operation()
-        ... except AutoPipetteError as e:
-        ...     print(f"Pipette error: {e}")
+        Catch this to handle any pipette-specific error uniformly, e.g.
+        ``except AutoPipetteError as e: print(f"Pipette error: {e}")``
+        around a call to any domain method.
     """
 
     pass
@@ -29,8 +28,8 @@ class TipAlreadyOnError(AutoPipetteError):
     tip without ejecting the current one first.
 
     Example:
-        >>> pipette.next_tip()  # First tip pickup
-        >>> pipette.next_tip()  # Raises TipAlreadyOnError
+        Raised on a second ``pipette.next_tip()`` call when the first
+        already attached a tip that hasn't been ejected yet.
     """
 
     def __init__(self) -> None:
@@ -45,8 +44,9 @@ class NotALocationError(AutoPipetteError):
         location: The invalid location name that was requested.
 
     Example:
-        >>> pipette.get_location_coor("nonexistent")
-        NotALocationError: 'nonexistent' is not a named location.
+        Raised when a referenced location name isn't in the deck, e.g.
+        ``pipette.get_location_coor("nonexistent")`` when no location
+        named ``"nonexistent"`` is defined.
     """
 
     def __init__(self, location: str) -> None:
@@ -63,8 +63,8 @@ class NoTipboxError(AutoPipetteError):
     """Raised when attempting tip operations without a configured tipbox.
 
     Example:
-        >>> pipette.next_tip()  # No tipbox configured
-        NoTipboxError: No tipbox configured.
+        Raised when ``pipette.next_tip()`` is called on a deck with no
+        tipbox configured at all.
     """
 
     def __init__(self) -> None:
@@ -86,8 +86,8 @@ class OutOfTipsError(AutoPipetteError):
             normally reports first.
 
     Example:
-        >>> pipette.next_tip()  # 97th tip from a single 96-tip box
-        OutOfTipsError: No tips remaining in tipbox_a. Reload and run reset_tips.
+        Raised on the 97th ``pipette.next_tip()`` call against a single
+        96-tip box, once every position has been drawn.
     """
 
     def __init__(self, boxes: list[str]) -> None:
@@ -132,8 +132,8 @@ class NotADipStrategyError(AutoPipetteError):
         valid_strategies: List of valid strategy names.
 
     Example:
-        >>> well = Well(..., strategy_type="invalid")
-        NotADipStrategyError: Invalid dip strategy 'invalid'.
+        Raised when constructing a ``Well`` with an unrecognized
+        ``strategy_type``, e.g. ``Well(..., strategy_type="invalid")``.
     """
 
     def __init__(
@@ -160,8 +160,8 @@ class NoWasteContainerError(AutoPipetteError):
     """Raised when attempting to dispose of a tip without a waste container.
 
     Example:
-        >>> pipette.dispose_tip()  # No waste container configured
-        NoWasteContainerError: No waste container configured.
+        Raised when ``pipette.dispose_tip()`` is called on a deck with
+        no waste container configured.
     """
 
     def __init__(self) -> None:
@@ -183,9 +183,9 @@ class VolumeCapacityError(AutoPipetteError):
             maximum less its safety margin.
 
     Example:
-        >>> pipette.aspirate_volume(150, "reservoir")  # 100 μL syringe
-        VolumeCapacityError: Cannot aspirate 150 μL: exceeds usable syringe
-        capacity of 98.0 μL.
+        Raised by ``pipette.aspirate_volume(150, "reservoir")`` on a
+        100 μL syringe, e.g. "Cannot aspirate 150 μL: exceeds usable
+        syringe capacity of 98.0 μL."
     """
 
     def __init__(self, volume_ul: float, usable_ul: float) -> None:
@@ -239,9 +239,9 @@ class NotHomedError(AutoPipetteError):
         command_name: Name of the command that was blocked.
 
     Example:
-        >>> service.move(MoveArgs(x=10, y=10, z=10))  # Not homed yet
-        NotHomedError: Command 'move' blocked — pipette not homed. Run
-        'init' or 'home all' first.
+        Raised by ``service.move(MoveArgs(x=10, y=10, z=10))`` before
+        the pipette has been homed, e.g. "Command 'move' blocked —
+        pipette not homed. Run 'init' or 'home all' first."
     """
 
     def __init__(self, command_name: str) -> None:

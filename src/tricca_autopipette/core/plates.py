@@ -40,9 +40,10 @@ class PlateExhaustedError(PlateError):
     Attributes:
         total: Number of eligible wells the plate had.
 
-    Example:
-        >>> plate.next()  # after every eligible well has been visited
-        PlateExhaustedError: All 96 well(s) have been visited.
+    Raised, for example, by calling ``plate.next()`` one more time after
+    every eligible well on a 96-well plate configured with
+    ``on_exhaust="error"`` has already been visited -- the resulting
+    exception's message reads ``"All 96 well(s) have been visited."``.
     """
 
     def __init__(self, total: int) -> None:
@@ -174,7 +175,7 @@ class PlateParams(SmartDefaultModel):
             None is handled here rather than relying on `SmartDefaultModel`,
             since both are "before" validators and their relative order is an
             implementation detail of pydantic.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         if v is None:
             return TraversalOrder()
         return coerce_traversal_order(v)
@@ -217,7 +218,7 @@ class Plate(ABC):
         Raises:
             ValueError: If the mask excludes every well, leaving the plate with
                 nothing to visit.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         self.start_coor = plate_params.well_template.coor
         self.well_template = plate_params.well_template
         self.num_row = plate_params.num_row
@@ -283,9 +284,22 @@ class Plate(ABC):
             Iterator over Well instances in row-major order.
 
         Example:
+            >>> template = Well(coor=Coordinate(x=10, y=20, z=5), dip_top=10.0)
+            >>> params = PlateParams(
+            ...     plate_type="array",
+            ...     well_template=template,
+            ...     num_row=2,
+            ...     num_col=2,
+            ...     spacing_row=9.0,
+            ...     spacing_col=9.0,
+            ... )
             >>> plate = PlateArray(params)
             >>> for well in plate:
             ...     print(well.coor)
+            (10.00, 20.00, 5.00)
+            (1.00, 20.00, 5.00)
+            (10.00, 29.00, 5.00)
+            (1.00, 29.00, 5.00)
         """
         return iter(self.wells)
 
@@ -311,6 +325,15 @@ class Plate(ABC):
             Index out of range will raise IndexError from the underlying list.
 
         Example:
+            >>> template = Well(coor=Coordinate(x=10, y=20, z=5), dip_top=10.0)
+            >>> params = PlateParams(
+            ...     plate_type="array",
+            ...     well_template=template,
+            ...     num_row=2,
+            ...     num_col=2,
+            ...     spacing_row=9.0,
+            ...     spacing_col=9.0,
+            ... )
             >>> plate = PlateArray(params)
             >>> well = plate[0]  # First well
             >>> well = plate[-1]  # Last well
@@ -371,6 +394,15 @@ class Plate(ABC):
             well rather than raising from a property.
 
         Example:
+            >>> template = Well(coor=Coordinate(x=100, y=0, z=0), dip_top=10.0)
+            >>> params = PlateParams(
+            ...     plate_type="array",
+            ...     well_template=template,
+            ...     num_row=8,
+            ...     num_col=12,
+            ...     spacing_row=9.0,
+            ...     spacing_col=9.0,
+            ... )
             >>> plate = PlateArray(params)  # 8x12 plate, default order
             >>> plate.curr = 12
             >>> plate.current_index
@@ -388,6 +420,15 @@ class Plate(ABC):
             Zero-indexed row number of the current well.
 
         Example:
+            >>> template = Well(coor=Coordinate(x=100, y=0, z=0), dip_top=10.0)
+            >>> params = PlateParams(
+            ...     plate_type="array",
+            ...     well_template=template,
+            ...     num_row=8,
+            ...     num_col=12,
+            ...     spacing_row=9.0,
+            ...     spacing_col=9.0,
+            ... )
             >>> plate = PlateArray(params)  # 8x12 plate
             >>> plate.curr = 0
             >>> plate.current_row
@@ -409,6 +450,15 @@ class Plate(ABC):
             Zero-indexed column number of the current well.
 
         Example:
+            >>> template = Well(coor=Coordinate(x=100, y=0, z=0), dip_top=10.0)
+            >>> params = PlateParams(
+            ...     plate_type="array",
+            ...     well_template=template,
+            ...     num_row=8,
+            ...     num_col=12,
+            ...     spacing_row=9.0,
+            ...     spacing_col=9.0,
+            ... )
             >>> plate = PlateArray(params)  # 8x12 plate
             >>> plate.curr = 0
             >>> plate.current_col
@@ -431,7 +481,7 @@ class Plate(ABC):
             col: Zero-indexed column number.
 
         Returns:
-            Coordinate at the specified position, or None if out of bounds.
+            Coordinate at the specified position.
 
         Raises:
             NotImplementedError: Must be implemented by subclasses.
@@ -449,6 +499,15 @@ class Plate(ABC):
             Well at the specified position, or None if out of bounds.
 
         Example:
+            >>> template = Well(coor=Coordinate(x=10, y=20, z=5), dip_top=10.0)
+            >>> params = PlateParams(
+            ...     plate_type="array",
+            ...     well_template=template,
+            ...     num_row=2,
+            ...     num_col=2,
+            ...     spacing_row=9.0,
+            ...     spacing_col=9.0,
+            ... )
             >>> plate = PlateArray(params)
             >>> well = plate.get_well(0, 0)
             >>> well.coor
@@ -534,7 +593,7 @@ class PlateFactory:
 
         Example:
             >>> @PlateFactory.register("custom")
-            >>> class CustomPlate(Plate):
+            ... class CustomPlate(Plate):
             ...     pass
         """
 
@@ -667,7 +726,7 @@ class PlateArray(Plate):
             col: Zero-indexed column number.
 
         Returns:
-            Coordinate at the specified position, or None if out of bounds.
+            Coordinate at the specified position.
 
         Raises:
             ValueError: If row and/or col is invalid
@@ -706,6 +765,15 @@ class PlateArray(Plate):
                 `on_exhaust` is ``"error"``.
 
         Example:
+            >>> template = Well(coor=Coordinate(x=10, y=20, z=5), dip_top=10.0)
+            >>> params = PlateParams(
+            ...     plate_type="array",
+            ...     well_template=template,
+            ...     num_row=2,
+            ...     num_col=2,
+            ...     spacing_row=9.0,
+            ...     spacing_col=9.0,
+            ... )
             >>> plate = PlateArray(params)  # default row-major order
             >>> plate.next()  # A1, then A2, A3, ...
             Coordinate(x=10.0, y=20.0, z=5.0)
@@ -786,7 +854,10 @@ class TipBox(PlateArray):
         Args:
             plate_params: Plate configuration. `on_exhaust` is forced to
                 ``"error"`` -- wrapping would hand back a used tip.
-        """
+
+        Raises:
+            ValueError: If the mask excludes every well (see Plate.__init__).
+        """  # ruff: ignore[docstring-extraneous-exception]
         super().__init__(plate_params.model_copy(update={"on_exhaust": "error"}))
         self.present: list[bool] = [True] * len(self.wells)
 
@@ -808,8 +879,18 @@ class TipBox(PlateArray):
             Count of eligible positions that still hold a tip.
 
         Example:
+            >>> template = Well(coor=Coordinate(x=100, y=0, z=0), dip_top=10.0)
+            >>> params = PlateParams(
+            ...     plate_type="tipbox",
+            ...     well_template=template,
+            ...     num_row=8,
+            ...     num_col=12,
+            ...     spacing_row=9.0,
+            ...     spacing_col=9.0,
+            ... )
+            >>> box = TipBox(params)
             >>> box.remaining
-            84
+            96
         """
         return sum(1 for index in self.sequence if self.present[index])
 
@@ -839,6 +920,16 @@ class TipBox(PlateArray):
             PlateExhaustedError: If no tips remain in this box.
 
         Example:
+            >>> template = Well(coor=Coordinate(x=100, y=0, z=0), dip_top=10.0)
+            >>> params = PlateParams(
+            ...     plate_type="tipbox",
+            ...     well_template=template,
+            ...     num_row=8,
+            ...     num_col=12,
+            ...     spacing_row=9.0,
+            ...     spacing_col=9.0,
+            ... )
+            >>> box = TipBox(params)
             >>> index, coor = box.take_tip()
             >>> box.present[index]
             False
@@ -859,6 +950,16 @@ class TipBox(PlateArray):
         consumption is persisted across daemon restarts.
 
         Example:
+            >>> template = Well(coor=Coordinate(x=100, y=0, z=0), dip_top=10.0)
+            >>> params = PlateParams(
+            ...     plate_type="tipbox",
+            ...     well_template=template,
+            ...     num_row=8,
+            ...     num_col=12,
+            ...     spacing_row=9.0,
+            ...     spacing_col=9.0,
+            ... )
+            >>> box = TipBox(params)
             >>> box.reset_tips()
             >>> box.remaining == box.capacity
             True
@@ -883,6 +984,16 @@ class TipBox(PlateArray):
                 different physical wells.
 
         Example:
+            >>> template = Well(coor=Coordinate(x=100, y=0, z=0), dip_top=10.0)
+            >>> params = PlateParams(
+            ...     plate_type="tipbox",
+            ...     well_template=template,
+            ...     num_row=8,
+            ...     num_col=12,
+            ...     spacing_row=9.0,
+            ...     spacing_col=9.0,
+            ... )
+            >>> box = TipBox(params)
             >>> box.set_presence([False] * 12 + [True] * 84)
             >>> box.remaining
             84

@@ -234,7 +234,7 @@ class Coordinate(BaseModel):
             New Coordinate with values clamped to bounds.
 
         Example:
-            >>> coord = Coordinate(x=15.0, y=5.0, z=-5.0)
+            >>> coord = Coordinate(x=15.0, y=5.0, z=0.0)
             >>> min_bound = Coordinate(x=0.0, y=0.0, z=0.0)
             >>> max_bound = Coordinate(x=10.0, y=10.0, z=10.0)
             >>> clamped = coord.clamp(min_bound, max_bound)

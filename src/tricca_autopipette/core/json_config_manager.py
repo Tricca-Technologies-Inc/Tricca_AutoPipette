@@ -51,12 +51,12 @@ class JsonConfigManager:
 
     Example:
         >>> # Batch loading (initialization)
-        >>> manager = JsonConfigManager(Path("config"))
-        >>> config = manager.load_system_config("system.json")
+        >>> manager = JsonConfigManager()
+        >>> config = manager.load_system_config("system.json")  # doctest: +SKIP
 
         >>> # Dynamic loading (interactive shell)
-        >>> manager.switch_liquid("glycerol")
-        >>> manager.switch_pipette("p200_horizontal.json")
+        >>> manager.switch_liquid("glycerol")  # doctest: +SKIP
+        >>> manager.load_pipette("p200_horizontal.json")  # doctest: +SKIP
     """
 
     def __init__(self) -> None:
@@ -64,7 +64,6 @@ class JsonConfigManager:
 
         Example:
             >>> manager = JsonConfigManager()
-            >>> manager = JsonConfigManager(Path("/custom/config"))
         """
         self.system_config: SystemConfig | None = None
 
@@ -79,10 +78,10 @@ class JsonConfigManager:
 
         Example:
             >>> manager = JsonConfigManager()
-            >>> manager.load_system_config()
+            >>> _ = manager.load_system_config()
             >>> config = manager.get_system_config()
             >>> print(config.system_name)
-            'AutoPipette'
+            TAP-Tyson
         """
         if self.system_config is None:
             raise RuntimeError("No system configuration loaded.")
@@ -138,10 +137,12 @@ class JsonConfigManager:
             ValueError: If configuration is invalid.
 
         Example:
+            >>> manager = JsonConfigManager()
             >>> config = manager.load_system_config()
-            >>> # Loads config/system.json with config/defaults/*
+            >>> # Loads config/system/default_system.json, merged with
+            >>> # config/gantry/, config/pipettes/, config/liquids/ defaults
             >>> print(config.system_name)
-            'AutoPipette'
+            TAP-Tyson
         """
         user_path = DefaultPaths.DIR_CONFIG_SYSTEM / filename
 
@@ -241,7 +242,7 @@ class JsonConfigManager:
             FileNotFoundError: If the file or any parent doesn't exist.
             ValueError: If any file is invalid JSON, ``extends`` is not a
                 string, or the chain is cyclic or too deep.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         data = self._read_system_file(filename)
 
         parent_ref = data.pop(KEY_EXTENDS, None)
@@ -335,7 +336,7 @@ class JsonConfigManager:
         setups in the shell.
 
         Args:
-            filename: Gantry config filename in config/ directory.
+            filename: Gantry config filename (looks in config/gantry/).
 
         Returns:
             Newly loaded GantryKinematics object.
@@ -346,9 +347,11 @@ class JsonConfigManager:
             ValueError: If config validation fails.
 
         Example:
-            >>> gantry = manager.load_gantry("fast_gantry.json")
+            >>> manager = JsonConfigManager()
+            >>> _ = manager.load_system_config()
+            >>> gantry = manager.load_gantry("default_gantry.json")
             >>> print(gantry.speed_xy)
-            8000.0
+            38000.0
         """
         if self.system_config is None:
             raise RuntimeError(
@@ -399,9 +402,11 @@ class JsonConfigManager:
             ValueError: If config validation fails.
 
         Example:
-            >>> pipette = manager.load_pipette("p200_horizontal.json")
+            >>> manager = JsonConfigManager()
+            >>> _ = manager.load_system_config()
+            >>> pipette = manager.load_pipette("p100_vertical.json")
             >>> print(pipette.name)
-            'P200_Horizontal'
+            P100_Vertical
         """
         if self.system_config is None:
             raise RuntimeError(
@@ -452,10 +457,12 @@ class JsonConfigManager:
             ValueError: If config validation fails.
 
         Example:
-            >>> liquid = manager.load_liquid("acetone.json")
+            >>> manager = JsonConfigManager()
+            >>> _ = manager.load_system_config()
+            >>> liquid = manager.load_liquid("methanol.json")
             >>> print(liquid.name)
-            'acetone'
-            >>> manager.switch_liquid("acetone")  # Now activate it
+            methanol
+            >>> _ = manager.switch_liquid("methanol")  # Now activate it
         """
         if self.system_config is None:
             raise RuntimeError(
@@ -510,10 +517,12 @@ class JsonConfigManager:
             ValueError: If liquid not found in loaded profiles.
 
         Example:
+            >>> manager = JsonConfigManager()
+            >>> _ = manager.load_system_config()
             >>> # In a protocol:
-            >>> manager.switch_liquid("water")
+            >>> _ = manager.switch_liquid("water")
             >>> # ... pipette water ...
-            >>> manager.switch_liquid("methanol")
+            >>> _ = manager.switch_liquid("methanol")
             >>> # ... pipette methanol ...
         """
         if self.system_config is None:
@@ -531,19 +540,10 @@ class JsonConfigManager:
         return self.system_config.liquids[liquid_name]
 
     def get_active_liquid_name(self) -> str:
-        """Get name of currently active liquid (for tracking).
+        """Not implemented -- active liquid tracking lives in AutoPipette, not here.
 
-        Returns:
-            Name of active liquid profile.
-
-        Note:
-            This is tracked separately from SystemConfig since the active
-            liquid changes during protocol execution.
-
-        Example:
-            >>> current = manager.get_active_liquid_name()
-            >>> print(f"Currently using: {current}")
-            'water'
+        Raises:
+            NotImplementedError: Always.
         """
         # This will be tracked in AutoPipette, not in SystemConfig
         # Just documenting the pattern here
@@ -562,9 +562,10 @@ class JsonConfigManager:
             List of pipette configuration filenames (without .json).
 
         Example:
+            >>> manager = JsonConfigManager()
             >>> pipettes = manager.list_available_pipettes()
             >>> print(pipettes)
-            ['p1000_vertical', 'p200_horizontal', 'p10_vertical']
+            ['default_p100', 'default_pipette', 'p100_vertical']
         """
         pipettes: list[str] = []
 
@@ -584,9 +585,11 @@ class JsonConfigManager:
             List of liquid profile names.
 
         Example:
+            >>> manager = JsonConfigManager()
+            >>> _ = manager.load_system_config()
             >>> liquids = manager.list_available_liquids()
             >>> print(liquids)
-            ['water', 'dmso', 'glycerol', 'methanol']
+            ['methanol', 'water']
         """
         if self.system_config is None:
             return []
@@ -603,8 +606,10 @@ class JsonConfigManager:
             True if liquid is loaded, False otherwise.
 
         Example:
-            >>> if manager.has_liquid("glycerol"):
-            ...     manager.switch_liquid("glycerol")
+            >>> manager = JsonConfigManager()
+            >>> _ = manager.load_system_config()
+            >>> if manager.has_liquid("methanol"):
+            ...     _ = manager.switch_liquid("methanol")
         """
         if self.system_config is None:
             return False
@@ -621,9 +626,11 @@ class JsonConfigManager:
             RuntimeError: If no system config loaded.
 
         Example:
+            >>> manager = JsonConfigManager()
+            >>> _ = manager.load_system_config()
             >>> config = manager.get_current_config()
             >>> print(config.pipette.name)
-            'P1000_Vertical'
+            P100_Vertical
         """
         if self.system_config is None:
             raise RuntimeError(
@@ -654,15 +661,17 @@ class JsonConfigManager:
             ValueError: If liquid not found.
 
         Example:
-            >>> # Get water parameters
+            >>> manager = JsonConfigManager()
+            >>> _ = manager.load_system_config()
+            >>> # Get water parameters (falls back to the pipette default)
             >>> water_params = manager.get_merged_syringe_params("water")
             >>> print(water_params["speed_aspirate"])
-            200.0
+            100.0
 
-            >>> # Get glycerol parameters (slower)
-            >>> glycerol_params = manager.get_merged_syringe_params("glycerol")
-            >>> print(glycerol_params["speed_aspirate"])
-            50.0
+            >>> # Get methanol parameters (liquid profile overrides, slower)
+            >>> methanol_params = manager.get_merged_syringe_params("methanol")
+            >>> print(methanol_params["speed_aspirate"])
+            80.0
         """
         if self.system_config is None:
             raise RuntimeError(

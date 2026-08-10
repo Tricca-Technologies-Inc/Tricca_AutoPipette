@@ -14,7 +14,8 @@ has the addressed well is checked by ``AutoPipette.resolve_splits``, which is
 the layer that can see the deck.
 
 Example:
-    >>> parse_splits_spec("plate_a:12@A1;plate_b:8")
+    >>> import pprint
+    >>> pprint.pprint(parse_splits_spec("plate_a:12@A1;plate_b:8"), width=76)
     [Split(dest='plate_a', vol_ul=12.0, well_id='A1'),
      Split(dest='plate_b', vol_ul=8.0, well_id=None)]
 """

@@ -140,6 +140,7 @@ class SimpleDipStrategy(DipStrategy):
             Distance to dip from the top reference point in millimeters.
 
         Example:
+            >>> coord = Coordinate(x=10, y=20, z=5)
             >>> strategy = SimpleDipStrategy()
             >>> well = Well(coor=coord, dip_top=10.0, dip_btm=50.0)
             >>> distance = strategy.calculate_dip_distance(well, 100.0)
@@ -200,12 +201,13 @@ class CylinderDipStrategy(DipStrategy):
             This method modifies well.dip_curr in place as a side effect.
 
         Example:
+            >>> coord = Coordinate(x=10, y=20, z=5)
             >>> strategy = CylinderDipStrategy()
             >>> well = Well(coor=coord, dip_top=10.0, dip_btm=50.0, well_diameter=8.0)
             >>> well.dip_curr = 10.0
             >>> distance = strategy.calculate_dip_distance(well, 100.0)
             >>> well.dip_curr  # Updated based on volume removed
-            12.0
+            11.989436788648693
         """
         if well.dip_btm is None or well.well_diameter is None:
             raise ValueError("Cylinder strategy requires well_diameter and dip_btm")
@@ -238,7 +240,10 @@ class CylinderDipStrategy(DipStrategy):
         Example:
             >>> strategy = CylinderDipStrategy()
             >>> strategy.validate_well_config(8.0, 50.0)  # Valid
-            >>> strategy.validate_well_config(None, 50.0)  # Raises ValueError
+            >>> strategy.validate_well_config(None, 50.0)
+            Traceback (most recent call last):
+                ...
+            ValueError: Cylinder strategy requires well_diameter
         """
         if well_diameter is None:
             raise ValueError("Cylinder strategy requires well_diameter")
@@ -320,7 +325,7 @@ class StrategyRegistry:
 
         Example:
             >>> strategy = CylinderDipStrategy()
-            >>> name = StrategyRegistry.get_strategy_name(strategy)
+            >>> name = StrategyRegistry.get_strategy_type(strategy)
             >>> name
             <StrategyType.CYLINDER: 'cylinder'>
         """
@@ -376,12 +381,18 @@ class WellParams(BaseModel):
             ... )
             >>>
             >>> # Invalid cylinder strategy (missing diameter)
-            >>> params = WellParams(
+            >>> params = WellParams(  # doctest: +SKIP
             ...     coor=Coordinate(x=10, y=20, z=5),
             ...     dip_top=10.0,
             ...     dip_btm=50.0,
             ...     strategy_type=StrategyType.CYLINDER,
-            ... )  # Will fail: Cylinder strategy requires well_diameter
+            ... )
+            Traceback (most recent call last):
+                ...
+            pydantic_core._pydantic_core.ValidationError: 1 validation error
+            for WellParams
+              Value error, Cylinder strategy requires well_diameter
+              [type=value_error, ...]
         """
         strategy = StrategyRegistry.get_strategy(self.strategy_type)
         strategy.validate_well_config(self.well_diameter, self.dip_btm)
@@ -476,7 +487,7 @@ class Well:
             ... )
             >>> distance = well.get_dip_distance(100.0)
             >>> distance  # Accounts for 100 μL removed
-            12.0
+            11.989436788648693
         """
         return self._strategy.calculate_dip_distance(self, volume)
 
@@ -495,7 +506,7 @@ class Well:
             ...     well_diameter=8.0,
             ...     dip_btm=50.0,
             ... )
-            >>> well.strategy_name
+            >>> well.strategy_type
             <StrategyType.CYLINDER: 'cylinder'>
         """
         return StrategyRegistry.get_strategy_type(self._strategy)

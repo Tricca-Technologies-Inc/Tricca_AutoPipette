@@ -4,24 +4,27 @@ This module provides the main AutoPipette class for controlling automated
 pipetting operations with JSON-based configuration.
 
 The AutoPipette class manages:
-- JSON configuration loading and validation
 - G-code command generation and buffering
 - Location and plate management
 - Pipetting operations (aspirate, dispense, tip handling)
 - Volume calculations and transfer chunking
 - Multi-liquid protocol support
 
+JSON configuration loading and validation is the job of ``JsonConfigManager``,
+injected into the constructor rather than performed by ``AutoPipette`` itself.
+
 Example:
-    >>> from pathlib import Path
-    >>> pipette = AutoPipette(Path("config/system/system.json"))
-    >>> pipette.init_pipette()
+    >>> from tricca_autopipette.core.json_config_manager import JsonConfigManager
+    >>> from tricca_autopipette.core.location_manager import LocationManager
+    >>> pipette = AutoPipette(JsonConfigManager(), LocationManager())  # doctest: +SKIP
+    >>> pipette.init_pipette()  # doctest: +SKIP
     >>>
     >>> # Switch liquids during protocol
-    >>> pipette.switch_liquid("water")
-    >>> pipette.pipette(vol_ul=100, source="plate_a", dest="plate_b")
+    >>> pipette.switch_liquid("water")  # doctest: +SKIP
+    >>> pipette.pipette(vol_ul=100, source="plate_a", dest="plate_b")  # doctest: +SKIP
     >>>
-    >>> pipette.switch_liquid("methanol")
-    >>> pipette.pipette(vol_ul=50, source="plate_c", dest="plate_d")
+    >>> pipette.switch_liquid("methanol")  # doctest: +SKIP
+    >>> pipette.pipette(vol_ul=50, source="plate_c", dest="plate_d")  # doctest: +SKIP
 """
 
 from __future__ import annotations
@@ -73,21 +76,30 @@ class AutoPipette:
         pipette: Pipette model configuration.
         syringe: Active syringe kinematics (merged with liquid overrides).
         active_liquid: Name of currently active liquid profile.
-        volume_converter: Converts between volumes and motor steps.
+        volume_converter: Converts between volumes and plunger-travel
+            millimetres (the field is still named "steps" -- see issue #29).
         location_manager: Manages named locations and plates.
         state: Current pipette state (tip, liquid, homed).
         gcode_buffers: G-code command buffer.
 
     Example:
-        >>> pipette = AutoPipette(Path("config/system.json"))
-        >>> pipette.init_pipette()
+        >>> from tricca_autopipette.core.json_config_manager import JsonConfigManager
+        >>> from tricca_autopipette.core.location_manager import LocationManager
+        >>> pipette = AutoPipette(
+        ...     JsonConfigManager(), LocationManager()
+        ... )  # doctest: +SKIP
+        >>> pipette.init_pipette()  # doctest: +SKIP
         >>>
         >>> # Multi-liquid protocol
-        >>> pipette.switch_liquid("water")
-        >>> pipette.pipette(vol_ul=100, source="plate_a", dest="plate_b")
+        >>> pipette.switch_liquid("water")  # doctest: +SKIP
+        >>> pipette.pipette(
+        ...     vol_ul=100, source="plate_a", dest="plate_b"
+        ... )  # doctest: +SKIP
         >>>
-        >>> pipette.switch_liquid("glycerol")
-        >>> pipette.pipette(vol_ul=50, source="plate_c", dest="plate_d")
+        >>> pipette.switch_liquid("glycerol")  # doctest: +SKIP
+        >>> pipette.pipette(
+        ...     vol_ul=50, source="plate_c", dest="plate_d"
+        ... )  # doctest: +SKIP
     """
 
     def __init__(
@@ -106,8 +118,13 @@ class AutoPipette:
             location_manager: Location manager instance that loads locations and plates.
 
         Example:
-            >>> pipette = AutoPipette()
-            >>> pipette = AutoPipette(Path("config/system/system.json"))
+            >>> from tricca_autopipette.core.json_config_manager import (
+            ...     JsonConfigManager,
+            ... )
+            >>> from tricca_autopipette.core.location_manager import LocationManager
+            >>> pipette = AutoPipette(
+            ...     JsonConfigManager(), LocationManager()
+            ... )  # doctest: +SKIP
         """
         # Logging
         self.logger = logging.getLogger(__name__)
@@ -181,14 +198,14 @@ class AutoPipette:
 
         Example:
             >>> # Multi-liquid protocol
-            >>> pipette.switch_liquid("water")
-            >>> pipette.pipette(100, "water_source", "plate_a")
+            >>> pipette.switch_liquid("water")  # doctest: +SKIP
+            >>> pipette.pipette(100, "water_source", "plate_a")  # doctest: +SKIP
             >>>
-            >>> pipette.switch_liquid("methanol")
-            >>> pipette.pipette(100, "methanol_source", "plate_b")
+            >>> pipette.switch_liquid("methanol")  # doctest: +SKIP
+            >>> pipette.pipette(100, "methanol_source", "plate_b")  # doctest: +SKIP
             >>>
-            >>> pipette.switch_liquid("water")
-            >>> pipette.pipette(50, "water_source", "plate_c")
+            >>> pipette.switch_liquid("water")  # doctest: +SKIP
+            >>> pipette.pipette(50, "water_source", "plate_c")  # doctest: +SKIP
         """
         if liquid_name not in self.system_config.liquids:
             available = list(self.system_config.liquids.keys())
@@ -294,8 +311,8 @@ class AutoPipette:
             Sets the homed flag to True upon successful completion.
 
         Example:
-            >>> pipette = AutoPipette()
-            >>> pipette.init_pipette()
+            >>> pipette = AutoPipette()  # doctest: +SKIP
+            >>> pipette.init_pipette()  # doctest: +SKIP
             >>> # Now ready for pipetting operations
         """
         self.set_coor_sys(CoordinateSystem.ABSOLUTE)
@@ -310,7 +327,7 @@ class AutoPipette:
         Sets gantry speed and acceleration from configuration.
 
         Example:
-            >>> pipette.init_speed()
+            >>> pipette.init_speed()  # doctest: +SKIP
         """
         self.set_speed_factor(100)  # Default speed factor
         self.set_max_velocity(self.gantry.speed_max)
@@ -330,8 +347,8 @@ class AutoPipette:
             - Relative (G91): Coordinates are offsets from current position
 
         Example:
-            >>> pipette.set_coor_sys("absolute")
-            >>> pipette.move_to(Coordinate(x=10, y=10, z=5))
+            >>> pipette.set_coor_sys("absolute")  # doctest: +SKIP
+            >>> pipette.move_to(Coordinate(x=10, y=10, z=5))  # doctest: +SKIP
         """
         # Convert enum to string if needed
         mode_str = mode.value if isinstance(mode, CoordinateSystem) else mode.lower()
@@ -356,7 +373,7 @@ class AutoPipette:
             100 = normal speed, 200 = double speed, 50 = half speed.
 
         Example:
-            >>> pipette.set_speed_factor(150)  # 1.5x speed
+            >>> pipette.set_speed_factor(150)  # doctest: +SKIP
         """
         self.gcode_buffers.add(f"{GCodeCommand.SPEED_FACTOR} S{factor}\n")
 
@@ -367,7 +384,7 @@ class AutoPipette:
             velocity: Maximum velocity in mm/s.
 
         Example:
-            >>> pipette.set_max_velocity(5000)
+            >>> pipette.set_max_velocity(5000)  # doctest: +SKIP
         """
         self.gcode_buffers.add(f"SET_VELOCITY_LIMIT VELOCITY={velocity}\n")
 
@@ -378,7 +395,7 @@ class AutoPipette:
             accel: Maximum acceleration in mm/s².
 
         Example:
-            >>> pipette.set_max_accel(3000)
+            >>> pipette.set_max_accel(3000)  # doctest: +SKIP
         """
         self.gcode_buffers.add(f"SET_VELOCITY_LIMIT ACCEL={accel}\n")
 
@@ -386,7 +403,7 @@ class AutoPipette:
         """Home all axes (X, Y, and Z).
 
         Example:
-            >>> pipette.home_axis()
+            >>> pipette.home_axis()  # doctest: +SKIP
         """
         self.gcode_buffers.add(f"{GCodeCommand.HOME_ALL}\n")
 
@@ -560,7 +577,7 @@ class AutoPipette:
             OutOfTipsError: If every configured tipbox is exhausted. Reload the
                 boxes and run ``reset_tips`` rather than reusing a tip.
             TipAlreadyOnError: If a tip is already attached.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         if self.state.tip_state == TipState.ATTACHED:
             raise TipAlreadyOnError()
 
@@ -738,10 +755,10 @@ class AutoPipette:
             prewet_vol_ul)``.
 
         Example:
-            >>> pipette.switch_liquid("methanol")  # profile sets a 5 μL gap
-            >>> pipette.resolve_technique()[0]
+            >>> pipette.switch_liquid("methanol")  # doctest: +SKIP
+            >>> pipette.resolve_technique()[0]  # doctest: +SKIP
             5.0
-            >>> pipette.resolve_technique(pre_air_gap_ul=0.0)[0]
+            >>> pipette.resolve_technique(pre_air_gap_ul=0.0)[0]  # doctest: +SKIP
             0.0
         """
         return (
@@ -792,7 +809,7 @@ class AutoPipette:
 
         Example:
             >>> # 100 μL syringe, 2 μL margin, 90 μL of liquid requested
-            >>> pipette.fit_air_volumes(90.0, 30.0, 2.0)
+            >>> pipette.fit_air_volumes(90.0, 30.0, 2.0)  # doctest: +SKIP
             (6.0, 2.0)
         """
         usable = self.usable_capacity_ul()
@@ -851,7 +868,8 @@ class AutoPipette:
             ValueError: If source is not a plate with dipping strategy.
             VolumeCapacityError: If ``volume`` alone exceeds usable syringe
                 capacity.
-        """
+            NotALocationError: If ``source`` is not a defined location.
+        """  # ruff: ignore[docstring-extraneous-exception]
         coor_source = self.location_manager.get_coordinate(source, src_row, src_col)
         loc_source = self.location_manager.locations[source]
 
@@ -927,7 +945,8 @@ class AutoPipette:
 
         Raises:
             ValueError: If destination is not a plate with dipping strategy.
-        """
+            NotALocationError: If ``dest`` is not a defined location.
+        """  # ruff: ignore[docstring-extraneous-exception]
         coor_dest = self.location_manager.get_coordinate(dest, dest_row, dest_col)
         loc_dest = self.location_manager.locations[dest]
 
@@ -1008,21 +1027,35 @@ class AutoPipette:
         Raises:
             ValueError: If requested volume is negative.
             VolumeCapacityError: If the air gaps leave no room for liquid.
+            NotALocationError: If ``source``/``dest`` is not a defined
+                location.
+            NoTipboxError: If a tip pickup is needed but no tipbox is
+                configured.
+            OutOfTipsError: If a tip pickup is needed and every configured
+                tipbox is exhausted.
+            NoWasteContainerError: If the transfer disposes of its tip
+                (``keep_tip`` is False) and no waste container is configured.
 
         Example:
             >>> # Simple transfer
-            >>> pipette.pipette(vol_ul=100, source="plate_a", dest="plate_b")
+            >>> pipette.pipette(
+            ...     vol_ul=100, source="plate_a", dest="plate_b"
+            ... )  # doctest: +SKIP
 
             >>> # Multi-liquid protocol
-            >>> pipette.switch_liquid("water")
-            >>> pipette.pipette(vol_ul=100, source="water_res", dest="plate")
+            >>> pipette.switch_liquid("water")  # doctest: +SKIP
+            >>> pipette.pipette(
+            ...     vol_ul=100, source="water_res", dest="plate"
+            ... )  # doctest: +SKIP
             >>>
-            >>> pipette.switch_liquid("methanol")
-            >>> pipette.pipette(vol_ul=50, source="methanol_res", dest="plate")
+            >>> pipette.switch_liquid("methanol")  # doctest: +SKIP
+            >>> pipette.pipette(
+            ...     vol_ul=50, source="methanol_res", dest="plate"
+            ... )  # doctest: +SKIP
 
             >>> # Large volume (automatically chunked)
-            >>> pipette.pipette(vol_ul=500, source="a", dest="b")
-        """
+            >>> pipette.pipette(vol_ul=500, source="a", dest="b")  # doctest: +SKIP
+        """  # ruff: ignore[docstring-extraneous-exception]
         if vol_ul < 0:
             raise ValueError(f"Invalid volume: {vol_ul}μL. Volume must be positive.")
 
@@ -1121,7 +1154,9 @@ class AutoPipette:
                 container is configured. Checked here rather than at the end
                 of the run, so the failure surfaces before any liquid moves.
             VolumeCapacityError: If `vol_ul` exceeds usable syringe capacity.
-        """
+            NotALocationError: If a split's destination is not a defined
+                location.
+        """  # ruff: ignore[docstring-extraneous-exception]
         if not splits:
             raise ValueError("No splits given.")
 
@@ -1220,15 +1255,21 @@ class AutoPipette:
             NoWasteContainerError: If the tip or its leftover must go to
                 waste and no waste container is configured.
             VolumeCapacityError: If `vol_ul` exceeds usable syringe capacity.
+            NotALocationError: If a split's destination is not a defined
+                location (see ``resolve_splits``).
+            NoTipboxError: If a tip pickup is needed but no tipbox is
+                configured.
+            OutOfTipsError: If a tip pickup is needed and every configured
+                tipbox is exhausted.
 
         Example:
             >>> # 12 μL to plate_a's A1 and 8 μL to plate_b's C3, one aspirate
-            >>> pipette.pipette_splits(
+            >>> pipette.pipette_splits(  # doctest: +SKIP
             ...     vol_ul=20,
             ...     source="reservoir",
             ...     splits=parse_splits_spec("plate_a:12@A1;plate_b:8@C3"),
             ... )
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         if vol_ul <= 0:
             raise ValueError(f"Invalid volume: {vol_ul}μL. Volume must be positive.")
 

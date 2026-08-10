@@ -34,7 +34,8 @@ class CoordinateSystem(StrEnum):
 
     Example:
         >>> mode = CoordinateSystem.ABSOLUTE
-        >>> print(mode.value)  # "absolute"
+        >>> mode.value
+        'absolute'
     """
 
     ABSOLUTE = "absolute"
@@ -63,9 +64,10 @@ class GCodeCommand:
     Standard G-code commands used for pipette control.
 
     Example:
-        >>> from pipette_constants import GCodeCommand
+        >>> from tricca_autopipette.core.pipette_constants import GCodeCommand
         >>> home_cmd = GCodeCommand.HOME_ALL
-        >>> print(home_cmd)  # "G28"
+        >>> home_cmd
+        'G28'
     """
 
     # Coordinate systems
@@ -230,9 +232,10 @@ class ConfigKey:
     instead of hardcoding configuration key strings.
 
     Example:
-        >>> from pipette_constants import ConfigKey
+        >>> from tricca_autopipette.core.pipette_constants import ConfigKey
         >>> speed_key = ConfigKey.Speed.XY
-        >>> print(speed_key)  # "SPEED_XY"
+        >>> speed_key
+        'SPEED_XY'
     """
 
     class Network:

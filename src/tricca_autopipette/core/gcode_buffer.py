@@ -38,6 +38,7 @@ class GCodeBuffer:
             command: G-code command string to buffer.
 
         Example:
+            >>> buffer = GCodeBuffer()
             >>> buffer.add("G28\n")
             >>> buffer.add("G1 X100 Y50 F5000\n")
         """
@@ -50,6 +51,7 @@ class GCodeBuffer:
             line: Header comment line (typically starts with ';').
 
         Example:
+            >>> buffer = GCodeBuffer()
             >>> buffer.add_header("; Configuration: autopipette.conf\n")
             >>> buffer.add_header("; SPEED_XY = 5000\n")
         """
@@ -66,6 +68,7 @@ class GCodeBuffer:
             The header buffer is NOT cleared.
 
         Example:
+            >>> buffer = GCodeBuffer()
             >>> buffer.add("G28\n")
             >>> commands = buffer.get_commands()
             >>> # commands = ['G28\n']
@@ -87,6 +90,7 @@ class GCodeBuffer:
             The header can be retrieved multiple times.
 
         Example:
+            >>> buffer = GCodeBuffer()
             >>> header = buffer.get_header()
             >>> header2 = buffer.get_header()
             >>> # header == header2 (not cleared)
@@ -97,6 +101,7 @@ class GCodeBuffer:
         r"""Clear the command buffer without returning contents.
 
         Example:
+            >>> buffer = GCodeBuffer()
             >>> buffer.add("G28\n")
             >>> buffer.clear_commands()
             >>> # Commands discarded
@@ -107,6 +112,7 @@ class GCodeBuffer:
         r"""Clear the header buffer.
 
         Example:
+            >>> buffer = GCodeBuffer()
             >>> buffer.add_header("; Config\n")
             >>> buffer.clear_header()
             >>> # Header cleared
@@ -117,6 +123,7 @@ class GCodeBuffer:
         """Clear both command and header buffers.
 
         Example:
+            >>> buffer = GCodeBuffer()
             >>> buffer.clear_all()
             >>> # Everything cleared
         """
@@ -130,6 +137,7 @@ class GCodeBuffer:
             True if commands are buffered, False otherwise.
 
         Example:
+            >>> buffer = GCodeBuffer()
             >>> buffer.has_commands()
             False
             >>> buffer.add("G28\n")
@@ -145,6 +153,7 @@ class GCodeBuffer:
             Number of commands in the buffer.
 
         Example:
+            >>> buffer = GCodeBuffer()
             >>> buffer.add("G28\n")
             >>> buffer.add("G1 X10\n")
             >>> buffer.command_count()
@@ -162,6 +171,7 @@ class GCodeBuffer:
             Unlike get_commands(), this does not clear the buffer.
 
         Example:
+            >>> buffer = GCodeBuffer()
             >>> buffer.add("G28\n")
             >>> peek = buffer.peek_commands()
             >>> # peek = ['G28\n']
@@ -183,6 +193,7 @@ class GCodeBuffer:
             config_sections: Dictionary of section names to key-value pairs.
 
         Example:
+            >>> buffer = GCodeBuffer()
             >>> sections = {
             ...     "SPEED": {"SPEED_XY": "5000", "SPEED_Z": "2000"},
             ...     "SERVO": {"ANGLE_RETRACT": "160"},
@@ -206,6 +217,7 @@ class GCodeBuffer:
         Allows using len(buffer) instead of buffer.command_count().
 
         Example:
+            >>> buffer = GCodeBuffer()
             >>> buffer.add("G28\n")
             >>> len(buffer)
             1
