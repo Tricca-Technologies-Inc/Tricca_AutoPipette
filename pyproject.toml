@@ -58,6 +58,8 @@ dev = [
     "pyright",
     "pytest",
     "ruff",
+    "sphinx",
+    "sphinx-rtd-theme",
 ]
 
 
@@ -217,7 +219,13 @@ root = "."
 
 [tool.pytest.ini_options]
 
-testpaths = ["tests"]
+# "src" only matters when --doctest-modules is passed explicitly (see
+# Commands in CLAUDE.md) -- pytest's default `test_*.py` collection pattern
+# never matches anything under src/, so plain `pytest` is unaffected by its
+# presence here. Without it, `pytest --doctest-modules` (no path arg) would
+# fall back to testpaths and find nothing, since none of the doctests live
+# under tests/.
+testpaths = ["tests", "src"]
 
 pythonpath = [
     "src",

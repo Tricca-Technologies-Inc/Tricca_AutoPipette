@@ -36,6 +36,10 @@ logs/
 temp/
 gcode/temp
 docs/_build
+# autosummary_generate = True (docs/conf.py) regenerates these stubs on
+# every `sphinx-build` from the live package tree -- checking them in is
+# exactly the mechanism that let docs/api.rst go stale before (see #21).
+docs/generated/
 
 # cmd2 writes the interactive shell's history next to the shell module
 # (DefaultPaths.DIR_SHELL). It's a per-developer runtime artifact, and cmd2

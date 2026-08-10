@@ -35,13 +35,13 @@ class VolumeConverter:
     The converter can be initialized with default calibration data or
     custom calibration points.
 
-    Class Attributes:
-        _consts: Default calibration mapping of volumes (μL) to plunger
-            travel (mm).
-        _poly: Default polynomial fit for volume-to-travel conversion.
-
     Attributes:
+        _consts: Default calibration mapping of volumes (μL) to plunger
+            travel (mm), used unless custom calibration points are supplied.
         _poly: Polynomial function for converting volume to plunger travel.
+            Set at class level to the default calibration's fit; ``__init__``
+            overrides it per-instance when custom calibration points are
+            given.
     """
 
     # Default calibration mapping: volume (μL) -> plunger travel (mm)

@@ -14,11 +14,10 @@ This module bundles the core pieces needed to compute pipette tip immersion
 
 Core behavior:
 
-- `DipStrategy` defines the interface:
-  - `calculate_dip_distance(well, volume)` returns a dip distance (mm) and may
-    update well state.
-  - `validate_well_config(well_diameter, dip_btm)` enforces required geometry
-    for a strategy.
+- `DipStrategy` defines the interface: `calculate_dip_distance(well, volume)`
+  returns a dip distance (mm) and may update well state;
+  `validate_well_config(well_diameter, dip_btm)` enforces required geometry
+  for a strategy.
 - `SimpleDipStrategy` returns `well.dip_top` unchanged (no volume tracking).
 - `CylinderDipStrategy` assumes a cylindrical well and converts a volume change
   (μL) into a liquid-height change using the well diameter, updating

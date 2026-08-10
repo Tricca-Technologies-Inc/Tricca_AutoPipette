@@ -1,19 +1,19 @@
-.. AutoPipette documentation master file, created by
-   sphinx-quickstart on Tue Sep 17 16:05:19 2024.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+Tricca AutoPipette
+==================
 
-AutoPipette documentation
-=========================
+Tricca AutoPipette controls an automated liquid handling system (ALHS) built
+on the Voron 3D-printer/Klipper platform. A long-running control daemon
+(``tapd``) owns the single connection to a Moonraker instance and exposes a
+local control-plane WebSocket that two thin clients talk to: a ``cmd2``-based
+interactive shell (``tap``) and a FastAPI "kiosk" touchscreen web UI.
 
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
-
+This site is generated API reference, rendered straight from the docstrings
+in ``src/``. For architecture, the command-line workflow, and how the pieces
+fit together, start with the repository's ``CLAUDE.md`` -- it is the
+authoritative system description and isn't duplicated here.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-   modules
    api
