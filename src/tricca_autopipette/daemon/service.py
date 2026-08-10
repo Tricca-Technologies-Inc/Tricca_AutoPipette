@@ -401,7 +401,7 @@ class AutoPipetteService:
         Raises:
             FileNotFoundError: If a referenced locations file doesn't exist.
             ValueError: If a locations source is invalid.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         if system_config.locations.is_empty():
             location_manager.load_from_json(DefaultFilenames.CONFIG_LOCATIONS)
         else:
@@ -658,7 +658,7 @@ class AutoPipetteService:
 
         Raises:
             NotHomedError: If the pipette is not homed.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         autopipette = self._autopipette
         coor = Coordinate(x=args.x, y=args.y, z=args.z)
         autopipette.move_to(coor)
@@ -683,7 +683,7 @@ class AutoPipetteService:
             NotALocationError: If ``args.name_loc`` is not a defined location
                 (raised by ``LocationManager.get_coordinate``).
             ValueError: If only one of row/col is given for a plate location.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         autopipette = self._autopipette
         coor = autopipette.location_manager.get_coordinate(
             args.name_loc, args.row, args.col
@@ -717,7 +717,7 @@ class AutoPipetteService:
             NotHomedError: If the pipette is not homed (checked before the
                 all-zero-offset no-op case, unlike the pre-Phase-3 behavior --
                 see ``require_homed``'s docstring).
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         # Exact sentinel check, not an arithmetic result: args.x/y/z are the
         # literal user-supplied offsets (default 0.0 when omitted), and an
         # isclose() tolerance would silently swallow a genuinely tiny
@@ -786,7 +786,7 @@ class AutoPipetteService:
                 soft no-tip/non-positive-volume no-op cases -- see
                 ``require_homed``'s docstring).
             NotALocationError: If ``args.source`` is not a defined location.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         autopipette = self._autopipette
 
         if autopipette.state.tip_state != TipState.ATTACHED:
@@ -828,7 +828,7 @@ class AutoPipetteService:
                 soft no-liquid-in-tip no-op case -- see ``require_homed``'s
                 docstring).
             NotALocationError: If ``args.dest`` is not a defined location.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         autopipette = self._autopipette
 
         if not autopipette.state.has_liquid:
@@ -885,7 +885,7 @@ class AutoPipetteService:
                 deck -- see ``AutoPipette.resolve_splits``.
             VolumeCapacityError: If the requested volume exceeds usable
                 syringe capacity.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         if args.vol_ul <= 0:
             return CommandResult(ok=False, message="Volume must be greater than zero.")
 
@@ -973,7 +973,7 @@ class AutoPipetteService:
             NotHomedError: If the pipette is not homed.
             NoTipboxError: If no tipbox is configured.
             TipAlreadyOnError: If a tip is already attached.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         autopipette = self._autopipette
         autopipette.next_tip()
         self.output_gcode(autopipette.get_gcode())
@@ -990,7 +990,7 @@ class AutoPipetteService:
 
         Raises:
             NotHomedError: If the pipette is not homed.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         autopipette = self._autopipette
         if autopipette.state.tip_state != TipState.ATTACHED:
             return CommandResult(
@@ -1019,7 +1019,7 @@ class AutoPipetteService:
         Raises:
             NotHomedError: If the pipette is not homed.
             NoWasteContainerError: If no waste container is configured.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         autopipette = self._autopipette
         if autopipette.state.tip_state != TipState.ATTACHED:
             return CommandResult(
@@ -1044,7 +1044,7 @@ class AutoPipetteService:
             NoTipboxError: If no tipbox is configured.
             NoWasteContainerError: If a tip is currently attached and no
                 waste container is configured to dispose of it.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         autopipette = self._autopipette
         if autopipette.state.tip_state == TipState.ATTACHED:
             autopipette.dispose_tip()
@@ -1071,12 +1071,13 @@ class AutoPipetteService:
 
         Returns:
             Result naming the new liquid, with its key parameters
-            (viscosity, aspirate speed, prewet_cycles recommendation) in ``data``
-            for adapters that want to render them individually.
+            (``viscosity_cP``, ``speed_aspirate``, ``prewet_cycles``,
+            ``pre_air_gap_ul``, ``post_air_gap_ul``) in ``data`` for
+            adapters that want to render them individually.
 
         Raises:
             ValueError: If ``liquid_name`` is not a loaded liquid profile.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         autopipette = self._autopipette
         autopipette.switch_liquid(liquid_name)
         liquid = autopipette.system_config.liquids[liquid_name]
@@ -1107,7 +1108,7 @@ class AutoPipetteService:
         Raises:
             FileNotFoundError: If the file doesn't exist.
             ValueError: If the file's contents are an invalid liquid profile.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         liquid = self._autopipette.config_manager.load_liquid(filename)
         return CommandResult(
             ok=True,
@@ -1182,9 +1183,7 @@ class AutoPipetteService:
         Raises:
             TypeError: If the plate factory produces a type mismatched with
                 ``args.plate_type`` (see ``LocationManager.set_plate``).
-            RuntimeError: If appending an additional tipbox to an existing
-                non-tipbox location (see ``LocationManager.set_plate``).
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         well = Well(
             coor=Coordinate(x=args.x, y=args.y, z=args.z),
             dip_top=args.dip_top,
@@ -1322,7 +1321,7 @@ class AutoPipetteService:
         Note:
             A failed load leaves the existing deck untouched -- the file is
             fully parsed before anything is applied.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         location_manager = self._autopipette.location_manager
         location_manager.load_from_json(args.filename, replace=args.replace)
         coords = location_manager.get_coordinate_names()
@@ -1569,9 +1568,11 @@ class AutoPipetteService:
         return CommandResult(ok=True, message=url, data={"url": url})
 
     def vol_to_steps(self, args: VolToStepsArgs) -> CommandResult:
-        """Convert a volume in microliters to motor steps.
+        """Convert a volume in microliters to "steps".
 
-        Uses the active liquid's calibration curve.
+        Uses the active liquid's calibration curve. The returned "steps"
+        value is actually millimetres of plunger travel, not motor steps —
+        see ``core/volume_converter.py``.
 
         Args:
             args: Volume in microliters.
@@ -1592,13 +1593,15 @@ class AutoPipetteService:
         )
 
     def steps_to_vol(self, steps: int) -> CommandResult:
-        """Convert motor steps to a volume in microliters.
+        """Convert "steps" to a volume in microliters.
 
         Inverse of :meth:`vol_to_steps`, using the active liquid's
-        calibration curve.
+        calibration curve. ``steps`` is actually millimetres of plunger
+        travel, not raw motor steps — see ``core/volume_converter.py``.
 
         Args:
-            steps: Number of motor steps.
+            steps: Number of "steps" (actually millimetres of plunger
+                travel, not motor steps — see ``core/volume_converter.py``).
 
         Returns:
             Result with the volume in ``message``/``data``, or an
@@ -1638,7 +1641,7 @@ class AutoPipetteService:
             RuntimeError: If there is no WebSocket client.
             Exception: Whatever ``WebSocketClient.upload_gcode_file``'s
                 future raises (e.g. ``WebSocketClient.UploadError``).
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         if self.client is None:
             raise RuntimeError(
                 "WebSocket client not initialized. Cannot upload G-code."
@@ -1659,7 +1662,7 @@ class AutoPipetteService:
         Raises:
             RuntimeError: If there is no WebSocket client.
             Exception: Whatever the upload raises.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         server_path = self.upload_gcode(file_name, file_path)
         return CommandResult(
             ok=True, message=f"Upload successful. Server path: {server_path}"
@@ -1683,7 +1686,7 @@ class AutoPipetteService:
             RuntimeError: If there is no WebSocket client.
             Exception: Whatever the upload or the ``printer.print.start``
                 RPC raises.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         server_path = self.upload_gcode(filename, file_path)
         self.client.send_jsonrpc(self.mrr.printer_print_start(filename))  # type: ignore[union-attr]
         if delete_file:
@@ -1724,7 +1727,7 @@ class AutoPipetteService:
             "no client" -- appropriate for their direct, explicit callers
             (e.g. the ``upload``/``ws.upload`` diagnostic command), where a
             silent no-op would be a confusing surprise instead.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         if self.gcode_manager.is_batch_mode:
             self.gcode_manager.add_gcode(gcode)
             return
@@ -1778,7 +1781,7 @@ class AutoPipetteService:
         Raises:
             RuntimeError: If there is no connected WebSocket client.
             TimeoutError: If the ping times out.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         if self.client is None or not self.client.is_connected():
             raise RuntimeError(_NOT_CONNECTED_MSG)
         start = time.monotonic()
@@ -1805,7 +1808,7 @@ class AutoPipetteService:
         Raises:
             RuntimeError: If there is no connected WebSocket client.
             TimeoutError: If the request times out.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         if self.client is None or not self.client.is_connected():
             raise RuntimeError(_NOT_CONNECTED_MSG)
         request = self.mrr.gen_request(method, params)
@@ -2069,7 +2072,8 @@ class AutoPipetteService:
         Returns:
             Result with ``data["liquids"]`` (list of dicts with
             ``name``/``active``/``viscosity_cP``/``has_custom_speed``/
-            ``prewet_cycles``/``air_gap`` keys) and ``data["active_liquid"]``.
+            ``prewet_cycles``/``pre_air_gap_ul``/``post_air_gap_ul`` keys)
+            and ``data["active_liquid"]``.
         """
         liquids = self._autopipette.system_config.liquids
         active = self._autopipette.active_liquid
@@ -2227,7 +2231,7 @@ class AutoPipetteService:
                 raises (e.g. ``NotALocationError``, a not-homed
                 ``RuntimeError``) -- propagates uncaught, aborting the rest
                 of the protocol.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         proto_path = DefaultPaths.DIR_PROTOCOL / filename
         try:
             lines = proto_path.read_text(encoding="utf-8").splitlines()
@@ -2306,7 +2310,7 @@ class AutoPipetteService:
             ValueError: If the line can't be tokenized, or a recognized
                 command's arguments fail to parse.
             Exception: Whatever the underlying service method raises.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         if line.strip().startswith(";"):
             return CommandResult(ok=True, message="")
 
@@ -2369,7 +2373,7 @@ class AutoPipetteService:
             ProtocolAbortedError: If a ``break`` line's breakpoint is
                 answered "abort".
             Exception: Whatever a dispatched line's service method raises.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         proto_path = DefaultPaths.DIR_PROTOCOL / filename
         if not proto_path.exists() or not proto_path.is_file():
             raise FileNotFoundError(f"Protocol not found: {filename}")
@@ -2386,7 +2390,7 @@ class AutoPipetteService:
 
         Raises:
             RuntimeError: If there is no connected WebSocket client.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         self._send_moonraker_control(self.mrr.printer_emergency_stop())
         return CommandResult(
             ok=True,
@@ -2401,7 +2405,7 @@ class AutoPipetteService:
 
         Raises:
             RuntimeError: If there is no connected WebSocket client.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         self._send_moonraker_control(self.mrr.printer_print_pause())
         return CommandResult(ok=True, message="Protocol paused.")
 
@@ -2413,7 +2417,7 @@ class AutoPipetteService:
 
         Raises:
             RuntimeError: If there is no connected WebSocket client.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         self._send_moonraker_control(self.mrr.printer_print_resume())
         return CommandResult(ok=True, message="Protocol resumed.")
 
@@ -2425,7 +2429,7 @@ class AutoPipetteService:
 
         Raises:
             RuntimeError: If there is no connected WebSocket client.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         self._send_moonraker_control(self.mrr.printer_print_cancel())
         return CommandResult(ok=True, message="Protocol canceled.")
 
@@ -2455,6 +2459,11 @@ class AutoPipetteService:
         RPC — it never touches the G-code buffer or ``AutoPipette`` domain
         state — so it's safe to run concurrently, and it must be able to
         interrupt a run that's stuck.
+
+        Returns:
+            The current run status (not necessarily yet reflecting the
+            cancellation — real state updates happen later via Moonraker's
+            print_stats transition).
         """
         await asyncio.to_thread(self.send_cancel)
         return self._current
@@ -2463,6 +2472,9 @@ class AutoPipetteService:
         """Pause the active run.
 
         See :meth:`cancel_run` for why this bypasses ``self._lock``.
+
+        Returns:
+            The current run status.
         """
         await asyncio.to_thread(self.send_pause)
         return self._current
@@ -2471,6 +2483,9 @@ class AutoPipetteService:
         """Resume the active run.
 
         See :meth:`cancel_run` for why this bypasses ``self._lock``.
+
+        Returns:
+            The current run status.
         """
         await asyncio.to_thread(self.send_resume)
         return self._current
@@ -2479,6 +2494,9 @@ class AutoPipetteService:
         """Send an emergency stop, interrupting the active run if any.
 
         See :meth:`cancel_run` for why this bypasses ``self._lock``.
+
+        Returns:
+            The current run status.
         """
         await asyncio.to_thread(self.emergency_stop)
         return self._current
