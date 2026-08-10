@@ -162,7 +162,7 @@ Leftover liquid requires an explicit `--leftover keep|waste`; omitting it is an 
 
 ## Code style
 - Target Python 3.12+, `from __future__ import annotations` at the top of modules.
-- Ruff (`preview = true`) enforces pycodestyle/pyflakes/isort/pyupgrade/bugbear/simplify/comprehensions/return/annotations/**Google-style docstrings** (`D` rules, convention `google`, `D203`/`D213` ignored). Match the existing heavy-docstring style (Args/Returns/Raises/Example) in `core/` and `commands/` when adding public functions/classes there.
+- Ruff (`preview = true`) enforces pycodestyle/pyflakes/isort/pyupgrade/bugbear/simplify/comprehensions/return/annotations/**Google-style docstrings** (`D` rules, convention `google`, `D203`/`D213` ignored) **repo-wide** — every module, not just `core/`/`commands/` (only `tests/**` is exempt). `DOC` (docstring-vs-signature/Returns/Raises drift, a `pydoclint` port) is enforced too. Match the existing heavy-docstring style (Args/Returns/Raises/Example) when adding public functions/classes anywhere in `src/`.
 - Pyright runs in `strict` mode with `extraPaths = ["src"]` — keep new code fully typed.
 - First-party import groups for isort: `tricca_autopipette`, `autopipette_kiosk`.
 
