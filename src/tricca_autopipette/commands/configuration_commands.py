@@ -66,12 +66,12 @@ class ConfigurationCommands(TAPCommandSet):
     - Listing configuration state
 
     Example:
-        >>> switch_liquid glycerol
-        >>> list_liquids
-        >>> coor home 0 0 50
-        >>> plate my_plate array 8 12 100 200 10
-        >>> ls locs
-        >>> del_loc old_plate
+        switch_liquid glycerol
+        list_liquids
+        coor home 0 0 50
+        plate my_plate array 8 12 100 200 10
+        ls locs
+        del_loc old_plate
     """
 
     def __init__(self) -> None:
@@ -92,9 +92,9 @@ class ConfigurationCommands(TAPCommandSet):
             statement: Command statement containing liquid name.
 
         Example:
-            >>> switch_liquid water
-            >>> switch_liquid glycerol
-            >>> switch_liquid methanol
+            switch_liquid water
+            switch_liquid glycerol
+            switch_liquid methanol
         """
         liquid_name = statement.arg_list[0] if statement.arg_list else None
 
@@ -128,7 +128,7 @@ class ConfigurationCommands(TAPCommandSet):
         Displays all loaded liquid profiles with their key properties.
 
         Example:
-            >>> list_liquids
+            list_liquids
         """
         result = self.service.list_liquids()
         data = result.data or {}
@@ -148,8 +148,8 @@ class ConfigurationCommands(TAPCommandSet):
             statement: Command statement containing filename.
 
         Example:
-            >>> load_liquid acetone.json
-            >>> load_liquid custom_buffer.json
+            load_liquid acetone.json
+            load_liquid custom_buffer.json
         """
         filename = statement.arg_list[0] if statement.arg_list else None
 
@@ -187,9 +187,9 @@ class ConfigurationCommands(TAPCommandSet):
             args: Parsed arguments containing variable name and value.
 
         Example:
-            >>> set SPEED_FACTOR 150
-            >>> set VELOCITY_MAX 5000
-            >>> set ACCEL_MAX 3000
+            set SPEED_FACTOR 150
+            set VELOCITY_MAX 5000
+            set ACCEL_MAX 3000
         """
         result = self.service.set(args)
         if result.ok:
@@ -212,8 +212,8 @@ class ConfigurationCommands(TAPCommandSet):
             args: Parsed arguments containing location name and coordinates.
 
         Example:
-            >>> coor home 0 0 50
-            >>> coor plate_a 100 200 10
+            coor home 0 0 50
+            coor plate_a 100 200 10
         """
         result = self.service.coor(args)
         rprint(f"[green]✓ {result.message}[/green]")
@@ -228,9 +228,9 @@ class ConfigurationCommands(TAPCommandSet):
             args: Parsed arguments containing plate configuration.
 
         Example:
-            >>> plate my_96well array 8 12 100 200 10
-            >>> plate tipbox1 tipbox 8 12 50 50 10
-            >>> plate reservoir singleton 1 1 30 30 5 --dip_top 2 --dip_btm 8
+            plate my_96well array 8 12 100 200 10
+            plate tipbox1 tipbox 8 12 50 50 10
+            plate reservoir singleton 1 1 30 30 5 --dip_top 2 --dip_btm 8
         """
         try:
             result = self.service.plate(args)
@@ -249,7 +249,7 @@ class ConfigurationCommands(TAPCommandSet):
             args: Parsed arguments containing plate name.
 
         Example:
-            >>> reset_plate my_96well
+            reset_plate my_96well
         """
         result = self.service.reset_plate(args)
         if result.ok:
@@ -262,7 +262,7 @@ class ConfigurationCommands(TAPCommandSet):
         """Reset all plates to the origin well.
 
         Example:
-            >>> reset_plates
+            reset_plates
         """
         result = self.service.reset_plates()
         if result.ok:
@@ -281,8 +281,8 @@ class ConfigurationCommands(TAPCommandSet):
             args: Parsed arguments containing location name.
 
         Example:
-            >>> del_loc old_plate
-            >>> del_loc spare_coor
+            del_loc old_plate
+            del_loc spare_coor
         """
         result = self.service.del_loc(args)
         if result.ok:
@@ -299,7 +299,7 @@ class ConfigurationCommands(TAPCommandSet):
         reloading from a file.
 
         Example:
-            >>> clear_locs
+            clear_locs
         """
         result = self.service.clear_locs()
         if result.ok:
@@ -318,8 +318,8 @@ class ConfigurationCommands(TAPCommandSet):
             statement: Optional filename (defaults to 'custom_locations.json').
 
         Example:
-            >>> save_locations
-            >>> save_locations my_setup.json
+            save_locations
+            save_locations my_setup.json
         """
         filename = (
             statement.arg_list[0] if statement.arg_list else "custom_locations.json"
@@ -339,8 +339,8 @@ class ConfigurationCommands(TAPCommandSet):
             args: Filename to load and whether to replace the deck.
 
         Example:
-            >>> load_locations my_setup.json
-            >>> load_locations my_setup.json --replace
+            load_locations my_setup.json
+            load_locations my_setup.json --replace
         """
         try:
             result = self.service.load_locations(
@@ -360,7 +360,7 @@ class ConfigurationCommands(TAPCommandSet):
             args: Name of the location to unload.
 
         Example:
-            >>> unload_locations tipbox_a
+            unload_locations tipbox_a
         """
         self._render(
             self.service.unload_locations(
@@ -380,7 +380,7 @@ class ConfigurationCommands(TAPCommandSet):
             args: Name of the tipbox to reset.
 
         Example:
-            >>> reset_tips tipbox_a
+            reset_tips tipbox_a
         """
         self._render(self.service.reset_tips(args_from_namespace(ResetTipsArgs, args)))
 
@@ -391,7 +391,7 @@ class ConfigurationCommands(TAPCommandSet):
             _: Unused; the command takes no arguments.
 
         Example:
-            >>> reset_tips_all
+            reset_tips_all
         """
         self._render(self.service.reset_tips_all())
 
@@ -404,8 +404,8 @@ class ConfigurationCommands(TAPCommandSet):
                 available positions rather than the consumed ones.
 
         Example:
-            >>> set_tips tipbox_a A1:C12
-            >>> set_tips tipbox_a D1:H12 --available
+            set_tips tipbox_a A1:C12
+            set_tips tipbox_a D1:H12 --available
         """
         self._render(self.service.set_tips(args_from_namespace(SetTipsArgs, args)))
 
@@ -418,8 +418,8 @@ class ConfigurationCommands(TAPCommandSet):
                 state persisted in Moonraker's database.
 
         Example:
-            >>> tips
-            >>> tips tipbox_a --db
+            tips
+            tips tipbox_a --db
         """
         result = self.service.tips(args_from_namespace(TipsArgs, args))
         if not result.ok:
@@ -455,14 +455,17 @@ class ConfigurationCommands(TAPCommandSet):
     def do_ls(self, args: LsArgs) -> None:
         """List configuration state by category.
 
+        ``locations`` is accepted as an alias for ``locs``, and ``config``
+        as an alias for ``system``.
+
         Args:
             args: Parsed arguments containing category to list.
 
         Example:
-            >>> ls locs
-            >>> ls plates
-            >>> ls liquids
-            >>> ls system
+            ls locs
+            ls plates
+            ls liquids
+            ls system
         """
         var: str = args.var.lower()
 

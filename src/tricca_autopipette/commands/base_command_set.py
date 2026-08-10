@@ -37,7 +37,7 @@ class TAPCommandSet(_CommandSetBase):
             CommandSetRegistrationError: If this command set has not been
                 registered with a shell (raised by cmd2's own ``_cmd``
                 property, which never returns None).
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         from tricca_autopipette.cli.tap_shell import TriccaAutoPipetteShell
 
         # Guards against registration into some *other* cmd2 app; the

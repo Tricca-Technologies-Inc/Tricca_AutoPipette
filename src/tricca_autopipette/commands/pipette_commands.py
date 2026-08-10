@@ -35,12 +35,12 @@ class PipetteCommands(TAPCommandSet):
     - Advanced features (prewet, wiggle, air gap)
 
     Example:
-        >>> next_tip
-        >>> aspirate 100 reservoir
-        >>> dispense 50 plate_a --dest_row 0 --dest_col 0
-        >>> dispense 50 plate_a --dest_row 0 --dest_col 1
-        >>> dispose_tip
-        >>> pipette 200 source dest --prewet 2 --wiggle
+        next_tip
+        aspirate 100 reservoir
+        dispense 50 plate_a --dest_row 0 --dest_col 0
+        dispense 50 plate_a --dest_row 0 --dest_col 1
+        dispose_tip
+        pipette 200 source dest --prewet 2 --wiggle
     """
 
     def __init__(self) -> None:
@@ -62,11 +62,11 @@ class PipetteCommands(TAPCommandSet):
             args: Parsed arguments containing source and volume.
 
         Example:
-            >>> next_tip
-            >>> aspirate 100 reservoir
-            >>> dispense 50 plate_a --dest_row 0 --dest_col 0
-            >>> dispense 50 plate_a --dest_row 0 --dest_col 1
-            >>> dispose_tip
+            next_tip
+            aspirate 100 reservoir
+            dispense 50 plate_a --dest_row 0 --dest_col 0
+            dispense 50 plate_a --dest_row 0 --dest_col 1
+            dispose_tip
 
         Note:
             Remember to dispose or eject the tip when done.
@@ -94,12 +94,12 @@ class PipetteCommands(TAPCommandSet):
             args: Parsed arguments containing destination and options.
 
         Example:
-            >>> aspirate 100 reservoir
-            >>> dispense 25 plate_a --dest_row 0 --dest_col 0
-            >>> dispense 25 plate_a --dest_row 0 --dest_col 1
-            >>> dispense 25 plate_a --dest_row 0 --dest_col 2
-            >>> dispense 25 plate_a --dest_row 0 --dest_col 3
-            >>> dispose_tip
+            aspirate 100 reservoir
+            dispense 25 plate_a --dest_row 0 --dest_col 0
+            dispense 25 plate_a --dest_row 0 --dest_col 1
+            dispense 25 plate_a --dest_row 0 --dest_col 2
+            dispense 25 plate_a --dest_row 0 --dest_col 3
+            dispose_tip
 
         Note:
             Omit --volume to dispense all remaining liquid.
@@ -128,14 +128,24 @@ class PipetteCommands(TAPCommandSet):
         aspiration, dispensing, and tip disposal. Large volumes are
         automatically chunked into multiple aspirate/dispense cycles.
 
+        ``--splits`` (a ``DEST:VOL[@WELL];...`` spec) takes over from a plain
+        single ``dest`` and does one aspirate followed by N metered dispenses
+        instead of chunking, saving a tip pickup and a source trip per
+        destination. ``--leftover keep|waste`` is required whenever the
+        splits don't consume the whole aspirate. ``--tipbox`` names a
+        specific tipbox to draw the tip from instead of the default
+        draw order.
+
         Args:
             args: Parsed arguments containing transfer parameters.
 
         Example:
-            >>> pipette 100 plate_a plate_b
-            >>> pipette 200 source dest --prewet 2 --wiggle
-            >>> pipette 150 src dest --keep_tip
-            >>> pipette 300 src dest --dispense_vol 100 --src_row 0 --src_col 0
+            pipette 100 plate_a plate_b
+            pipette 200 source dest --prewet 2 --wiggle
+            pipette 150 src dest --keep_tip
+            pipette 300 src dest --dispense_vol 100 --src_row 0 --src_col 0
+            pipette 100 src plate_a --splits 'plate_a:12@A1;plate_b:8@C3' \
+                --leftover waste
         """
         try:
             result = self.service.transfer(args)
@@ -172,7 +182,7 @@ class PipetteCommands(TAPCommandSet):
         position. The tipbox automatically tracks which tips have been used.
 
         Example:
-            >>> next_tip
+            next_tip
 
         Note:
             Requires a tipbox to be defined in the configuration.
@@ -198,7 +208,7 @@ class PipetteCommands(TAPCommandSet):
         tip disposal during a protocol.
 
         Example:
-            >>> eject_tip
+            eject_tip
 
         Warning:
             The tip is left at the current pipette position, not in the
@@ -220,7 +230,7 @@ class PipetteCommands(TAPCommandSet):
         standard way to discard used tips during a protocol.
 
         Example:
-            >>> dispose_tip
+            dispose_tip
 
         Note:
             Requires a waste container to be defined in the configuration.
@@ -246,7 +256,7 @@ class PipetteCommands(TAPCommandSet):
         If no tip is currently attached, skips straight to pickup.
 
         Example:
-            >>> change_tip
+            change_tip
 
         Note:
             Requires both a tipbox and a waste container to be configured.

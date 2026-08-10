@@ -40,14 +40,14 @@ class WebSocketCommands(TAPCommandSet):
     - Reconnecting and restoring subscriptions
 
     Example:
-        >>> ws_status
-        >>> ping
-        >>> subscribe notify_status_update
-        >>> notify printer.info
-        >>> send server.config
-        >>> upload protocol.gcode /path/to/file.gcode
-        >>> read
-        >>> reconnect
+        ws_status
+        ping
+        subscribe notify_status_update
+        notify printer.info
+        send server.config
+        upload protocol.gcode /path/to/file.gcode
+        read
+        reconnect
     """
 
     def __init__(self) -> None:
@@ -65,7 +65,7 @@ class WebSocketCommands(TAPCommandSet):
         handlers, and pending requests.
 
         Example:
-            >>> ws_status
+            ws_status
         """
         result = self.service.ws_status()
         data = result.data or {}
@@ -103,7 +103,7 @@ class WebSocketCommands(TAPCommandSet):
         """Ping the server to check connection health and measure round-trip time.
 
         Example:
-            >>> ping
+            ping
             ✓ Pong! (Round-trip: 23.4ms)
         """
         try:
@@ -130,9 +130,9 @@ class WebSocketCommands(TAPCommandSet):
             args: Parsed arguments containing method and optional params.
 
         Example:
-            >>> send printer.info
-            >>> send server.config
-            >>> send gcode.script '{"script": "G28"}'
+            send printer.info
+            send server.config
+            send gcode.script '{"script": "G28"}'
         """
         try:
             params: dict[str, Any] | None = None
@@ -167,8 +167,8 @@ class WebSocketCommands(TAPCommandSet):
             args: Parsed arguments containing method and optional params.
 
         Example:
-            >>> notify printer.restart
-            >>> notify gcode.script '{"script": "G28"}'
+            notify printer.restart
+            notify gcode.script '{"script": "G28"}'
 
         Note:
             Parameters must be valid JSON. Use single quotes around
@@ -207,8 +207,8 @@ class WebSocketCommands(TAPCommandSet):
             arg: The notification method to subscribe to.
 
         Example:
-            >>> subscribe notify_status_update
-            >>> subscribe notify_gcode_response
+            subscribe notify_status_update
+            subscribe notify_gcode_response
         """
         if not arg.strip():
             rprint("[yellow]Usage: subscribe <method>[/yellow]")
@@ -232,7 +232,7 @@ class WebSocketCommands(TAPCommandSet):
             arg: The notification method to unsubscribe from.
 
         Example:
-            >>> unsubscribe notify_status_update
+            unsubscribe notify_status_update
         """
         if not arg.strip():
             rprint("[yellow]Usage: unsubscribe <method>[/yellow]")
@@ -259,8 +259,8 @@ class WebSocketCommands(TAPCommandSet):
             args: Parsed arguments containing server filename and local path.
 
         Example:
-            >>> upload protocol.gcode /tmp/protocol.gcode
-            >>> upload calibration.gcode ./calibration.gcode
+            upload protocol.gcode /tmp/protocol.gcode
+            upload calibration.gcode ./calibration.gcode
 
         Note:
             ``file_name`` is the name assigned on the server.
@@ -288,7 +288,7 @@ class WebSocketCommands(TAPCommandSet):
         messages are returned to the queue.
 
         Example:
-            >>> read
+            read
         """
         try:
             result = self.service.read_message()
@@ -315,7 +315,7 @@ class WebSocketCommands(TAPCommandSet):
         """Read and display all messages from the WebSocket queue.
 
         Example:
-            >>> read_all
+            read_all
         """
         try:
             result = self.service.read_all_messages()
@@ -342,7 +342,7 @@ class WebSocketCommands(TAPCommandSet):
         """Discard all messages from the WebSocket queue.
 
         Example:
-            >>> clear_queue
+            clear_queue
         """
         try:
             result = self.service.clear_message_queue()
@@ -365,7 +365,7 @@ class WebSocketCommands(TAPCommandSet):
         and re-registers all previously registered notification handlers.
 
         Example:
-            >>> reconnect
+            reconnect
 
         Note:
             Client-side handlers are restored automatically. Server-side
