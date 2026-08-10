@@ -87,7 +87,7 @@ _main_loop: asyncio.AbstractEventLoop | None = None
 # ── in-memory run state, mirrored from the daemon's notify_run_status pushes ──
 _current_run: RunStatus = RunStatus(status="idle")
 # Pending breakpoint, mirrored from notify_breakpoint pushes: {"run_id",
-# "filename"} while one is awaiting a response, None otherwise.
+# "filename", "pending"} while one is awaiting a response, None otherwise.
 _current_breakpoint: dict[str, Any] | None = None
 _ws_clients: set[WebSocket] = set()
 
@@ -133,13 +133,21 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 # ── routes ─────────────────────────────────────────────────────────────────────
 @app.get("/")
 def index() -> FileResponse:
-    """Serve the kiosk's single-page frontend."""
+    """Serve the kiosk's single-page frontend.
+
+    Returns:
+        The static `index.html` file.
+    """
     return FileResponse(STATIC_DIR / "index.html")
 
 
 @app.get("/protocols", response_model=list[Protocol])
 def list_protocols() -> list[Protocol]:
-    """Return all .pipette files in the protocols directory, sorted by name."""
+    """Return all .pipette files in the protocols directory, sorted by name.
+
+    Raises:
+        HTTPException: 500 if the protocols directory doesn't exist.
+    """
     if not PROTOCOLS_DIR.exists():
         raise HTTPException(
             status_code=500, detail=f"Protocols directory not found: {PROTOCOLS_DIR}"
@@ -156,6 +164,14 @@ async def run_protocol(req: RunRequest) -> RunStatus:
     Completion is reported later through `notify_run_status` pushes (see
     `_on_run_status_notification`), driven by the daemon's real Moonraker
     `print_stats` tracking rather than this call returning.
+
+    Returns:
+        The just-dispatched run's initial status (not its completion).
+
+    Raises:
+        HTTPException: 404 if `req.filename` doesn't exist, 409 if a run is
+            already active, 503 if the control daemon isn't connected, or
+            500 for any other dispatch failure.
     """
     global _current_run
 
@@ -200,6 +216,13 @@ async def home_pipette() -> RunStatus:
     `toolhead.homed_axes` tracking (see `daemon/moonraker_state.py`)
     unblocks gated commands automatically — no separate "homing done"
     signal is needed here.
+
+    Returns:
+        A status reporting dispatch success, not physical homing completion.
+
+    Raises:
+        HTTPException: 503 if the control daemon isn't connected, or 500 if
+            dispatch itself fails.
     """
     if _control_client is None:
         raise HTTPException(status_code=503, detail="Control daemon not connected")
@@ -222,6 +245,12 @@ async def respond_to_breakpoint(req: BreakpointResponse) -> dict[str, bool]:
 
     Only one run (and therefore one pending breakpoint) can be active at a
     time, so no run/breakpoint id is needed to disambiguate.
+
+    Returns:
+        `{"ok": True}` once the response has been relayed to the daemon.
+
+    Raises:
+        HTTPException: 503 if the control daemon isn't connected.
     """
     if _control_client is None:
         raise HTTPException(status_code=503, detail="Control daemon not connected")
@@ -332,7 +361,7 @@ def _status_payload() -> dict[str, Any]:
 
     Returns:
         The current `RunStatus` fields plus a `breakpoint` key: the pending
-        breakpoint's `{"run_id", "filename"}` dict, or None.
+        breakpoint's `{"run_id", "filename", "pending"}` dict, or None.
     """
     return {**_current_run.model_dump(), "breakpoint": _current_breakpoint}
 
