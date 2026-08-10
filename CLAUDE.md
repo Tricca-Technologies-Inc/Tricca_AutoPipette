@@ -40,7 +40,12 @@ ruff format .
 pyright
 
 # Tests
-pytest   # unit/integration tests under tests/ (pythonpath=src, testpaths=tests in pyproject.toml)
+pytest                         # unit/integration tests under tests/ (pythonpath=src, testpaths=tests+src in pyproject.toml)
+pytest --doctest-modules       # same, plus executing every >>> doctest example under src/ as a test
+
+# Docs (Sphinx; requires the `dev` extra)
+sphinx-build docs docs/_build/html          # regular build
+sphinx-build -W docs docs/_build/html       # warnings-as-errors -- run this before a docs-affecting PR
 ```
 
 Inside the `tap` shell, protocol files (`.pipette`, plain text — one shell command per line, blank lines allowed) are run with `run <path>`; the command grammar is exactly the shell's own, so `commands/tap_cmd_parsers.py` is the authoritative reference for what a line may contain. The `protocols/` directory was cleared out and its remaining contents are not a reliable syntax reference — check a file against the parsers before assuming it runs. `run` executes each line in batch mode, buffering G-code, then uploads and executes it as a single file on the pipette — all of this happens inside `tapd`, which every `tap` command (not just `run`/`cancel`/`pause`/`resume`) dispatches to over the control-plane connection via a structured RPC.
