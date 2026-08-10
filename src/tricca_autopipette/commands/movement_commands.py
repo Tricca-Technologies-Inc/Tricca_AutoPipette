@@ -37,11 +37,11 @@ class MovementCommands(TAPCommandSet):
     - Relative movement from current position
 
     Example:
-        >>> init
-        >>> home axis
-        >>> move 100 50 10
-        >>> move_loc plate_a --row 0 --col 3
-        >>> move_rel - -z - 5
+        init
+        home axis
+        move 100 50 10
+        move_loc plate_a --row 0 --col 3
+        move_rel --z -5
     """
 
     def __init__(self) -> None:
@@ -65,7 +65,7 @@ class MovementCommands(TAPCommandSet):
         other operations. ``home all`` is an alias for this command.
 
         Example:
-            >>> init
+            init
         """
         try:
             result = self.service.init()
@@ -90,10 +90,10 @@ class MovementCommands(TAPCommandSet):
             args: Parsed arguments containing motor specification.
 
         Example:
-            >>> home all
-            >>> home axis
-            >>> home pipette
-            >>> home x
+            home all
+            home axis
+            home pipette
+            home x
         """
         try:
             result = self.service.home(args)
@@ -115,8 +115,8 @@ class MovementCommands(TAPCommandSet):
             args: Parsed arguments containing x, y, z coordinates.
 
         Example:
-            >>> move 100 50 10
-            >>> move 0 0 50
+            move 100 50 10
+            move 0 0 50
         """
         try:
             result = self.service.move(args)
@@ -136,9 +136,9 @@ class MovementCommands(TAPCommandSet):
                   row/col indices.
 
         Example:
-            >>> move_loc home
-            >>> move_loc plate_a
-            >>> move_loc plate_a --row 1 --col 3
+            move_loc home
+            move_loc plate_a
+            move_loc plate_a --row 1 --col 3
         """
         try:
             result = self.service.move_loc(args)
@@ -168,9 +168,9 @@ class MovementCommands(TAPCommandSet):
                   to 0 if not specified).
 
         Example:
-            >>> move_rel --x 5
-            >>> move_rel - -z - 10
-            >>> move_rel --x 2 --y -3
+            move_rel --x 5
+            move_rel --z -10
+            move_rel --x 2 --y -3
         """
         try:
             result = self.service.move_rel(args)

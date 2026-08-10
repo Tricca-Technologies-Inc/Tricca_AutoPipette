@@ -26,22 +26,25 @@ from numpy.polynomial import Polynomial
 
 
 class VolumeConverter:
-    """Convert between motor steps and liquid volume.
+    """Convert between plunger travel (mm) and liquid volume.
 
     Uses polynomial fitting to translate between microliters (μL) and
-    motor microsteps (μsteps) for accurate pipette volume control.
+    millimetres of plunger travel for accurate pipette volume control.
+    Despite the "steps" naming throughout this class (see the module-level
+    warning above), the values are millimetres, not motor microsteps.
     The converter can be initialized with default calibration data or
     custom calibration points.
 
     Class Attributes:
-        _consts: Default calibration mapping of volumes (μL) to steps (μsteps).
-        _poly: Default polynomial fit for volume-to-steps conversion.
+        _consts: Default calibration mapping of volumes (μL) to plunger
+            travel (mm).
+        _poly: Default polynomial fit for volume-to-travel conversion.
 
     Attributes:
-        _poly: Polynomial function for converting volume to steps.
+        _poly: Polynomial function for converting volume to plunger travel.
     """
 
-    # Default calibration mapping: volume (μL) -> motor steps (μsteps)
+    # Default calibration mapping: volume (μL) -> plunger travel (mm)
     _consts: ClassVar[dict[float, float]] = {
         0.0: 0.0,
         25.0: 14.35,
@@ -63,16 +66,22 @@ class VolumeConverter:
         """Initialize the volume converter with calibration data.
 
         Creates a polynomial fit from calibration points mapping volumes
-        to motor steps. If no calibration data is provided, uses default
-        values.
+        to plunger travel (mm). If no calibration data is provided, uses
+        default values.
 
         Args:
             x: List of volume values in microliters (μL), or None for defaults.
-            y: List of corresponding motor step values (μsteps), or None for defaults.
+            y: List of corresponding plunger-travel values (mm), or None for
+                defaults.
 
         Note:
-            Uses quadratic (degree 2) polynomial fitting for custom calibration,
-            versus linear (degree 1) for default calibration.
+            Always uses linear (degree 1) polynomial fitting, for both
+            default and custom calibration data — a quadratic fit was
+            previously used here unconditionally regardless of the ``x``/``y``
+            arguments (a bug, since it silently ignored this docstring's own
+            claim of degree 1 for defaults), but degree doesn't meaningfully
+            change the fit over this calibration range, so this settles on
+            the simpler, originally-intended linear fit.
 
         Example:
             >>> # Use default calibration
@@ -80,61 +89,66 @@ class VolumeConverter:
             >>>
             >>> # Use custom calibration
             >>> volumes = [0.0, 50.0, 100.0, 200.0]
-            >>> steps = [0.0, 25.0, 50.0, 100.0]
-            >>> converter = VolumeConverter(x=volumes, y=steps)
+            >>> travel_mm = [0.0, 25.0, 50.0, 100.0]
+            >>> converter = VolumeConverter(x=volumes, y=travel_mm)
         """
         if x is None:
             x = list(self._consts.keys())
         if y is None:
             y = list(self._consts.values())
 
-        # TODO Change to degree 1?
-        self._poly = Polynomial.fit(x, y, deg=2).convert()
+        self._poly = Polynomial.fit(x, y, deg=1).convert()
 
     def vol_to_steps(self, vol_ul: float) -> float:
-        """Convert volume in microliters to motor steps.
+        """Convert volume in microliters to plunger travel (mm).
 
-        Uses the fitted polynomial to calculate the number of motor
-        microsteps needed to dispense the specified volume.
+        Uses the fitted polynomial to calculate the plunger travel, in
+        millimetres, needed to dispense the specified volume. Named
+        "steps" for historical reasons (see the module-level warning) —
+        the return value is millimetres, not a motor step count.
 
         Args:
             vol_ul: Volume to dispense in microliters (μL).
 
         Returns:
-            Number of motor microsteps (μsteps) required.
+            Plunger travel required, in millimetres.
 
         Example:
             >>> converter = VolumeConverter()
-            >>> steps = converter.vol_to_steps(100.0)
-            >>> steps
-            39.25
+            >>> travel_mm = converter.vol_to_steps(100.0)
+            >>> travel_mm
+            40.64175291073736
         """
         return float(self._poly(vol_ul))
 
     def steps_to_vol(self, steps: float) -> float:
-        """Convert motor steps to volume in microliters.
+        """Convert plunger travel (mm) to volume in microliters.
 
         Performs inverse calculation to determine the volume corresponding
-        to a given number of motor steps. Uses root-finding on the polynomial.
+        to a given plunger travel. Uses root-finding on the polynomial.
+        Named "steps" for historical reasons (see the module-level warning)
+        — the input is millimetres, not a motor step count.
 
         Args:
-            steps: Number of motor microsteps (μsteps).
+            steps: Plunger travel, in millimetres (despite the name).
 
         Returns:
             Corresponding volume in microliters (μL).
 
         Raises:
-            ValueError: If no valid positive volume can be found for the given steps.
+            ValueError: If no valid positive volume can be found for the given
+                travel value.
 
         Note:
-            For polynomials of degree > 1, this may have multiple solutions.
-            Returns the positive real root closest to the expected range.
+            The fitted polynomial is always linear (degree 1, see
+            ``__init__``), so there is exactly one real root; root-finding is
+            used anyway to keep this method correct if that ever changes.
 
         Example:
             >>> converter = VolumeConverter()
             >>> volume = converter.steps_to_vol(39.25)
             >>> volume
-            100.0
+            96.39585992489044
         """
         # Create polynomial: steps - poly(vol) = 0
         roots_poly = self._poly - steps
@@ -144,7 +158,7 @@ class VolumeConverter:
         valid_roots = [r.real for r in roots if r.imag == 0 and r.real >= 0]
 
         if not valid_roots:
-            raise ValueError(f"No valid volume found for {steps} steps")
+            raise ValueError(f"No valid volume found for {steps} mm of travel")
 
         # Return the smallest positive root (most likely solution)
         return float(min(valid_roots))
@@ -153,11 +167,12 @@ class VolumeConverter:
         """Get the current calibration data points.
 
         Returns:
-            Tuple of (volumes, steps) lists used for polynomial fitting.
+            Tuple of (volumes, plunger-travel) lists used for polynomial
+            fitting, in (μL, mm).
 
         Example:
             >>> converter = VolumeConverter()
-            >>> volumes, steps = converter.get_calibration_points()
+            >>> volumes, travel_mm = converter.get_calibration_points()
             >>> volumes
             [0.0, 25.0, 50.0, 100.0, 200.0, 300.0, 400.0]
         """

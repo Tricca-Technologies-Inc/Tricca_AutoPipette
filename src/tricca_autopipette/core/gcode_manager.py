@@ -93,10 +93,10 @@ class GCodeManager:
             instead of actually uploading and executing.
 
         Example:
-            >>> with gcode_mgr.batch_mode():
+            >>> with gcode_mgr.batch_mode():  # doctest: +SKIP
             ...     gcode_mgr.add_gcode(["G0 X10 Y10"])
             ...     gcode_mgr.add_gcode(["G0 Z5"])
-            >>> buffer = gcode_mgr.get_buffer()
+            >>> buffer = gcode_mgr.get_buffer()  # doctest: +SKIP
         """
         self.start_batch()
         try:
@@ -158,7 +158,7 @@ class GCodeManager:
             OSError: If the file or directory cannot be created or written
 
         Example:
-            >>> path = gcode_mgr.write_gcode_file(
+            >>> path = gcode_mgr.write_gcode_file(  # doctest: +SKIP
             ...     ["G28", "G0 X10 Y10"], "home_and_move.gcode"
             ... )
         """

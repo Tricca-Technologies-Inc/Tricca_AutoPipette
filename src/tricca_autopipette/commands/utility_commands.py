@@ -37,12 +37,12 @@ class UtilityCommands(TAPCommandSet):
     - Accessing the webcam stream URL
 
     Example:
-        >>> wait 500
-        >>> trigger air on
-        >>> gcode_print "Protocol started"
-        >>> vol_to_steps 100
-        >>> steps_to_vol 4523
-        >>> webcam
+        wait 500
+        trigger air on
+        gcode_print "Protocol started"
+        vol_to_steps 100
+        steps_to_vol 4523
+        webcam
     """
 
     def __init__(self) -> None:
@@ -65,8 +65,8 @@ class UtilityCommands(TAPCommandSet):
             args: Parsed arguments containing duration in milliseconds.
 
         Example:
-            >>> wait 500
-            >>> wait 2000
+            wait 500
+            wait 2000
         """
         try:
             result = self.service.wait(args)
@@ -92,9 +92,9 @@ class UtilityCommands(TAPCommandSet):
             args: Parsed arguments containing channel and state.
 
         Example:
-            >>> trigger air on
-            >>> trigger shake off
-            >>> trigger aux on
+            trigger air on
+            trigger shake off
+            trigger aux on
 
         Note:
             Valid channels: air, shake, aux
@@ -119,8 +119,8 @@ class UtilityCommands(TAPCommandSet):
             args: Parsed arguments containing the message string.
 
         Example:
-            >>> gcode_print "Protocol started"
-            >>> gcode_print "Dispensing sample 1"
+            gcode_print "Protocol started"
+            gcode_print "Dispensing sample 1"
         """
         try:
             result = self.service.gcode_print(args)
@@ -144,7 +144,7 @@ class UtilityCommands(TAPCommandSet):
         hostname and prints it for use in a browser or viewer.
 
         Example:
-            >>> webcam
+            webcam
             Webcam Stream URL:
             http://192.168.1.100/webcam/?action=stream
         """
@@ -170,10 +170,10 @@ class UtilityCommands(TAPCommandSet):
             args: Parsed arguments containing volume in microliters.
 
         Example:
-            >>> vol_to_steps 100
+            vol_to_steps 100
             100.0 μL = 4523 steps
 
-            >>> vol_to_steps 250
+            vol_to_steps 250
             250.0 μL = 11307 steps
         """
         try:
@@ -211,7 +211,7 @@ class UtilityCommands(TAPCommandSet):
             arg: Number of steps (integer or float, truncated to int).
 
         Example:
-            >>> steps_to_vol 4523
+            steps_to_vol 4523
             4523 steps = 100.00 μL
 
         Note:

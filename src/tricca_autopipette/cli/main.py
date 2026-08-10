@@ -97,7 +97,8 @@ def main() -> int:
         Exit code (0 for success, non-zero for errors).
 
     Example:
-        >>> sys.exit(main())
+        Typically invoked via ``sys.exit(main())`` from
+        ``if __name__ == "__main__"``.
     """
     try:
         args = parse_arguments()

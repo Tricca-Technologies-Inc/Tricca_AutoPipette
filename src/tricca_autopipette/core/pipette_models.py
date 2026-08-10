@@ -175,7 +175,7 @@ class ServoConfig(BaseModel):
     Example:
         >>> servo = ServoConfig(angle_retract=160, angle_eject=90)
         >>> print(servo.name)
-        'pipette_servo'
+        pipette_servo
     """
 
     name: str = Field(
@@ -280,7 +280,7 @@ class PipetteSyringeKinematics(BaseModel):
 
     calibration_steps: list[float] | None = Field(
         default=None,
-        description="Corresponding motor steps (overrides pipette default)",
+        description="Corresponding plunger travel in mm (overrides pipette default)",
     )
 
     # Speed parameters (mm/s -- these reach Klipper's MANUAL_STEPPER SPEED=)
@@ -387,7 +387,7 @@ class PipetteModel(BaseModel):
         ...     servo=ServoConfig(),
         ... )
         >>> print(pipette.name)
-        'P1000_Vertical'
+        P1000_Vertical
     """
 
     # Metadata
@@ -439,7 +439,8 @@ class LiquidProfile(BaseModel):
         pre_air_gap_ul: Air drawn before the liquid in μL, or None.
         post_air_gap_ul: Air drawn after the liquid in μL, or None.
         calibration_volumes: Calibration volume points in μL (overrides pipette).
-        calibration_steps: Corresponding motor steps (overrides pipette).
+        calibration_steps: Corresponding plunger travel in millimetres, not
+            motor steps despite the name (overrides pipette default).
 
     Example:
         >>> water = LiquidProfile(name="water", viscosity_cP=1.0)
@@ -517,7 +518,7 @@ class LiquidProfile(BaseModel):
 
     calibration_steps: list[float] | None = Field(
         default=None,
-        description="Corresponding motor steps (overrides pipette default)",
+        description="Corresponding plunger travel in mm (overrides pipette default)",
     )
 
     def model_post_init(self, __context: Any) -> None:  # ruff:ignore[any-type]
@@ -667,10 +668,14 @@ class SystemConfig(BaseModel):
         >>> config = SystemConfig(
         ...     system_name="Lab_AutoPipette_1",
         ...     gantry=GantryKinematics(),
-        ...     pipette=PipetteModel(name="P1000_Vertical", ...)
+        ...     pipette=PipetteModel(
+        ...         name="P1000_Vertical",
+        ...         syringe=PipetteSyringeKinematics(max_volume_ul=1000.0),
+        ...         servo=ServoConfig(),
+        ...     ),
         ... )
         >>> print(config.system_name)
-        'Lab_AutoPipette_1'
+        Lab_AutoPipette_1
     """
 
     # System info

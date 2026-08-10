@@ -117,6 +117,9 @@ select = [
 
     # Docstrings
     "D",
+
+    # pydoclint -- docstring vs. actual signature/Returns/Raises drift
+    "DOC",
 ]
 
 ignore = [
@@ -124,8 +127,6 @@ ignore = [
     "incorrect-blank-line-before-class",
     "multi-line-summary-second-line",
 ]
-
-external = ["DOC"]
 
 # "8×12 wells", "prewet×2" -- the multiplication sign is the intended
 # character in these display strings, and RUF001's suggested ASCII "x" is

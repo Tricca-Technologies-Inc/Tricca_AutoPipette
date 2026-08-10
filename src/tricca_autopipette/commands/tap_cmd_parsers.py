@@ -509,8 +509,10 @@ class TAPCmdParsers:
     """Container for all Tricca AutoPipette Shell command parsers.
 
     Each class-level parser corresponds to a ``do_*`` method in one of the
-    command modules. The argument ``dest`` names produced by each parser must
-    match the field names in the associated dataclass above.
+    command modules (with one historical exception, ``parser_load_conf``/
+    ``LoadConfArgs``, which has no corresponding ``do_*`` method -- dead
+    code, not yet removed). The argument ``dest`` names produced by each
+    parser must match the field names in the associated dataclass above.
     """
 
     # -----------------------------------------------------------------------

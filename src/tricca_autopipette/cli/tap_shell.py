@@ -42,12 +42,18 @@ class TriccaAutoPipetteShell(Cmd):
     result) -- see ``commands/*.py``.
 
     Commands are organized into separate command sets for better modularity:
-    - MovementCommands: home, move, move_loc, move_rel
-    - PipetteCommands: pipette, next_tip, eject_tip, dispose_tip
-    - ConfigurationCommands: set, coor, plate, ls, save, load_conf
+    - MovementCommands: init, home, move, move_loc, move_rel
+    - PipetteCommands: pipette, aspirate, dispense, next_tip, eject_tip,
+      dispose_tip, change_tip
+    - ConfigurationCommands: set, coor, plate, ls, switch_liquid/list_liquids/
+      load_liquid, save_locations/load_locations/unload_locations,
+      reset_plate(s), del_loc, clear_locs, tips/reset_tips/reset_tips_all/
+      set_tips
     - ProtocolCommands: run, stop, pause, resume, cancel, break
-    - WebSocketCommands: send, notify, upload, read, reconnect
-    - UtilityCommands: trigger, print, gcode_print, vol_to_steps, webcam
+    - WebSocketCommands: ws_status, ping, send, notify, subscribe,
+      unsubscribe, upload, read, read_all, clear_queue, reconnect
+    - UtilityCommands: wait, trigger, gcode_print, webcam, vol_to_steps,
+      steps_to_vol
 
     Attributes:
         GCODE_PATH: Directory for generated G-code files.

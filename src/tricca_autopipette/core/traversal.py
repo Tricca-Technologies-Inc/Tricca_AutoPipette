@@ -160,7 +160,7 @@ def parse_well_ranges(ranges: list[str], num_row: int, num_col: int) -> set[int]
         [0, 2]
         >>> sorted(parse_well_ranges(["A1:B2"], 8, 12))
         [0, 1, 12, 13]
-    """
+    """  # ruff: ignore[docstring-extraneous-exception]
     indices: set[int] = set()
 
     for entry in ranges:
@@ -536,7 +536,7 @@ class WellMask(BaseModel):
         Example:
             >>> WellMask(exclude=["A1"]).allowed(2, 3)
             {1, 2, 3, 4, 5}
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         if self.include is None:
             eligible = set(range(num_row * num_col))
         else:

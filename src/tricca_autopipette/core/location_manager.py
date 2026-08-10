@@ -96,6 +96,7 @@ class LocationManager:
         """Clear all locations, tipboxes, and waste container.
 
         Example:
+            >>> manager = LocationManager()
             >>> manager.clear()
             >>> # All locations removed
         """
@@ -115,6 +116,7 @@ class LocationManager:
             If a location with this name already exists, it will be overwritten.
 
         Example:
+            >>> manager = LocationManager()
             >>> coord = Coordinate(x=100, y=50, z=10)
             >>> manager.set_coordinate("home_position", coord)
         """
@@ -142,8 +144,10 @@ class LocationManager:
               the others.
 
         Example:
-            >>> from well import Well
-            >>> well = Well(coor=Coordinate(10, 10, 5), ...)
+            >>> from tricca_autopipette.core.well import Well
+            >>> from tricca_autopipette.core.coordinate import Coordinate
+            >>> manager = LocationManager()
+            >>> well = Well(coor=Coordinate(x=10, y=10, z=5), dip_top=10.0)
             >>> params = PlateParams(
             ...     plate_type="array", well_template=well, num_row=8, num_col=12
             ... )
@@ -185,6 +189,8 @@ class LocationManager:
             True if the location exists, False otherwise.
 
         Example:
+            >>> manager = LocationManager()
+            >>> manager.set_coordinate("plate_a", Coordinate(x=0, y=0, z=0))
             >>> manager.has_location("plate_a")
             True
             >>> manager.has_location("nonexistent")
@@ -217,8 +223,17 @@ class LocationManager:
                 address a cell outside the plate.
 
         Example:
+            >>> manager = LocationManager()
+            >>> manager.set_coordinate("home", Coordinate(x=0, y=0, z=0))
+
             >>> # Get simple coordinate
             >>> coord = manager.get_coordinate("home")
+
+            >>> well = Well(coor=Coordinate(x=10, y=10, z=5), dip_top=10.0)
+            >>> params = PlateParams(
+            ...     plate_type="array", well_template=well, num_row=8, num_col=12
+            ... )
+            >>> manager.set_plate("plate_a", params)
 
             >>> # Get next well from plate
             >>> well1 = manager.get_coordinate("plate_a")
@@ -250,8 +265,14 @@ class LocationManager:
             List of location names that contain Plate objects.
 
         Example:
-            >>> plates = manager.get_plate_names()
-            >>> # plates = ['96_well_plate', 'tipbox', 'waste']
+            >>> manager = LocationManager()
+            >>> well = Well(coor=Coordinate(x=10, y=10, z=5), dip_top=10.0)
+            >>> params = PlateParams(
+            ...     plate_type="array", well_template=well, num_row=8, num_col=12
+            ... )
+            >>> manager.set_plate("96_well_plate", params)
+            >>> manager.get_plate_names()
+            ['96_well_plate']
         """
         return [
             name
@@ -266,8 +287,10 @@ class LocationManager:
             List of location names that are Coordinate objects.
 
         Example:
-            >>> coords = manager.get_coordinate_names()
-            >>> # coords = ['home', 'safe_position']
+            >>> manager = LocationManager()
+            >>> manager.set_coordinate("home", Coordinate(x=0, y=0, z=0))
+            >>> manager.get_coordinate_names()
+            ['home']
         """
         return [
             name
@@ -282,8 +305,10 @@ class LocationManager:
             List of all location names (coordinates and plates).
 
         Example:
-            >>> all_locs = manager.get_all_names()
-            >>> # all_locs = ['home', 'plate_a', 'tipbox', 'waste']
+            >>> manager = LocationManager()
+            >>> manager.set_coordinate("home", Coordinate(x=0, y=0, z=0))
+            >>> manager.get_all_names()
+            ['home']
         """
         return list(self.locations.keys())
 
@@ -300,7 +325,11 @@ class LocationManager:
             state untouched.
 
         Example:
+            >>> manager = LocationManager()
+            >>> manager.set_coordinate("old_plate", Coordinate(x=0, y=0, z=0))
             >>> manager.remove_location("old_plate")
+            >>> manager.has_location("old_plate")
+            False
         """
         if name not in self.locations:
             return
@@ -333,6 +362,12 @@ class LocationManager:
             untouched.
 
         Example:
+            >>> manager = LocationManager()
+            >>> well = Well(coor=Coordinate(x=10, y=10, z=5), dip_top=10.0)
+            >>> params = PlateParams(
+            ...     plate_type="tipbox", well_template=well, num_row=8, num_col=12
+            ... )
+            >>> manager.set_plate("tipbox_a", params)
             >>> manager.unload("tipbox_a")
             True
         """
@@ -356,6 +391,11 @@ class LocationManager:
             or not loaded at all.
 
         Example:
+            >>> manager = LocationManager()
+            >>> manager.apply_locations_data(
+            ...     {"coordinates": [{"name": "tipbox_a", "x": 0, "y": 0, "z": 0}]},
+            ...     source="deck_a.json",
+            ... )
             >>> manager.source_of("tipbox_a")
             'deck_a.json'
         """
@@ -386,10 +426,10 @@ class LocationManager:
             which wiped the deck on a mistyped filename.
 
         Example:
-            >>> manager = LocationManager(Path("config"))
-            >>> manager.load_from_json("my_locations.json")
-            >>> manager.load_from_json("extra_plates.json")  # adds to the deck
-        """
+            >>> manager = LocationManager()
+            >>> manager.load_from_json()  # loads default_locations.json
+            >>> manager.load_from_json("default_locations.json")  # adds to the deck
+        """  # ruff: ignore[docstring-extraneous-exception]
         locations_data = self._read_locations_file(filename)
         self.apply_locations_data(locations_data, source=filename, replace=replace)
 
@@ -411,8 +451,12 @@ class LocationManager:
             deck half-built.
 
         Example:
-            >>> manager.load_group(["standard_deck.json", "assay_a.json"])
-        """
+            >>> manager = LocationManager()
+            >>> manager.load_group([
+            ...     "standard_deck.json",
+            ...     "assay_a.json",
+            ... ])  # doctest: +SKIP
+        """  # ruff: ignore[docstring-extraneous-exception]
         parsed = [(name, self._read_locations_file(name)) for name in filenames]
 
         if replace:
@@ -443,8 +487,11 @@ class LocationManager:
             broken entry leaves the existing deck untouched.
 
         Example:
-            >>> manager.load_spec(["standard_deck.json", {"plates": [...]}])
-        """
+            >>> manager.load_spec([
+            ...     "standard_deck.json",
+            ...     {"coordinates": [{"name": "home", "x": 0, "y": 0, "z": 0}]},
+            ... ])  # doctest: +SKIP
+        """  # ruff: ignore[docstring-extraneous-exception]
         # Resolve everything up front so the commit below cannot fail halfway.
         # Entry types are already validated by `LocationsConfig`, so a
         # non-string here is an inline payload.
@@ -485,11 +532,12 @@ class LocationManager:
                 not registered.
 
         Example:
+            >>> manager = LocationManager()
             >>> manager.apply_locations_data(
             ...     {"coordinates": [{"name": "home", "x": 0, "y": 0, "z": 0}]},
             ...     source="system.json",
             ... )
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         coordinates = self._parse_coordinates(locations_data, source)
         plates = self._parse_plates(locations_data, source)
 
@@ -680,7 +728,7 @@ class LocationManager:
 
         Raises:
             ValueError: If geometry, traversal order, or mask is invalid.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         well = Well(
             coor=Coordinate(x=plate_def["x"], y=plate_def["y"], z=plate_def["z"]),
             dip_top=float(plate_def.get("dip_top", 0)),
@@ -766,7 +814,13 @@ class LocationManager:
             Creates the locations directory if it doesn't exist.
 
         Example:
-            >>> manager.save_to_json("backup_locations.json")
+            >>> import tempfile
+            >>> with tempfile.TemporaryDirectory() as tmp:
+            ...     manager = LocationManager(Path(tmp))
+            ...     manager.set_coordinate("home", Coordinate(x=0, y=0, z=0))
+            ...     manager.save_to_json("backup_locations.json")
+            ...     (Path(tmp) / "backup_locations.json").exists()
+            True
         """
         locations_dir = self.locations_dir
         locations_dir.mkdir(parents=True, exist_ok=True)
@@ -894,8 +948,15 @@ class LocationManager:
             NotALocationError: If the location doesn't exist.
 
         Example:
+            >>> manager = LocationManager()
+            >>> well = Well(coor=Coordinate(x=10, y=10, z=5), dip_top=10.0)
+            >>> params = PlateParams(
+            ...     plate_type="array", well_template=well, num_row=8, num_col=12
+            ... )
+            >>> manager.set_plate("plate_a", params)
             >>> info = manager.get_location_info("plate_a")
-            >>> # info = {'type': 'plate', 'rows': '8', 'cols': '12'}
+            >>> info["type"], info["rows"], info["cols"]
+            ('plate', '8', '12')
         """
         if name not in self.locations:
             raise NotALocationError(name)
@@ -927,8 +988,20 @@ class LocationManager:
 
         Example:
             >>> manager = LocationManager()
+            >>> well = Well(coor=Coordinate(x=10, y=10, z=5), dip_top=10.0)
+            >>> tipbox_params = PlateParams(
+            ...     plate_type="tipbox", well_template=well, num_row=8, num_col=12
+            ... )
+            >>> manager.set_plate("tipbox_a", tipbox_params)
+            >>> waste_params = PlateParams(
+            ...     plate_type="waste_container",
+            ...     well_template=well,
+            ...     num_row=1,
+            ...     num_col=1,
+            ... )
+            >>> manager.set_plate("waste", waste_params)
             >>> repr(manager)
-            'LocationManager(locations=5, tipboxes=2, waste=yes)'
+            'LocationManager(locations=2, tipboxes=1, waste=yes)'
         """
         return (
             f"LocationManager("

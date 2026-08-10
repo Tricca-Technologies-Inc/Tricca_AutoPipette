@@ -26,6 +26,19 @@ Persistence:
     physical wells would send the pipette to a position it believes is empty.
 
 Typical usage:
+    >>> from tricca_autopipette.core.plates import PlateParams, TipBox
+    >>> from tricca_autopipette.core.well import Well
+    >>> template = Well(coor=Coordinate(x=100, y=0, z=0), dip_top=10.0)
+    >>> params = PlateParams(
+    ...     plate_type="tipbox",
+    ...     well_template=template,
+    ...     num_row=8,
+    ...     num_col=12,
+    ...     spacing_row=9.0,
+    ...     spacing_col=9.0,
+    ... )
+    >>> box_a = TipBox(params)
+    >>> box_b = TipBox(params)
     >>> manager = TipBoxManager()
     >>> manager.register("tipbox_a", box_a)
     >>> manager.register("tipbox_b", box_b)
@@ -67,6 +80,18 @@ class TipBoxManager:
         boxes: Registered tipboxes keyed by location name, in draw order.
 
     Example:
+        >>> from tricca_autopipette.core.plates import PlateParams, TipBox
+        >>> from tricca_autopipette.core.well import Well
+        >>> template = Well(coor=Coordinate(x=100, y=0, z=0), dip_top=10.0)
+        >>> params = PlateParams(
+        ...     plate_type="tipbox",
+        ...     well_template=template,
+        ...     num_row=8,
+        ...     num_col=12,
+        ...     spacing_row=9.0,
+        ...     spacing_col=9.0,
+        ... )
+        >>> box = TipBox(params)
         >>> manager = TipBoxManager()
         >>> manager.register("tipbox_a", box)
         >>> manager.next_tip()[0]
@@ -96,7 +121,8 @@ class TipBoxManager:
             change which box is drained first.
 
         Example:
-            >>> manager.register("tipbox_a", box)
+            Registers a freshly loaded box under the name it will be drawn
+            from, e.g. ``manager.register("tipbox_a", box)``.
         """
         if name in self.boxes:
             logger.info("Replacing tipbox %r; its consumed-tip state is reset", name)
@@ -116,8 +142,8 @@ class TipBoxManager:
             the reason boxes are never merged.
 
         Example:
-            >>> manager.unregister("tipbox_a")
-            True
+            ``manager.unregister("tipbox_a")`` returns ``True`` when a box
+            named ``"tipbox_a"`` was registered and is now removed.
         """
         return self.boxes.pop(name, None) is not None
 
@@ -177,8 +203,9 @@ class TipBoxManager:
             OutOfTipsError: If every registered box is exhausted.
 
         Example:
-            >>> name, box, coor = manager.next_tip()
-            >>> dip = box.get_dip_distance(vol=None)
+            ``name, box, coor = manager.next_tip()`` returns the supplying
+            box's name, the box itself (for its dip distance), and the
+            tip's coordinate.
         """
         if not self.boxes:
             raise NoTipboxError()
@@ -220,8 +247,9 @@ class TipBoxManager:
             NotALocationError: If no tipbox is registered under that name.
 
         Example:
-            >>> manager.reset_tips("tipbox_a")
-        """
+            ``manager.reset_tips("tipbox_a")`` marks that one box full
+            again after it was physically reloaded.
+        """  # ruff: ignore[docstring-extraneous-exception]
         self._require(name).reset_tips()
         logger.info("Reset tipbox %r to full", name)
 
@@ -229,7 +257,7 @@ class TipBoxManager:
         """Mark every registered box as full again.
 
         Example:
-            >>> manager.reset_all()
+            ``manager.reset_all()`` marks every registered box full again.
         """
         for box in self.boxes.values():
             box.reset_tips()
@@ -251,8 +279,9 @@ class TipBoxManager:
             ValueError: If an index falls outside the box.
 
         Example:
-            >>> manager.set_consumed("tipbox_a", {0, 1, 2})
-        """
+            ``manager.set_consumed("tipbox_a", {0, 1, 2})`` declares that
+            positions 0, 1, and 2 of that box no longer hold a tip.
+        """  # ruff: ignore[docstring-extraneous-exception]
         box = self._require(name)
         total = len(box.wells)
 
@@ -276,8 +305,8 @@ class TipBoxManager:
             detect that a box has been reconfigured.
 
         Example:
-            >>> manager.snapshot()["tipbox_a"]["num_row"]
-            8
+            ``manager.snapshot()["tipbox_a"]["num_row"]`` gives that box's
+            row count, e.g. ``8`` for an 8x12 plate.
         """
         return {
             name: {
@@ -307,8 +336,9 @@ class TipBoxManager:
             this -- it means the operator's tip state was not what they expect.
 
         Example:
-            >>> manager.restore(saved)
-            []
+            ``manager.restore(saved)`` reapplies a mapping previously
+            produced by `snapshot`, returning ``[]`` when every box's
+            stored dimensions still match the live ones.
         """
         skipped: list[str] = []
 
@@ -397,9 +427,10 @@ class TipBoxManager:
             NotALocationError: If no tipbox is registered under that name.
 
         Example:
-            >>> manager.describe("tipbox_a")["remaining"]
-            84
-        """
+            ``manager.describe("tipbox_a")["remaining"]`` gives that box's
+            remaining tip count, e.g. ``84`` for a 96-tip box with 12
+            positions already drawn.
+        """  # ruff: ignore[docstring-extraneous-exception]
         box = self._require(name)
         next_index = box.peek_tip()
 
@@ -454,8 +485,9 @@ class TipBoxManager:
             String showing box count and total tips remaining.
 
         Example:
-            >>> repr(manager)
-            'TipBoxManager(boxes=2, remaining=191/192)'
+            ``repr(manager)`` gives e.g.
+            ``'TipBoxManager(boxes=2, remaining=191/192)'`` for two
+            registered 96-tip boxes with one tip already drawn.
         """
         return (
             f"TipBoxManager(boxes={len(self.boxes)}, "

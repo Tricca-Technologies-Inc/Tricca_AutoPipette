@@ -170,9 +170,23 @@ def build_tipbox_map(
         the next position to be drawn.
 
     Example:
-        >>> print(build_tipbox_map(service.tips(TipsArgs()).data["boxes"][0]))
-        tipbox_a   84/96 remaining   order=column_from_bottom_right
-        ...
+        >>> box = {
+        ...     "name": "tipbox_a",
+        ...     "num_row": 1,
+        ...     "num_col": 2,
+        ...     "present": [True, False],
+        ...     "eligible": [0, 1],
+        ...     "order": "column_from_bottom_right",
+        ...     "remaining": 1,
+        ...     "capacity": 2,
+        ...     "next_well": "A1",
+        ... }
+        >>> print(build_tipbox_map(box))
+        tipbox_a   1/2 remaining   order=column_from_bottom_right
+             1  2
+          A  O  .
+          O present   . consumed   x masked out
+          next -> A1
     """
     num_row: int = box["num_row"]
     num_col: int = box["num_col"]

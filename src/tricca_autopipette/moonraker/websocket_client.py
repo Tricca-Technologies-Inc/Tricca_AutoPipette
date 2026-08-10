@@ -5,21 +5,28 @@ This module provides an asynchronous WebSocket client that runs in a background
 thread, handling JSON-RPC requests, file uploads, and message dispatching.
 
 Example:
-    >>> client = WebSocketClient("ws://192.168.1.100:7125/websocket")
-    >>> client.start()
+    All of the following require a reachable Moonraker server, so they are
+    illustrative rather than runnable in isolation:
+
+    >>> client = WebSocketClient("ws://192.168.1.100:7125/websocket")  # doctest: +SKIP
+    >>> client.start()  # doctest: +SKIP
     >>>
     >>> # Send JSON-RPC request
-    >>> response = client.send_jsonrpc(
-    >>>                 {"jsonrpc": "2.0", "method": "server.info", "id": "123"})
+    >>> response = client.send_jsonrpc(  # doctest: +SKIP
+    ...     {"jsonrpc": "2.0", "method": "server.info", "id": "123"}
+    ... )
     >>>
     >>> # Upload G-code file
-    >>> future = client.upload_gcode_file("protocol.gcode", "/path/to/file.gcode")
-    >>> server_path = future.result()
+    >>> future = client.upload_gcode_file(  # doctest: +SKIP
+    ...     "protocol.gcode", "file.gcode"
+    ... )
+    >>> server_path = future.result()  # doctest: +SKIP
     >>>
-    >>> client.stop()
+    >>> client.stop()  # doctest: +SKIP
     >>>
     >>> # Or use context manager
-    >>> with WebSocketClient("ws://192.168.1.100:7125/websocket") as client:
+    >>> url = "ws://192.168.1.100:7125/websocket"
+    >>> with WebSocketClient(url) as client:  # doctest: +SKIP
     ...     client.wait_for_connection()
     ...     response = client.send_jsonrpc(request)
 """
@@ -72,8 +79,10 @@ class QueuedMessage:
 
     Example:
         >>> msg = QueuedMessage.connection_error("Connection refused")
-        >>> print(msg.type)  # MessageType.CONNECTION_ERROR
-        >>> print(msg.data["text"])  # "Connection refused"
+        >>> msg.type
+        <MessageType.CONNECTION_ERROR: 'error'>
+        >>> msg.data["text"]
+        'Connection refused'
     """
 
     type: MessageType
@@ -160,15 +169,19 @@ class WebSocketClient:
         logger: Logger instance for debugging and error tracking.
 
     Example:
+        Both lifecycles below require a reachable Moonraker server, so they
+        are illustrative rather than runnable in isolation:
+
         >>> # Manual lifecycle
-        >>> client = WebSocketClient("ws://localhost:7125/websocket")
-        >>> client.start()
-        >>> client.wait_for_connection()
-        >>> response = client.send_jsonrpc(request)
-        >>> client.stop()
+        >>> client = WebSocketClient("ws://localhost:7125/websocket")  # doctest: +SKIP
+        >>> client.start()  # doctest: +SKIP
+        >>> client.wait_for_connection()  # doctest: +SKIP
+        >>> response = client.send_jsonrpc(request)  # doctest: +SKIP
+        >>> client.stop()  # doctest: +SKIP
 
         >>> # Or use context manager
-        >>> with WebSocketClient("ws://localhost:7125/websocket") as client:
+        >>> url = "ws://localhost:7125/websocket"
+        >>> with WebSocketClient(url) as client:  # doctest: +SKIP
         ...     client.wait_for_connection()
         ...     response = client.send_jsonrpc(request)
     """
@@ -244,9 +257,10 @@ class WebSocketClient:
             Number of unhandled messages in the queue.
 
         Example:
-            >>> client = WebSocketClient(url)
+            >>> client = WebSocketClient("ws://localhost:7125/websocket")
+            >>> client.message_queue.put(QueuedMessage.notification({"foo": "bar"}))
             >>> len(client)
-            3  # 3 unhandled messages
+            1
         """
         return self.message_queue.qsize()
 
@@ -257,7 +271,11 @@ class WebSocketClient:
             Self for use in with statement.
 
         Example:
-            >>> with WebSocketClient("ws://localhost:7125/websocket") as client:
+            Requires a reachable Moonraker server, so this is illustrative
+            rather than runnable in isolation:
+
+            >>> url = "ws://localhost:7125/websocket"
+            >>> with WebSocketClient(url) as client:  # doctest: +SKIP
             ...     client.wait_for_connection()
             ...     # Use client
         """
@@ -290,7 +308,13 @@ class WebSocketClient:
         wait_for_connection() to block until connected.
 
         Example:
-            >>> client.start()
+            Requires a reachable Moonraker server, so this is illustrative
+            rather than runnable in isolation:
+
+            >>> client = WebSocketClient(  # doctest: +SKIP
+            ...     "ws://localhost:7125/websocket"
+            ... )
+            >>> client.start()  # doctest: +SKIP
             >>> # Client is now connecting in background
         """
         self.logger.info(f"Starting WebSocket client for {self.url}")
@@ -333,8 +357,14 @@ class WebSocketClient:
             True if connected within timeout, False otherwise.
 
         Example:
-            >>> client.start()
-            >>> if client.wait_for_connection(timeout=5):
+            Requires a reachable Moonraker server, so this is illustrative
+            rather than runnable in isolation:
+
+            >>> client = WebSocketClient(  # doctest: +SKIP
+            ...     "ws://localhost:7125/websocket"
+            ... )
+            >>> client.start()  # doctest: +SKIP
+            >>> if client.wait_for_connection(timeout=5):  # doctest: +SKIP
             ...     print("Connected!")
             ... else:
             ...     print("Connection timeout")
@@ -348,8 +378,9 @@ class WebSocketClient:
             True if connection is active, False otherwise.
 
         Example:
-            >>> if client.is_connected():
-            ...     client.send_notification("ping")
+            >>> client = WebSocketClient("ws://localhost:7125/websocket")
+            >>> client.is_connected()
+            False
         """
         return self._connected.is_set()
 
@@ -363,8 +394,11 @@ class WebSocketClient:
             Dictionary mapping method names to their handler callbacks.
 
         Example:
+            >>> client = WebSocketClient("ws://localhost:7125/websocket")
+            >>> client.register_handler("notify_status_update", lambda params: None)
             >>> for method in client.handlers:
             ...     print(f"Handling: {method}")
+            Handling: notify_status_update
         """
         return dict(self._handlers)
 
@@ -376,8 +410,9 @@ class WebSocketClient:
             Count of in-flight requests.
 
         Example:
-            >>> if client.pending_count > 0:
-            ...     print("Waiting for responses...")
+            >>> client = WebSocketClient("ws://localhost:7125/websocket")
+            >>> client.pending_count
+            0
         """
         return len(self._pending)
 
@@ -584,6 +619,7 @@ class WebSocketClient:
         Raises:
             RuntimeError: If server returns an error response or WebSocket
                           not connected.
+            TimeoutError: If no response arrives within timeout.
         """  # Create future for this request
         fut: asyncio.Future[dict[str, Any]] = self.loop.create_future()
         self._pending[request_id] = fut
@@ -596,7 +632,10 @@ class WebSocketClient:
         await self.ws.send_str(json.dumps(payload))
 
         # Wait for response
-        return await asyncio.wait_for(fut, timeout)
+        try:
+            return await asyncio.wait_for(fut, timeout)
+        except TimeoutError:
+            raise
 
     def send_jsonrpc(
         self,
@@ -620,9 +659,21 @@ class WebSocketClient:
             TimeoutError: If response not received within timeout.
 
         Example:
-            >>> request = {"jsonrpc": "2.0", "method": "printer.info", "id": "123"}
-            >>> response = client.send_jsonrpc(request)
-            >>> print(response["result"])
+            Requires a reachable Moonraker server, so this is illustrative
+            rather than runnable in isolation:
+
+            >>> client = WebSocketClient(  # doctest: +SKIP
+            ...     "ws://localhost:7125/websocket"
+            ... )
+            >>> client.start()  # doctest: +SKIP
+            >>> client.wait_for_connection()  # doctest: +SKIP
+            >>> request = {  # doctest: +SKIP
+            ...     "jsonrpc": "2.0",
+            ...     "method": "printer.info",
+            ...     "id": "123",
+            ... }
+            >>> response = client.send_jsonrpc(request)  # doctest: +SKIP
+            >>> print(response["result"])  # doctest: +SKIP
         """
         self._ensure_connection()
 
@@ -660,8 +711,18 @@ class WebSocketClient:
             RuntimeError: If WebSocket is not connected.
 
         Example:
-            >>> client.send_notification("notify_klippy_ready")
-            >>> client.send_notification("notify_gcode_response", {"message": "ok"})
+            Requires a reachable Moonraker server, so this is illustrative
+            rather than runnable in isolation:
+
+            >>> client = WebSocketClient(  # doctest: +SKIP
+            ...     "ws://localhost:7125/websocket"
+            ... )
+            >>> client.start()  # doctest: +SKIP
+            >>> client.wait_for_connection()  # doctest: +SKIP
+            >>> client.send_notification("notify_klippy_ready")  # doctest: +SKIP
+            >>> client.send_notification(  # doctest: +SKIP
+            ...     "notify_gcode_response", {"message": "ok"}
+            ... )
         """
         self._ensure_connection()
 
@@ -692,6 +753,7 @@ class WebSocketClient:
             handler replaces any existing handler for that method.
 
         Example:
+            >>> client = WebSocketClient("ws://localhost:7125/websocket")
             >>> def on_status(params):
             ...     print(f"Printer status: {params}")
             >>>
@@ -707,6 +769,8 @@ class WebSocketClient:
             method: JSON-RPC method name to stop handling.
 
         Example:
+            >>> client = WebSocketClient("ws://localhost:7125/websocket")
+            >>> client.register_handler("notify_status_update", lambda params: None)
             >>> client.unregister_handler("notify_status_update")
         """
         if method in self._handlers:
@@ -827,9 +891,19 @@ class WebSocketClient:
             Future.result() is called).
 
         Example:
-            >>> future = client.upload_gcode_file("protocol.gcode", "/tmp/file.gcode")
-            >>> server_path = future.result()
-            >>> print(f"Uploaded to: {server_path}")
+            Requires a reachable Moonraker server, so this is illustrative
+            rather than runnable in isolation:
+
+            >>> client = WebSocketClient(  # doctest: +SKIP
+            ...     "ws://localhost:7125/websocket"
+            ... )
+            >>> client.start()  # doctest: +SKIP
+            >>> client.wait_for_connection()  # doctest: +SKIP
+            >>> future = client.upload_gcode_file(  # doctest: +SKIP
+            ...     "protocol.gcode", "/tmp/file.gcode"
+            ... )
+            >>> server_path = future.result()  # doctest: +SKIP
+            >>> print(f"Uploaded to: {server_path}")  # doctest: +SKIP
         """
         coro = self._upload_gcode_file_async(file_name, file_path)
         return asyncio.run_coroutine_threadsafe(coro, self.loop)
@@ -844,10 +918,15 @@ class WebSocketClient:
             Drains the message queue, removing all messages.
 
         Example:
+            >>> client = WebSocketClient("ws://localhost:7125/websocket")
+            >>> client.message_queue.put(
+            ...     QueuedMessage.connection_error("Connection refused")
+            ... )
             >>> messages = client.get_queued_messages()
             >>> for msg in messages:
             ...     if msg.type == MessageType.CONNECTION_ERROR:
             ...         print(f"Error: {msg.data['text']}")
+            Error: Connection refused
         """
         messages: list[QueuedMessage] = []
         while not self.message_queue.empty():
@@ -861,8 +940,11 @@ class WebSocketClient:
             Number of messages that were cleared.
 
         Example:
+            >>> client = WebSocketClient("ws://localhost:7125/websocket")
+            >>> client.message_queue.put(QueuedMessage.notification({}))
             >>> count = client.clear_queue()
             >>> print(f"Cleared {count} messages")
+            Cleared 1 messages
         """
         count = 0
         while not self.message_queue.empty():
@@ -883,9 +965,12 @@ class WebSocketClient:
             The next QueuedMessage, or None if the queue is empty.
 
         Example:
+            >>> client = WebSocketClient("ws://localhost:7125/websocket")
+            >>> client.message_queue.put(QueuedMessage.notification({"foo": "bar"}))
             >>> msg = client.pop_message()
             >>> if msg is not None:
             ...     print(msg.type, msg.data)
+            notification {'data': {'foo': 'bar'}}
         """
         try:
             return self.message_queue.get_nowait()

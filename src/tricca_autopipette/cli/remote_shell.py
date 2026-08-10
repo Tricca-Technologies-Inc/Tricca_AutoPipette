@@ -1,11 +1,12 @@
 """Thin interactive client shell that talks to the `tapd` control daemon.
 
-Unlike `TriccaAutoPipetteShell`, this owns no `AutoPipette`/`WebSocketClient`
-of its own — all domain logic, config loading, and the Moonraker connection
-live in the daemon's `AutoPipetteService` (see `tricca_autopipette.daemon`).
-Every command has a structured control-plane method and a thin `do_*`
-wrapper (either hand-written or generated from `_STRUCTURED_COMMANDS`) --
-as of migration Phase 4 (see CLAUDE.md's ports-and-adapters notes), there is
+Unlike `TriccaAutoPipetteShell`, this owns no `AutoPipette` and no
+*Moonraker-connected* `WebSocketClient` of its own — it does own a
+`WebSocketClient` pointed at the daemon's control plane, but all domain
+logic, config loading, and the actual Moonraker connection live in the
+daemon's `AutoPipetteService` (see `tricca_autopipette.daemon`). Every
+command has a structured control-plane method and a thin `do_*` wrapper
+(either hand-written or generated from `_STRUCTURED_COMMANDS`) -- there is
 no `shell.exec` escape hatch left to fall back to; an unrecognized command
 falls through to cmd2's own default "unknown command" handling.
 """
@@ -227,7 +228,13 @@ class RemoteTapShell(Cmd):
         self._call_and_print(self.requests.webcam_url())
 
     def do_steps_to_vol(self, statement: Statement) -> None:
-        """Convert motor steps to volume in μL: steps_to_vol <steps>."""
+        """Convert a `vol_to_steps` value back to volume in μL.
+
+        Usage: steps_to_vol <steps>
+
+        The value is actually millimetres of plunger travel, not motor
+        steps -- see issue #29.
+        """
         arg = statement.arg_list[0] if statement.arg_list else ""
         if not arg.strip():
             self.perror("Usage: steps_to_vol <steps>")
@@ -462,11 +469,11 @@ class RemoteTapShell(Cmd):
 # ==================== structured commands (generated do_* methods) ====================
 #
 # Declarative table of (name, parser, request-builder) driving a generated
-# do_<name> method each, rather than ~25 hand-written near-duplicates as
-# more command groups migrate off shell.exec (see CLAUDE.md's
-# ports-and-adapters migration notes). `parser` is None for commands that
-# take no arguments; `build_request` takes the parsed argparse Namespace (or
-# the raw Statement, for no-arg commands) and returns the JSON-RPC request
+# do_<name> method each, rather than ~25 hand-written near-duplicates, as
+# landed when command groups were migrated off `shell.exec`. `parser` is
+# None for commands that take no arguments; `build_request` takes the
+# parsed argparse Namespace (or the raw Statement, for no-arg commands) and
+# returns the JSON-RPC request
 # dict to send. Namespace-to-dataclass conversion is `args_from_namespace`,
 # shared with `daemon/service.py`'s protocol-file dispatch (see that
 # module) so there's one copy of this logic, not two.

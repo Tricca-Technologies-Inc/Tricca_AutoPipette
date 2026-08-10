@@ -36,11 +36,11 @@ class ProtocolCommands(TAPCommandSet):
     - Interactive breakpoints
 
     Example:
-        >>> run my_protocol.tap
-        >>> pause
-        >>> resume
-        >>> cancel
-        >>> stop
+        run my_protocol.tap
+        pause
+        resume
+        cancel
+        stop
     """
 
     def __init__(self) -> None:
@@ -64,8 +64,8 @@ class ProtocolCommands(TAPCommandSet):
             args: Parsed arguments containing filename.
 
         Example:
-            >>> run my_protocol.tap
-            >>> run protocols/calibration.tap
+            run my_protocol.tap
+            run protocols/calibration.tap
         """
         rprint(f"[cyan]Running protocol: {args.filename}[/cyan]")
         try:
@@ -99,7 +99,7 @@ class ProtocolCommands(TAPCommandSet):
         confirmation flow outside of a protocol run.
 
         Example:
-            >>> break
+            break
         """
         handler = self.service.breakpoint_handler
         if handler is not None:
@@ -127,7 +127,7 @@ class ProtocolCommands(TAPCommandSet):
         before resuming normal operation.
 
         Example:
-            >>> stop
+            stop
         """
         rprint("[bold red]⚠ EMERGENCY STOP ⚠[/bold red]")
         try:
@@ -140,7 +140,7 @@ class ProtocolCommands(TAPCommandSet):
         """Pause the current protocol execution.
 
         Example:
-            >>> pause
+            pause
         """
         rprint("[yellow]⏸ Pausing protocol...[/yellow]")
         try:
@@ -154,7 +154,7 @@ class ProtocolCommands(TAPCommandSet):
         """Resume paused protocol execution.
 
         Example:
-            >>> resume
+            resume
         """
         rprint("[cyan]▶ Resuming protocol...[/cyan]")
         try:
@@ -167,7 +167,7 @@ class ProtocolCommands(TAPCommandSet):
         """Cancel the current protocol execution.
 
         Example:
-            >>> cancel
+            cancel
         """
         rprint("[yellow]⏹ Canceling protocol...[/yellow]")
         try:

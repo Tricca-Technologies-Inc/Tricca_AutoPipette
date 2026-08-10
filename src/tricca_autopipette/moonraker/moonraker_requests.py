@@ -242,6 +242,7 @@ class MoonrakerRequests:
             id, and optionally params fields.
 
         Example:
+            >>> mrr = MoonrakerRequests()
             >>> request = mrr.gen_request("printer.info")
             >>> # {'jsonrpc': '2.0', 'method': 'printer.info', 'id': '...'}
 
@@ -272,6 +273,7 @@ class MoonrakerRequests:
             JSON-RPC request for subscribing to the specified objects.
 
         Example:
+            >>> mrr = MoonrakerRequests()
             >>> request = mrr.request_sub_to_objs(["toolhead", "extruder", "heaters"])
             >>> # Subscribe to status updates for these objects
         """
@@ -432,6 +434,7 @@ class MoonrakerRequests:
             Request to query specified objects and fields.
 
         Example:
+            >>> mrr = MoonrakerRequests()
             >>> request = mrr.printer_objects_query({
             ...     "toolhead": ["position", "max_velocity"],
             ...     "extruder": None,  # All fields
@@ -459,6 +462,7 @@ class MoonrakerRequests:
             Request to execute the specified G-code.
 
         Example:
+            >>> mrr = MoonrakerRequests()
             >>> request = mrr.printer_gcode_script("G28")  # Home all axes
             >>> request = mrr.printer_gcode_script("G1 X10 Y20 F3000")  # Move
         """
@@ -484,6 +488,7 @@ class MoonrakerRequests:
             Request to start printing the specified file.
 
         Example:
+            >>> mrr = MoonrakerRequests()
             >>> request = mrr.printer_print_start("protocol_001.gcode")
         """
         return self.gen_request("printer.print.start", {"filename": filename})

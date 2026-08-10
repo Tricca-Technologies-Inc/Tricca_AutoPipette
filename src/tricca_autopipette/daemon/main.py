@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Entry point for the ``tapd`` control daemon.
 
-Parses the same ``--config*`` arguments as the interactive ``tap`` CLI
-(``cli/main.py``), builds an ``AutoPipetteService``, and serves the
-control-plane WebSocket forever via ``ControlServer``.
+Parses the ``--config*``/``--no-connect``/``--local-connect`` flags that
+``tap`` (``cli/main.py``) used to parse before the daemon split —
+``cli/main.py`` no longer loads config files at all. Builds an
+``AutoPipetteService`` and serves the control-plane WebSocket forever via
+``ControlServer``.
 """
 
 from __future__ import annotations
