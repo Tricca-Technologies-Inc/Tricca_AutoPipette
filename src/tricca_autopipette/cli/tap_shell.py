@@ -42,6 +42,7 @@ class TriccaAutoPipetteShell(Cmd):
     result) -- see ``commands/*.py``.
 
     Commands are organized into separate command sets for better modularity:
+
     - MovementCommands: init, home, move, move_loc, move_rel
     - PipetteCommands: pipette, aspirate, dispense, next_tip, eject_tip,
       dispose_tip, change_tip

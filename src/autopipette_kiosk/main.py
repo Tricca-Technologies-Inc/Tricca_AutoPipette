@@ -247,7 +247,7 @@ async def respond_to_breakpoint(req: BreakpointResponse) -> dict[str, bool]:
     time, so no run/breakpoint id is needed to disambiguate.
 
     Returns:
-        `{"ok": True}` once the response has been relayed to the daemon.
+        ``{"ok": True}`` once the response has been relayed to the daemon.
 
     Raises:
         HTTPException: 503 if the control daemon isn't connected.
