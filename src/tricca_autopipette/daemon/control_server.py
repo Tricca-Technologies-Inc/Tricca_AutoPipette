@@ -225,7 +225,7 @@ class ControlServer:
             RunAlreadyActiveError: If ``run.start`` is called while a run is
                 already active.
             FileNotFoundError: If ``run.start`` names a missing protocol.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         if method == "movement.init":
             return dataclasses.asdict(await self.service.dispatch(self.service.init))
         if method == "movement.home":

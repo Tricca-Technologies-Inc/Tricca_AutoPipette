@@ -6,11 +6,9 @@ through the same ``WebSocketClient.send_jsonrpc`` transport used to talk to
 Moonraker itself.
 
 Example:
-    >>> from tricca_autopipette.moonraker.websocket_client import WebSocketClient
-    >>> client = WebSocketClient("ws://127.0.0.1:8765/control")
-    >>> client.start()
-    >>> client.wait_for_connection()
-    >>> response = client.send_jsonrpc(ControlRequests().run_start("A1.pipette"))
+    >>> cr = ControlRequests()
+    >>> request = cr.run_start("A1.pipette")
+    >>> # Send request via WebSocketClient.send_jsonrpc to tapd's control plane
 """
 
 from __future__ import annotations
@@ -405,7 +403,11 @@ class ControlRequests:
         return self.gen_request("util.webcam_url")
 
     def vol_to_steps(self, args: VolToStepsArgs) -> dict[str, Any]:
-        """Build a request to convert a volume to motor steps.
+        """Build a request to convert a volume to plunger travel (in mm).
+
+        Despite the ``vol_to_steps`` name, the value is millimetres passed
+        to Klipper's ``MANUAL_STEPPER MOVE=``, not motor steps — see
+        ``core/volume_converter.py``, issue #29.
 
         Args:
             args: Volume in microliters.
@@ -416,10 +418,14 @@ class ControlRequests:
         return self.gen_request("util.vol_to_steps", dataclasses.asdict(args))
 
     def steps_to_vol(self, steps: int) -> dict[str, Any]:
-        """Build a request to convert motor steps to a volume.
+        """Build a request to convert plunger travel (mm) back to a volume.
+
+        Despite the name, ``steps`` is a millimetre value, not motor
+        steps — see ``core/volume_converter.py``.
 
         Args:
-            steps: Number of motor steps.
+            steps: Plunger travel value (actually millimetres — see
+                ``core/volume_converter.py``).
 
         Returns:
             Request to perform the conversion.
