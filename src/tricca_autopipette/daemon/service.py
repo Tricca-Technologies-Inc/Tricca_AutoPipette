@@ -661,6 +661,12 @@ class AutoPipetteService:
         """  # ruff: ignore[docstring-extraneous-exception]
         autopipette = self._autopipette
         coor = Coordinate(x=args.x, y=args.y, z=args.z)
+        # note_action here (rather than inside move_to itself) because
+        # move_to is also used internally as a raw positioning primitive by
+        # aspirate/dispense/tip-handling, which already log their own,
+        # higher-level action -- logging every move_to call would duplicate
+        # or drown those out.
+        autopipette.note_action(f"Moving to X:{args.x} Y:{args.y} Z:{args.z}")
         autopipette.move_to(coor)
         self.output_gcode(autopipette.get_gcode())
         return CommandResult(
@@ -687,6 +693,10 @@ class AutoPipetteService:
         autopipette = self._autopipette
         coor = autopipette.location_manager.get_coordinate(
             args.name_loc, args.row, args.col
+        )
+        autopipette.note_action(
+            f"Moving to '{args.name_loc}' "
+            f"(X:{coor.x:.2f} Y:{coor.y:.2f} Z:{coor.z:.2f})"
         )
         autopipette.move_to(coor)
         self.output_gcode(autopipette.get_gcode())
@@ -734,11 +744,6 @@ class AutoPipetteService:
         autopipette = self._autopipette
         coor = Coordinate(x=args.x, y=args.y, z=args.z)
 
-        autopipette.set_coor_sys(CoordinateSystem.RELATIVE)
-        autopipette.move_to(coor)
-        autopipette.set_coor_sys(CoordinateSystem.ABSOLUTE)
-        self.output_gcode(autopipette.get_gcode())
-
         parts: list[str] = []
         if args.x != 0:
             parts.append(f"X{args.x:+.2f}")
@@ -746,6 +751,13 @@ class AutoPipetteService:
             parts.append(f"Y{args.y:+.2f}")
         if args.z != 0:
             parts.append(f"Z{args.z:+.2f}")
+        autopipette.note_action(f"Moving relative: {' '.join(parts)}")
+
+        autopipette.set_coor_sys(CoordinateSystem.RELATIVE)
+        autopipette.move_to(coor)
+        autopipette.set_coor_sys(CoordinateSystem.ABSOLUTE)
+        self.output_gcode(autopipette.get_gcode())
+
         return CommandResult(ok=True, message=f"Moving relative: {' '.join(parts)}")
 
     # ==================== Pipette commands ====================
