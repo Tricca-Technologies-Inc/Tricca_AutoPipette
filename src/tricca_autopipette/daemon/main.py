@@ -15,6 +15,7 @@ import asyncio
 import logging
 import signal
 import sys
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from tricca_autopipette.core.config_validation import validate_config_files
@@ -29,6 +30,13 @@ from tricca_autopipette.daemon.service import AutoPipetteService
 DEFAULT_LOG_FILE = "tapd.log"
 LOG_FORMAT = "%(asctime)s [%(module)s] %(levelname)s: %(message)s"
 DEFAULT_LOG_LEVEL = logging.INFO
+# Issue #52 meaningfully increases log volume (an INFO line per movement/
+# pipetting action plus every control-plane RPC) -- a plain FileHandler
+# would grow unbounded on a long-running daemon, so rotate instead. 10 MiB
+# x 5 backups is a size cap, not a tuned figure; revisit if real-world
+# volume warrants it.
+DEFAULT_LOG_MAX_BYTES = 10 * 1024 * 1024
+DEFAULT_LOG_BACKUP_COUNT = 5
 
 
 def setup_logging(
@@ -44,11 +52,20 @@ def setup_logging(
         level=level,
         format=LOG_FORMAT,
         handlers=[
-            logging.FileHandler(log_file),
+            RotatingFileHandler(
+                log_file,
+                maxBytes=DEFAULT_LOG_MAX_BYTES,
+                backupCount=DEFAULT_LOG_BACKUP_COUNT,
+            ),
             logging.StreamHandler(sys.stdout),
         ],
     )
-    logging.info("Logging initialized: %s", log_file)
+    logging.info(
+        "Logging initialized: %s (rotating, max %d bytes x %d backups)",
+        log_file,
+        DEFAULT_LOG_MAX_BYTES,
+        DEFAULT_LOG_BACKUP_COUNT,
+    )
 
 
 def parse_arguments() -> argparse.Namespace:

@@ -25,6 +25,7 @@ import io
 import logging
 import os
 import signal
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Any, cast
 
@@ -159,8 +160,12 @@ class TestSetupLogging:
         handlers = cast("list[logging.Handler]", captured["handlers"])
         assert len(handlers) == 2
         file_handler, stream_handler = handlers
-        assert isinstance(file_handler, logging.FileHandler)
+        # Rotating, not a plain FileHandler -- issue #52 meaningfully
+        # increases log volume, so unbounded growth needs a cap.
+        assert isinstance(file_handler, RotatingFileHandler)
         assert file_handler.baseFilename == str(log_file)
+        assert file_handler.maxBytes == main_module.DEFAULT_LOG_MAX_BYTES
+        assert file_handler.backupCount == main_module.DEFAULT_LOG_BACKUP_COUNT
         assert (
             cast("logging.StreamHandler[Any]", stream_handler).stream is sentinel_stdout
         )
