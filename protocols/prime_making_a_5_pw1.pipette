@@ -160,4 +160,4 @@ pipette 25.0 --extra_air --after_air manu8 KIT1 --dispense_vol 25.0 --tipbox tip
 pipette 25.0 --extra_air --after_air manu8 KIT1 --dispense_vol 25.0 --tipbox tipbox --prewet 1 
 
 # alpha-Aminoadipicacid *)
-pipette 80.0 --extra_air --after_air --keep_tip manu7 KIT1 --dispense_vol 80.0 --tipbox tipbox --prewet 1 
+pipette 80.0 --extra_air --after_air manu7 KIT1 --dispense_vol 80.0 --tipbox tipbox --prewet 1 
