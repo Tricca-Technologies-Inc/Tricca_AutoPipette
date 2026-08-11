@@ -1,0 +1,8 @@
+#Final step of prime panel A kit manufacturing adding 2790mL of water to the vial
+
+pipette 465.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465.0 --tipbox tipbox --prewet 5
+pipette 465.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465.0 --tipbox tipbox
+pipette 465.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465.0 --tipbox tipbox
+pipette 465.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465.0 --tipbox tipbox
+pipette 465.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465.0 --tipbox tipbox
+pipette 465.0 --extra_air --after_air WATER dest --dispense_vol 465.0 --tipbox tipbox
