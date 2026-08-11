@@ -1,12 +1,14 @@
-pipette 444.6 --extra_air --after_air --keep_tip WATER dest --dispense_vol 444.6 --tipbox tipbox --prewet 5
-pipette 444.6 --extra_air --after_air --keep_tip WATER dest --dispense_vol 444.6 --tipbox tipbox
-pipette 444.6 --extra_air --after_air --keep_tip WATER dest --dispense_vol 444.6 --tipbox tipbox
-pipette 444.6 --extra_air --after_air --keep_tip WATER dest --dispense_vol 444.6 --tipbox tipbox
-pipette 444.6 --extra_air --after_air --keep_tip WATER dest --dispense_vol 444.6 --tipbox tipbox
-pipette 444.6 --extra_air --after_air --keep_tip WATER dest --dispense_vol 444.6 --tipbox tipbox
-pipette 444.6 --extra_air --after_air --keep_tip WATER dest --dispense_vol 444.6 --tipbox tipbox
-pipette 444.6 --extra_air --after_air --keep_tip WATER dest --dispense_vol 444.6 --tipbox tipbox
-pipette 444.6 --extra_air --after_air --keep_tip WATER dest --dispense_vol 444.6 --tipbox tipbox
-pipette 444.6 --extra_air --after_air --keep_tip WATER dest --dispense_vol 444.6 --tipbox tipbox
-pipette 444.6 --extra_air --after_air --keep_tip WATER dest --dispense_vol 444.6 --tipbox tipbox
-pipette 444.6 --extra_air --after_air WATER dest --dispense_vol 444.6 --tipbox tipbox
+#Final step of prime panel A kit manufacturing adding 5580mL of water to the vial
+
+pipette 465.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465.0 --tipbox tipbox --prewet 5
+pipette 465.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465.0 --tipbox tipbox
+pipette 465.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465.0 --tipbox tipbox
+pipette 465.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465.0 --tipbox tipbox
+pipette 465.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465.0 --tipbox tipbox
+pipette 465.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465.0 --tipbox tipbox
+pipette 465.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465.0 --tipbox tipbox
+pipette 465.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465.0 --tipbox tipbox
+pipette 465.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465.0 --tipbox tipbox
+pipette 465.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465.0 --tipbox tipbox
+pipette 465.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 465.0 --tipbox tipbox
+pipette 465.0 --extra_air --after_air WATER dest --dispense_vol 465.0 --tipbox tipbox
