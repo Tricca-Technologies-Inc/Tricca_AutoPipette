@@ -114,6 +114,25 @@ class TestConnectionLifecycle:
 
         assert not tap.client.is_connected()
 
+    def test_preloop_identifies_the_connection_as_tap(
+        self, live_control_plane: LiveControlPlane
+    ) -> None:
+        """`preloop` sends `daemon.identify("tap")` so the server's RPC log
+        can attribute this connection's later calls (issue #53).
+        """
+        tap = RemoteTapShell(live_control_plane.url)
+        tap.preloop()
+        try:
+            # tests/ disables reportPrivateUsage (see pyproject.toml) --
+            # reaching into the live server's client registry to observe
+            # the identity `preloop` just sent is deliberate white-box
+            # testing, the same style `live_control_plane.py` itself uses.
+            server = live_control_plane._server  # pyright: ignore[reportPrivateUsage]
+            assert server is not None
+            assert "tap" in server._clients.values()  # pyright: ignore[reportPrivateUsage]
+        finally:
+            tap.postloop()
+
 
 class TestRunLifecycleAlerts:
     """The alert-driven state handling issue #37 specifically calls out."""
