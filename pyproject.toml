@@ -198,7 +198,7 @@ reportUnknownMemberType = true
 reportUnknownParameterType = true
 reportUnknownVariableType = true
 
-extraPaths = ["src"]
+extraPaths = ["src", "scripts"]
 
 # The service/daemon tests are deliberately white-box: they assert against
 # `service._autopipette`, drive `ControlServer._call` directly, and check
@@ -229,6 +229,7 @@ testpaths = ["tests", "src"]
 
 pythonpath = [
     "src",
+    "scripts",
 ]
 
 addopts = "-ra"

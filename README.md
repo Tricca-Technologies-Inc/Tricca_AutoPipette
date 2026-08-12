@@ -41,6 +41,8 @@ address.
 - [`CLAUDE.md`](CLAUDE.md) — architecture deep-dive: components, the `tapd`
   daemon, domain model, config system, and code style.
 - [`CONTEXT.md`](CONTEXT.md) — glossary of domain terms.
+- [`docs/protocol-authoring.md`](docs/protocol-authoring.md) — how to write
+  a `.pipette` protocol file, with runnable examples.
 - [`config/README.md`](config/README.md) — the layered JSON config system.
 - [`systemd/README.md`](systemd/README.md) — production deployment as
   systemd services, and the network-exposure decisions behind it.

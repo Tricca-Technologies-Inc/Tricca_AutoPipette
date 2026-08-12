@@ -1,0 +1,15 @@
+# splits.pipette
+#
+# Multi-dispense: one aspirate, then several metered dispenses to different
+# wells of the same plate -- saves a tip pickup and a source trip per
+# destination compared with running `pipette` once per well. Assumes the
+# machine is already homed.
+
+load_locations examples_deck.json --replace
+
+# Aspirate 25uL once, dispense 12uL to A1 and 8uL to B2 of example_dest.
+# 12 + 8 = 20uL, 5uL short of the 25uL aspirated -- --leftover says what to
+# do with that remainder; "waste" verifies a waste container up front and
+# disposes of it (and the tip) there. Omitting --leftover here would be an
+# error rather than silently keeping it.
+pipette 25 example_source example_dest --splits 'example_dest:12@A1;example_dest:8@B2' --leftover waste

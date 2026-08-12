@@ -1,0 +1,20 @@
+# simple_transfer.pipette
+#
+# One tip, one transfer, one disposal -- the minimal real pipetting
+# protocol. Assumes the machine is already homed (run home_and_move.pipette
+# first, or `init`/`home all` via tap, if it isn't).
+
+load_locations examples_deck.json --replace
+
+# Pick up a tip explicitly. (pipette below would also pick one up
+# automatically if none were attached -- doing it up front here just makes
+# the three steps of a transfer visible.)
+next_tip
+
+# Transfer 20uL from the first well of example_source to the first well of
+# example_dest. --keep_tip overrides pipette's own default of disposing the
+# tip at the end, so the explicit dispose_tip below has something to do.
+pipette 20 example_source example_dest --keep_tip
+
+# Eject the tip into the configured waste container.
+dispose_tip
