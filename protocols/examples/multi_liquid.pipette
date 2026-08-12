@@ -1,0 +1,17 @@
+# multi_liquid.pipette
+#
+# Two liquids, two transfers, switching technique (speeds/waits/prewet/air
+# gaps) between them. Assumes the machine is already homed.
+
+load_locations examples_deck.json --replace
+
+# "water" is the built-in default liquid profile and is already active, but
+# naming it explicitly makes the switch visible.
+switch_liquid water
+pipette 20 example_source example_dest
+
+# load_liquid registers a profile from config/liquids/ without activating
+# it; switch_liquid is a separate step.
+load_liquid methanol.json
+switch_liquid methanol
+pipette 15 example_source example_dest

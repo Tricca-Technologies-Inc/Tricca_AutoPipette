@@ -933,7 +933,11 @@ class TAPCmdParsers:
     parser_vol_to_steps.add_argument("vol", type=float, help="Volume in microliters")
 
     parser_trigger: Cmd2ArgumentParser = Cmd2ArgumentParser(
-        description="Control auxiliary triggers (air, shake, aux)."
+        description=(
+            "Control auxiliary triggers (air, shake, aux). Stub: validates "
+            "the channel/state and always reports 'not yet implemented' -- "
+            "see issue #16."
+        )
     )
     parser_trigger.add_argument(
         "channel",

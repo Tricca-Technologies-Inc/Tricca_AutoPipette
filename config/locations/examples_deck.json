@@ -1,0 +1,49 @@
+{
+  "plates": [
+    {
+      "name": "example_tipbox",
+      "type": "tipbox",
+      "x": 100,
+      "y": 20,
+      "z": 5,
+      "dip_top": 5.0,
+      "num_row": 2,
+      "num_col": 5,
+      "spacing_row": 9.0,
+      "spacing_col": 9.0
+    },
+    {
+      "name": "example_waste",
+      "type": "waste_container",
+      "x": 20,
+      "y": 20,
+      "z": 5,
+      "dip_top": 5.0,
+      "num_row": 1,
+      "num_col": 1
+    },
+    {
+      "name": "example_source",
+      "type": "array",
+      "x": 100,
+      "y": 60,
+      "z": 5,
+      "dip_top": 5.0,
+      "num_row": 1,
+      "num_col": 4,
+      "spacing_col": 9.0
+    },
+    {
+      "name": "example_dest",
+      "type": "array",
+      "x": 150,
+      "y": 60,
+      "z": 5,
+      "dip_top": 5.0,
+      "num_row": 2,
+      "num_col": 3,
+      "spacing_row": 9.0,
+      "spacing_col": 9.0
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+# home_and_move.pipette
+#
+# The simplest possible protocol: home the machine, then move around the
+# deck a couple of different ways. Start here if you're writing your first
+# .pipette file -- see docs/protocol-authoring.md.
+
+# Every example self-loads its own deck so it's runnable standalone.
+# --replace wipes whatever else was loaded; fine to run on its own.
+load_locations examples_deck.json --replace
+
+# init sets the coordinate system and speed, then homes every motor -- the
+# only command (besides `home`) exempt from the homed-safety interlock.
+init
+
+# Absolute move, in mm.
+move 50 50 30
+
+# Move to a named location instead of bare coordinates -- with no
+# --row/--col, a plate location moves to its next well in traversal order.
+move_loc example_source
