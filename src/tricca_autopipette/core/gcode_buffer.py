@@ -44,6 +44,31 @@ class GCodeBuffer:
         """
         self._commands.append(command)
 
+    def add_comment(self, message: str) -> None:
+        r"""Add a single-line G-code comment to the command buffer.
+
+        Unlike ``add_header``, this goes in the command buffer itself so it
+        appears inline, immediately before the G-code it describes, rather
+        than in the one-off configuration header. Intended for one comment
+        per logical action (e.g. one aspirate, one dispense), not per raw
+        G-code line -- see ``AutoPipette.note_action``, which calls this
+        with the exact same message it logs at INFO, so the G-code file and
+        the run log can never describe an action differently.
+
+        Args:
+            message: Human-readable description of the action. Must not
+                itself contain a newline.
+
+        Example:
+            >>> buffer = GCodeBuffer()
+            >>> buffer.add_comment("Aspirating 50.0μL from 'plate_a'")
+            >>> buffer.add("G1 X10 Y10 F5000\n")
+            >>> commands = buffer.get_commands()
+            >>> # commands = ["; Aspirating 50.0μL from 'plate_a'\n",
+            >>> #             "G1 X10 Y10 F5000\n"]
+        """
+        self.add(f"; {message}\n")
+
     def add_header(self, line: str) -> None:
         r"""Add a line to the configuration header.
 

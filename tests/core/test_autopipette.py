@@ -80,7 +80,9 @@ class TestGCodeBuffer:
         autopipette.gcode_print("hello")
 
         first = autopipette.get_gcode()
-        assert len(first) == 2
+        # gcode_wait emits one dwell line; gcode_print emits an action
+        # comment (see AutoPipette.note_action) plus its own display line.
+        assert len(first) == 3
 
         # get_gcode() is destructive -- a second call sees nothing new.
         assert autopipette.get_gcode() == []

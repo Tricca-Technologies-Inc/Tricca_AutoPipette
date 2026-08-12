@@ -200,6 +200,11 @@ class ControlServer:
         params: dict[str, Any] = request.get("params") or {}
         request_id = request.get("id")
 
+        # The control plane has no authentication (loopback-only trust, see
+        # CLAUDE.md) -- this is the only audit trail available for who did
+        # what, so every RPC is logged before it runs, not just failures.
+        logger.info("Control-plane RPC: %s %r", method, params)
+
         try:
             result = await self._call(method, params)
             await ws.send_json({"id": request_id, "result": result})
