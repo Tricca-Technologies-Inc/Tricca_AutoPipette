@@ -44,6 +44,7 @@ address.
 - [`docs/protocol-authoring.md`](docs/protocol-authoring.md) — how to write
   a `.pipette` protocol file, with runnable examples.
 - [`config/README.md`](config/README.md) — the layered JSON config system.
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — dev setup, checks, and how to open a PR.
 - [`systemd/README.md`](systemd/README.md) — production deployment as
   systemd services, and the network-exposure decisions behind it.
 

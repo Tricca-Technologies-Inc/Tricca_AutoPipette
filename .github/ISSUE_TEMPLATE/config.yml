@@ -1,0 +1,7 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Backlog map
+    url: https://github.com/Tricca-Technologies-Inc/Tricca_AutoPipette/issues/34
+    about: >-
+      Planned-but-unimplemented work and its dependency order lives here,
+      not in a bug report or feature request.

@@ -1,0 +1,99 @@
+name: Bug report
+description: Something in tapd/tap/the kiosk is broken or behaving unexpectedly.
+labels: ["needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file this. This project drives physical
+        hardware (a gantry, a syringe pump, a tip-ejection servo) through
+        Klipper/Moonraker, so the machine-specific context below matters more
+        here than it would for a typical web app bug report.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Which component?
+      options:
+        - tapd (the control daemon)
+        - tap (the interactive shell)
+        - kiosk (the touchscreen web UI)
+        - Config system (config/*.json)
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, what happened instead?
+      placeholder: |
+        1. Ran `tap`, then `pipette 50 plate_a plate_b`
+        2. Expected the transfer to complete
+        3. Instead it raised NotHomedError even though I'd already homed
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: >-
+        The exact commands or `.pipette` lines, in order, that trigger it.
+        If it only reproduces from a specific deck layout, include the
+        relevant part of your locations file (redact anything sensitive).
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit
+      description: >-
+        This project doesn't have tagged releases yet (see #22) — run
+        `git rev-parse HEAD` in your checkout, or `pip show tricca-autopipette`
+        if installed as a package.
+      placeholder: e.g. 26c2a8b
+    validations:
+      required: false
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Relevant config
+      description: >-
+        The system/locations/liquids/pipette config file(s) involved, if the
+        bug is config-shaped. `config/system/*.json`'s `extends` chain matters
+        too if you're using it.
+      render: json
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: tapd log excerpt
+      description: >-
+        `tapd`'s log (rotating file handler as of #52) is usually the fastest
+        way to see what actually happened on the Moonraker side. Paste the
+        relevant window around the failure.
+      render: shell
+    validations:
+      required: false
+
+  - type: input
+    id: moonraker-klipper
+    attributes:
+      label: Moonraker / Klipper version
+      description: Only relevant if the bug looks like a G-code/RPC mismatch.
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Anything else — screenshots, a specific pipette/deck model, etc.
+    validations:
+      required: false
