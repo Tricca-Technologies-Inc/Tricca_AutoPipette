@@ -30,6 +30,25 @@ from autopipette_kiosk import main as kiosk_main
 from tricca_autopipette.core.pipette_constants import DefaultPaths
 
 
+class TestConnectionLifecycle:
+    def test_lifespan_identifies_the_connection_as_kiosk(
+        self, kiosk_client: TestClient, live_control_plane: LiveControlPlane
+    ) -> None:
+        """The kiosk's `lifespan` sends `daemon.identify("kiosk")` right
+        after connecting, so the server's RPC log can attribute this
+        connection's later calls (issue #53). `kiosk_client` already
+        entered the app's lifespan by the time this test body runs.
+        """
+        del kiosk_client  # only needed to enter the app's lifespan
+        # tests/ disables reportPrivateUsage (see pyproject.toml) --
+        # reaching into the live server's client registry to observe the
+        # identity `lifespan` just sent is deliberate white-box testing,
+        # the same style `live_control_plane.py` itself uses.
+        server = live_control_plane._server  # pyright: ignore[reportPrivateUsage]
+        assert server is not None
+        assert "kiosk" in server._clients.values()  # pyright: ignore[reportPrivateUsage]
+
+
 class TestProtocolListing:
     def test_empty_dir_returns_empty_list(
         self, kiosk_client: TestClient, protocols_dir: Path

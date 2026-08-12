@@ -91,7 +91,11 @@ class ControlServer:
         self.service = service
         self._host = host
         self._port = port
-        self._clients: set[web.WebSocketResponse] = set()
+        # Maps each connected client to the type it identified itself as
+        # via `daemon.identify` ("tap"/"kiosk"), or "unknown" for a
+        # connection that hasn't (yet) sent one -- an audit-trail label for
+        # the RPC log, not access control (see issue #53).
+        self._clients: dict[web.WebSocketResponse, str] = {}
         self._app = web.Application()
         self._app.router.add_get("/control", self._handle_control)
         self._runner: web.AppRunner | None = None
@@ -158,7 +162,7 @@ class ControlServer:
             except ConnectionResetError:
                 stale.append(ws)
         for ws in stale:
-            self._clients.discard(ws)
+            self._clients.pop(ws, None)
 
     async def _handle_control(self, request: web.Request) -> web.WebSocketResponse:
         """Handle one control-plane client connection for its lifetime.
@@ -171,7 +175,7 @@ class ControlServer:
         """
         ws = web.WebSocketResponse()
         await ws.prepare(request)
-        self._clients.add(ws)
+        self._clients[ws] = "unknown"
         try:
             async for msg in ws:
                 if msg.type == WSMsgType.TEXT:
@@ -179,7 +183,7 @@ class ControlServer:
                 elif msg.type == WSMsgType.ERROR:
                     logger.warning("Control websocket error: %s", ws.exception())
         finally:
-            self._clients.discard(ws)
+            self._clients.pop(ws, None)
         return ws
 
     async def _dispatch(self, ws: web.WebSocketResponse, raw: str) -> None:
@@ -203,10 +207,15 @@ class ControlServer:
         # The control plane has no authentication (loopback-only trust, see
         # CLAUDE.md) -- this is the only audit trail available for who did
         # what, so every RPC is logged before it runs, not just failures.
-        logger.info("Control-plane RPC: %s %r", method, params)
+        # Client type comes from a prior `daemon.identify` call on this same
+        # connection (see issue #53); a connection that never identified
+        # itself just logs as "unknown" -- this is an audit label, not
+        # access control, so nothing is rejected for omitting it.
+        client_type = self._clients.get(ws, "unknown")
+        logger.info("Control-plane RPC [%s]: %s %r", client_type, method, params)
 
         try:
-            result = await self._call(method, params)
+            result = await self._call(method, params, ws)
             await ws.send_json({"id": request_id, "result": result})
         except Exception as exc:
             logger.exception("Error dispatching control-plane method '%s'", method)
@@ -215,12 +224,22 @@ class ControlServer:
                 "error": {"type": type(exc).__name__, "message": str(exc)},
             })
 
-    async def _call(self, method: str | None, params: dict[str, Any]) -> Any:  # ruff:ignore[any-type]
+    async def _call(
+        self,
+        method: str | None,
+        params: dict[str, Any],
+        ws: web.WebSocketResponse | None = None,
+    ) -> Any:  # ruff:ignore[any-type]
         """Route one method name to the corresponding service call.
 
         Args:
             method: JSON-RPC method name.
             params: JSON-RPC params dict.
+            ws: The connection the request arrived on, used only by
+                ``daemon.identify`` to record that connection's client
+                type. ``None`` (e.g. in the dispatch-completeness test,
+                which calls ``_call`` directly) just means the identity
+                can't be recorded.
 
         Returns:
             JSON-serializable result.
@@ -433,6 +452,11 @@ class ControlServer:
             return {"protocols": self.service.list_protocols()}
         if method == "daemon.ping":
             return await self.service.ping()
+        if method == "daemon.identify":
+            client_type = str(params.get("client_type", "unknown"))
+            if ws is not None:
+                self._clients[ws] = client_type
+            return {}
         if method == "ws.status":
             return dataclasses.asdict(
                 await self.service.dispatch(self.service.ws_status)

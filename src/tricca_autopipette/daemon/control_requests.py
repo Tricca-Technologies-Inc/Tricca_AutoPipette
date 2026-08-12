@@ -505,6 +505,23 @@ class ControlRequests:
         """
         return self.gen_request("daemon.ping")
 
+    def identify(self, client_type: str) -> dict[str, Any]:
+        """Build a one-time request identifying this connection's client type.
+
+        Both ``RemoteTapShell`` and the kiosk send this once, right after
+        connecting, hardcoded to their own fixed string ("tap"/"kiosk") --
+        see issue #53. This is an audit-trail label for the RPC log, not
+        access control: a connection that never identifies itself is still
+        served, just logged as "unknown".
+
+        Args:
+            client_type: Fixed client-type string, e.g. "tap" or "kiosk".
+
+        Returns:
+            Request to identify this connection.
+        """
+        return self.gen_request("daemon.identify", {"client_type": client_type})
+
     def run_stop(self) -> dict[str, Any]:
         """Build a request to send an emergency stop.
 

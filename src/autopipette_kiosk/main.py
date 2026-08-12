@@ -117,6 +117,17 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
     )
     if not connected:
         logger.error("Failed to connect to tapd control plane at %s", TAPD_CONTROL_URI)
+    else:
+        # One-time identity so the daemon's RPC log can attribute
+        # subsequent calls on this connection to "kiosk" (issue #53) -- an
+        # audit-trail label, not access control, so a failure here is
+        # logged rather than treated as fatal to startup.
+        try:
+            await asyncio.to_thread(
+                client.send_jsonrpc, _control_requests.identify("kiosk")
+            )
+        except RuntimeError:
+            logger.warning("Failed to identify this connection to tapd.")
     _control_client = client
 
     try:

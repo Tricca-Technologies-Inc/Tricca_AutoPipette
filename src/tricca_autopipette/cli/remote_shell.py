@@ -117,6 +117,14 @@ class RemoteTapShell(Cmd):
             )
         else:
             self.poutput("Connected.")
+            # One-time identity so the daemon's RPC log can attribute
+            # subsequent calls on this connection to "tap" (issue #53) --
+            # an audit-trail label, not access control, so a failure here
+            # is logged rather than treated as fatal to the shell.
+            try:
+                self.client.send_jsonrpc(self.requests.identify("tap"))
+            except RuntimeError:
+                logger.warning("Failed to identify this connection to tapd.")
 
     def postloop(self) -> None:
         """Disconnect from the daemon's control plane on exit."""
