@@ -522,6 +522,19 @@ class ControlRequests:
         """
         return self.gen_request("daemon.identify", {"client_type": client_type})
 
+    def clients(self) -> dict[str, Any]:
+        """Build a request listing currently-connected control-plane clients.
+
+        A debugging aid built on the same ``ControlServer._clients`` map
+        that #53's ``daemon.identify`` populates -- see issue #59. Reports
+        one entry per open connection, each carrying only the client-type
+        label ("tap"/"kiosk"/"unknown"); nothing beyond that is tracked.
+
+        Returns:
+            Request for the connected-client list.
+        """
+        return self.gen_request("daemon.clients")
+
     def run_stop(self) -> dict[str, Any]:
         """Build a request to send an emergency stop.
 

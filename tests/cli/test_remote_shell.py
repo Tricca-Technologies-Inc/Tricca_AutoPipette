@@ -372,6 +372,14 @@ class TestWebSocketDiagnostics:
 
         assert "Usage: subscribe <method>" in capsys.readouterr().err
 
+    def test_clients_lists_this_connection_as_tap(self, shell: RemoteTapShell) -> None:
+        # The `shell` fixture's own `preloop()` already sent
+        # `daemon.identify("tap")` (issue #53) -- this is the real
+        # `daemon.clients` (issue #59) round trip reflecting that back.
+        shell.onecmd_plus_hooks("clients")
+
+        assert "tap" in _output(shell)
+
     def test_reconnect_surfaces_the_real_no_client_error(
         self, shell: RemoteTapShell, capsys: pytest.CaptureFixture[str]
     ) -> None:

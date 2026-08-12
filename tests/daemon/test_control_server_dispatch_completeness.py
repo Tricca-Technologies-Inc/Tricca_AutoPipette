@@ -170,6 +170,7 @@ _BUILDER_CALLS: list[tuple[str, tuple[Any, ...]]] = [
     ("protocols_list", ()),
     ("daemon_ping", ()),
     ("identify", ("tap",)),
+    ("clients", ()),
     ("run_stop", ()),
     ("ws_status", ()),
     ("ws_ping", ()),
