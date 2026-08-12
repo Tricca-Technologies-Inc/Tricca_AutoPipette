@@ -457,6 +457,13 @@ class ControlServer:
             if ws is not None:
                 self._clients[ws] = client_type
             return {}
+        if method == "daemon.clients":
+            return {
+                "clients": [
+                    {"client_type": client_type}
+                    for client_type in self._clients.values()
+                ]
+            }
         if method == "ws.status":
             return dataclasses.asdict(
                 await self.service.dispatch(self.service.ws_status)

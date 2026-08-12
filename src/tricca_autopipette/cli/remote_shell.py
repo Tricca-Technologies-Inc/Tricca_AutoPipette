@@ -313,6 +313,18 @@ class RemoteTapShell(Cmd):
         """Ping Moonraker directly and measure round-trip time."""
         self._call_and_print(self.requests.ws_ping())
 
+    def do_clients(self, _: Statement) -> None:
+        """List control-plane clients currently connected to the daemon."""
+        response = self._send(self.requests.clients())
+        if response is None:
+            return
+        clients: list[Any] = _as_dict(response.get("result")).get("clients") or []
+        if not clients:
+            self.poutput("(no clients connected)")
+            return
+        for client in clients:
+            self.poutput(str(_as_dict(client).get("client_type", "unknown")))
+
     @with_argparser(TAPCmdParsers.parser_send)  # type: ignore[arg-type]
     def do_send(self, args: SendArgs) -> None:
         """Send a JSON-RPC request to Moonraker and await a response."""
