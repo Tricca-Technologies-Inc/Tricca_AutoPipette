@@ -22,12 +22,8 @@ name = "tricca-autopipette"
 version = "0.1.0"
 description = "Automation software for the Tricca AutoPipette"
 
-# TODO:
-# Replace with your actual minimum supported version.
 requires-python = ">=3.12"
 
-# TODO:
-# Add runtime dependencies here.
 dependencies = [
     "aiohttp",
     "cmd2",
@@ -150,8 +146,6 @@ allowed-confusables = ["×"]
 
 [tool.ruff.lint.isort]
 
-# TODO:
-# Replace with your package name under src/.
 known-first-party = [
     "tricca_autopipette", "autopipette_kiosk"
 ]

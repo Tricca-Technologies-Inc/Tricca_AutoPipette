@@ -1,0 +1,43 @@
+name: Feature request
+description: Propose new behavior, or a change to existing behavior.
+labels: ["needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This repo tracks its whole backlog as GitHub issues (see the map,
+        [#34](https://github.com/Tricca-Technologies-Inc/Tricca_AutoPipette/issues/34)).
+        A well-scoped request here may get folded into that backlog rather
+        than actioned standalone — that's expected, not a rejection.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What can't you do today, or what's awkward/unsafe about the current behavior?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: What should happen instead? Concrete is better than abstract.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other approaches you thought about, and why you didn't propose them instead.
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Anything else — links, sketches, a related issue number.
+    validations:
+      required: false
