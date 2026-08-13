@@ -29,7 +29,11 @@ class TestWsStatus:
         result = service.ws_status()
 
         assert result.ok is False
-        assert result.data is None
+        # Still reports the configured URI -- just the resolved config
+        # value, not a live connection property -- even with no client at
+        # all (e.g. `tapd --no-connect`), so callers like the `tap` splash
+        # can show "configured pipette" without a live connection.
+        assert result.data == {"connected": False, "uri": service.uri}
 
     def test_reports_connected_client_details(
         self, service: AutoPipetteService

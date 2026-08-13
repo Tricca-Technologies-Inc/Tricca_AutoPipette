@@ -72,8 +72,12 @@ class WebSocketCommands(TAPCommandSet):
         """
         result = self.service.ws_status()
         data = result.data or {}
-        if not data:
+        if "queued_messages" not in data:
+            # No Moonraker client configured at all -- only the configured
+            # URI is known, not live connection details.
             rprint(f"[yellow]{result.message}[/yellow]")
+            if data.get("uri"):
+                rprint(f"[dim]Configured server:[/dim] {data['uri']}")
             return
 
         rprint(

@@ -133,6 +133,66 @@ class TestConnectionLifecycle:
         finally:
             tap.postloop()
 
+    def test_preloop_prints_the_splash_banner(
+        self, live_control_plane: LiveControlPlane, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """`preloop` prints the ported `TAP_CLR_BANNER` before connecting."""
+        tap = RemoteTapShell(live_control_plane.url)
+        tap.preloop()
+        try:
+            # A literal (non-rich-markup) fragment of the ASCII art -- stable
+            # across rendering, unlike the `[bold ...]` tags around it.
+            assert "___(_)__________" in capsys.readouterr().out
+        finally:
+            tap.postloop()
+
+    def test_preloop_prints_the_pipette_host_below_the_banner(
+        self, live_control_plane: LiveControlPlane, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """The pipette's configured Moonraker host prints after connecting.
+
+        `live_control_plane`'s underlying `service` fixture is built with
+        `connect_websocket=False` (see `tests/conftest.py`), so `tapd` has no
+        live Moonraker connection here -- the line falls back to the
+        "configured but not connected" form (Q6 of the design).
+        """
+        tap = RemoteTapShell(live_control_plane.url)
+        host = live_control_plane.service.hostname
+        tap.preloop()
+        try:
+            out = capsys.readouterr().out
+            assert f"Pipette: {host} (not connected)" in out
+        finally:
+            tap.postloop()
+
+    def test_pipette_status_line_is_skipped_if_the_rpc_fails(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """No "Pipette: ..." line, and no crash, if `tapd` is unreachable."""
+        monkeypatch.setattr(remote_shell_module, "WEBSOCKET_TIMEOUT_SECONDS", 0.3)
+        tap = RemoteTapShell("ws://127.0.0.1:1/control")
+        tap.preloop()
+        try:
+            assert "Pipette:" not in capsys.readouterr().out
+        finally:
+            tap.postloop()
+
+
+class TestReconnect:
+    def test_reconnect_refreshes_the_pipette_status_line(
+        self, shell: RemoteTapShell
+    ) -> None:
+        """`reconnect` re-fetches and reprints the pipette host line.
+
+        `shell`'s underlying service has no Moonraker client (see the
+        `service` fixture), so `ws.reconnect` itself errors server-side --
+        the status line should still refresh regardless of whether the
+        reconnect attempt it followed succeeded.
+        """
+        shell.onecmd_plus_hooks("reconnect")
+
+        assert "Pipette:" in _output(shell)
+
 
 class TestRunLifecycleAlerts:
     """The alert-driven state handling issue #37 specifically calls out."""
@@ -343,7 +403,10 @@ class TestWebSocketDiagnostics:
         # `self.client is None` server-side -- a real, not injected, state.
         shell.onecmd_plus_hooks("ws_status")
 
-        assert "not initialized" in _output(shell).lower()
+        out = _output(shell).lower()
+        assert "not initialized" in out
+        # Still reports the configured URI even with no live client.
+        assert "configured server:" in out
 
     def test_ping_surfaces_the_real_not_connected_error(
         self, shell: RemoteTapShell, capsys: pytest.CaptureFixture[str]
