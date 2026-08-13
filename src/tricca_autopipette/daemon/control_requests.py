@@ -32,6 +32,7 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     PlateArgs,
     ResetPlateArgs,
     ResetTipsArgs,
+    SeeCalibrationArgs,
     SetArgs,
     SetTipsArgs,
     TipsArgs,
@@ -417,6 +418,17 @@ class ControlRequests:
         """
         return self.gen_request("util.vol_to_steps", dataclasses.asdict(args))
 
+    def see_calibration(self, args: SeeCalibrationArgs) -> dict[str, Any]:
+        """Build a request to show a liquid's calibration curve and fit.
+
+        Args:
+            args: Liquid profile to inspect (or None for the active liquid).
+
+        Returns:
+            Request for the calibration report.
+        """
+        return self.gen_request("util.see_calibration", dataclasses.asdict(args))
+
     def steps_to_vol(self, steps: int) -> dict[str, Any]:
         """Build a request to convert plunger travel (mm) back to a volume.
 
@@ -657,6 +669,18 @@ class ControlRequests:
             Request to reconnect.
         """
         return self.gen_request("ws.reconnect")
+
+    def ws_query_endstops(self) -> dict[str, Any]:
+        """Build a request to query live endstop trigger state from Klipper.
+
+        A thin, structured passthrough to Moonraker's own
+        ``printer.query_endstops.status`` -- the same family as
+        ``ws_status``/``ws_ping``, not domain/business logic.
+
+        Returns:
+            Request for the endstop states.
+        """
+        return self.gen_request("ws.query_endstops")
 
     # ==================== Reporting ====================
 

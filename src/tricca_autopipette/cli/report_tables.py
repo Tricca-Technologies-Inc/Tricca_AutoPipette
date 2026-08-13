@@ -139,6 +139,52 @@ def build_system_table(data: dict[str, Any]) -> Table:
     return table
 
 
+def build_endstops_table(endstops: dict[str, str]) -> Table:
+    """Build a table of live endstop trigger states.
+
+    Args:
+        endstops: ``AutoPipetteService.query_endstops``'s
+            ``data["endstops"]`` -- endstop name (exactly as Klipper
+            reports it, including whatever name it assigns the pipette's
+            ``MANUAL_STEPPER`` endstop) mapped to its state ("open" or
+            "TRIGGERED", Klipper's own vocabulary -- kept as-is rather than
+            translated to "closed").
+
+    Returns:
+        A populated Table, rows sorted by endstop name.
+    """
+    table = Table(title="Endstop Status", show_header=True)
+    table.add_column("Endstop", style="cyan")
+    table.add_column("State", style="white")
+
+    for name in sorted(endstops):
+        state = endstops[name]
+        style = "red" if state.upper() == "TRIGGERED" else "green"
+        table.add_row(name, f"[{style}]{state}[/{style}]")
+    return table
+
+
+def build_calibration_table(volumes_ul: list[float], travel_mm: list[float]) -> Table:
+    """Build a table of a liquid's calibration points.
+
+    Args:
+        volumes_ul: ``AutoPipetteService.see_calibration``'s
+            ``data["volumes_ul"]``.
+        travel_mm: The same result's ``data["travel_mm"]``, parallel to
+            ``volumes_ul``.
+
+    Returns:
+        A populated Table.
+    """
+    table = Table(title="Calibration Points", show_header=True)
+    table.add_column("Volume (μL)", justify="right", style="cyan")
+    table.add_column("Travel (mm)", justify="right", style="white")
+
+    for volume, travel in zip(volumes_ul, travel_mm, strict=True):
+        table.add_row(f"{volume:g}", f"{travel:g}")
+    return table
+
+
 #: Glyphs for the tip map. Chosen to stay legible in a terminal without
 #: relying on color, since the map is also read over SSH and in logs.
 TIP_PRESENT = "O"

@@ -83,6 +83,41 @@ class TestPingMoonraker:
         assert "Pong" in result.message
 
 
+class TestQueryEndstops:
+    def test_raises_when_no_client(self, service: AutoPipetteService) -> None:
+        with pytest.raises(RuntimeError, match="not connected"):
+            service.query_endstops()
+
+    def test_raises_when_disconnected(self, service: AutoPipetteService) -> None:
+        _wire_fake_client(service, connected=False)
+
+        with pytest.raises(RuntimeError, match="not connected"):
+            service.query_endstops()
+
+    def test_returns_raw_endstop_states_from_moonraker(
+        self, service: AutoPipetteService
+    ) -> None:
+        client = _wire_fake_client(service, connected=True)
+        client.queue_response({"result": {"x": "open", "y": "open", "z": "TRIGGERED"}})
+
+        result = service.query_endstops()
+
+        assert result.ok is True
+        assert result.data == {"endstops": {"x": "open", "y": "open", "z": "TRIGGERED"}}
+        assert client.sent_requests[0]["method"] == "printer.query_endstops.status"
+
+    def test_reports_zero_endstops_gracefully(
+        self, service: AutoPipetteService
+    ) -> None:
+        client = _wire_fake_client(service, connected=True)
+        client.queue_response({"result": {}})
+
+        result = service.query_endstops()
+
+        assert result.ok is True
+        assert result.data == {"endstops": {}}
+
+
 class TestSendNotifyRaw:
     def test_send_raw_raises_when_disconnected(
         self, service: AutoPipetteService

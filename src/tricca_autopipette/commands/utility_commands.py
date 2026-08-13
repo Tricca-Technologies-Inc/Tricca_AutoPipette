@@ -9,10 +9,12 @@ from __future__ import annotations
 from cmd2 import Statement, with_argparser
 from rich import print as rprint
 
+from tricca_autopipette.cli.report_tables import build_calibration_table
 from tricca_autopipette.commands.base_command_set import TAPCommandSet
 
 from .tap_cmd_parsers import (
     GcodePrintArgs,
+    SeeCalibrationArgs,
     TAPCmdParsers,
     TriggerArgs,
     VolToStepsArgs,
@@ -35,6 +37,7 @@ class UtilityCommands(TAPCommandSet):
     - Sending messages to the pipette display
     - Converting volumes to motor steps and vice versa
     - Accessing the webcam stream URL
+    - Showing a liquid's calibration curve and fitted line
 
     Example:
         wait 500
@@ -43,6 +46,7 @@ class UtilityCommands(TAPCommandSet):
         vol_to_steps 100
         steps_to_vol 4523
         webcam
+        see_calibration
     """
 
     def __init__(self) -> None:
@@ -242,3 +246,43 @@ class UtilityCommands(TAPCommandSet):
             rprint(f"[cyan]{steps} steps[/cyan] = [green]{vol:.2f} μL[/green]")
         except Exception as e:
             rprint(f"[red]Conversion error: {e}[/red]")
+
+    # =========================================================================
+    # CALIBRATION
+    # =========================================================================
+
+    @with_argparser(TAPCmdParsers.parser_see_calibration)  # type: ignore[arg-type]
+    def do_see_calibration(self, args: SeeCalibrationArgs) -> None:
+        """Show a liquid's calibration curve and its fitted line.
+
+        Displays the (volume, plunger-travel) points a liquid's motion is
+        actually fit from -- the liquid's own override if it has one,
+        otherwise the pipette's base curve -- plus the resulting linear
+        equation ``travel_mm = A * volume_ul + B``.
+
+        Args:
+            args: Liquid profile to inspect, or None for the active liquid.
+
+        Example:
+            see_calibration
+            see_calibration methanol
+        """
+        try:
+            result = self.service.see_calibration(args.liquid)
+        except (ValueError, RuntimeError) as e:
+            rprint(f"[red]{e}[/red]")
+            return
+
+        data = result.data or {}
+        volumes_ul: list[float] = data.get("volumes_ul") or []
+        travel_mm: list[float] = data.get("travel_mm") or []
+        if not volumes_ul:
+            rprint(f"[yellow]{result.message}[/yellow]")
+            return
+
+        rprint(f"[bold]{data.get('liquid')}[/bold] [dim]({data.get('source')})[/dim]")
+        rprint(build_calibration_table(volumes_ul, travel_mm))
+        rprint(
+            f"[cyan]travel_mm = {data.get('slope'):.6f} * volume_ul "
+            f"+ {data.get('intercept'):.6f}[/cyan]"
+        )

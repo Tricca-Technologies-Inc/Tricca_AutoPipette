@@ -21,6 +21,8 @@ from typing import Any, Literal, cast
 from cmd2 import Cmd, Statement, with_argparser
 
 from tricca_autopipette.cli.report_tables import (
+    build_calibration_table,
+    build_endstops_table,
     build_liquids_table,
     build_locations_table,
     build_plates_table,
@@ -44,6 +46,7 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     PlateArgs,
     ResetPlateArgs,
     ResetTipsArgs,
+    SeeCalibrationArgs,
     SendArgs,
     SetArgs,
     SetTipsArgs,
@@ -313,6 +316,25 @@ class RemoteTapShell(Cmd):
         """Ping Moonraker directly and measure round-trip time."""
         self._call_and_print(self.requests.ws_ping())
 
+    def do_query_endstops(self, _: Statement) -> None:
+        """Query live endstop trigger state from Klipper.
+
+        Nearly identical to Klipper's own ``QUERY_ENDSTOPS``, but via
+        Moonraker's structured ``printer.query_endstops.status`` RPC.
+        Shows every endstop Klipper reports (each axis, and the pipette's
+        ``MANUAL_STEPPER`` endstop), using Klipper's own "open"/"TRIGGERED"
+        wording. Works before homing.
+        """
+        response = self._send(self.requests.ws_query_endstops())
+        data = self._result_data(response)
+        if data is None:
+            return
+        endstops: dict[str, str] = data.get("endstops") or {}
+        if not endstops:
+            self.poutput("No endstops reported.")
+            return
+        self.poutput(build_endstops_table(endstops))
+
     def do_clients(self, _: Statement) -> None:
         """List control-plane clients currently connected to the daemon."""
         response = self._send(self.requests.clients())
@@ -422,6 +444,38 @@ class RemoteTapShell(Cmd):
     def do_list_liquids(self, _: Statement) -> None:
         """List all loaded liquid profiles."""
         self._print_liquids()
+
+    @with_argparser(TAPCmdParsers.parser_see_calibration)  # type: ignore[arg-type]
+    def do_see_calibration(self, args: SeeCalibrationArgs) -> None:
+        """Show a liquid's calibration curve and its fitted line.
+
+        Usage: see_calibration [liquid]
+
+        Displays the (volume, plunger-travel) points a liquid's motion is
+        actually fit from -- the liquid's own override if it has one,
+        otherwise the pipette's base curve -- plus the resulting linear
+        equation ``travel_mm = A * volume_ul + B``.
+        """
+        response = self._send(
+            self.requests.see_calibration(args_from_namespace(SeeCalibrationArgs, args))
+        )
+        if response is None:
+            return
+        result = _as_dict(response.get("result"))
+        data = _as_dict(result.get("data"))
+
+        volumes_ul: list[float] = data.get("volumes_ul") or []
+        travel_mm: list[float] = data.get("travel_mm") or []
+        if not volumes_ul:
+            self.poutput(result.get("message", ""))
+            return
+
+        self.poutput(f"{data.get('liquid')} ({data.get('source')})")
+        self.poutput(build_calibration_table(volumes_ul, travel_mm))
+        self.poutput(
+            f"travel_mm = {data.get('slope'):.6f} * volume_ul "
+            f"+ {data.get('intercept'):.6f}"
+        )
 
     def _print_liquids(self) -> None:
         """Fetch and render the liquid-profile table (shared by `ls liquids`)."""

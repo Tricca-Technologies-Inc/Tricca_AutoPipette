@@ -456,6 +456,18 @@ class TriggerArgs:
     state: str
 
 
+@dataclass
+class SeeCalibrationArgs:
+    """Arguments for the ``see_calibration`` command.
+
+    Attributes:
+        liquid: Liquid profile to inspect, or None to use whatever liquid
+            is currently active.
+    """
+
+    liquid: str | None
+
+
 # ===========================================================================
 # WebSocket / networking
 # ===========================================================================
@@ -948,6 +960,17 @@ class TAPCmdParsers:
         "state",
         type=str,
         help="Desired state: on, off",
+    )
+
+    parser_see_calibration: Cmd2ArgumentParser = Cmd2ArgumentParser(
+        description="Show a liquid's calibration curve and its fitted line."
+    )
+    parser_see_calibration.add_argument(
+        "liquid",
+        nargs="?",
+        default=None,
+        type=str,
+        help="Liquid profile to inspect (default: the active liquid)",
     )
 
     # -----------------------------------------------------------------------
