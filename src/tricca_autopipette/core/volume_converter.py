@@ -42,6 +42,11 @@ class VolumeConverter:
             Set at class level to the default calibration's fit; ``__init__``
             overrides it per-instance when custom calibration points are
             given.
+        _x: The calibration volumes (μL) this instance was actually fit
+            from -- either the constructor's ``x`` or the default
+            ``_consts`` keys. Retained so :meth:`get_calibration_points`
+            can report the real data in use, not just the class defaults.
+        _y: The calibration plunger-travel values (mm) paired with ``_x``.
     """
 
     # Default calibration mapping: volume (μL) -> plunger travel (mm)
@@ -97,6 +102,8 @@ class VolumeConverter:
         if y is None:
             y = list(self._consts.values())
 
+        self._x: list[float] = x
+        self._y: list[float] = y
         self._poly = Polynomial.fit(x, y, deg=1).convert()
 
     def vol_to_steps(self, vol_ul: float) -> float:
@@ -164,19 +171,45 @@ class VolumeConverter:
         return float(min(valid_roots))
 
     def get_calibration_points(self) -> tuple[list[float], list[float]]:
-        """Get the current calibration data points.
+        """Get the calibration data points this instance was fit from.
 
         Returns:
             Tuple of (volumes, plunger-travel) lists used for polynomial
-            fitting, in (μL, mm).
+            fitting, in (μL, mm) -- the actual ``x``/``y`` passed to
+            ``__init__`` (or the default ``_consts`` data, if none were
+            given), not always the class-level defaults regardless of
+            construction.
 
         Example:
             >>> converter = VolumeConverter()
             >>> volumes, travel_mm = converter.get_calibration_points()
             >>> volumes
             [0.0, 25.0, 50.0, 100.0, 200.0, 300.0, 400.0]
+
+            >>> custom = VolumeConverter(x=[0.0, 100.0], y=[0.0, 50.0])
+            >>> custom.get_calibration_points()
+            ([0.0, 100.0], [0.0, 50.0])
         """
-        # Extract from the default constants as representation
-        volumes = list(self._consts.keys())
-        steps = list(self._consts.values())
-        return volumes, steps
+        return list(self._x), list(self._y)
+
+    def get_fit_coefficients(self) -> tuple[float, float]:
+        """Get the fitted line's slope and intercept.
+
+        Returns the same linear relationship :meth:`vol_to_steps` evaluates
+        via ``self._poly``, as plain numbers rather than a ``Polynomial``,
+        for callers that want to display or report the fit (e.g. a
+        calibration-check command) without reaching into the private
+        ``_poly`` attribute themselves.
+
+        Returns:
+            Tuple of ``(slope, intercept)`` such that
+            ``travel_mm == slope * volume_ul + intercept``.
+
+        Example:
+            >>> converter = VolumeConverter(x=[0.0, 100.0], y=[10.0, 60.0])
+            >>> slope, intercept = converter.get_fit_coefficients()
+            >>> round(slope, 4), round(intercept, 4)
+            (0.5, 10.0)
+        """
+        intercept, slope = self._poly.coef
+        return float(slope), float(intercept)

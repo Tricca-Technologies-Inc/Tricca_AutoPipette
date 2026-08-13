@@ -23,6 +23,7 @@ from typing import Any
 from cmd2 import Statement, with_argparser
 from rich import print as rprint
 
+from tricca_autopipette.cli.report_tables import build_endstops_table
 from tricca_autopipette.commands.base_command_set import TAPCommandSet
 
 from .tap_cmd_parsers import NotifyArgs, SendArgs, TAPCmdParsers, UploadArgs
@@ -37,11 +38,13 @@ class WebSocketCommands(TAPCommandSet):
     - Uploading G-code files to the server
     - Reading messages from the WebSocket queue
     - Monitoring connection status
+    - Querying live endstop trigger state
     - Reconnecting and restoring subscriptions
 
     Example:
         ws_status
         ping
+        query_endstops
         subscribe notify_status_update
         notify printer.info
         send server.config
@@ -114,6 +117,31 @@ class WebSocketCommands(TAPCommandSet):
             rprint("[red]✗ Ping timed out[/red]")
         except Exception as e:
             rprint(f"[red]✗ Ping failed: {e}[/red]")
+
+    def do_query_endstops(self, _: Statement) -> None:
+        """Query live endstop trigger state from Klipper.
+
+        Nearly identical to Klipper's own ``QUERY_ENDSTOPS``, but via
+        Moonraker's structured ``printer.query_endstops.status`` RPC
+        rather than parsing G-code text -- shows every endstop Klipper
+        reports (each axis, and the pipette's ``MANUAL_STEPPER`` endstop),
+        using Klipper's own "open"/"TRIGGERED" wording. Works before
+        homing; not gated by the homed interlock.
+
+        Example:
+            query_endstops
+        """
+        try:
+            result = self.service.query_endstops()
+        except (RuntimeError, TimeoutError) as e:
+            rprint(f"[red]Error querying endstops: {e}[/red]")
+            return
+
+        endstops: dict[str, str] = (result.data or {}).get("endstops") or {}
+        if not endstops:
+            rprint("[yellow]No endstops reported.[/yellow]")
+            return
+        rprint(build_endstops_table(endstops))
 
     # =========================================================================
     # SEND / NOTIFY

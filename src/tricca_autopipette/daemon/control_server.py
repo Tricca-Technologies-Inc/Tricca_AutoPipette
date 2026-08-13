@@ -432,6 +432,12 @@ class ControlServer:
                     lambda: self.service.steps_to_vol(params["steps"])
                 )
             )
+        if method == "util.see_calibration":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.see_calibration(params.get("liquid"))
+                )
+            )
         if method == "run.start":
             status = await self.service.start_run(params["filename"])
             return _run_status_to_dict(status)
@@ -523,6 +529,10 @@ class ControlServer:
         if method == "ws.reconnect":
             return dataclasses.asdict(
                 await self.service.dispatch(self.service.reconnect_websocket)
+            )
+        if method == "ws.query_endstops":
+            return dataclasses.asdict(
+                await self.service.dispatch(self.service.query_endstops)
             )
         if method == "config.list_locations":
             return dataclasses.asdict(

@@ -16,6 +16,7 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     VolToStepsArgs,
     WaitArgs,
 )
+from tricca_autopipette.core.volume_converter import VolumeConverter
 from tricca_autopipette.daemon.service import AutoPipetteService
 
 
@@ -115,3 +116,84 @@ class TestStepsToVol:
         assert result.ok is True
         assert result.data is not None
         assert result.data["vol"] == pytest.approx(100.0, rel=0.05)
+
+
+class TestSeeCalibration:
+    def test_unknown_liquid_raises(self, service: AutoPipetteService) -> None:
+        with pytest.raises(ValueError, match="not found"):
+            service.see_calibration("no_such_liquid")
+
+    def test_defaults_to_the_active_liquid(self, service: AutoPipetteService) -> None:
+        autopipette = service._autopipette
+
+        result = service.see_calibration(None)
+
+        assert result.ok is True
+        assert result.data is not None
+        assert result.data["liquid"] == autopipette.active_liquid
+
+    def test_falls_back_to_pipette_default_when_liquid_has_no_override(
+        self, service: AutoPipetteService
+    ) -> None:
+        # None of the default liquid profiles override calibration -- see
+        # config/liquids/*.json -- so every one of them reports the
+        # pipette's base curve.
+        result = service.see_calibration("water")
+
+        assert result.ok is True
+        assert result.data is not None
+        assert result.data["source"] == "pipette default"
+        syringe = service._autopipette.syringe
+        assert result.data["volumes_ul"] == syringe.calibration_volumes
+        assert result.data["travel_mm"] == syringe.calibration_steps
+
+    def test_uses_the_liquid_override_when_present(
+        self, service: AutoPipetteService
+    ) -> None:
+        autopipette = service._autopipette
+        liquid = autopipette.system_config.liquids["methanol"]
+        liquid.calibration_volumes = [0.0, 100.0]
+        liquid.calibration_steps = [0.0, 50.0]
+
+        result = service.see_calibration("methanol")
+
+        assert result.ok is True
+        assert result.data is not None
+        assert result.data["source"] == "liquid override"
+        assert result.data["volumes_ul"] == [0.0, 100.0]
+        assert result.data["travel_mm"] == [0.0, 50.0]
+
+    def test_slope_and_intercept_match_a_fresh_fit(
+        self, service: AutoPipetteService
+    ) -> None:
+        result = service.see_calibration("water")
+
+        assert result.data is not None
+        volumes = result.data["volumes_ul"]
+        travel = result.data["travel_mm"]
+        expected_slope, expected_intercept = VolumeConverter(
+            volumes, travel
+        ).get_fit_coefficients()
+
+        assert result.data["slope"] == pytest.approx(expected_slope)
+        assert result.data["intercept"] == pytest.approx(expected_intercept)
+
+    def test_does_not_mutate_the_currently_active_converter(
+        self, service: AutoPipetteService
+    ) -> None:
+        """Regression test: inspecting a non-active liquid must not swap
+
+        out `autopipette.volume_converter`, which reflects whichever
+        liquid is actually active -- a live run must keep using the
+        active liquid's real converter regardless of what's been
+        inspected via `see_calibration`.
+        """
+        autopipette = service._autopipette
+        original_converter = autopipette.volume_converter
+        liquid = autopipette.system_config.liquids["methanol"]
+        liquid.calibration_volumes = [0.0, 100.0]
+        liquid.calibration_steps = [0.0, 999.0]
+
+        service.see_calibration("methanol")
+
+        assert autopipette.volume_converter is original_converter

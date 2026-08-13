@@ -83,6 +83,7 @@ from tricca_autopipette.core.pipette_models import SystemConfig, TipState
 from tricca_autopipette.core.plates import Plate, PlateParams
 from tricca_autopipette.core.splits import parse_splits_spec
 from tricca_autopipette.core.traversal import parse_well_ranges
+from tricca_autopipette.core.volume_converter import VolumeConverter
 from tricca_autopipette.core.well import StrategyType, Well
 from tricca_autopipette.daemon.moonraker_state import MoonrakerStateTracker
 from tricca_autopipette.moonraker.moonraker_requests import MoonrakerRequests
@@ -1805,6 +1806,110 @@ class AutoPipetteService:
             )
         return CommandResult(
             ok=False, message="Response received but contained no result."
+        )
+
+    def query_endstops(self) -> CommandResult:
+        """Query live endstop trigger state from Klipper.
+
+        Sends Moonraker's structured ``printer.query_endstops.status`` RPC
+        (``MoonrakerRequests.printer_query_endstops_status``) rather than
+        sending ``QUERY_ENDSTOPS`` as G-code and parsing its free-text
+        reply, so the reported names and states are exactly what Klipper
+        returns, unmodified -- including whatever name it assigns the
+        pipette's ``MANUAL_STEPPER`` endstop, which isn't recorded anywhere
+        in this repo's config (it lives in the host's Klipper config).
+        Read-only and not gated by the homed interlock: unlike
+        ``move``/``aspirate``/etc., this doesn't move anything, and is
+        exactly the kind of check useful *before* homing.
+
+        Returns:
+            Result with each endstop's name -> state ("open" or
+            "TRIGGERED", Klipper's own vocabulary) in
+            ``data["endstops"]``.
+
+        Raises:
+            RuntimeError: If there is no connected WebSocket client.
+            TimeoutError: If the request times out.
+        """  # ruff: ignore[docstring-extraneous-exception]
+        if self.client is None or not self.client.is_connected():
+            raise RuntimeError(_NOT_CONNECTED_MSG)
+        request = self.mrr.printer_query_endstops_status()
+        response = self.client.send_jsonrpc(request, timeout=5.0)
+        endstops: dict[str, Any] = response.get("result") or {}
+        return CommandResult(
+            ok=True,
+            message=f"{len(endstops)} endstop(s) reported.",
+            data={"endstops": endstops},
+        )
+
+    def see_calibration(self, liquid_name: str | None) -> CommandResult:
+        """Report a liquid's effective calibration curve and its fitted line.
+
+        Shows the raw (volume, plunger-travel) calibration points Klipper's
+        ``MANUAL_STEPPER`` motion is fit from -- via the same
+        liquid-overrides-pipette merge every other technique parameter
+        uses (``JsonConfigManager.get_merged_syringe_params``) -- plus the
+        resulting linear fit's slope/intercept, so an operator can sanity
+        check the numbers a live run would actually use without cross
+        referencing config files by hand.
+
+        Args:
+            liquid_name: Liquid profile to inspect, or None to use whatever
+                liquid is currently active.
+
+        Returns:
+            Result with the points and fit in ``data``: ``liquid`` (name
+            inspected), ``source`` ("liquid override" or "pipette
+            default"), ``volumes_ul``/``travel_mm`` (the calibration
+            points, parallel lists), and ``slope``/``intercept`` such that
+            ``travel_mm == slope * volume_ul + intercept``.
+
+        Raises:
+            ValueError: If ``liquid_name`` is not a loaded liquid profile.
+            RuntimeError: If neither the liquid nor the pipette has
+                calibration data configured (mirrors
+                ``AutoPipette._init_volume_converter``'s own check -- a
+                live system can't actually run in this state, but a
+                caller inspecting an unusual pipette config could still
+                hit it here).
+        """  # ruff: ignore[docstring-extraneous-exception]
+        autopipette = self._autopipette
+        name = liquid_name or autopipette.active_liquid
+
+        merged = autopipette.config_manager.get_merged_syringe_params(name)
+        volumes = merged["calibration_volumes"]
+        travel_mm = merged["calibration_steps"]
+        if volumes is None or travel_mm is None:
+            raise RuntimeError(
+                "No calibration data available. "
+                f"Check pipette '{autopipette.pipette_model.name}' "
+                f"and liquid '{name}' configs."
+            )
+
+        liquid = autopipette.system_config.liquids[name]
+        source = (
+            "liquid override"
+            if liquid.calibration_volumes is not None
+            else "pipette default"
+        )
+
+        converter = VolumeConverter(volumes, travel_mm)
+        slope, intercept = converter.get_fit_coefficients()
+
+        return CommandResult(
+            ok=True,
+            message=(
+                f"Calibration for '{name}' ({source}, {len(volumes)} points): "
+                f"travel_mm = {slope:.6f} * volume_ul + {intercept:.6f}"
+            ),
+            data={
+                "liquid": name,
+                "source": source,
+                "volumes_ul": volumes,
+                "travel_mm": travel_mm,
+                "slope": slope,
+                "intercept": intercept,
+            },
         )
 
     def send_raw(self, method: str, params: dict[str, Any] | None) -> CommandResult:

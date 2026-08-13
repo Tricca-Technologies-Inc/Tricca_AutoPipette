@@ -28,6 +28,12 @@ class TestDefaultCalibration:
         assert 100.0 in volumes
         assert len(volumes) == len(steps)
 
+    def test_get_fit_coefficients_matches_vol_to_steps(self) -> None:
+        converter = VolumeConverter()
+        slope, intercept = converter.get_fit_coefficients()
+
+        assert slope * 100.0 + intercept == pytest.approx(converter.vol_to_steps(100.0))
+
 
 class TestCustomCalibration:
     def test_custom_calibration_curve_is_used_instead_of_default(self) -> None:
@@ -44,3 +50,24 @@ class TestCustomCalibration:
 
         with pytest.raises(ValueError, match="No valid volume found"):
             converter.steps_to_vol(-1_000_000.0)
+
+    def test_get_calibration_points_returns_custom_data_not_defaults(self) -> None:
+        """Regression test: this used to always return the class defaults.
+
+        ``VolumeConverter.__init__`` never stored its ``x``/``y`` args, so
+        ``get_calibration_points`` had no way to report anything but the
+        hardcoded ``_consts`` table, regardless of what the instance was
+        actually fit from.
+        """
+        volumes = [0.0, 50.0, 100.0, 200.0]
+        steps = [0.0, 25.0, 50.0, 100.0]
+        converter = VolumeConverter(x=volumes, y=steps)
+
+        assert converter.get_calibration_points() == (volumes, steps)
+
+    def test_get_fit_coefficients_on_custom_curve(self) -> None:
+        converter = VolumeConverter(x=[0.0, 100.0], y=[10.0, 60.0])
+        slope, intercept = converter.get_fit_coefficients()
+
+        assert slope == pytest.approx(0.5)
+        assert intercept == pytest.approx(10.0)
