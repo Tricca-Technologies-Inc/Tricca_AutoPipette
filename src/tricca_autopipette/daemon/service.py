@@ -1770,10 +1770,19 @@ class AutoPipetteService:
 
         Returns:
             Result with ``ok`` mirroring connection state and connection/
-            queue/handler/pending-request details in ``data``.
+            queue/handler/pending-request details in ``data``. ``uri`` is
+            always present (even with no client, e.g. `tapd --no-connect`)
+            since it's just the resolved config value, not a live property
+            of the connection -- callers that only need "what pipette is
+            this daemon configured for" (e.g. the `tap` startup splash)
+            don't need to distinguish that case from a live one.
         """
         if self.client is None:
-            return CommandResult(ok=False, message="WebSocket client not initialized.")
+            return CommandResult(
+                ok=False,
+                message="WebSocket client not initialized.",
+                data={"connected": False, "uri": self.uri},
+            )
         connected = self.client.is_connected()
         data = {
             "connected": connected,

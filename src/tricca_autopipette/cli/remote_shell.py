@@ -61,6 +61,7 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
 )
 from tricca_autopipette.daemon.control_requests import ControlRequests
 from tricca_autopipette.moonraker.websocket_client import WebSocketClient
+from tricca_autopipette.resources.string_constants import TAP_CLR_BANNER
 
 logger = logging.getLogger(__name__)
 
@@ -110,7 +111,9 @@ class RemoteTapShell(Cmd):
     # ==================== lifecycle ====================
 
     def preloop(self) -> None:
-        """Connect to the daemon's control plane before entering the loop."""
+        """Show the splash banner, then connect to the daemon's control plane."""
+        self.poutput("\033c", end="")
+        self.poutput(TAP_CLR_BANNER, markup=True)
         self.poutput(f"Connecting to tapd at {self.control_uri}...")
         self.client.start()
         if not self.client.wait_for_connection(timeout=WEBSOCKET_TIMEOUT_SECONDS):
@@ -128,6 +131,7 @@ class RemoteTapShell(Cmd):
                 self.client.send_jsonrpc(self.requests.identify("tap"))
             except RuntimeError:
                 logger.warning("Failed to identify this connection to tapd.")
+            self._print_pipette_status()
 
     def postloop(self) -> None:
         """Disconnect from the daemon's control plane on exit."""
@@ -302,9 +306,14 @@ class RemoteTapShell(Cmd):
         response = self._send(self.requests.ws_status())
         if response is None:
             return
-        data = _as_dict(_as_dict(response.get("result")).get("data"))
-        if not data:
-            self.poutput(_as_dict(response.get("result")).get("message", ""))
+        result = _as_dict(response.get("result"))
+        data = _as_dict(result.get("data"))
+        if "queued_messages" not in data:
+            # No Moonraker client configured at all (`tapd --no-connect`) --
+            # only the configured URI is known, not live connection details.
+            self.poutput(result.get("message", ""))
+            if data.get("uri"):
+                self.poutput(f"Configured server: {data['uri']}")
             return
         self.poutput("Connected" if data.get("connected") else "Disconnected")
         self.poutput(f"Server: {data.get('uri')}")
@@ -408,6 +417,7 @@ class RemoteTapShell(Cmd):
     def do_reconnect(self, _: Statement) -> None:
         """Reconnect the daemon's WebSocket connection to Moonraker."""
         self._call_and_print(self.requests.ws_reconnect())
+        self._print_pipette_status()
 
     # ==================== reporting ====================
 
@@ -538,6 +548,32 @@ class RemoteTapShell(Cmd):
         except RuntimeError as exc:
             self.perror(str(exc))
             return None
+
+    def _print_pipette_status(self) -> None:
+        """Print the pipette's configured Moonraker host, below the splash.
+
+        Fetched via `ws.status` rather than known locally -- unlike the old
+        pre-daemon shell, `tap` has no Moonraker connection of its own, only
+        `tapd` does. Silently does nothing if the request fails (mirrors the
+        `identify` call in `preloop`): this is a startup/status nicety, not
+        something worth erroring the shell over.
+        """
+        try:
+            response = self.client.send_jsonrpc(self.requests.ws_status())
+        except RuntimeError:
+            return
+        data = _as_dict(_as_dict(response.get("result")).get("data"))
+        uri = data.get("uri")
+        if not uri:
+            return
+        # "ws://192.168.1.50/websocket" -> "192.168.1.50".
+        host = str(uri).removeprefix("ws://").split("/", 1)[0]
+        if data.get("connected"):
+            self.poutput(f"[green]Pipette: {host}[/green]", markup=True)
+        else:
+            self.poutput(
+                f"[yellow]Pipette: {host} (not connected)[/yellow]", markup=True
+            )
 
 
 # ==================== structured commands (generated do_* methods) ====================
