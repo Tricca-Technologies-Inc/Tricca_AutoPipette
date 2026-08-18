@@ -46,6 +46,9 @@ def shell(live_control_plane: LiveControlPlane) -> Iterator[RemoteTapShell]:
     plain `io.StringIO()` sidesteps that entirely. `perror` (stderr) has no
     such problem -- it looks up `sys.stderr` fresh each call rather than a
     cached attribute -- so stderr-focused tests below use `capsys` directly.
+
+    Yields:
+        The connected shell, torn down via `postloop()` after the test.
     """
     tap = RemoteTapShell(live_control_plane.url)
     tap.stdout = io.StringIO()
@@ -61,6 +64,9 @@ def _output(shell: RemoteTapShell) -> str:
 
     `Cmd.stdout` is typed as the more general `TextIO`; the `shell` fixture
     always sets it to a real `io.StringIO()`, so narrowing here is safe.
+
+    Returns:
+        Everything written to `shell.stdout` since it was created.
     """
     stream = shell.stdout
     assert isinstance(stream, io.StringIO)
@@ -75,6 +81,9 @@ def protocol_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     call, so patching it for the duration of one test is enough -- no need
     to thread a protocols-dir override through the service/fixture chain the
     way `gcode_path`/`locations_dir` already are in `tests/conftest.py`.
+
+    Returns:
+        The empty temp dir now patched in as the protocols directory.
     """
     monkeypatch.setattr(DefaultPaths, "DIR_PROTOCOL", tmp_path)
     return tmp_path

@@ -26,6 +26,9 @@ def protocols_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     per request (see CLAUDE.md), so patching each module constant directly
     -- not the env vars they were originally read from -- is the only way
     to redirect them per test.
+
+    Returns:
+        The empty temp dir now patched in as both protocol directories.
     """
     monkeypatch.setattr(kiosk_main, "PROTOCOLS_DIR", tmp_path)
     monkeypatch.setattr(DefaultPaths, "DIR_PROTOCOL", tmp_path)
@@ -50,6 +53,9 @@ def kiosk_client(
     long-lived singleton in production) -- tests share that same module
     across the whole session, so leftover state from one test would
     otherwise leak into the next.
+
+    Yields:
+        A `TestClient` for the kiosk app, with its `lifespan` running.
     """
     empty_clients: set[WebSocket] = set()
     monkeypatch.setattr(kiosk_main, "TAPD_CONTROL_URI", live_control_plane.url)

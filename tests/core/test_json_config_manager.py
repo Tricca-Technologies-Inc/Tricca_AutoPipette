@@ -57,6 +57,10 @@ def _scratch_writer(directory: Path) -> Iterator[Any]:
 
     Yields a ``(name, payload) -> filename`` writer that prefixes each
     filename and tracks it for cleanup once the test using it finishes.
+
+    Yields:
+        A writer callable that writes a prefixed scratch config file into
+        ``directory`` and returns its filename.
     """
     written: list[Path] = []
 
@@ -79,25 +83,44 @@ def write_system_config() -> Iterator[Any]:
 
     Into `DefaultPaths.DIR_LOCAL_SYSTEM`, not `DIR_CONFIG_SYSTEM` --
     ``system/`` is local-only (issue #68).
+
+    Yields:
+        A writer callable that writes a prefixed scratch system config and
+        returns its filename.
     """
     yield from _scratch_writer(DefaultPaths.DIR_LOCAL_SYSTEM)
 
 
 @pytest.fixture
 def write_gantry_config() -> Iterator[Any]:
-    """Write scratch gantry configs, cleaning them up afterwards."""
+    """Write scratch gantry configs, cleaning them up afterwards.
+
+    Yields:
+        A writer callable that writes a prefixed scratch gantry config and
+        returns its filename.
+    """
     yield from _scratch_writer(DefaultPaths.DIR_CONFIG_GANTRY)
 
 
 @pytest.fixture
 def write_pipette_config() -> Iterator[Any]:
-    """Write scratch pipette configs, cleaning them up afterwards."""
+    """Write scratch pipette configs, cleaning them up afterwards.
+
+    Yields:
+        A writer callable that writes a prefixed scratch pipette config and
+        returns its filename.
+    """
     yield from _scratch_writer(DefaultPaths.DIR_CONFIG_PIPETTE)
 
 
 @pytest.fixture
 def write_liquid_config() -> Iterator[Any]:
-    """Write scratch liquid configs, cleaning them up afterwards."""
+    """Write scratch liquid configs, cleaning them up afterwards.
+
+    Yields:
+        A writer callable that writes a prefixed scratch liquid config and
+        returns its filename.
+    """
     yield from _scratch_writer(DefaultPaths.DIR_CONFIG_LIQUIDS)
 
 

@@ -26,7 +26,11 @@ from tricca_autopipette.core.well import StrategyType, Well
 
 @pytest.fixture
 def locations_dir(tmp_path: Path) -> Path:
-    """A scratch locations directory, so tests never touch the real config."""
+    """A scratch locations directory, so tests never touch the real config.
+
+    Returns:
+        The scratch directory to load/save locations files from.
+    """
     return tmp_path
 
 
@@ -36,7 +40,11 @@ def manager(locations_dir: Path) -> LocationManager:
 
 
 def _write(directory: Path, name: str, payload: dict[str, Any]) -> str:
-    """Write a locations file and return its filename."""
+    """Write a locations file and return its filename.
+
+    Returns:
+        The filename the locations file was written under.
+    """
     (directory / name).write_text(json.dumps(payload), encoding="utf-8")
     return name
 

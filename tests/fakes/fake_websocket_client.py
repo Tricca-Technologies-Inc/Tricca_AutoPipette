@@ -63,7 +63,12 @@ class FakeWebSocketClient:
     def send_jsonrpc(
         self, payload: dict[str, Any], timeout: float = 5.0
     ) -> dict[str, Any]:
-        """Record the request and return the next queued canned response."""
+        """Record the request and return the next queued canned response.
+
+        Returns:
+            The next queued canned response, or ``{"result": {}}`` if the
+            queue is empty.
+        """
         del timeout
         self.sent_requests.append(payload)
         if self._responses:
@@ -77,7 +82,11 @@ class FakeWebSocketClient:
         self.sent_notifications.append((method, params))
 
     def upload_gcode_file(self, file_name: str, file_path: str | Path) -> Future[str]:
-        """Record the upload and return an already-resolved Future."""
+        """Record the upload and return an already-resolved Future.
+
+        Returns:
+            An already-resolved `Future` holding the uploaded file's path.
+        """
         self.uploaded_files.append((file_name, str(file_path)))
         future: Future[str] = Future()
         future.set_result(f"gcodes/{file_name}")
@@ -119,17 +128,30 @@ class FakeWebSocketClient:
         self._message_queue.append(QueuedMessage(type=message_type, data=data or {}))
 
     def pop_message(self) -> QueuedMessage | None:
-        """Pop and return the oldest queued message, or None if empty."""
+        """Pop and return the oldest queued message, or None if empty.
+
+        Returns:
+            The oldest queued message, or None if the queue is empty.
+        """
         return self._message_queue.popleft() if self._message_queue else None
 
     def get_queued_messages(self) -> list[QueuedMessage]:
-        """Drain and return every queued message, in FIFO order."""
+        """Drain and return every queued message, in FIFO order.
+
+        Returns:
+            Every message that was queued, in FIFO order. The queue is
+            empty afterwards.
+        """
         messages = list(self._message_queue)
         self._message_queue.clear()
         return messages
 
     def clear_queue(self) -> int:
-        """Discard all queued messages, returning how many were removed."""
+        """Discard all queued messages, returning how many were removed.
+
+        Returns:
+            The number of messages that were discarded.
+        """
         count = len(self._message_queue)
         self._message_queue.clear()
         return count
@@ -143,7 +165,7 @@ class FakeWebSocketClient:
 
         Raises:
             KeyError: If no handler was registered for `method`.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         self._handlers[method](params)
 
     def is_connected(self) -> bool:

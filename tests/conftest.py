@@ -28,6 +28,9 @@ def autopipette() -> AutoPipette:
     pipette, liquid) files — read-only, so this is safe to run against the
     real config/ tree with no fixture files or mocks needed. Locations start
     empty; use ``pipette_with_plates`` for tip/well-dependent tests.
+
+    Returns:
+        A real ``AutoPipette`` with no locations loaded yet.
     """
     config_manager = JsonConfigManager()
     config_manager.load_configs()
@@ -92,14 +95,23 @@ def _add_tipbox_waste_and_plate(autopipette: AutoPipette) -> None:
 
 @pytest.fixture
 def pipette_with_plates(autopipette: AutoPipette) -> AutoPipette:
-    """An ``autopipette`` with a tipbox, waste container, and a well plate."""
+    """An ``autopipette`` with a tipbox, waste container, and a well plate.
+
+    Returns:
+        The same ``autopipette``, now with a tipbox, waste container, and
+        4-well plate wired in.
+    """
     _add_tipbox_waste_and_plate(autopipette)
     return autopipette
 
 
 @pytest.fixture
 def fake_websocket_client() -> FakeWebSocketClient:
-    """A connected `FakeWebSocketClient`, for future service-layer tests."""
+    """A connected `FakeWebSocketClient`, for future service-layer tests.
+
+    Returns:
+        A fresh, connected `FakeWebSocketClient`.
+    """
     return FakeWebSocketClient()
 
 
@@ -118,6 +130,10 @@ def service(tmp_path: Path) -> AutoPipetteService:
     ``save_locations``/``load_locations`` are likewise redirected to
     ``tmp_path``, so dispatching them can't leave stray files in the repo's
     real ``config/locations/``.
+
+    Returns:
+        A real, unconnected ``AutoPipetteService`` with I/O redirected to
+        ``tmp_path`` and an unhomed ``FakeMoonrakerState``.
     """
     svc = AutoPipetteService(
         config_system=DefaultPaths.DIR_CONFIG_SYSTEM / DefaultFilenames.CONFIG_SYSTEM,
@@ -139,6 +155,10 @@ def service_with_plates(service: AutoPipetteService) -> AutoPipetteService:
 
     For pipette-group command tests (aspirate/dispense/transfer/tip
     management), which need real locations to operate on.
+
+    Returns:
+        The same ``service``, now with a tipbox, waste container, and
+        4-well plate wired into its ``AutoPipette``.
     """
     _add_tipbox_waste_and_plate(service._autopipette)
     return service
@@ -156,6 +176,9 @@ def live_control_plane(service: AutoPipetteService) -> Iterator[LiveControlPlane
     with the same unhomed, plate-less ``service`` as the ``service`` fixture;
     use ``live_control_plane.service`` to reach in and adjust it (e.g.
     ``.moonraker_state.set_homed(True)``) before issuing requests.
+
+    Yields:
+        The started ``LiveControlPlane``, stopped after the test.
     """
     plane = LiveControlPlane(service)
     plane.start()
@@ -171,6 +194,9 @@ def live_control_plane_with_plates(
 
     For structured movement/pipette command tests that need real locations
     to operate on, the control-plane counterpart of ``service_with_plates``.
+
+    Yields:
+        The started ``LiveControlPlane``, stopped after the test.
     """
     plane = LiveControlPlane(service_with_plates)
     plane.start()
