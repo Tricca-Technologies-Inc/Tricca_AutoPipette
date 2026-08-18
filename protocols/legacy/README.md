@@ -65,13 +65,16 @@ not the source file's original order.
 
 ## Needs a human before running
 
-- **`murphy_100/step0B.pipette`** -- references `STANS_FULL`, which exists
-  in neither conf (`STANS1_FULL` does; likely the intended plate, but not
-  guessed here).
-- **`murphy_100/step0B-2.pipette`** -- references `4DR` and `STANS4M`,
-  neither of which exists in either conf (`STANS4` does; `4DR` has no
-  obvious match at all).
-- **`murphy_100/step4B.pipette`** -- references `SAMPLEPLATE_DIP`
+These three carry their problem in the filename (`UNDEF` = undefined plate
+reference, `XDECK` = conflicting cross-deck plate reference):
+
+- **`murphy_100/step0B_UNDEF.pipette`** -- references `STANS_FULL`, which
+  exists in neither conf (`STANS1_FULL` does; likely the intended plate,
+  but not guessed here).
+- **`murphy_100/step0B-2_UNDEF.pipette`** -- references `4DR` and
+  `STANS4M`, neither of which exists in either conf (`STANS4` does; `4DR`
+  has no obvious match at all).
+- **`murphy_100/step4B_XDECK.pipette`** -- references `SAMPLEPLATE_DIP`
   (Murphy-100-only) and `MSPLATE` (Murphy-1000-only) in the same line --
   the two can't coexist on either deck as converted. Needs a person to
   decide which machine/plate name was actually intended.
@@ -87,7 +90,8 @@ Eight files reference only names shared by both confs (`96wellplate`,
 move them to `murphy_1000/` if that's wrong:
 
 `0PB-2.pipette`, `0PB-3.pipette`, `MB0-2.pipette`, `YPB0-3-15.pipette`,
-`YPB0-3.pipette`, `YPB0-3a.pipette`, `step0B-2.pipette`, `test_home.pipette`
+`YPB0-3.pipette`, `YPB0-3a.pipette`, `step0B-2_UNDEF.pipette`,
+`test_home.pipette`
 
 ## Files using the wrapped `--serum_speed` (12)
 
