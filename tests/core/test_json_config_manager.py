@@ -201,7 +201,7 @@ class TestExtends:
     def test_config_without_extends_still_loads(self) -> None:
         """The existing default config must be unaffected."""
         config = JsonConfigManager().load_system_config()
-        assert config.system_name == "TAP-Tyson"
+        assert config.system_name == "AutoPipette"
 
 
 class TestLocationsSection:

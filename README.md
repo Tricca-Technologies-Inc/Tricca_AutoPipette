@@ -17,7 +17,7 @@ Run the daemon first — `tap` and the kiosk are both clients of it and do
 nothing useful until it's running:
 
 ```bash
-tapd                          # connects to Moonraker per config/system/system.json
+tapd                          # connects to Moonraker per the active local system config
 ```
 
 Then, in another terminal, drive it with the interactive shell:

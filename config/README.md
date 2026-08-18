@@ -54,12 +54,6 @@ This split is deliberately provisional for all six union categories except
 `plates/` is not yet well understood, and a future pass may cull those back
 to shared-only. Don't read the current scope as a permanent shape.
 
-**Migration status:** the mechanism above is live, but `config/system/default_system.json`/`system.json`
-in *this* repo still carry TAP-Tyson's real hostname pending a follow-up
-migration that scrubs them to a generic template and moves the real data out
-to that machine's local root. Don't copy their current content as a "generic"
-example.
-
 ## Configuration Files
 
 ### `system/` -- local-only, one active profile

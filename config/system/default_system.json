@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "system_name": "TAP-Tyson",
+  "system_name": "AutoPipette",
   "gantry": {
     "speed_xy": 38000.0,
     "speed_z": 12000.0,
@@ -12,7 +12,7 @@
   "pipette": "p100_vertical",
   "liquids": {},
   "network": {
-    "hostname": "tap-tyson.local",
+    "hostname": "CHANGE-ME.local",
     "port": "7125"
   }
 }

@@ -56,7 +56,7 @@ class JsonConfigManager:
     Example:
         >>> # Batch loading (initialization)
         >>> manager = JsonConfigManager()
-        >>> config = manager.load_system_config("system.json")  # doctest: +SKIP
+        >>> config = manager.load_system_config("my_profile.json")  # doctest: +SKIP
 
         >>> # Dynamic loading (interactive shell)
         >>> manager.switch_liquid("glycerol")  # doctest: +SKIP
@@ -85,7 +85,7 @@ class JsonConfigManager:
             >>> _ = manager.load_system_config()
             >>> config = manager.get_system_config()
             >>> print(config.system_name)
-            TAP-Tyson
+            AutoPipette
         """
         if self.system_config is None:
             raise RuntimeError("No system configuration loaded.")
@@ -130,8 +130,10 @@ class JsonConfigManager:
         with user configuration file to create complete SystemConfig.
 
         Args:
-            filename: Filename of the system configuration file in
-                           config/system/ directory. Defaults to "system.json".
+            filename: Filename of the system configuration file, resolved
+                against the local config root's ``system/`` directory (issue
+                #68 -- never the shared repo's ``config/system/``). Defaults
+                to `CONFIG_SYSTEM` ("default_system.json").
 
         Returns:
             Complete SystemConfig with merged defaults and overrides.
@@ -143,10 +145,11 @@ class JsonConfigManager:
         Example:
             >>> manager = JsonConfigManager()
             >>> config = manager.load_system_config()
-            >>> # Loads config/system/default_system.json, merged with
-            >>> # config/gantry/, config/pipettes/, config/liquids/ defaults
+            >>> # Loads default_system.json from the local config root,
+            >>> # merged with config/gantry/, config/pipettes/,
+            >>> # config/liquids/ defaults from the shared repo
             >>> print(config.system_name)
-            TAP-Tyson
+            AutoPipette
         """
         user_path = DefaultPaths.DIR_LOCAL_SYSTEM / filename
 

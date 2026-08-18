@@ -18,10 +18,11 @@ pip install -e ".[dev]"
 
 # Run the control daemon first -- tap and the kiosk are both clients of it
 # and do nothing useful until it's running.
-tapd                          # connects to hostname/IP from config/system/system.json
+tapd                          # connects to hostname/IP from the active local system config (see "Multi-machine config split" below)
 tapd --no-connect             # start without a Moonraker connection (local testing)
 tapd --local-connect          # connect to ws://localhost/websocket (e.g. local Moonraker/mock)
-tapd --config <file.json>     # override system config (resolved under config/system/)
+tapd --config <name>          # load a named local system config profile by name (resolved under the local root's system/, never config/)
+tapd --init-local-config [name] # bootstrap a local system config profile from the shared template, then exit
 tapd --host / --port          # control-plane bind address (default 127.0.0.1:8765)
 tapd --log-level DEBUG
 

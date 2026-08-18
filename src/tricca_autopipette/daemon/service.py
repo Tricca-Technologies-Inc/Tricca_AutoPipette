@@ -429,8 +429,8 @@ class AutoPipetteService:
         if not hostname:
             raise RuntimeError(
                 f"No hostname or IP configured in system.network. "
-                f"Please set '{hostname_key}' or '{ip_key}' in "
-                f"config/system/system.json"
+                f"Please set '{hostname_key}' or '{ip_key}' in the active "
+                f"local system config (see config/README.md)."
             )
         return hostname
 

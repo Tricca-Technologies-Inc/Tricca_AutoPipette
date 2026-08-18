@@ -3,14 +3,19 @@
 
 `config/`/`protocols/` are the shared code repo now that the local-root
 split (`core/pipette_constants.py`'s `LocalConfigRoots`, `daemon/main.py`'s
-`resolve_system_config`) has landed, but the *data* that motivated the split
-hasn't moved yet: `config/system/system.json`/`default_system.json` still
-carry TAP-Tyson's real hostname, and (once PR #66's Murphy conversion lands
-alongside this) `config/{system,locations,pipettes}/murphy_*` and
-`protocols/legacy/murphy_*/` carry that rig's real deck/protocols too. This
-script copies whichever of that real data actually exists in this checkout
-out to a local config root, shaped the way `DefaultPaths.DIR_LOCAL_*`
-expects it.
+`resolve_system_config`) has landed. TAP-Tyson's real hostname was already
+scrubbed out of `config/system/default_system.json` by hand (it's now a
+generic template) and `config/system/system.json` (a byte-for-byte
+duplicate) was deleted as part of that same change -- running this script
+against *this* checkout now just harmlessly re-copies the already-generic
+template, which is not useful but not wrong either; it's kept as a record of
+exactly how that migration was done, and for whatever the *next* real
+machine's onboarding needs. Once PR #66's Murphy conversion lands,
+`config/{system,locations,pipettes}/murphy_*` and `protocols/legacy/murphy_*/`
+will carry that rig's real deck/protocols and still need this same
+treatment -- this script copies whichever of that real data actually exists
+in the checkout out to a local config root, shaped the way
+`DefaultPaths.DIR_LOCAL_*` expects it.
 
 Deliberately **dry-run by default**; the copy only happens with `--apply`.
 The shared-repo half of the job -- deleting the migrated files and scrubbing
@@ -56,12 +61,6 @@ SHARED_SYSTEM = REPO_ROOT / "config" / "system"
 SHARED_LOCATIONS = REPO_ROOT / "config" / "locations"
 SHARED_PIPETTES = REPO_ROOT / "config" / "pipettes"
 SHARED_PROTOCOLS_LEGACY = REPO_ROOT / "protocols" / "legacy"
-
-#: Filenames in config/system/ carrying TAP-Tyson's real data today. Only
-#: default_system.json is actually migrated (system.json is a byte-for-byte
-#: duplicate of it, kept only because tapd used to require an explicit
-#: `--config system.json` to reach it -- no longer true post-#68).
-TAP_TYSON_SYSTEM_FILES = ("default_system.json", "system.json")
 
 #: Machine-name prefixes PR #66's Murphy conversion uses for its config
 #: files. Empty on a checkout where that PR hasn't landed yet -- every glob
