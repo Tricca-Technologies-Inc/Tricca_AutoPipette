@@ -60,6 +60,11 @@ flycheck_*.py
 *.swp
 *.swo
 
+# Claude Code (local session state, permissions, scheduled-task locks --
+# never repo config; that lives in .claude/CLAUDE.md-adjacent tracked files
+# like CLAUDE.md itself, not under this directory)
+.claude/
+
 # Emacs
 .#*
 \#*\#
