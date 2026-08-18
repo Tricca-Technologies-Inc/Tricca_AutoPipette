@@ -30,6 +30,9 @@ def _box(rows: int = 1, cols: int = 3, y: float = 2.0, **kwargs: object) -> TipB
     Columns advance in *decreasing* x and `Coordinate` rejects negatives, so
     the template starts far enough right to keep every well on the bed. `y`
     separates boxes that would otherwise sit on top of each other.
+
+    Returns:
+        A `TipBox` of `rows` x `cols` tips.
     """
     params: dict[str, object] = {
         "plate_type": "tipbox",
@@ -53,6 +56,9 @@ def manager() -> TipBoxManager:
 
     The boxes sit at different y so their wells are physically distinct, as
     two real boxes on a deck would be.
+
+    Returns:
+        A `TipBoxManager` with boxes `"tips_a"` and `"tips_b"` registered.
     """
     mgr = TipBoxManager()
     mgr.register("tips_a", _box(y=2.0))

@@ -24,7 +24,11 @@ from tricca_autopipette.daemon.service import AutoPipetteService
 def _call(
     server: ControlServer, method: str, params: dict[str, object]
 ) -> dict[str, Any]:
-    """Dispatch one control-plane RPC, returning its CommandResult-shaped dict."""
+    """Dispatch one control-plane RPC, returning its CommandResult-shaped dict.
+
+    Returns:
+        The RPC response as a `CommandResult`-shaped dict.
+    """
     return asyncio.run(server._call(method, params))
 
 

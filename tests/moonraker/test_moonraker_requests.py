@@ -700,7 +700,11 @@ _BUILDER_CALLS: list[
 
 @pytest.fixture
 def requests() -> MoonrakerRequests:
-    """A fresh builder instance -- these methods are pure, but stay tidy."""
+    """A fresh builder instance -- these methods are pure, but stay tidy.
+
+    Returns:
+        A fresh `MoonrakerRequests` instance.
+    """
     return MoonrakerRequests()
 
 

@@ -72,7 +72,12 @@ class LiveControlPlane:
         await server.stop()
 
     def start(self, *, timeout: float = 5.0) -> None:
-        """Start the server thread and block until `url` is ready to dial."""
+        """Start the server thread and block until `url` is ready to dial.
+
+        Raises:
+            RuntimeError: If the server doesn't become ready within
+                `timeout` seconds.
+        """
         self._thread.start()
         if not self._ready.wait(timeout=timeout):
             raise RuntimeError("Live control plane failed to start")

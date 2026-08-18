@@ -47,6 +47,10 @@ def _params(plate_type: str = "array", **kwargs: object) -> PlateParams:
     `PlateArray._gen_wells` lays columns out in *decreasing* x, and
     `Coordinate` rejects negative values, so the template well starts far
     enough right that a 12-column plate at 9 mm pitch stays on the bed.
+
+    Returns:
+        A `PlateParams` for a full `ROWS` x `COLS` plate, with `kwargs`
+        overriding any field.
     """
     base: dict[str, object] = {
         "plate_type": plate_type,

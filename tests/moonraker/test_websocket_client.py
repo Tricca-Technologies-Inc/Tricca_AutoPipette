@@ -76,7 +76,12 @@ class _RealServer:
         await self._server.wait_closed()
 
     def start(self) -> None:
-        """Start the server thread and block until it's accepting connections."""
+        """Start the server thread and block until it's accepting connections.
+
+        Raises:
+            RuntimeError: If the server doesn't start accepting connections
+                within 5 seconds.
+        """
         self._thread.start()
         if not self._ready.wait(timeout=5):
             raise RuntimeError("Test WebSocket server failed to start")
@@ -96,6 +101,10 @@ def real_server() -> Iterator[ServerFactory]:
     Returns a callable that takes a connection handler and returns the
     `ws://...` URL a `WebSocketClient` can connect to. Every server started
     through it is torn down automatically at the end of the test.
+
+    Yields:
+        A factory that starts a real server for the given handler and
+        returns its URL.
     """
     servers: list[_RealServer] = []
 
@@ -112,7 +121,11 @@ def real_server() -> Iterator[ServerFactory]:
 
 
 def _poll_until(predicate: Callable[[], bool], *, timeout: float = 5.0) -> bool:
-    """Poll `predicate` until it's true or `timeout` seconds have elapsed."""
+    """Poll `predicate` until it's true or `timeout` seconds have elapsed.
+
+    Returns:
+        True if `predicate` became true before `timeout` elapsed, else False.
+    """
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         if predicate():
