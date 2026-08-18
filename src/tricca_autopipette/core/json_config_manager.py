@@ -13,7 +13,11 @@ import json
 import logging
 from typing import Any, cast
 
-from tricca_autopipette.core.pipette_constants import DefaultFilenames, DefaultPaths
+from tricca_autopipette.core.pipette_constants import (
+    DefaultFilenames,
+    DefaultPaths,
+    LocalConfigRoots,
+)
 from tricca_autopipette.core.pipette_models import (
     GantryKinematics,
     LiquidProfile,
@@ -52,7 +56,7 @@ class JsonConfigManager:
     Example:
         >>> # Batch loading (initialization)
         >>> manager = JsonConfigManager()
-        >>> config = manager.load_system_config("system.json")  # doctest: +SKIP
+        >>> config = manager.load_system_config("my_profile.json")  # doctest: +SKIP
 
         >>> # Dynamic loading (interactive shell)
         >>> manager.switch_liquid("glycerol")  # doctest: +SKIP
@@ -81,7 +85,7 @@ class JsonConfigManager:
             >>> _ = manager.load_system_config()
             >>> config = manager.get_system_config()
             >>> print(config.system_name)
-            TAP-Tyson
+            AutoPipette
         """
         if self.system_config is None:
             raise RuntimeError("No system configuration loaded.")
@@ -126,8 +130,10 @@ class JsonConfigManager:
         with user configuration file to create complete SystemConfig.
 
         Args:
-            filename: Filename of the system configuration file in
-                           config/system/ directory. Defaults to "system.json".
+            filename: Filename of the system configuration file, resolved
+                against the local config root's ``system/`` directory (issue
+                #68 -- never the shared repo's ``config/system/``). Defaults
+                to `CONFIG_SYSTEM` ("default_system.json").
 
         Returns:
             Complete SystemConfig with merged defaults and overrides.
@@ -139,12 +145,13 @@ class JsonConfigManager:
         Example:
             >>> manager = JsonConfigManager()
             >>> config = manager.load_system_config()
-            >>> # Loads config/system/default_system.json, merged with
-            >>> # config/gantry/, config/pipettes/, config/liquids/ defaults
+            >>> # Loads default_system.json from the local config root,
+            >>> # merged with config/gantry/, config/pipettes/,
+            >>> # config/liquids/ defaults from the shared repo
             >>> print(config.system_name)
-            TAP-Tyson
+            AutoPipette
         """
-        user_path = DefaultPaths.DIR_CONFIG_SYSTEM / filename
+        user_path = DefaultPaths.DIR_LOCAL_SYSTEM / filename
 
         if user_path.exists():
             path_system = user_path
@@ -303,7 +310,7 @@ class JsonConfigManager:
             FileNotFoundError: If the file doesn't exist.
             ValueError: If the file is invalid JSON or is not a JSON object.
         """
-        path = DefaultPaths.DIR_CONFIG_SYSTEM / filename
+        path = DefaultPaths.DIR_LOCAL_SYSTEM / filename
 
         if not path.exists():
             raise FileNotFoundError(
@@ -358,14 +365,10 @@ class JsonConfigManager:
                 "No system config loaded. Call load_system_config() first."
             )
 
-        user_path = DefaultPaths.DIR_CONFIG_GANTRY / filename
-
-        if user_path.exists():
-            path_gantry = user_path
-        else:
-            raise FileNotFoundError(
-                f"Gantry config not found: {filename} (searched in {user_path.parent})"
-            )
+        try:
+            path_gantry = LocalConfigRoots.resolve("gantry", filename)
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"Gantry config not found: {e}") from e
 
         try:
             with path_gantry.open("r", encoding="utf-8") as f:
@@ -413,15 +416,10 @@ class JsonConfigManager:
                 "No system config loaded. Call load_system_config() first."
             )
 
-        # Try user pipettes first, then defaults
-        user_path = DefaultPaths.DIR_CONFIG_PIPETTE / filename
-
-        if user_path.exists():
-            path = user_path
-        else:
-            raise FileNotFoundError(
-                f"Pipette config not found: {filename} (searched in {user_path.parent})"
-            )
+        try:
+            path = LocalConfigRoots.resolve("pipettes", filename)
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"Pipette config not found: {e}") from e
 
         try:
             with path.open("r", encoding="utf-8") as f:
@@ -469,15 +467,10 @@ class JsonConfigManager:
                 "No system config loaded. Call load_system_config() first."
             )
 
-        # Try user liquids first, then defaults
-        user_path = DefaultPaths.DIR_CONFIG_LIQUIDS / filename
-
-        if user_path.exists():
-            path = user_path
-        else:
-            raise FileNotFoundError(
-                f"Liquid config not found: {filename} (searched in {user_path.parent})"
-            )
+        try:
+            path = LocalConfigRoots.resolve("liquids", filename)
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"Liquid config not found: {e}") from e
 
         try:
             with path.open("r", encoding="utf-8") as f:
@@ -564,19 +557,14 @@ class JsonConfigManager:
         Example:
             >>> manager = JsonConfigManager()
             >>> pipettes = manager.list_available_pipettes()
-            >>> print(pipettes)
-            ['default_p100', 'default_pipette', 'p100_vertical']
+            >>> pipettes == sorted(pipettes)
+            True
+            >>> "p100_vertical" in pipettes
+            True
         """
-        pipettes: list[str] = []
-
-        # Check user pipettes
-        user_pipettes_dir = DefaultPaths.DIR_CONFIG_PIPETTE
-        if user_pipettes_dir.exists():
-            user_pipettes = [f.stem for f in user_pipettes_dir.glob("*.json")]
-            # Add user pipettes that aren't duplicates
-            pipettes.extend([p for p in user_pipettes if p not in pipettes])
-
-        return sorted(pipettes)
+        return sorted(
+            path.stem for path in LocalConfigRoots.list_files("pipettes").values()
+        )
 
     def list_available_liquids(self) -> list[str]:
         """List all available liquid configurations.
@@ -750,16 +738,17 @@ class JsonConfigManager:
         Raises:
             FileNotFoundError: If default gantry config not found.
         """
-        path = DefaultPaths.DIR_CONFIG_GANTRY / CONFIG_GANTRY
         try:
-            with path.open("r", encoding="utf-8") as f:
-                data = json.load(f)
-            return GantryKinematics(**data)
+            path = LocalConfigRoots.resolve("gantry", CONFIG_GANTRY)
         except FileNotFoundError as e:
-            logger.error("Default gantry config not found: %s", path)
+            logger.error("Default gantry config not found: %s", e)
             raise FileNotFoundError(
-                f"Default gantry configuration not found: {path}"
+                f"Default gantry configuration not found: {e}"
             ) from e
+
+        with path.open("r", encoding="utf-8") as f:
+            data = json.load(f)
+        return GantryKinematics(**data)
 
     def _load_default_pipettes(self) -> dict[str, PipetteModel]:
         """Load all default pipette configurations.
@@ -767,14 +756,13 @@ class JsonConfigManager:
         Returns:
             Dictionary of PipetteModel objects keyed by file stem.
         """
-        pipettes_dir = DefaultPaths.DIR_CONFIG_PIPETTE
         pipettes: dict[str, PipetteModel] = {}
 
-        if not pipettes_dir.exists():
-            logger.warning("Default pipettes directory not found: %s", pipettes_dir)
-            return pipettes
+        shared_dir, _local_dir = LocalConfigRoots.roots("pipettes")
+        if not shared_dir.exists():
+            logger.warning("Default pipettes directory not found: %s", shared_dir)
 
-        for json_file in pipettes_dir.glob("*.json"):
+        for json_file in LocalConfigRoots.list_files("pipettes").values():
             try:
                 with json_file.open("r", encoding="utf-8") as f:
                     data = json.load(f)
@@ -794,14 +782,13 @@ class JsonConfigManager:
         Returns:
             Dictionary of LiquidProfile objects keyed by liquid name.
         """
-        liquids_dir = DefaultPaths.DIR_CONFIG_LIQUIDS
         liquids: dict[str, LiquidProfile] = {}
 
-        if not liquids_dir.exists():
-            logger.warning("Default liquids directory not found: %s", liquids_dir)
-            return liquids
+        shared_dir, _local_dir = LocalConfigRoots.roots("liquids")
+        if not shared_dir.exists():
+            logger.warning("Default liquids directory not found: %s", shared_dir)
 
-        for json_file in liquids_dir.glob("*.json"):
+        for json_file in LocalConfigRoots.list_files("liquids").values():
             try:
                 with json_file.open("r", encoding="utf-8") as f:
                     data = json.load(f)

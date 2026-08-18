@@ -6,7 +6,8 @@ This directory contains JSON configuration files for the Tricca AutoPipette syst
 ```
 config/
 ├── system/
-│   └── system.json          # Main system configuration (references other configs)
+│   └── default_system.json  # Copy-from template only -- see "Shared repo vs.
+│                             # local per-machine config" below. Never loaded live.
 ├── gantry/
 │   └── default_gantry.json  # Gantry kinematics settings
 ├── pipettes/
@@ -21,19 +22,76 @@ config/
     └── 96_well_standard.json   # 96-well plate template
 ```
 
+## Shared repo vs. local per-machine config
+
+`config/` (this directory) is the **shared code repo** -- checked into git,
+identical across every physical rig. Real per-machine data (a rig's actual
+hostname, its deck layout, its own protocols) belongs instead in a **local
+config root**: a second directory, outside this repo entirely, that the
+operator manages as its own git repo by hand -- `tapd`/`tap` never shell out
+to git for it. It defaults to `$XDG_CONFIG_HOME/tricca-autopipette` (falling
+back to `~/.config/tricca-autopipette`), overridable via
+`$AUTOPIPETTE_LOCAL_DIR`. It mirrors this directory's six categories directly
+as children -- `$AUTOPIPETTE_LOCAL_DIR/{gantry,pipettes,liquids,locations,plates,protocols}/`
+-- plus `system/`, which behaves differently (see below).
+
+Two merge mechanisms, by category shape:
+
+- **`gantry/`, `pipettes/`, `liquids/`, `locations/`, `plates/`, `protocols/`**
+  -- "the more entries the merrier": the shared and local directories are
+  unioned. The same filename in both roots means the local file wins
+  (whole-file replace, not a field-by-field merge); a filename that exists in
+  only one root is included as-is. This is why `tapd --config-gantry
+  <file>`/`load_liquid <file>`/etc. and a protocol's `locations` entries all
+  resolve the same way regardless of which root the file actually lives in.
+- **`system/`** -- a "pick exactly one active file" selector, not a union:
+  100% local at load time. `config/system/default_system.json` in this
+  shared repo is a **copy-from template only**, never consulted live once a
+  local file exists -- see the next section.
+
+This split is deliberately provisional for all six union categories except
+`locations/`/`protocols/` -- real per-rig divergence in `gantry/`/`pipettes/`/
+`plates/` is not yet well understood, and a future pass may cull those back
+to shared-only. Don't read the current scope as a permanent shape.
+
 ## Configuration Files
 
-### `system/system.json`
-Main configuration file that ties together all components. References:
+### `system/` -- local-only, one active profile
+
+Unlike every other category, `system/` config is **never** read from this
+shared repo at runtime. `tapd` resolves it entirely against the local config
+root's `system/` directory:
+
+- **No local system config yet** -- `tapd` warns and auto-copies
+  `config/system/default_system.json` (from *this* shared repo) into the
+  local root as a starting point.
+- **`tapd --init-local-config [NAME]`** does that copy on demand, as
+  `NAME.json` (default `default_system`), and exits without starting the
+  daemon -- refuses to overwrite an existing profile.
+- **Exactly one local system config** -- loaded as-is.
+- **More than one, no explicit `--config`, and a real terminal** -- prompts
+  interactively, defaulting to whichever was last loaded (bare Enter
+  confirms it).
+- **More than one, no explicit `--config`, no terminal** (the normal systemd
+  case) -- hard-fails at startup naming the available profiles, rather than
+  guessing or hanging waiting on input that will never arrive. Give a
+  multi-profile machine (e.g. a rig with interchangeable pipette models, see
+  "Per-protocol configs") an explicit `--config` in its unit file.
+- **`tapd --config <name>`** always resolves under the local `system/`
+  directory (never this shared repo), bypassing the discovery/prompt flow
+  entirely.
+
+Whichever file is actually loaded, `system/active.json` in the local root is
+(re)pointed at it as a plain symlink -- not a separate state file, so
+`ls -l`/`ln -sf` on the physical rig is enough to inspect or set "what loads
+next" by hand.
+
+A loaded system config references:
 - Gantry settings (inline)
 - Pipette model (by name: "p100_vertical")
 - Liquid profiles (inline definitions)
 - Locations, i.e. the deck layout (see "Per-protocol configs" below)
 - Network settings
-
-Note the file loaded by default is `default_system.json`
-(`DefaultFilenames.CONFIG_SYSTEM`); `system.json` is only used when passed
-explicitly via `tapd --config system.json`.
 
 ### `pipettes/*.json`
 Pipette model definitions including:
@@ -62,11 +120,15 @@ Reusable plate templates with:
 
 ## Usage
 
-Point the daemon at a system config; everything else is resolved from it:
+Point the daemon at a local system config profile by name; everything else
+is resolved from it:
 
 ```bash
-tapd --config assay_a.json      # resolved under config/system/
+tapd --config assay_a.json      # resolved under the local root's system/, not this directory
 ```
+
+Omit `--config` and `tapd` figures out which profile to load itself -- see
+"`system/` -- local-only, one active profile" above.
 
 ## Per-protocol configs
 
@@ -96,7 +158,9 @@ settings live in one place instead of being copied per protocol and drifting:
 
 `extends` merges shallowly, per top-level key: a child's `gantry` block
 replaces the parent's wholesale rather than merging field by field. Cycles and
-chains deeper than 10 are rejected.
+chains deeper than 10 are rejected. Both the child and every ancestor in the
+chain resolve against the local config root's `system/` directory -- `system/`
+being local-only (see above) applies to `extends` targets too.
 
 ### The `locations` section
 
@@ -157,9 +221,17 @@ set_tips tipbox_a A1:C12  # declare exactly which positions are used
 
 ## Customization
 
-1. **Create a new pipette**: Copy `default_p100.json` and adjust calibration
-2. **Add a liquid**: Copy `water.json` and modify parameters
-3. **Define locations**: Edit `default_locations.json` with your setup
-4. **Update system**: Reference new configs in `system.json`
-5. **Add a protocol**: Copy a system config, replace its body with
-   `"extends"` + `"locations"`, and run `tapd --config <it>`
+Per-machine additions (a new pipette calibration, a liquid, a deck, a system
+profile) belong in the **local config root**, not this shared repo -- see
+"Shared repo vs. local per-machine config" above.
+
+1. **Create a new pipette**: Copy `default_p100.json` into the local root's
+   `pipettes/` and adjust calibration
+2. **Add a liquid**: Copy `water.json` into the local root's `liquids/` and
+   modify parameters
+3. **Define locations**: Add a deck file under the local root's `locations/`
+4. **Bootstrap a system profile**: `tapd --init-local-config <name>`, then
+   edit the copy under the local root's `system/`
+5. **Add a protocol**: Copy a system profile, replace its body with
+   `"extends"` + `"locations"`, save it under the local root's `system/`, and
+   run `tapd --config <it>`

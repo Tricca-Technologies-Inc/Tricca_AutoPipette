@@ -85,6 +85,45 @@ class TestProtocolListing:
 
         assert response.status_code == 500
 
+    def test_local_only_protocol_is_listed_alongside_the_shared_ones(
+        self,
+        kiosk_client: TestClient,
+        protocols_dir: Path,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        (protocols_dir / "shared.pipette").write_text("wait 1\n")
+        local_dir = tmp_path / "local-protocols"
+        local_dir.mkdir()
+        (local_dir / "local_only.pipette").write_text("wait 1\n")
+        monkeypatch.setattr(DefaultPaths, "DIR_LOCAL_PROTOCOL", local_dir)
+
+        response = kiosk_client.get("/protocols")
+
+        assert response.json() == [
+            {"name": "local_only", "filename": "local_only.pipette"},
+            {"name": "shared", "filename": "shared.pipette"},
+        ]
+
+    def test_local_file_wins_over_a_same_named_shared_one(
+        self,
+        kiosk_client: TestClient,
+        protocols_dir: Path,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        (protocols_dir / "a.pipette").write_text("wait 1\n")
+        local_dir = tmp_path / "local-protocols"
+        local_dir.mkdir()
+        (local_dir / "a.pipette").write_text("wait 2\n")
+        monkeypatch.setattr(DefaultPaths, "DIR_LOCAL_PROTOCOL", local_dir)
+
+        response = kiosk_client.get("/protocols")
+
+        # Still just one entry -- a name collision resolves to the local
+        # file, it doesn't produce two rows.
+        assert response.json() == [{"name": "a", "filename": "a.pipette"}]
+
 
 class TestRunEndpoint:
     def test_starts_a_run_and_returns_the_real_daemon_reply(
@@ -98,6 +137,25 @@ class TestRunEndpoint:
         body = response.json()
         assert body["status"] == "running"
         assert "a.pipette" in body["message"]
+
+    def test_local_only_protocol_can_be_run(
+        self,
+        kiosk_client: TestClient,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        # Not in `protocols_dir` (the shared side) at all -- only in the
+        # local root, which both the kiosk's own pre-check and the daemon's
+        # real resolution must consult for this to succeed end to end.
+        local_dir = tmp_path / "local-protocols"
+        local_dir.mkdir()
+        (local_dir / "local_only.pipette").write_text('gcode_print "hi"\n')
+        monkeypatch.setattr(DefaultPaths, "DIR_LOCAL_PROTOCOL", local_dir)
+
+        response = kiosk_client.post("/run", json={"filename": "local_only.pipette"})
+
+        assert response.status_code == 200
+        assert response.json()["status"] == "running"
 
     def test_missing_file_in_the_kiosk_dir_returns_404_without_contacting_daemon(
         self, kiosk_client: TestClient, protocols_dir: Path

@@ -16,6 +16,7 @@ from tricca_autopipette.core.coordinate import Coordinate
 from tricca_autopipette.core.pipette_constants import (
     DefaultFilenames,
     DefaultPaths,
+    LocalConfigRoots,
     PlateType,
 )
 from tricca_autopipette.core.pipette_exceptions import NotALocationError
@@ -40,8 +41,6 @@ from tricca_autopipette.core.well import StrategyType, Well
 logger = logging.getLogger(__name__)
 
 CONFIG_LOCATIONS = DefaultFilenames.CONFIG_LOCATIONS
-DIR_CONFIG_LOCATIONS = DefaultPaths.DIR_CONFIG_LOCATIONS
-DIR_CONFIG_PLATES = DefaultPaths.DIR_CONFIG_PLATES
 
 
 class LocationManager:
@@ -71,20 +70,24 @@ class LocationManager:
         """Initialize the location manager.
 
         Args:
-            locations_dir: Directory to load/save locations files from.
-                Defaults to `config/locations/` under the repo root. Mainly
-                an injection point for tests, which would otherwise have to
-                write scratch files into the real repo and clean up after
-                themselves.
+            locations_dir: Directory to load/save locations files from. If
+                None (the default), every filename is resolved through
+                `LocalConfigRoots` instead -- shared ``config/locations/``
+                and the per-machine local root (issue #68), local winning on
+                a name collision. An explicit directory is mainly an
+                injection point for tests, which would otherwise have to
+                write scratch files into the real repo/local root and clean
+                up after themselves; it disables the shared/local split
+                entirely; only that one directory is used.
 
         Example:
-            >>> # Use the default config/locations/ directory
+            >>> # Resolve locations via the shared/local split
             >>> manager = LocationManager()
 
-            >>> # Use a custom locations directory
+            >>> # Use a single custom locations directory instead
             >>> manager = LocationManager(Path("/custom/config/locations"))
         """
-        self.locations_dir: Path = locations_dir or DIR_CONFIG_LOCATIONS
+        self.locations_dir: Path | None = locations_dir
         self.locations: dict[str, Coordinate | Plate] = {}
         self.waste_container: WasteContainer | None = None
         self.tipbox_manager: TipBoxManager = TipBoxManager()
@@ -588,7 +591,9 @@ class LocationManager:
         """Read and parse a locations JSON file.
 
         Args:
-            filename: Name of the file, resolved against `locations_dir`.
+            filename: Name of the file. Resolved against `locations_dir` if
+                one was injected, else via `LocalConfigRoots` (shared/local,
+                local wins).
 
         Returns:
             The parsed JSON object.
@@ -597,11 +602,17 @@ class LocationManager:
             FileNotFoundError: If the file doesn't exist.
             ValueError: If the file is not valid JSON, or is not a JSON object.
         """
-        locations_file = self.locations_dir / filename
-
-        if not locations_file.exists():
-            logger.warning(f"Locations file not found: {locations_file}")
-            raise FileNotFoundError(f"Locations file not found: {locations_file}")
+        if self.locations_dir is not None:
+            locations_file = self.locations_dir / filename
+            if not locations_file.exists():
+                logger.warning(f"Locations file not found: {locations_file}")
+                raise FileNotFoundError(f"Locations file not found: {locations_file}")
+        else:
+            try:
+                locations_file = LocalConfigRoots.resolve("locations", filename)
+            except FileNotFoundError as e:
+                logger.warning(f"Locations file not found: {e}")
+                raise FileNotFoundError(f"Locations file not found: {e}") from e
 
         try:
             with locations_file.open("r", encoding="utf-8") as f:
@@ -665,6 +676,8 @@ class LocationManager:
         Raises:
             ValueError: If an entry is malformed, names an unregistered plate
                 type, or declares tip ranges outside the plate.
+            FileNotFoundError: If a ``plate_file`` reference doesn't exist in
+                either config root.
         """
         parsed: list[tuple[str, PlateParams, set[int] | None]] = []
 
@@ -675,9 +688,13 @@ class LocationManager:
             # A referenced template supplies geometry; the locations entry
             # supplies placement and any per-deck overrides.
             if "plate_file" in plate_data:
-                plate_def = self._load_plate_definition(
-                    DIR_CONFIG_PLATES / plate_data["plate_file"]
-                )
+                try:
+                    plate_file_path = LocalConfigRoots.resolve(
+                        "plates", plate_data["plate_file"]
+                    )
+                except FileNotFoundError as e:
+                    raise FileNotFoundError(f"Plate definition not found: {e}") from e
+                plate_def = self._load_plate_definition(plate_file_path)
                 plate_def.update({
                     key: value
                     for key, value in plate_data.items()
@@ -804,7 +821,9 @@ class LocationManager:
     def save_to_json(self, filename: str = "custom_locations.json") -> None:
         """Save all locations to a JSON configuration file.
 
-        Saves to `self.locations_dir / filename`.
+        Saves to `self.locations_dir / filename` if an explicit directory was
+        injected, else to `DefaultPaths.DIR_LOCAL_LOCATIONS` -- a save never
+        writes into the shared repo at runtime.
 
         Args:
             filename: Name of output JSON file. Defaults to
@@ -822,7 +841,7 @@ class LocationManager:
             ...     (Path(tmp) / "backup_locations.json").exists()
             True
         """
-        locations_dir = self.locations_dir
+        locations_dir = self.locations_dir or DefaultPaths.DIR_LOCAL_LOCATIONS
         locations_dir.mkdir(parents=True, exist_ok=True)
 
         locations_file = locations_dir / filename

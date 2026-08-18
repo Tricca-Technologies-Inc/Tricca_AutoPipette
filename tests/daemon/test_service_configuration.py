@@ -275,6 +275,7 @@ class TestSaveAndLoadLocations:
 
         save_result = service.save_locations(filename)
         assert save_result.ok is True
+        assert loc_mgr.locations_dir is not None  # set by the `service` fixture
         assert (loc_mgr.locations_dir / filename).exists()
 
         service.clear_locs()

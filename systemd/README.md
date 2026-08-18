@@ -38,6 +38,35 @@ directory, if it lives somewhere other than `$AUTOPIPETTE_REPO_ROOT/protocols`.
 Note the kiosk resolves it once at import time, so changing it needs a
 service restart.
 
+## `AUTOPIPETTE_LOCAL_DIR`
+
+A second, unrelated root (issue #68) — the per-machine **local config root**,
+holding real per-rig data (hostname, deck layout, per-machine protocols) that
+has no business in the shared code repo above. Defaults to
+`$XDG_CONFIG_HOME/tricca-autopipette` (falling back to
+`~/.config/tricca-autopipette`); override with `Environment=AUTOPIPETTE_LOCAL_DIR=...`
+if it should live somewhere else on this host. Same absolute-path requirement
+and empty-is-unset handling as `AUTOPIPETTE_REPO_ROOT`. Unlike
+`AUTOPIPETTE_REPO_ROOT`, the default's fallback depends on `HOME`/
+`XDG_CONFIG_HOME` being set, which a systemd-run service doesn't get for
+free — `tapd.service` sets it explicitly rather than relying on that
+fallback; do the same if you write your own unit. See
+`config/README.md`'s "Shared repo vs. local per-machine config" for the full
+model — six categories are a shared/local union, but `system/` is a
+pick-one-active-file selector that lives in the local root exclusively.
+
+That `system/` selector has a startup consequence specific to a headless
+systemd start: if the local root's `system/` directory ever ends up with more
+than one profile and `tapd.service`'s `ExecStart` passes no `--config`, the
+daemon has no terminal to prompt on and **hard-fails at startup** rather than
+guessing which profile to load. A single-profile machine needs no `--config`
+at all; a machine that keeps more than one profile (e.g. interchangeable
+pipette models on the same rig) needs an explicit `--config <name>` added to
+`ExecStart` in the unit file, or `system/active.json` in the local root
+pointed at the right one by hand (`ln -sf <name>.json system/active.json`) --
+either way, avoid relying on the interactive prompt for anything that starts
+under systemd.
+
 ## Network exposure
 
 Both services bind **loopback only**, and that is deliberate.
