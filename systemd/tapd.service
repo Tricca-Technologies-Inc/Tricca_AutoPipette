@@ -9,6 +9,13 @@ Type=simple
 # src-layout checkout: config/, protocols/ and gcode/ are resolved relative
 # to this. Must be an absolute path. See systemd/README.md.
 Environment=AUTOPIPETTE_REPO_ROOT=/opt/tricca-autopipette
+# Unrelated to the above: the per-machine local config root (real hostname,
+# deck layout, per-rig protocols -- issue #68). Defaults to
+# $XDG_CONFIG_HOME/tricca-autopipette / ~/.config/tricca-autopipette, but
+# HOME/XDG_CONFIG_HOME are not guaranteed to be set for a systemd-run
+# service -- set this explicitly rather than relying on that fallback here.
+# See systemd/README.md.
+Environment=AUTOPIPETTE_LOCAL_DIR=/etc/tricca-autopipette-local
 # Adjust to the venv/user for your host; see systemd/README.md.
 ExecStart=/opt/tricca-autopipette/venv/bin/tapd
 Restart=on-failure

@@ -98,7 +98,7 @@ class TriccaAutoPipetteShell(Cmd):
 
         Example:
             >>> shell = TriccaAutoPipetteShell(
-            ...     config_system=Path("config/system/system.json"),
+            ...     config_system=Path("default_system.json"),
             ...     config_gantry=None,
             ...     config_pipette=None,
             ...     config_locations=None,

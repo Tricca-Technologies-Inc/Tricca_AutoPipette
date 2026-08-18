@@ -368,5 +368,5 @@ class TestReporting:
 
         assert result.ok is True
         data = result.data or {}
-        assert data["system_name"] == "TAP-Tyson"
+        assert data["system_name"] == "AutoPipette"
         assert data["pipette_model"] == "P100_Vertical"
