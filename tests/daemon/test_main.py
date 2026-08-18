@@ -31,7 +31,11 @@ from typing import Any, cast
 
 import pytest
 
-from tricca_autopipette.core.pipette_constants import DefaultFilenames, DefaultPaths
+from tricca_autopipette.core.pipette_constants import (
+    DefaultFilenames,
+    DefaultPaths,
+    LocalConfigRoots,
+)
 from tricca_autopipette.daemon import main as main_module
 from tricca_autopipette.daemon.control_server import DEFAULT_HOST, DEFAULT_PORT
 
@@ -39,6 +43,7 @@ from tricca_autopipette.daemon.control_server import DEFAULT_HOST, DEFAULT_PORT
 def _base_args(**overrides: Any) -> argparse.Namespace:
     defaults: dict[str, Any] = {
         "config": None,
+        "init_local_config": None,
         "config_gantry": None,
         "config_pipette": None,
         "config_liquids": None,
@@ -61,6 +66,7 @@ class TestParseArguments:
         args = main_module.parse_arguments()
 
         assert args.config is None
+        assert args.init_local_config is None
         assert args.config_gantry is None
         assert args.config_pipette is None
         assert args.config_locations is None
@@ -97,6 +103,24 @@ class TestParseArguments:
         assert args.config_pipette == "pipette.json"
         assert args.config_locations == "locations.json"
         assert args.config_liquids == "liquids.json"
+
+    def test_init_local_config_bare_flag_defaults_to_default_system(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr("sys.argv", ["tapd", "--init-local-config"])
+
+        args = main_module.parse_arguments()
+
+        assert args.init_local_config == "default_system"
+
+    def test_init_local_config_with_a_name(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr("sys.argv", ["tapd", "--init-local-config", "murphy_100"])
+
+        args = main_module.parse_arguments()
+
+        assert args.init_local_config == "murphy_100"
 
     def test_no_connect_and_local_connect_flags(
         self, monkeypatch: pytest.MonkeyPatch
@@ -173,9 +197,14 @@ class TestSetupLogging:
 
 class TestServe:
     def _drive(
-        self, monkeypatch: pytest.MonkeyPatch, args: argparse.Namespace
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        args: argparse.Namespace,
+        system_filename: str = "default_system.json",
     ) -> dict[str, Any]:
-        """Run ``_serve(args)`` to completion against fakes, self-terminating.
+        """Run ``_serve(args, system_filename)`` to completion against fakes.
+
+        Self-terminating.
 
         Returns:
             A dict with the constructed fake ``"service"`` and ``"server"``
@@ -213,7 +242,7 @@ class TestServe:
         monkeypatch.setattr(main_module, "ControlServer", _FakeControlServer)
         monkeypatch.setattr(main_module, "AutoPipetteService", _FakeAutoPipetteService)
 
-        asyncio.run(main_module._serve(args))
+        asyncio.run(main_module._serve(args, system_filename))
         return created
 
     def test_starts_and_cleanly_stops_the_control_server(
@@ -235,11 +264,13 @@ class TestServe:
     def test_default_config_paths_resolve_to_default_filenames(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        created = self._drive(monkeypatch, _base_args())
+        created = self._drive(
+            monkeypatch, _base_args(), system_filename=DefaultFilenames.CONFIG_SYSTEM
+        )
 
         kwargs = created["service"].kwargs
         assert kwargs["config_system"] == (
-            DefaultPaths.DIR_CONFIG_SYSTEM / DefaultFilenames.CONFIG_SYSTEM
+            DefaultPaths.DIR_LOCAL_SYSTEM / DefaultFilenames.CONFIG_SYSTEM
         )
         assert kwargs["config_gantry"] is None
         assert kwargs["config_pipette"] is None
@@ -249,19 +280,23 @@ class TestServe:
     def test_explicit_config_paths_resolve_under_their_config_dirs(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
+        # `system_filename` stands in for what `resolve_system_config` (a
+        # separate, directly-tested function -- see `TestResolveSystemConfig`)
+        # would have resolved `--config sys.json` to; `_serve` itself no
+        # longer reads `args.config` at all.
         created = self._drive(
             monkeypatch,
             _base_args(
-                config="sys.json",
                 config_gantry="gantry.json",
                 config_pipette="pipette.json",
                 config_locations="locations.json",
                 config_liquids="liquids.json",
             ),
+            system_filename="sys.json",
         )
 
         kwargs = created["service"].kwargs
-        assert kwargs["config_system"] == DefaultPaths.DIR_CONFIG_SYSTEM / "sys.json"
+        assert kwargs["config_system"] == DefaultPaths.DIR_LOCAL_SYSTEM / "sys.json"
         assert kwargs["config_gantry"] == DefaultPaths.DIR_CONFIG_GANTRY / "gantry.json"
         assert (
             kwargs["config_pipette"] == DefaultPaths.DIR_CONFIG_PIPETTE / "pipette.json"
@@ -302,6 +337,7 @@ class TestMain:
         monkeypatch: pytest.MonkeyPatch,
         args: argparse.Namespace,
         *,
+        resolve_error: Exception | None = None,
         validate_error: Exception | None = None,
         serve_error: BaseException | None = None,
     ) -> dict[str, Any]:
@@ -313,6 +349,14 @@ class TestMain:
             calls["setup_logging"] = (log_file, level)
 
         monkeypatch.setattr(main_module, "setup_logging", _fake_setup_logging)
+
+        def _fake_resolve(explicit: str | None) -> str:
+            calls["resolve_system_config"] = explicit
+            if resolve_error is not None:
+                raise resolve_error
+            return "default_system.json"
+
+        monkeypatch.setattr(main_module, "resolve_system_config", _fake_resolve)
 
         def _fake_validate(**kwargs: Any) -> None:
             calls["validate_config_files"] = kwargs
@@ -339,8 +383,8 @@ class TestMain:
         assert result == 0
         assert calls["asyncio_run_called"] is True
         assert calls["setup_logging"] == (args.log_file, logging.INFO)
+        assert calls["resolve_system_config"] == args.config
         assert calls["validate_config_files"] == {
-            "config_system": args.config,
             "config_gantry": args.config_gantry,
             "config_pipette": args.config_pipette,
             "config_locations": args.config_locations,
@@ -360,6 +404,16 @@ class TestMain:
     def test_value_error_returns_one(self, monkeypatch: pytest.MonkeyPatch) -> None:
         args = _base_args()
         self._patch_common(monkeypatch, args, validate_error=ValueError("bad file"))
+
+        assert main_module.main() == 1
+
+    def test_resolve_system_config_error_returns_one(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        args = _base_args()
+        self._patch_common(
+            monkeypatch, args, resolve_error=ValueError("ambiguous configs")
+        )
 
         assert main_module.main() == 1
 
@@ -388,3 +442,243 @@ class TestMain:
         assert main_module.main() == 0
 
         assert calls["setup_logging"] == (args.log_file, logging.DEBUG)
+
+    def test_init_local_config_flag_bypasses_serve_and_returns_zero(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        args = _base_args(init_local_config="murphy_100")
+        calls = self._patch_common(monkeypatch, args)
+
+        def _fake_init(name: str) -> Path:
+            calls["init_local_config"] = name
+            return tmp_path / f"{name}.json"
+
+        monkeypatch.setattr(main_module, "init_local_config", _fake_init)
+
+        assert main_module.main() == 0
+        assert calls["init_local_config"] == "murphy_100"
+        # The daemon never actually starts on this path.
+        assert "resolve_system_config" not in calls
+        assert "asyncio_run_called" not in calls
+
+    def test_init_local_config_error_returns_one(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        args = _base_args(init_local_config="murphy_100")
+        self._patch_common(monkeypatch, args)
+
+        def _fake_init(name: str) -> Path:
+            raise FileExistsError(f"{name}.json already exists")
+
+        monkeypatch.setattr(main_module, "init_local_config", _fake_init)
+
+        assert main_module.main() == 1
+
+
+@pytest.fixture
+def config_roots(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> dict[str, Path]:
+    """Redirect the shared/local system-config dirs into an isolated tree.
+
+    Returns:
+        Mapping with ``"shared"`` and ``"local"`` directories, both already
+        created and empty, plus a real ``default_system.json`` template
+        already written into ``"shared"``.
+    """
+    shared = tmp_path / "shared_system"
+    local = tmp_path / "local_system"
+    shared.mkdir()
+    local.mkdir()
+    monkeypatch.setattr(DefaultPaths, "DIR_CONFIG_SYSTEM", shared)
+    monkeypatch.setattr(DefaultPaths, "DIR_LOCAL_SYSTEM", local)
+    (shared / DefaultFilenames.CONFIG_SYSTEM).write_text('{"system_name": "shared"}')
+    return {"shared": shared, "local": local}
+
+
+class TestCopySharedDefaultSystem:
+    def test_copies_the_template_into_the_local_root(
+        self, config_roots: dict[str, Path]
+    ) -> None:
+        dest = main_module._copy_shared_default_system()
+
+        assert dest == config_roots["local"] / DefaultFilenames.CONFIG_SYSTEM
+        assert dest.read_text() == '{"system_name": "shared"}'
+
+    def test_missing_shared_template_raises(
+        self, config_roots: dict[str, Path]
+    ) -> None:
+        (config_roots["shared"] / DefaultFilenames.CONFIG_SYSTEM).unlink()
+
+        with pytest.raises(FileNotFoundError, match="template not found"):
+            main_module._copy_shared_default_system()
+
+
+class TestInitLocalConfig:
+    def test_copies_shared_template_to_the_named_local_profile(
+        self, config_roots: dict[str, Path]
+    ) -> None:
+        dest = main_module.init_local_config("murphy_100")
+
+        assert dest == config_roots["local"] / "murphy_100.json"
+        assert dest.read_text() == '{"system_name": "shared"}'
+
+    def test_refuses_to_overwrite_an_existing_profile(
+        self, config_roots: dict[str, Path]
+    ) -> None:
+        (config_roots["local"] / "murphy_100.json").write_text('{"real": "config"}')
+
+        with pytest.raises(FileExistsError, match="already exists"):
+            main_module.init_local_config("murphy_100")
+
+        # Untouched -- the existing real config was not clobbered.
+        assert (
+            config_roots["local"] / "murphy_100.json"
+        ).read_text() == '{"real": "config"}'
+
+    def test_missing_shared_template_raises(
+        self, config_roots: dict[str, Path]
+    ) -> None:
+        (config_roots["shared"] / DefaultFilenames.CONFIG_SYSTEM).unlink()
+
+        with pytest.raises(FileNotFoundError, match="template not found"):
+            main_module.init_local_config("murphy_100")
+
+
+class TestResolveSystemConfig:
+    def test_explicit_config_resolves_locally_and_sets_active_link(
+        self, config_roots: dict[str, Path]
+    ) -> None:
+        (config_roots["local"] / "murphy_100.json").write_text("{}")
+
+        result = main_module.resolve_system_config("murphy_100.json")
+
+        assert result == "murphy_100.json"
+        assert LocalConfigRoots.active_system_target() == (
+            config_roots["local"] / "murphy_100.json"
+        )
+
+    def test_explicit_config_missing_locally_raises(
+        self, config_roots: dict[str, Path]
+    ) -> None:
+        with pytest.raises(FileNotFoundError, match=r"does_not_exist\.json"):
+            main_module.resolve_system_config("does_not_exist.json")
+
+    def test_none_found_auto_copies_the_shared_template(
+        self, config_roots: dict[str, Path], caplog: pytest.LogCaptureFixture
+    ) -> None:
+        with caplog.at_level(logging.WARNING):
+            result = main_module.resolve_system_config(None)
+
+        assert result == DefaultFilenames.CONFIG_SYSTEM
+        assert (config_roots["local"] / DefaultFilenames.CONFIG_SYSTEM).exists()
+        assert any("No local system config found" in r.message for r in caplog.records)
+        assert LocalConfigRoots.active_system_target() == (
+            config_roots["local"] / DefaultFilenames.CONFIG_SYSTEM
+        )
+
+    def test_exactly_one_local_config_is_used_as_is(
+        self, config_roots: dict[str, Path]
+    ) -> None:
+        (config_roots["local"] / "only_one.json").write_text("{}")
+
+        result = main_module.resolve_system_config(None)
+
+        assert result == "only_one.json"
+        assert LocalConfigRoots.active_system_target() == (
+            config_roots["local"] / "only_one.json"
+        )
+
+    def test_ambiguous_with_no_tty_hard_fails(
+        self, config_roots: dict[str, Path]
+    ) -> None:
+        (config_roots["local"] / "murphy_100.json").write_text("{}")
+        (config_roots["local"] / "murphy_1000.json").write_text("{}")
+
+        with pytest.raises(ValueError, match="Multiple local system configs found"):
+            main_module.resolve_system_config(None, interactive=False)
+
+    def test_ambiguous_with_tty_prompts_and_uses_the_choice(
+        self, config_roots: dict[str, Path]
+    ) -> None:
+        (config_roots["local"] / "murphy_100.json").write_text("{}")
+        (config_roots["local"] / "murphy_1000.json").write_text("{}")
+        prompted: dict[str, Any] = {}
+
+        def _fake_prompt(names: list[str], default: str) -> str:
+            prompted["names"] = names
+            prompted["default"] = default
+            return "murphy_1000.json"
+
+        result = main_module.resolve_system_config(
+            None, interactive=True, prompt=_fake_prompt
+        )
+
+        assert result == "murphy_1000.json"
+        assert set(prompted["names"]) == {"murphy_100.json", "murphy_1000.json"}
+        assert LocalConfigRoots.active_system_target() == (
+            config_roots["local"] / "murphy_1000.json"
+        )
+
+    def test_ambiguous_prompt_defaults_to_last_loaded(
+        self, config_roots: dict[str, Path]
+    ) -> None:
+        (config_roots["local"] / "murphy_100.json").write_text("{}")
+        (config_roots["local"] / "murphy_1000.json").write_text("{}")
+        LocalConfigRoots.set_active_system(config_roots["local"] / "murphy_100.json")
+        prompted: dict[str, Any] = {}
+
+        def _fake_prompt(names: list[str], default: str) -> str:
+            prompted["default"] = default
+            return default
+
+        main_module.resolve_system_config(None, interactive=True, prompt=_fake_prompt)
+
+        assert prompted["default"] == "murphy_100.json"
+
+    def test_ambiguous_prompt_returning_an_unknown_name_raises(
+        self, config_roots: dict[str, Path]
+    ) -> None:
+        (config_roots["local"] / "murphy_100.json").write_text("{}")
+        (config_roots["local"] / "murphy_1000.json").write_text("{}")
+
+        with pytest.raises(ValueError, match="not one of the available configs"):
+            main_module.resolve_system_config(
+                None, interactive=True, prompt=lambda names, default: "nonsense.json"
+            )
+
+
+class TestPromptForSystemConfig:
+    def test_blank_input_returns_the_default(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        def _fake_input(prompt: str) -> str:
+            return ""
+
+        monkeypatch.setattr("builtins.input", _fake_input)
+
+        result = main_module._prompt_for_system_config(["a.json", "b.json"], "b.json")
+
+        assert result == "b.json"
+
+    def test_numeric_input_selects_by_index(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        def _fake_input(prompt: str) -> str:
+            return "2"
+
+        monkeypatch.setattr("builtins.input", _fake_input)
+
+        result = main_module._prompt_for_system_config(["a.json", "b.json"], "a.json")
+
+        assert result == "b.json"
+
+    def test_typed_filename_is_returned_verbatim(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        def _fake_input(prompt: str) -> str:
+            return "c.json"
+
+        monkeypatch.setattr("builtins.input", _fake_input)
+
+        result = main_module._prompt_for_system_config(["a.json", "b.json"], "a.json")
+
+        assert result == "c.json"

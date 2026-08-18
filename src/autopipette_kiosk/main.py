@@ -152,20 +152,45 @@ def index() -> FileResponse:
     return FileResponse(STATIC_DIR / "index.html")
 
 
+def _list_protocol_files() -> list[Path]:
+    """Union `PROTOCOLS_DIR` with the per-machine local config root's protocols/.
+
+    `PROTOCOLS_DIR` (not `DefaultPaths.DIR_PROTOCOL` directly) so this keeps
+    honoring `AUTOPIPETTE_PROTOCOLS_DIR`, which `LocalConfigRoots` doesn't
+    know about. Local wins on a filename collision, matching every other
+    config category's shared/local union (see `config/README.md`).
+
+    Returns:
+        Sorted list of resolved `.pipette` paths.
+    """
+    found: dict[str, Path] = {}
+    if PROTOCOLS_DIR.exists():
+        for path in sorted(PROTOCOLS_DIR.glob("*.pipette")):
+            found[path.name] = path
+    if DefaultPaths.DIR_LOCAL_PROTOCOL.exists():
+        for path in sorted(DefaultPaths.DIR_LOCAL_PROTOCOL.glob("*.pipette")):
+            found[path.name] = path
+    return sorted(found.values())
+
+
 @app.get("/protocols", response_model=list[Protocol])
 def list_protocols() -> list[Protocol]:
-    """Return all .pipette files in the protocols directory, sorted by name.
+    """Return all .pipette files, sorted by name (see `_list_protocol_files`).
 
     Raises:
-        HTTPException: 500 if the protocols directory doesn't exist.
+        HTTPException: 500 if neither the shared nor the local protocols
+            directory exists.
     """
-    if not PROTOCOLS_DIR.exists():
+    if not PROTOCOLS_DIR.exists() and not DefaultPaths.DIR_LOCAL_PROTOCOL.exists():
         raise HTTPException(
-            status_code=500, detail=f"Protocols directory not found: {PROTOCOLS_DIR}"
+            status_code=500,
+            detail=(
+                f"Protocols directory not found: {PROTOCOLS_DIR} or "
+                f"{DefaultPaths.DIR_LOCAL_PROTOCOL}"
+            ),
         )
 
-    files = sorted(PROTOCOLS_DIR.glob("*.pipette"))
-    return [Protocol(name=f.stem, filename=f.name) for f in files]
+    return [Protocol(name=f.stem, filename=f.name) for f in _list_protocol_files()]
 
 
 @app.post("/run", response_model=RunStatus)
@@ -186,8 +211,12 @@ async def run_protocol(req: RunRequest) -> RunStatus:
     """
     global _current_run
 
-    protocol_path = PROTOCOLS_DIR / req.filename
-    if not protocol_path.exists():
+    # Fails fast without round-tripping to the daemon only when the file is
+    # missing from *both* roots the kiosk itself can see -- a file that
+    # exists only in the local root still passes this and reaches the
+    # daemon, which resolves the same shared/local union for real.
+    known_names = {path.name for path in _list_protocol_files()}
+    if req.filename not in known_names:
         raise HTTPException(
             status_code=404, detail=f"Protocol not found: {req.filename}"
         )

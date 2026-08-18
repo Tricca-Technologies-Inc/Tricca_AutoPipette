@@ -19,7 +19,7 @@ from cmd2 import Statement, with_argparser
 from rich import print as rprint
 
 from tricca_autopipette.commands.base_command_set import TAPCommandSet
-from tricca_autopipette.core.pipette_constants import DefaultPaths
+from tricca_autopipette.core.pipette_constants import DefaultPaths, LocalConfigRoots
 from tricca_autopipette.core.pipette_exceptions import ProtocolAbortedError
 
 from .tap_cmd_parsers import RunArgs, TAPCmdParsers
@@ -75,9 +75,10 @@ class ProtocolCommands(TAPCommandSet):
             rprint(f"[yellow]{e}[/yellow]")
         except FileNotFoundError as e:
             rprint(f"[red]{e}[/red]")
+            _shared, local = LocalConfigRoots.roots("protocols")
             rprint(
-                f"[dim]Hint: Check '{DefaultPaths.DIR_PROTOCOL}' for "
-                "available protocols.[/dim]"
+                f"[dim]Hint: Check '{DefaultPaths.DIR_PROTOCOL}' or "
+                f"'{local}' for available protocols.[/dim]"
             )
         except OSError as e:
             rprint(f"[red]Failed to write protocol G-code: {e}[/red]")

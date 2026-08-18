@@ -4,17 +4,21 @@
 usually just ``locations`` -- instead of duplicating gantry, network, and
 pipette settings that would then drift out of sync with the machine's.
 
-These tests write scratch config files into the real ``config/system/``,
-``config/gantry/``, ``config/pipettes/``, and ``config/liquids/`` directories
-(there is no injection point for them -- `JsonConfigManager` resolves against
-`DefaultPaths.DIR_CONFIG_*` at call time) and remove them afterwards, so
-filenames are prefixed to avoid colliding with real configs. The handful of
-tests that need a *missing* directory (`_load_default_pipettes`/
-`_load_default_liquids`'s "directory not found" branches, and the
-`_load_default_gantry` `FileNotFoundError`) monkeypatch the relevant
-`DefaultPaths.DIR_CONFIG_*` constant to an isolated `tmp_path` instead, since
-that can't be expressed by adding scratch files to a directory that already
-exists and already has real defaults in it.
+These tests write scratch config files into the real ``config/gantry/`` and
+``config/pipettes/``/``config/liquids/`` directories (there is no injection
+point for them -- `JsonConfigManager` resolves those against
+`DefaultPaths.DIR_CONFIG_*`/`LocalConfigRoots` at call time) and remove them
+afterwards, so filenames are prefixed to avoid colliding with real configs.
+System configs are the one exception: `system/` is local-only (issue #68), so
+`write_system_config` writes into `DefaultPaths.DIR_LOCAL_SYSTEM` instead --
+the isolated per-test-session local root the repo-root ``conftest.py`` sets
+up, not a real directory in this repo. The handful of tests that need a
+*missing* directory (`_load_default_pipettes`/`_load_default_liquids`'s
+"directory not found" branches, and the `_load_default_gantry`
+`FileNotFoundError`) monkeypatch the relevant `DefaultPaths.DIR_CONFIG_*`
+constant to an isolated `tmp_path` instead, since that can't be expressed by
+adding scratch files to a directory that already exists and already has real
+defaults in it.
 """
 
 from __future__ import annotations
@@ -71,8 +75,12 @@ def _scratch_writer(directory: Path) -> Iterator[Any]:
 
 @pytest.fixture
 def write_system_config() -> Iterator[Any]:
-    """Write scratch system configs, cleaning them up afterwards."""
-    yield from _scratch_writer(DefaultPaths.DIR_CONFIG_SYSTEM)
+    """Write scratch system configs, cleaning them up afterwards.
+
+    Into `DefaultPaths.DIR_LOCAL_SYSTEM`, not `DIR_CONFIG_SYSTEM` --
+    ``system/`` is local-only (issue #68).
+    """
+    yield from _scratch_writer(DefaultPaths.DIR_LOCAL_SYSTEM)
 
 
 @pytest.fixture
@@ -411,9 +419,9 @@ class TestExtendsDepthGuard:
             for i in range(MAX_EXTENDS_DEPTH + 1)
         ]
         for child_name, parent_name in itertools.pairwise(names):
-            path = DefaultPaths.DIR_CONFIG_SYSTEM / child_name
+            path = DefaultPaths.DIR_LOCAL_SYSTEM / child_name
             path.write_text(json.dumps({"extends": parent_name}))
-        last_path = DefaultPaths.DIR_CONFIG_SYSTEM / names[-1]
+        last_path = DefaultPaths.DIR_LOCAL_SYSTEM / names[-1]
         last_path.write_text(json.dumps({"extends": "unreachable.json"}))
 
         with pytest.raises(ValueError, match="deeper than"):
@@ -433,7 +441,7 @@ class TestExtendsValidation:
 
 class TestReadSystemFile:
     def test_invalid_json_raises_value_error(self) -> None:
-        path = DefaultPaths.DIR_CONFIG_SYSTEM / f"{PREFIX}invalid.json"
+        path = DefaultPaths.DIR_LOCAL_SYSTEM / f"{PREFIX}invalid.json"
         path.write_text("{not valid json")
         try:
             with pytest.raises(ValueError, match="Invalid JSON"):
@@ -442,7 +450,7 @@ class TestReadSystemFile:
             path.unlink(missing_ok=True)
 
     def test_non_object_json_raises_value_error(self) -> None:
-        path = DefaultPaths.DIR_CONFIG_SYSTEM / f"{PREFIX}array.json"
+        path = DefaultPaths.DIR_LOCAL_SYSTEM / f"{PREFIX}array.json"
         path.write_text("[1, 2, 3]")
         try:
             with pytest.raises(ValueError, match="must contain a JSON object"):

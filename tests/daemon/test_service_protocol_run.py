@@ -169,3 +169,49 @@ class TestStartRunAndRunProtocol:
                 await service.start_run("does_not_exist.pipette")
 
         asyncio.run(_go())
+
+
+class TestProtocolsAreASharedLocalUnion:
+    """``protocols/`` is a union category (issue #68): a local-only file must
+
+    be just as runnable/listable as a shared one, and a same-named local file
+    must win over the shared one.
+    """
+
+    def test_local_only_protocol_is_listed(
+        self, service: AutoPipetteService, tmp_path: Path
+    ) -> None:
+        (tmp_path / "local_only.pipette").write_text("wait 1\n")
+        with patch.object(DefaultPaths, "DIR_LOCAL_PROTOCOL", tmp_path):
+            names = {entry["filename"] for entry in service.list_protocols()}
+
+        assert "local_only.pipette" in names
+        assert "normal.pipette" in names  # the shared fixture still shows up
+
+    def test_local_only_protocol_is_runnable(
+        self, service: AutoPipetteService, tmp_path: Path
+    ) -> None:
+        _set_homed(service, True)
+        (tmp_path / "local_only.pipette").write_text("move 10 20 5\n")
+
+        with patch.object(DefaultPaths, "DIR_LOCAL_PROTOCOL", tmp_path):
+            result = service.run_protocol_blocking("local_only.pipette")
+
+        assert result.ok is True
+
+    def test_local_file_with_the_same_name_wins(
+        self, service: AutoPipetteService, tmp_path: Path
+    ) -> None:
+        _set_homed(service, True)
+        # The shared "normal.pipette" fixture moves; a same-named local file
+        # with different content must be the one actually executed.
+        (tmp_path / "normal.pipette").write_text("wait 1\n")
+
+        with (
+            patch.object(DefaultPaths, "DIR_LOCAL_PROTOCOL", tmp_path),
+            patch.object(service.gcode_manager, "write_gcode_file") as spy_write,
+        ):
+            service.run_protocol_blocking("normal.pipette")
+
+        gcode_arg = spy_write.call_args.args[0]
+        assert not any("G1" in line for line in gcode_arg)  # no move emitted

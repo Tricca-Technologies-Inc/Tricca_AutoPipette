@@ -72,6 +72,7 @@ from tricca_autopipette.core.pipette_constants import (
     DefaultFilenames,
     DefaultPaths,
     HomingTargets,
+    LocalConfigRoots,
     TriggerChannels,
 )
 from tricca_autopipette.core.pipette_exceptions import (
@@ -2275,9 +2276,10 @@ class AutoPipetteService:
                     f"A protocol is already running: {self._current.filename}"
                 )
 
-            proto_path = DefaultPaths.DIR_PROTOCOL / filename
-            if not proto_path.exists() or not proto_path.is_file():
-                raise FileNotFoundError(f"Protocol not found: {filename}")
+            try:
+                LocalConfigRoots.resolve("protocols", filename)
+            except FileNotFoundError as e:
+                raise FileNotFoundError(f"Protocol not found: {e}") from e
 
             run_id = str(uuid.uuid4())
             self._current = RunStatus(
@@ -2358,7 +2360,7 @@ class AutoPipetteService:
                 ``RuntimeError``) -- propagates uncaught, aborting the rest
                 of the protocol.
         """  # ruff: ignore[docstring-extraneous-exception]
-        proto_path = DefaultPaths.DIR_PROTOCOL / filename
+        proto_path = LocalConfigRoots.resolve("protocols", filename)
         try:
             lines = proto_path.read_text(encoding="utf-8").splitlines()
         except UnicodeDecodeError as exc:
@@ -2500,9 +2502,10 @@ class AutoPipetteService:
                 answered "abort".
             Exception: Whatever a dispatched line's service method raises.
         """  # ruff: ignore[docstring-extraneous-exception]
-        proto_path = DefaultPaths.DIR_PROTOCOL / filename
-        if not proto_path.exists() or not proto_path.is_file():
-            raise FileNotFoundError(f"Protocol not found: {filename}")
+        try:
+            LocalConfigRoots.resolve("protocols", filename)
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"Protocol not found: {e}") from e
         self._run_protocol_sync(filename)
         return CommandResult(
             ok=True, message=f"Protocol '{filename}' executed successfully."
@@ -2636,9 +2639,11 @@ class AutoPipetteService:
 
         Returns:
             List of ``{"name": stem, "filename": name}`` dicts, sorted by
-            filename.
+            filename. The union of the shared repo's ``protocols/`` and the
+            per-machine local config root's -- a filename present in both
+            resolves to the local one.
         """
-        files = sorted(DefaultPaths.DIR_PROTOCOL.glob("*.pipette"))
+        files = sorted(LocalConfigRoots.list_files("protocols", "*.pipette").values())
         return [{"name": f.stem, "filename": f.name} for f in files]
 
     def request_breakpoint(self) -> bool:
