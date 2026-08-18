@@ -1,0 +1,19 @@
+{
+  "version": "1.0",
+  "system_name": "Murphy-100",
+  "gantry": {
+    "speed_xy": 38000,
+    "speed_z": 12000,
+    "speed_max": 99999,
+    "accel_xy": 42000,
+    "accel_z": 42000,
+    "accel_max": 42000
+  },
+  "pipette": "murphy_100",
+  "liquids": {},
+  "locations": "murphy_100_deck.json",
+  "network": {
+    "hostname": "triccaautopipette02.local",
+    "port": "7125"
+  }
+}

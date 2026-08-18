@@ -1,0 +1,40 @@
+reset_plate 96wellplate
+
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 6 --dest_col 3 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 7 --dest_col 3 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 0 --dest_col 4 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 1 --dest_col 4 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 2 --dest_col 4 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 3 --dest_col 4 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 4 --dest_col 4 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 5 --dest_col 4 --tipbox tipbox --pre_air_gap 30
+
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 6 --dest_col 4 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 7 --dest_col 4 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 0 --dest_col 5 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 1 --dest_col 5 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 2 --dest_col 5 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 3 --dest_col 5 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 4 --dest_col 5 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 5 --dest_col 5 --tipbox tipbox --pre_air_gap 30
+
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 6 --dest_col 5 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 7 --dest_col 5 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 0 --dest_col 6 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 1 --dest_col 6 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 2 --dest_col 6 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 3 --dest_col 6 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 4 --dest_col 6 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 5 --dest_col 6 --tipbox tipbox --pre_air_gap 30
+
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 6 --dest_col 6 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 7 --dest_col 6 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 0 --dest_col 7 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 1 --dest_col 7 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 2 --dest_col 7 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 3 --dest_col 7 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 4 --dest_col 7 --tipbox tipbox --pre_air_gap 30
+pipette 10.2 STANS2 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 5 --dest_col 7 --tipbox tipbox --pre_air_gap 30
+
+
+reset_plate 96wellplateSAMPLE

@@ -1,0 +1,21 @@
+#Prime panel B adding 150uL of MeOH  to the appropriate eppendorf tubes, blanks, cals and qcs
+
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 5 --prewet_vol 139.6 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+
+
+
+reset_plate STANS1_FULL

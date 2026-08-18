@@ -1,0 +1,37 @@
+#Prime panel B adding 150uL of ice cold methanol to the appropriate eppendorf tubes skips the double blank and blanks (4 tubes)
+
+pipette 0 ICEM STANS1_FULL --dispense_vol 0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 0 ICEM STANS1_FULL --dispense_vol 0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 0 ICEM STANS1_FULL --dispense_vol 0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 0 ICEM STANS1_FULL --dispense_vol 0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 5 --prewet_vol 139.6 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 139.6 ICEM STANS1_FULL --dispense_vol 139.6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+
+
+reset_plate tipbox

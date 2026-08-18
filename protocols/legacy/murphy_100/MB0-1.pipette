@@ -1,0 +1,111 @@
+# Mega Panel B protein precipitation step: adding 50uL of serum from a PCR plate to flip top tubes. 1x prewet for each vial
+
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 0 --src_col 0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 1 --src_col 0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 2 --src_col 0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 3 --src_col 0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 4 --src_col 0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 5 --src_col 0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 6 --src_col 0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 7 --src_col 0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 0 --src_col 1 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 1 --src_col 1 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 2 --src_col 1 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 3 --src_col 1 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 4 --src_col 1 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 5 --src_col 1 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 6 --src_col 1 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 7 --src_col 1 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 0 --src_col 2 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 1 --src_col 2 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 2 --src_col 2 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 3 --src_col 2 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 4 --src_col 2 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 5 --src_col 2 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 6 --src_col 2 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 7 --src_col 2 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 0 --src_col 3 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 1 --src_col 3 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 2 --src_col 3 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 3 --src_col 3 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 4 --src_col 3 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 5 --src_col 3 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 6 --src_col 3 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS1_FULL --dispense_vol 50.0 --src_row 7 --src_col 3 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 0 --src_col 4 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 1 --src_col 4 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 2 --src_col 4 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 3 --src_col 4 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 4 --src_col 4 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 5 --src_col 4 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 6 --src_col 4 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 7 --src_col 4 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 0 --src_col 5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 1 --src_col 5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 2 --src_col 5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 3 --src_col 5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 4 --src_col 5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 5 --src_col 5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 6 --src_col 5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 7 --src_col 5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 0 --src_col 6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 1 --src_col 6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 2 --src_col 6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 3 --src_col 6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 4 --src_col 6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 5 --src_col 6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 6 --src_col 6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 7 --src_col 6 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 0 --src_col 7 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 1 --src_col 7 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 2 --src_col 7 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 3 --src_col 7 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 4 --src_col 7 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 5 --src_col 7 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 6 --src_col 7 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS2 --dispense_vol 50.0 --src_row 7 --src_col 7 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 0 --src_col 8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 1 --src_col 8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 2 --src_col 8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 3 --src_col 8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 4 --src_col 8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 5 --src_col 8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 6 --src_col 8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 7 --src_col 8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 0 --src_col 9 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 1 --src_col 9 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 2 --src_col 9 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 3 --src_col 9 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 4 --src_col 9 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 5 --src_col 9 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 6 --src_col 9 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 7 --src_col 9 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 0 --src_col 10 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 1 --src_col 10 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 2 --src_col 10 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 3 --src_col 10 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 4 --src_col 10 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 5 --src_col 10 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 6 --src_col 10 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 7 --src_col 10 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 0 --src_col 11 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 1 --src_col 11 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 2 --src_col 11 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 3 --src_col 11 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 4 --src_col 11 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 5 --src_col 11 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 6 --src_col 11 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+pipette 50.0 96wellplatePCR STANS3 --dispense_vol 50.0 --src_row 7 --src_col 11 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 1 --prewet_vol 50.0
+
+reset_plate tipbox

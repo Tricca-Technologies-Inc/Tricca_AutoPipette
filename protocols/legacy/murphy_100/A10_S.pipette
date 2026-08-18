@@ -1,0 +1,297 @@
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --prewet 5 --prewet_vol 50 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 50 PITC1 96wellplatePITC --dispense_vol 50 --tipbox tipbox2 --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+
+reset_plate 96wellplatePITC

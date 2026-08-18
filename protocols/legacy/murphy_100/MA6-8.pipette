@@ -1,0 +1,219 @@
+#Mega Panel A steps 6-8, adding LIS to each well and then adding the PBS, CAls, QC and samples to the wells from a PCR plate by column!
+
+pipette 0 LIS 96wellplate --dispense_vol 0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 5 --prewet_vol 10.0 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 10.0 LIS 96wellplate --dispense_vol 10.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+
+# now with inverted pcr plate (by column not row)
+
+pipette 12.2 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 12.2 --src_row 1 --src_col 0 --dest_row 1 --dest_col 0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 5 --prewet_vol 12.2 --keep_tip
+pipette 12.2 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 12.2 --src_row 2 --src_col 0 --dest_row 2 --dest_col 0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 12.2 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 12.2 --src_row 3 --src_col 0 --dest_row 3 --dest_col 0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 4 --src_col 0 --dest_row 4 --dest_col 0 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 10.0
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 5 --src_col 0 --dest_row 5 --dest_col 0 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 10.0
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 6 --src_col 0 --dest_row 6 --dest_col 0 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 10.0
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 7 --src_col 0 --dest_row 7 --dest_col 0 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 10.0
+
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 0 --src_col 1 --dest_row 0 --dest_col 1 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 10.0
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 1 --src_col 1 --dest_row 1 --dest_col 1 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 10.0
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 2 --src_col 1 --dest_row 2 --dest_col 1 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 10.0
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 3 --src_col 1 --dest_row 3 --dest_col 1 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 10.0
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 4 --src_col 1 --dest_row 4 --dest_col 1 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 10.0
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 5 --src_col 1 --dest_row 5 --dest_col 1 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 10.0
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 6 --src_col 1 --dest_row 6 --dest_col 1 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 7 --src_col 1 --dest_row 7 --dest_col 1 --tipbox tipbox --pre_air_gap 30
+
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 0 --src_col 2 --dest_row 0 --dest_col 2 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 1 --src_col 2 --dest_row 1 --dest_col 2 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 2 --src_col 2 --dest_row 2 --dest_col 2 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 3 --src_col 2 --dest_row 3 --dest_col 2 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 4 --src_col 2 --dest_row 4 --dest_col 2 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 5 --src_col 2 --dest_row 5 --dest_col 2 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 6 --src_col 2 --dest_row 6 --dest_col 2 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 7 --src_col 2 --dest_row 7 --dest_col 2 --tipbox tipbox --pre_air_gap 30
+
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 0 --src_col 3 --dest_row 0 --dest_col 3 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 1 --src_col 3 --dest_row 1 --dest_col 3 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 2 --src_col 3 --dest_row 2 --dest_col 3 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 3 --src_col 3 --dest_row 3 --dest_col 3 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 4 --src_col 3 --dest_row 4 --dest_col 3 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 5 --src_col 3 --dest_row 5 --dest_col 3 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 6 --src_col 3 --dest_row 6 --dest_col 3 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 7 --src_col 3 --dest_row 7 --dest_col 3 --tipbox tipbox --pre_air_gap 30
+
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 0 --src_col 4 --dest_row 0 --dest_col 4 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 1 --src_col 4 --dest_row 1 --dest_col 4 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 2 --src_col 4 --dest_row 2 --dest_col 4 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 3 --src_col 4 --dest_row 3 --dest_col 4 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 4 --src_col 4 --dest_row 4 --dest_col 4 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 5 --src_col 4 --dest_row 5 --dest_col 4 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 6 --src_col 4 --dest_row 6 --dest_col 4 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 7 --src_col 4 --dest_row 7 --dest_col 4 --tipbox tipbox --pre_air_gap 30
+
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 0 --src_col 5 --dest_row 0 --dest_col 5 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 1 --src_col 5 --dest_row 1 --dest_col 5 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 2 --src_col 5 --dest_row 2 --dest_col 5 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 3 --src_col 5 --dest_row 3 --dest_col 5 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 4 --src_col 5 --dest_row 4 --dest_col 5 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 5 --src_col 5 --dest_row 5 --dest_col 5 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 6 --src_col 5 --dest_row 6 --dest_col 5 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 7 --src_col 5 --dest_row 7 --dest_col 5 --tipbox tipbox --pre_air_gap 30
+
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 0 --src_col 6 --dest_row 0 --dest_col 6 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 1 --src_col 6 --dest_row 1 --dest_col 6 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 2 --src_col 6 --dest_row 2 --dest_col 6 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 3 --src_col 6 --dest_row 3 --dest_col 6 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 4 --src_col 6 --dest_row 4 --dest_col 6 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 5 --src_col 6 --dest_row 5 --dest_col 6 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 6 --src_col 6 --dest_row 6 --dest_col 6 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 7 --src_col 6 --dest_row 7 --dest_col 6 --tipbox tipbox --pre_air_gap 30
+
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 0 --src_col 7 --dest_row 0 --dest_col 7 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 1 --src_col 7 --dest_row 1 --dest_col 7 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 2 --src_col 7 --dest_row 2 --dest_col 7 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 3 --src_col 7 --dest_row 3 --dest_col 7 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 4 --src_col 7 --dest_row 4 --dest_col 7 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 5 --src_col 7 --dest_row 5 --dest_col 7 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 6 --src_col 7 --dest_row 6 --dest_col 7 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 7 --src_col 7 --dest_row 7 --dest_col 7 --tipbox tipbox --pre_air_gap 30
+
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 0 --src_col 8 --dest_row 0 --dest_col 8 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 1 --src_col 8 --dest_row 1 --dest_col 8 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 2 --src_col 8 --dest_row 2 --dest_col 8 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 3 --src_col 8 --dest_row 3 --dest_col 8 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 4 --src_col 8 --dest_row 4 --dest_col 8 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 5 --src_col 8 --dest_row 5 --dest_col 8 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 6 --src_col 8 --dest_row 6 --dest_col 8 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 7 --src_col 8 --dest_row 7 --dest_col 8 --tipbox tipbox --pre_air_gap 30
+
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 0 --src_col 9 --dest_row 0 --dest_col 9 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 1 --src_col 9 --dest_row 1 --dest_col 9 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 2 --src_col 9 --dest_row 2 --dest_col 9 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 3 --src_col 9 --dest_row 3 --dest_col 9 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 4 --src_col 9 --dest_row 4 --dest_col 9 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 5 --src_col 9 --dest_row 5 --dest_col 9 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 6 --src_col 9 --dest_row 6 --dest_col 9 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 7 --src_col 9 --dest_row 7 --dest_col 9 --tipbox tipbox --pre_air_gap 30
+
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 0 --src_col 10 --dest_row 0 --dest_col 10 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 1 --src_col 10 --dest_row 1 --dest_col 10 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 2 --src_col 10 --dest_row 2 --dest_col 10 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 3 --src_col 10 --dest_row 3 --dest_col 10 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 4 --src_col 10 --dest_row 4 --dest_col 10 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 5 --src_col 10 --dest_row 5 --dest_col 10 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 6 --src_col 10 --dest_row 6 --dest_col 10 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 7 --src_col 10 --dest_row 7 --dest_col 10 --tipbox tipbox --pre_air_gap 30
+
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 0 --src_col 11 --dest_row 0 --dest_col 11 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 1 --src_col 11 --dest_row 1 --dest_col 11 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 2 --src_col 11 --dest_row 2 --dest_col 11 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 3 --src_col 11 --dest_row 3 --dest_col 11 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 4 --src_col 11 --dest_row 4 --dest_col 11 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 5 --src_col 11 --dest_row 5 --dest_col 11 --tipbox tipbox --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 6 --src_col 11 --dest_row 6 --dest_col 11 --tipbox tipbox2 --pre_air_gap 30
+pipette 10.0 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 10.0 --src_row 7 --src_col 11 --dest_row 7 --dest_col 11 --tipbox tipbox2 --pre_air_gap 30
+
+reset_plate 96wellplateSAMPLE
