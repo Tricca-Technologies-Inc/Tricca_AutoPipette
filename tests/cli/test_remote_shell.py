@@ -1,11 +1,11 @@
 """Tests for the actual `tap` CLI (`cli/remote_shell.py`) against a real,
 in-process control plane.
 
-`RemoteTapShell` owns no domain/Moonraker objects of its own -- it either
-builds a `ControlRequests` request directly (hand-written `do_*` methods) or
-is one of the generated `_STRUCTURED_COMMANDS` entries. What a request-
-builder-level test can't exercise honestly is the *client-side reaction* to
-what comes back over the wire: `_on_run_status`/`_on_breakpoint` react to
+`RemoteTapShell` owns no domain/Moonraker objects of its own -- every
+`do_*` is a hand-written method that builds a `ControlRequests` request and
+dispatches it through the shared `_call_and_print`/`_send` helpers. What a
+request-builder-level test can't exercise honestly is the *client-side
+reaction* to what comes back over the wire: `_on_run_status`/`_on_breakpoint` react to
 real `notify_run_status`/`notify_breakpoint` pushes (issue #37's specific
 ask), and `_call_and_print`/`_send` react to a real JSON-RPC error frame,
 not a canned one. Every test here drives a real `RemoteTapShell` against a
@@ -309,9 +309,9 @@ class TestBreakpointFlow:
 
 
 class TestStructuredCommands:
-    """One passing and one failing round trip through a generated `do_*`."""
+    """One passing and one failing round trip through a hand-written `do_*`."""
 
-    def test_wait_dispatches_through_the_generated_handler(
+    def test_wait_dispatches_through_the_handler(
         self, shell: RemoteTapShell
     ) -> None:
         shell.onecmd_plus_hooks("wait 5")
