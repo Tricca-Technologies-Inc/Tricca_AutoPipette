@@ -1,11 +1,12 @@
 """Shared ``rich.table.Table`` builders for reporting commands.
 
-Both ``commands/configuration_commands.py`` (``TriccaAutoPipetteShell``,
-standalone) and ``cli/remote_shell.py`` (``RemoteTapShell``, talking to the
-daemon) render the exact same structured data --
-``AutoPipetteService.list_locations``/``list_plates``/``list_liquids``/
-``system_summary``'s ``CommandResult.data`` -- so the table-building logic
-lives here once rather than being duplicated per driving adapter.
+Used by ``cli/remote_shell.py`` (``RemoteTapShell``, talking to the daemon)
+to render ``AutoPipetteService.list_locations``/``list_plates``/
+``list_liquids``/``system_summary``'s ``CommandResult.data``. Split out of
+``RemoteTapShell`` itself so the table-building logic has one home rather
+than being inlined per command; it was also shared with the standalone
+``TriccaAutoPipetteShell`` (``cli/tap_shell.py``) until that shell was
+removed in issue #39.
 """
 
 from __future__ import annotations

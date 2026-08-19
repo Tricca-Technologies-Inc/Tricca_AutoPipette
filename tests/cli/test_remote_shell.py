@@ -13,8 +13,9 @@ real `ControlServer` (`tests/support/live_control_plane.py`, via the
 `live_control_plane` fixture in `tests/conftest.py`) over a real localhost
 socket -- no mocking at the `send_jsonrpc` boundary.
 
-`cli/tap_shell.py` and its `commands/*.py` CommandSets are out of scope (see
-issue #39): this file only covers `RemoteTapShell`, the actual `tap` CLI.
+`cli/tap_shell.py` and its `commands/*.py` CommandSets were removed in issue
+#39 once `RemoteTapShell` reached full command parity: this file only
+covers `RemoteTapShell`, the actual `tap` CLI.
 """
 
 from __future__ import annotations

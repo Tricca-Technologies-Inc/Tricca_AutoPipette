@@ -10,14 +10,14 @@ replaces the kiosk's old subprocess-exit-code heuristic with real Moonraker
 Migration Phase 4 (see CLAUDE.md's ports-and-adapters notes) removed cmd2
 from this class entirely: it used to construct and delegate to a
 ``HeadlessTapShell`` (a ``cmd2.Cmd`` subclass) for all of this. Now it
-builds ``AutoPipette``/``WebSocketClient``/``GCodeManager`` directly, the
-same way ``cli/tap_shell.py``'s ``TriccaAutoPipetteShell`` does for
-standalone/local-scripting use -- in fact ``TriccaAutoPipetteShell``
-constructs one of these internally too, so both the daemon and the
-standalone interactive shell share this exact class as their one business-
-logic layer, differing only in whether ``start()``/``stop()`` (async, for
-the daemon's event loop) or ``connect()``/``disconnect()`` (plain sync, for
-a caller with no event loop) drives its lifecycle.
+builds ``AutoPipette``/``WebSocketClient``/``GCodeManager`` directly. A
+standalone ``cmd2`` shell built on this same class once existed
+(``cli/tap_shell.py``'s ``TriccaAutoPipetteShell``, removed in issue #39
+once ``RemoteTapShell`` reached full command parity); a caller that wants
+a zero-daemon REPL today drives this class's plain sync API
+(``connect()``/``disconnect()``/``run_protocol_blocking()``) directly from
+a plain Python shell or script, while the daemon drives the async
+``start()``/``stop()`` equivalents from its own event loop.
 """
 
 from __future__ import annotations
@@ -451,7 +451,7 @@ class AutoPipetteService:
         """Connect to Moonraker, subscribe to state, replay the init script.
 
         Plain synchronous entry point for a caller with no event loop of
-        its own (``cli/tap_shell.py``'s standalone ``TriccaAutoPipetteShell``).
+        its own (a zero-daemon REPL/script driving this class directly).
         :meth:`start` is the async equivalent, for the daemon.
 
         Returns:
@@ -590,11 +590,9 @@ class AutoPipetteService:
     #
     # The first group of commands migrated off cmd2-text dispatch (see
     # CLAUDE.md's ports-and-adapters migration notes). Each method here is
-    # the sole owner of its command's business logic -- commands/*.py's
-    # do_* methods are thin cmd2 adapters that delegate to these directly
-    # (via self.service, see base_command_set.py's TAPCommandSet.service
-    # property), and ControlServer dispatches the matching movement.* RPC
-    # method straight here too, with no cmd2 involved on that path at all.
+    # the sole owner of its command's business logic -- ControlServer
+    # dispatches the matching movement.* RPC method straight here, with no
+    # cmd2 involved on that path at all.
 
     @persist_tip_liquid_state
     def init(self) -> CommandResult:
@@ -2125,8 +2123,7 @@ class AutoPipetteService:
     # Migrated off `ConfigurationCommands`' `ls`/`list_liquids` in Phase 4
     # (see CLAUDE.md) -- these return structured data rather than a
     # `rich.table.Table`; presentation (table rendering) is each driving
-    # adapter's job (see `cli/report_tables.py`, shared by
-    # `TriccaAutoPipetteShell` and `RemoteTapShell`).
+    # adapter's job (see `cli/report_tables.py`, used by `RemoteTapShell`).
 
     def list_locations(self) -> CommandResult:
         """List all defined locations (coordinates and plates).
@@ -2485,8 +2482,8 @@ class AutoPipetteService:
     def run_protocol_blocking(self, filename: str) -> CommandResult:
         """Run a protocol file synchronously, blocking until it completes.
 
-        For standalone/local-scripting use (``TriccaAutoPipetteShell``,
-        which has no asyncio event loop to run :meth:`start_run`'s
+        For standalone/local-scripting use (a caller driving this class
+        directly, with no asyncio event loop to run :meth:`start_run`'s
         background-task machinery on). The daemon uses :meth:`start_run`
         instead, so a control-plane ``run.start`` call returns immediately.
 
