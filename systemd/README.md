@@ -67,6 +67,35 @@ pointed at the right one by hand (`ln -sf <name>.json system/active.json`) --
 either way, avoid relying on the interactive prompt for anything that starts
 under systemd.
 
+### Cloning the local config root
+
+The local root itself is a git checkout, not something `tapd` creates for
+you — see `config/README.md`'s "Shared repo vs. local per-machine config"
+for the model: one shared repo, `tricca-autopipette-local-config`, with one
+branch per physical rig. Clone it into place **before** the first
+`tapd.service` start, as whatever `User=` the unit runs as (or with
+ownership matching that user afterward):
+
+```bash
+git clone git@github.com:Tricca-Technologies-Inc/tricca-autopipette-local-config.git \
+  ~/.config/tricca-autopipette   # or wherever AUTOPIPETTE_LOCAL_DIR points
+cd ~/.config/tricca-autopipette
+git checkout <machine-branch>    # e.g. murphy — matches this rig's name
+```
+
+Cloning first matters: if `system/` in the local root is empty when `tapd`
+starts, it warns and auto-copies the shared repo's generic
+`config/system/default_system.json` in as a starting profile — harmless on a
+brand-new rig, but not what you want on a rig that already has a real
+profile committed. Clone (and `checkout` the right branch) first and that
+auto-copy never triggers.
+
+If no branch exists yet for this rig, branch it from `main` (the shared
+baseline templates) instead of starting from nothing — see the local-config
+repo's own README for the exact steps, and `config/README.md`'s `system/`
+section for bootstrapping the profile itself (`tapd --init-local-config`)
+once the checkout is in place.
+
 ## Network exposure
 
 Both services bind **loopback only**, and that is deliberate.
