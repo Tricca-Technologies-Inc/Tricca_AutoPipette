@@ -1,0 +1,111 @@
+# Mega Panel B second step of protein precipitation. Adding ice cold methanol to each tube. Use the 1000uL tip
+
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 5 --prewet_vol 150.0 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS1_FULL --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS2 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 150.0 ICEM STANS3 --dispense_vol 150.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+
+reset_plate tipbox

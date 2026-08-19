@@ -1,0 +1,16 @@
+{
+  "name": "serum",
+  "description": "Slow dispense for viscous/serum samples (converted from legacy --serum_speed flag).",
+  "viscosity_cP": null,
+  "density_g_ml": null,
+  "speed_aspirate": null,
+  "speed_dispense": 30.0,
+  "wait_aspirate_ms": null,
+  "wait_dispense_ms": null,
+  "prewet_cycles": null,
+  "prewet_vol_ul": null,
+  "pre_air_gap_ul": null,
+  "post_air_gap_ul": null,
+  "calibration_volumes": null,
+  "calibration_steps": null
+}

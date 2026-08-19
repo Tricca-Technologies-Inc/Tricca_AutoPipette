@@ -1,0 +1,294 @@
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 0 --src_col 0 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 0 --src_col 0 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 0 --src_col 1 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 0 --src_col 1 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 0 --src_col 2 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 0 --src_col 2 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 0 --src_col 3 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 0 --src_col 3 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 0 --src_col 4 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 0 --src_col 4 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 0 --src_col 5 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 0 --src_col 5 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 0 --src_col 6 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 0 --src_col 6 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 0 --src_col 7 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 0 --src_col 7 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 0 --src_col 8 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 0 --src_col 8 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 0 --src_col 9 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 0 --src_col 9 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 0 --src_col 10 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 0 --src_col 10 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 0 --src_col 11 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 0 --src_col 11 --tipbox tipbox --wiggle
+
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 1 --src_col 0 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 1 --src_col 0 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 1 --src_col 1 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 1 --src_col 1 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 1 --src_col 2 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 1 --src_col 2 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 1 --src_col 3 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 1 --src_col 3 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 1 --src_col 4 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 1 --src_col 4 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 1 --src_col 5 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 1 --src_col 5 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 1 --src_col 6 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 1 --src_col 6 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 1 --src_col 7 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 1 --src_col 7 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 1 --src_col 8 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 1 --src_col 8 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 1 --src_col 9 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 1 --src_col 9 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 1 --src_col 10 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 1 --src_col 10 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 1 --src_col 11 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 1 --src_col 11 --tipbox tipbox --wiggle
+
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 2 --src_col 0 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 2 --src_col 0 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 2 --src_col 1 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 2 --src_col 1 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 2 --src_col 2 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 2 --src_col 2 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 2 --src_col 3 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 2 --src_col 3 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 2 --src_col 4 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 2 --src_col 4 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 2 --src_col 5 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 2 --src_col 5 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 2 --src_col 6 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 2 --src_col 6 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 2 --src_col 7 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 2 --src_col 7 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 2 --src_col 8 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 2 --src_col 8 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 2 --src_col 9 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 2 --src_col 9 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 2 --src_col 10 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 2 --src_col 10 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 2 --src_col 11 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 2 --src_col 11 --tipbox tipbox --wiggle
+
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 3 --src_col 0 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 3 --src_col 0 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 3 --src_col 1 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 3 --src_col 1 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 3 --src_col 2 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 3 --src_col 2 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 3 --src_col 3 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 3 --src_col 3 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 3 --src_col 4 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 3 --src_col 4 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 3 --src_col 5 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 3 --src_col 5 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 3 --src_col 6 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 3 --src_col 6 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 3 --src_col 7 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 3 --src_col 7 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 3 --src_col 8 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 3 --src_col 8 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 3 --src_col 9 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 3 --src_col 9 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 3 --src_col 10 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 3 --src_col 10 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 3 --src_col 11 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 3 --src_col 11 --tipbox tipbox --wiggle
+
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 4 --src_col 0 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 4 --src_col 0 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 4 --src_col 1 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 4 --src_col 1 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 4 --src_col 2 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 4 --src_col 2 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 4 --src_col 3 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 4 --src_col 3 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 4 --src_col 4 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 4 --src_col 4 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 4 --src_col 5 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 4 --src_col 5 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 4 --src_col 6 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 4 --src_col 6 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 4 --src_col 7 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 4 --src_col 7 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 4 --src_col 8 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 4 --src_col 8 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 4 --src_col 9 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 4 --src_col 9 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 4 --src_col 10 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 4 --src_col 10 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 4 --src_col 11 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 4 --src_col 11 --tipbox tipbox --wiggle
+
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 5 --src_col 0 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 5 --src_col 0 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 5 --src_col 1 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 5 --src_col 1 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 5 --src_col 2 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 5 --src_col 2 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 5 --src_col 3 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 5 --src_col 3 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 5 --src_col 4 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 5 --src_col 4 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 5 --src_col 5 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 5 --src_col 5 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 5 --src_col 6 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 5 --src_col 6 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 5 --src_col 7 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 5 --src_col 7 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 5 --src_col 8 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 5 --src_col 8 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 5 --src_col 9 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 5 --src_col 9 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 5 --src_col 10 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 5 --src_col 10 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 5 --src_col 11 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 5 --src_col 11 --tipbox tipbox --wiggle
+
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 6 --src_col 0 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 6 --src_col 0 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 6 --src_col 1 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 6 --src_col 1 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 6 --src_col 2 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 6 --src_col 2 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 6 --src_col 3 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 6 --src_col 3 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 6 --src_col 4 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 6 --src_col 4 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 6 --src_col 5 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 6 --src_col 5 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 6 --src_col 6 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 6 --src_col 6 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 6 --src_col 7 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 6 --src_col 7 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 6 --src_col 8 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 6 --src_col 8 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 6 --src_col 9 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 6 --src_col 9 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 6 --src_col 10 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 6 --src_col 10 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 6 --src_col 11 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 6 --src_col 11 --tipbox tipbox --wiggle
+
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 7 --src_col 0 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 7 --src_col 0 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 7 --src_col 1 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 7 --src_col 1 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 7 --src_col 2 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 7 --src_col 2 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 7 --src_col 3 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 7 --src_col 3 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 7 --src_col 4 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 7 --src_col 4 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 7 --src_col 5 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 7 --src_col 5 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 7 --src_col 6 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 7 --src_col 6 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 7 --src_col 7 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 7 --src_col 7 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 7 --src_col 8 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 7 --src_col 8 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 7 --src_col 9 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 7 --src_col 9 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 7 --src_col 10 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 7 --src_col 10 --tipbox tipbox --wiggle
+
+pipette 10.3 COLPLATE DFIPLATE --dispense_vol 10.3 --src_row 7 --src_col 11 --tipbox tipbox --wiggle --keep_tip
+pipette 53.2 COLPLATE LCPLATE --dispense_vol 53.2 --src_row 7 --src_col 11 --tipbox tipbox --wiggle

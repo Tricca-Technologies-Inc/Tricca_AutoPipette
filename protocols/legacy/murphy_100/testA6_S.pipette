@@ -1,0 +1,22 @@
+
+reset_plate 96wellplate
+
+switch_liquid serum
+pipette 10.2 PBS 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 1 --dest_col 0 --tipbox tipbox --prewet 1 --prewet_vol 10.2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 10.2 PBS 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 2 --dest_col 0 --tipbox tipbox --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 10.2 PBS 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 3 --dest_col 0 --tipbox tipbox
+switch_liquid water
+
+switch_liquid serum
+pipette 10.2 CAL7 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 2 --dest_col 1 --tipbox tipbox --prewet 1 --prewet_vol 10.2
+switch_liquid water
+
+switch_liquid serum
+pipette 10.2 QC3 96wellplateSAMPLE --dispense_vol 10.2 --dest_row 5 --dest_col 1 --tipbox tipbox --prewet 1 --prewet_vol 10.2
+switch_liquid water
+
+reset_plate 96wellplateSAMPLE

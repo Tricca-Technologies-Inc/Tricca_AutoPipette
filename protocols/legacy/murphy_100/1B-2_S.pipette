@@ -1,0 +1,297 @@
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 5 --prewet_vol 76.8 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 76.8 RGNT_ABC SAMPLEPLATE --dispense_vol 76.8 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+
+reset_plate tipbox

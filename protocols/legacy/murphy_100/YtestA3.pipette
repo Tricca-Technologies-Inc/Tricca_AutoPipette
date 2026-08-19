@@ -1,0 +1,9 @@
+# code to test Prime Panel A step 3
+
+
+pipette 11.4 FS1 manu3 --dispense_vol 11.4 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 5 --prewet_vol 11.4 --keep_tip
+pipette 11.4 FS1 manu3 --dispense_vol 11.4 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 11.4 FS1 manu3 --dispense_vol 11.4 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 11.4 FS1 manu3 --dispense_vol 11.4 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+
+reset_plate manu3
