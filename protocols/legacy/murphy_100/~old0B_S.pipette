@@ -1,0 +1,301 @@
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS1_FULL --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS2 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+switch_liquid serum
+pipette 51.5 96wellplatePCR STANS3 --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --prewet 1 --prewet_vol 51.5
+switch_liquid water
+
+reset_plate tipbox

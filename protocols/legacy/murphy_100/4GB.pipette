@@ -1,0 +1,292 @@
+#Giga panel B adding 50uL to each well
+
+reset_plate tipbox
+
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water
+switch_liquid serum
+pipette 51.5 SAMPLEPLATE_DIP COLPLATE --dispense_vol 51.5 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+switch_liquid water

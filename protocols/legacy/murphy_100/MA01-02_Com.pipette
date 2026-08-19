@@ -1,0 +1,107 @@
+# Steps for Mega Panel A 1 and 2 assuming combining FIS1 and FIS2 into two tubes
+
+pipette 0 FIS1 96wellplate --dispense_vol 0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 5 --prewet_vol 20.0 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS1 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 20.0 FIS2 96wellplate --dispense_vol 20.0 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2
+
+reset_plate 96wellplate

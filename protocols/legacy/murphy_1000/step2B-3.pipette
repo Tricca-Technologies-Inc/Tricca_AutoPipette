@@ -1,0 +1,3 @@
+pipette 498 WATER LRA --dispense_vol 498 --tipbox tipbox --wiggle --keep_tip
+pipette 498 WATER LRA --dispense_vol 498 --tipbox tipbox --wiggle
+pipette 125 WATER LRA --dispense_vol 125 --tipbox tipbox --wiggle

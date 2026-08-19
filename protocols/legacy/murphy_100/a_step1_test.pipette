@@ -1,0 +1,297 @@
+switch_liquid serum
+pipette 0 FIS1 96wellplate --dispense_vol 0 --tipbox tipbox --post_air_gap 2 --wiggle
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --prewet 1 --prewet_vol 11.4 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle --keep_tip
+switch_liquid water
+switch_liquid serum
+pipette 11.4 FIS1 96wellplate --dispense_vol 11.4 --tipbox tipbox --post_air_gap 2 --wiggle
+switch_liquid water
+
+reset_plate 96wellplate

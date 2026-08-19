@@ -35,6 +35,15 @@ back to `~/.config/tricca-autopipette`), overridable via
 as children -- `$AUTOPIPETTE_LOCAL_DIR/{gantry,pipettes,liquids,locations,plates,protocols}/`
 -- plus `system/`, which behaves differently (see below).
 
+In practice, "its own git repo by hand" is usually one shared repo across all
+rigs, `tricca-autopipette-local-config`, with **one branch per physical
+machine** -- e.g. `murphy` -- forked from a `main` that just holds the same
+generic `default_*`/example files this directory ships, so a rig can
+periodically `git merge main` to pick up shared template updates without
+disturbing its own data. A machine's local config root is a clone of that
+repo, permanently checked out on its own branch. This isn't required (a rig
+can just as well be its own standalone repo), but it's the setup in use.
+
 Two merge mechanisms, by category shape:
 
 - **`gantry/`, `pipettes/`, `liquids/`, `locations/`, `plates/`, `protocols/`**

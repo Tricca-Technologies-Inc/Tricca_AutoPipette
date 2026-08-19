@@ -1,0 +1,6 @@
+# test code for prime panel A for PITC step
+
+pipette 51.3 PITC1 manu3 --dispense_vol 51.3 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --prewet 5 --prewet_vol 51.3 --keep_tip
+pipette 51.3 PITC1 manu3 --dispense_vol 51.3 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 51.3 PITC1 manu3 --dispense_vol 51.3 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2 --keep_tip
+pipette 51.3 PITC1 manu3 --dispense_vol 51.3 --tipbox tipbox --pre_air_gap 30 --post_air_gap 2

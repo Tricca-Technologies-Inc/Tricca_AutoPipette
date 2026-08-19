@@ -1,0 +1,14 @@
+#Final step of prime panel A kit manufacturing adding 5580mL of water to the vial
+
+pipette 465.0 WATER dest --dispense_vol 465.0 --tipbox tipbox --pre_air_gap 50 --post_air_gap 10 --prewet 5 --prewet_vol 465.0 --keep_tip
+pipette 465.0 WATER dest --dispense_vol 465.0 --tipbox tipbox --pre_air_gap 50 --post_air_gap 10 --keep_tip
+pipette 465.0 WATER dest --dispense_vol 465.0 --tipbox tipbox --pre_air_gap 50 --post_air_gap 10 --keep_tip
+pipette 465.0 WATER dest --dispense_vol 465.0 --tipbox tipbox --pre_air_gap 50 --post_air_gap 10 --keep_tip
+pipette 465.0 WATER dest --dispense_vol 465.0 --tipbox tipbox --pre_air_gap 50 --post_air_gap 10 --keep_tip
+pipette 465.0 WATER dest --dispense_vol 465.0 --tipbox tipbox --pre_air_gap 50 --post_air_gap 10 --keep_tip
+pipette 465.0 WATER dest --dispense_vol 465.0 --tipbox tipbox --pre_air_gap 50 --post_air_gap 10 --keep_tip
+pipette 465.0 WATER dest --dispense_vol 465.0 --tipbox tipbox --pre_air_gap 50 --post_air_gap 10 --keep_tip
+pipette 465.0 WATER dest --dispense_vol 465.0 --tipbox tipbox --pre_air_gap 50 --post_air_gap 10 --keep_tip
+pipette 465.0 WATER dest --dispense_vol 465.0 --tipbox tipbox --pre_air_gap 50 --post_air_gap 10 --keep_tip
+pipette 465.0 WATER dest --dispense_vol 465.0 --tipbox tipbox --pre_air_gap 50 --post_air_gap 10 --keep_tip
+pipette 465.0 WATER dest --dispense_vol 465.0 --tipbox tipbox --pre_air_gap 50 --post_air_gap 10
