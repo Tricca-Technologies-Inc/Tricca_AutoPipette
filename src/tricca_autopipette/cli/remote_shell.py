@@ -1,12 +1,13 @@
 """Thin interactive client shell that talks to the `tapd` control daemon.
 
-Unlike `TriccaAutoPipetteShell`, this owns no `AutoPipette` and no
-*Moonraker-connected* `WebSocketClient` of its own — it does own a
-`WebSocketClient` pointed at the daemon's control plane, but all domain
-logic, config loading, and the actual Moonraker connection live in the
-daemon's `AutoPipetteService` (see `tricca_autopipette.daemon`). There is
-no `CommandSet` here (unlike `TriccaAutoPipetteShell`) and no `shell.exec`
-escape hatch either — every `do_*` is a distinct, hand-written method with
+This owns no `AutoPipette` and no *Moonraker-connected* `WebSocketClient`
+of its own — it does own a `WebSocketClient` pointed at the daemon's
+control plane, but all domain logic, config loading, and the actual
+Moonraker connection live in the daemon's `AutoPipetteService` (see
+`tricca_autopipette.daemon`). There is no `CommandSet` here (unlike the
+standalone `TriccaAutoPipetteShell` this shell replaced with full parity —
+see issue #39) and no `shell.exec` escape hatch either — every `do_*` is a
+distinct, hand-written method with
 a real docstring, thin enough to be a few lines: parse args (via
 `@with_argparser`/a bare `Statement`), build a `ControlRequests` request,
 and dispatch it through `_call_and_print`/`_send`. Commands were briefly
