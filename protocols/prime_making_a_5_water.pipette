@@ -1,0 +1,8 @@
+#adding water for the 5mL prime panel a kit making procedure
+
+pipette 465.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 465.0 --tipbox tipbox --prewet 5
+pipette 465.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 465.0 --tipbox tipbox
+pipette 465.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 465.0 --tipbox tipbox
+pipette 465.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 465.0 --tipbox tipbox
+pipette 465.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 465.0 --tipbox tipbox
+pipette 465.0 --extra_air --after_air WATER KIT1 --dispense_vol 465.0 --tipbox tipbox
