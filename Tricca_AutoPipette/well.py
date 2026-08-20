@@ -248,23 +248,23 @@ class FStubeDipStrategy(DipStrategy):
  
     def calculate_dip_distance(self, well: Well, volume: float) -> float:
         """Calculate the dip distance accounting for liquid volume removed."""
-      if well.dip_btm is None:
-        raise ValueError(
-          "FStube strategy requires dip_btm")
-      # Calculate the current height of liquid in the tube from the bottom of the tube
-      height_current = (well.dip_top + 11.17) - well.dip_curr
-      # Calculate the current volume in the tube -97.8 + 50.8x + -6.85x^2 + 0.373x^3
-      vol_current = -97.8+50.8*height_current-6.85*height_current**2+0.373*height_current**3
-      vol_new = vol_current - volume
-      # Calculate the new height of the liquid in the vial
-      height_new = 2.61+0.0836*vol_new+1e-4*(vol_new**2)-1.83e-6*(vol_new**3)
-      # Find the change in height of the liquid
-      height_change = height_current - height_new # all already in mm
-      well.dip_curr += height_change
-      # Make sure to never dip further than dip_btm
-      if well.dip_curr > well.dip_btm:
-        well.dip_curr = well.dip_btm
-      return well.dip_curr
+        if well.dip_btm is None:
+          raise ValueError(
+            "FStube strategy requires dip_btm")
+        # Calculate the current height of liquid in the tube from the bottom of the tube
+        height_current = (well.dip_top + 11.17) - well.dip_curr
+        # Calculate the current volume in the tube -97.8 + 50.8x + -6.85x^2 + 0.373x^3
+        vol_current = -97.8+50.8*height_current-6.85*height_current**2+0.373*height_current**3
+        vol_new = vol_current - volume
+        # Calculate the new height of the liquid in the vial
+        height_new = 2.61+0.0836*vol_new+1e-4*(vol_new**2)-1.83e-6*(vol_new**3)
+        # Find the change in height of the liquid
+        height_change = height_current - height_new # all already in mm
+        well.dip_curr += height_change
+        # Make sure to never dip further than dip_btm
+        if well.dip_curr > well.dip_btm:
+          well.dip_curr = well.dip_btm
+        return well.dip_curr
 
    def validate_well_config(
         self, dip_btm: float | None
