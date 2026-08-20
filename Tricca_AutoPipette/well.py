@@ -266,7 +266,7 @@ class FStubeDipStrategy(DipStrategy):
           well.dip_curr = well.dip_btm
         return well.dip_curr
 
-   def validate_well_config(
+    def validate_well_config(
         self, dip_btm: float | None
     ) -> None:
         """Validate that the well configuration supports this strategy.
