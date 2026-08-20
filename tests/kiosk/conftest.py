@@ -65,3 +65,29 @@ def kiosk_client(
 
     with TestClient(kiosk_main.app) as client:
         yield client
+
+
+@pytest.fixture
+def kiosk_client_with_plates(
+    live_control_plane_with_plates: LiveControlPlane,
+    monkeypatch: pytest.MonkeyPatch,
+) -> Iterator[TestClient]:
+    """A `kiosk_client` whose service has a tipbox/waste/plate wired up.
+
+    For the `/tips*` routes, which need a real registered tipbox
+    (`live_control_plane`'s plain `service` has none) to report or mutate.
+
+    Yields:
+        A `TestClient` for the kiosk app, with its `lifespan` running and a
+        real tipbox (named ``"tipbox"``, 1x2) behind it.
+    """
+    empty_clients: set[WebSocket] = set()
+    monkeypatch.setattr(
+        kiosk_main, "TAPD_CONTROL_URI", live_control_plane_with_plates.url
+    )
+    monkeypatch.setattr(kiosk_main, "_current_run", kiosk_main.RunStatus(status="idle"))
+    monkeypatch.setattr(kiosk_main, "_current_breakpoint", None)
+    monkeypatch.setattr(kiosk_main, "_ws_clients", empty_clients)
+
+    with TestClient(kiosk_main.app) as client:
+        yield client

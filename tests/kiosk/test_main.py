@@ -237,6 +237,91 @@ class TestHomeEndpoint:
         assert response.status_code == 503
 
 
+class TestTipsEndpoints:
+    """Tests for `GET /tips`, `POST /tips/reset`, `POST /tips/set` (issue #17).
+
+    Use `kiosk_client_with_plates`, not the plain `kiosk_client` -- these
+    routes need a real registered tipbox (named ``"tipbox"``, 1x2, both
+    positions present by default) to report or mutate.
+    """
+
+    def test_list_reports_the_registered_tipbox(
+        self, kiosk_client_with_plates: TestClient
+    ) -> None:
+        response = kiosk_client_with_plates.get("/tips")
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["ok"] is True
+        boxes = body["data"]["boxes"]
+        assert len(boxes) == 1
+        assert boxes[0]["name"] == "tipbox"
+        assert boxes[0]["present"] == [True, True]
+
+    def test_set_declares_exact_consumed_state(
+        self, kiosk_client_with_plates: TestClient
+    ) -> None:
+        response = kiosk_client_with_plates.post(
+            "/tips/set",
+            json={"name": "tipbox", "ranges": ["A1"], "available": False},
+        )
+
+        assert response.status_code == 200
+        assert response.json()["ok"] is True
+        listing = kiosk_client_with_plates.get("/tips").json()
+        assert listing["data"]["boxes"][0]["present"] == [False, True]
+
+    def test_set_invalid_range_reports_ok_false_not_an_http_error(
+        self, kiosk_client_with_plates: TestClient
+    ) -> None:
+        # config.set_tips reports a bad range via CommandResult(ok=False),
+        # not by raising -- so this is a normal 200, unlike /run's 404/409.
+        response = kiosk_client_with_plates.post(
+            "/tips/set",
+            json={"name": "tipbox", "ranges": ["Z99"], "available": False},
+        )
+
+        assert response.status_code == 200
+        assert response.json()["ok"] is False
+
+    def test_reset_marks_the_box_full_again(
+        self, kiosk_client_with_plates: TestClient
+    ) -> None:
+        kiosk_client_with_plates.post(
+            "/tips/set",
+            json={"name": "tipbox", "ranges": ["A1", "A2"], "available": False},
+        )
+
+        response = kiosk_client_with_plates.post("/tips/reset", json={"name": "tipbox"})
+
+        assert response.status_code == 200
+        assert response.json()["ok"] is True
+        listing = kiosk_client_with_plates.get("/tips").json()
+        assert listing["data"]["boxes"][0]["present"] == [True, True]
+
+    def test_reset_unknown_box_reports_ok_false_not_an_http_error(
+        self, kiosk_client_with_plates: TestClient
+    ) -> None:
+        response = kiosk_client_with_plates.post(
+            "/tips/reset", json={"name": "does-not-exist"}
+        )
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["ok"] is False
+        assert "does-not-exist" in body["message"]
+
+    def test_list_returns_503_when_the_daemon_is_not_connected(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(kiosk_main, "_control_client", None)
+
+        client = TestClient(kiosk_main.app)  # no lifespan, see TestRunEndpoint above
+        response = client.get("/tips")
+
+        assert response.status_code == 503
+
+
 class TestIndexRoute:
     def test_serves_the_frontend(self, kiosk_client: TestClient) -> None:
         response = kiosk_client.get("/")
