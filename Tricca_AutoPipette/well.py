@@ -250,7 +250,7 @@ class FStubeDipStrategy(DipStrategy):
         """Calculate the dip distance accounting for liquid volume removed."""
       if well.dip_btm is None:
         raise ValueError(
-        "FStube strategy requires dip_btm")
+          "FStube strategy requires dip_btm")
       # Calculate the current height of liquid in the tube from the bottom of the tube
       height_current = (well.dip_top + 11.17) - well.dip_curr
       # Calculate the current volume in the tube -97.8 + 50.8x + -6.85x^2 + 0.373x^3
