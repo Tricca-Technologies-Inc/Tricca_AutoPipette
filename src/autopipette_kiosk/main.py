@@ -30,6 +30,11 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from tricca_autopipette.commands.tap_cmd_parsers import (
+    ResetTipsArgs,
+    SetTipsArgs,
+    TipsArgs,
+)
 from tricca_autopipette.core.pipette_constants import DefaultPaths
 from tricca_autopipette.daemon.control_requests import ControlRequests
 from tricca_autopipette.moonraker.websocket_client import WebSocketClient
@@ -77,6 +82,41 @@ class BreakpointResponse(BaseModel):
     """Request body for `POST /breakpoint/respond`."""
 
     proceed: bool
+
+
+class TipsResetRequest(BaseModel):
+    """Request body for `POST /tips/reset`."""
+
+    name: str  # tipbox location name
+
+
+class TipsSetRequest(BaseModel):
+    """Request body for `POST /tips/set`.
+
+    `ranges`/`available` mirror `SetTipsArgs` (see `tap_cmd_parsers.py`):
+    `config.set_tips` *replaces* the named box's entire state, so the
+    frontend always sends the box's complete new consumed (or available)
+    set, never a single toggled cell.
+    """
+
+    name: str  # tipbox location name
+    ranges: list[str]  # well IDs/ranges, e.g. ["A1", "B3:B6"]
+    available: bool = False
+
+
+class TipsResult(BaseModel):
+    """Response envelope for the `/tips*` routes.
+
+    Mirrors `CommandResult` (`ok`/`message`/`data`) rather than translating
+    to an HTTP error status: unlike `/run`/`/home`, the tip RPCs
+    (`config.tips`/`config.reset_tips`/`config.set_tips`) report failure
+    (e.g. "no such tipbox") as `CommandResult(ok=False, ...)`, not as a
+    raised exception, so there's no exception to translate.
+    """
+
+    ok: bool
+    message: str = ""
+    data: dict[str, Any] | None = None
 
 
 # ── daemon control-plane connection ────────────────────────────────────────────
@@ -300,6 +340,90 @@ async def respond_to_breakpoint(req: BreakpointResponse) -> dict[str, bool]:
         _control_requests.run_confirm_breakpoint(req.proceed),
     )
     return {"ok": True}
+
+
+async def _dispatch_tips_request(request: dict[str, Any]) -> TipsResult:
+    """Send a `config.tips*` control-plane request and forward its result.
+
+    Shared by the three `/tips*` routes below -- each just builds the
+    request and lets this translate the daemon's `CommandResult` shape
+    (`ok`/`message`/`data`) into a `TipsResult`, or the connection state
+    into an `HTTPException`.
+
+    Args:
+        request: A `ControlRequests.tips`/`reset_tips`/`set_tips` result.
+
+    Returns:
+        The forwarded `CommandResult`, as a `TipsResult`.
+
+    Raises:
+        HTTPException: 503 if the control daemon isn't connected, or 500 if
+            dispatch itself fails.
+    """
+    if _control_client is None:
+        raise HTTPException(status_code=503, detail="Control daemon not connected")
+
+    try:
+        response = await asyncio.to_thread(_control_client.send_jsonrpc, request)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    result: dict[str, Any] = response.get("result", {})
+    return TipsResult(
+        ok=bool(result.get("ok", False)),
+        message=str(result.get("message", "")),
+        data=result.get("data"),
+    )
+
+
+@app.get("/tips", response_model=TipsResult)
+async def list_tips() -> TipsResult:
+    """Report tip availability for every registered tipbox.
+
+    Routing only, per issue #17's constraint -- `TipBoxManager.describe`
+    (via `AutoPipetteService.tips`) is the data source; this adds no tip
+    logic of its own. `data["boxes"]` carries each box's `num_row`/
+    `num_col`, `present` (one flag per flat well index), `eligible` (flat
+    indices actually usable -- a box may have masked-out positions), and
+    `next_well`.
+
+    Returns:
+        `TipsResult` with `data["boxes"]`/`data["total_remaining"]`/
+        `data["total_capacity"]`.
+    """
+    return await _dispatch_tips_request(_control_requests.tips(TipsArgs()))
+
+
+@app.post("/tips/reset", response_model=TipsResult)
+async def reset_tips(req: TipsResetRequest) -> TipsResult:
+    """Mark one tipbox as full, after it's been physically reloaded.
+
+    Returns:
+        `TipsResult` naming the box's new tip count, or `ok=False` if no
+        tipbox by that name is registered.
+    """
+    return await _dispatch_tips_request(
+        _control_requests.reset_tips(ResetTipsArgs(name=req.name))
+    )
+
+
+@app.post("/tips/set", response_model=TipsResult)
+async def set_tips(req: TipsSetRequest) -> TipsResult:
+    """Declare exactly which positions of a tipbox hold tips.
+
+    Replaces the named box's state rather than adding to it -- the
+    frontend always sends the box's complete new consumed (or available)
+    set (see `TipsSetRequest`), never a single toggled cell.
+
+    Returns:
+        `TipsResult` naming the box's new tip count, or `ok=False` if the
+        box is unknown or a range is invalid.
+    """
+    return await _dispatch_tips_request(
+        _control_requests.set_tips(
+            SetTipsArgs(name=req.name, ranges=req.ranges, available=req.available)
+        )
+    )
 
 
 @app.get("/status", response_model=RunStatus)
