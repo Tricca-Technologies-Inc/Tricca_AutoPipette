@@ -183,6 +183,28 @@ class TestDrawing:
         manager.unregister("tips_b")
         assert manager.remaining == 2
 
+    def test_next_tip_with_name_draws_from_that_box(
+        self, manager: TipBoxManager
+    ) -> None:
+        """A caller can request a specific box instead of registration order."""
+        name, box, _coor = manager.next_tip(name="tips_b")
+        assert name == "tips_b"
+        assert box is manager.boxes["tips_b"]
+        assert manager.boxes["tips_a"].remaining == 3
+
+    def test_next_tip_with_unknown_name_raises(self, manager: TipBoxManager) -> None:
+        with pytest.raises(NotALocationError):
+            manager.next_tip(name="nope")
+
+    def test_next_tip_with_name_exhausted_raises_out_of_tips(
+        self, manager: TipBoxManager
+    ) -> None:
+        for _ in range(3):
+            manager.next_tip(name="tips_a")
+        with pytest.raises(OutOfTipsError) as excinfo:
+            manager.next_tip(name="tips_a")
+        assert excinfo.value.boxes == ["tips_a"]
+
 
 # ==================== Resetting ====================
 

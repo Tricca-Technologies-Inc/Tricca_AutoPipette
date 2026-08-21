@@ -680,6 +680,12 @@ class LocationManager:
                 either config root.
         """
         parsed: list[tuple[str, PlateParams, set[int] | None]] = []
+        # Several entries commonly share one template (e.g. identical
+        # tipboxes) -- cache each file's parse for the rest of this call so
+        # it's read once, not once per referencing entry. Scoped to this one
+        # call (not persisted on self) since a template edited between two
+        # separate load_from_json calls should be picked up fresh.
+        plate_def_cache: dict[Path, dict[str, Any]] = {}
 
         for entry in locations_data.get("plates", []):
             plate_data = cast("dict[str, Any]", entry)
@@ -694,7 +700,14 @@ class LocationManager:
                     )
                 except FileNotFoundError as e:
                     raise FileNotFoundError(f"Plate definition not found: {e}") from e
-                plate_def = self._load_plate_definition(plate_file_path)
+                if plate_file_path not in plate_def_cache:
+                    plate_def_cache[plate_file_path] = self._load_plate_definition(
+                        plate_file_path
+                    )
+                # Copied so the .update() below (per-entry overrides) can't
+                # mutate the cached template out from under the next entry
+                # that references the same file.
+                plate_def = dict(plate_def_cache[plate_file_path])
                 plate_def.update({
                     key: value
                     for key, value in plate_data.items()

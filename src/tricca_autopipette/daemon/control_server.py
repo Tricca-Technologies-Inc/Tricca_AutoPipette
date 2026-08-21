@@ -15,6 +15,7 @@ import asyncio
 import dataclasses
 import json
 import logging
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -43,12 +44,100 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     VolToStepsArgs,
     WaitArgs,
 )
-from tricca_autopipette.daemon.service import AutoPipetteService, RunStatus
+from tricca_autopipette.daemon.service import (
+    AutoPipetteService,
+    CommandResult,
+    RunStatus,
+)
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
+
+
+@dataclasses.dataclass(frozen=True)
+class _RpcCommand:
+    """One entry in the regular-shaped RPC dispatch table.
+
+    Covers every control-plane method whose handling is exactly "build an
+    ``*Args`` dataclass from ``params`` (or take no arguments), dispatch the
+    named ``AutoPipetteService`` method through ``service.dispatch``, and
+    ``dataclasses.asdict`` the ``CommandResult`` it returns" -- the large
+    majority of methods. Methods with any other shape (a bare-value
+    argument instead of an ``*Args`` dataclass, a non-``CommandResult``
+    return, special handling of ``ws``/``self._clients``, ...) are handled
+    as explicit branches in :meth:`ControlServer._call` instead of forced
+    into this table.
+
+    Mirrors ``daemon/service.py``'s ``_LineCommand``/``_LINE_DISPATCH``,
+    which solves the identical "command name -> parser/args -> service
+    method" problem for protocol-file lines -- one shape for both.
+
+    Attributes:
+        args_cls: The ``*Args`` dataclass to build from ``params``, or None
+            for a zero-argument RPC.
+        method: The corresponding *unbound* ``AutoPipetteService`` method
+            (``AutoPipetteService.move``, not a bound instance method) --
+            called as ``method(service_instance, args)`` (or
+            ``method(service_instance)`` when ``args_cls`` is None).
+    """
+
+    args_cls: type | None
+    method: Callable[..., CommandResult]
+
+
+#: Maps a control-plane method name to how to build its args and which
+#: service method to dispatch it to. Built once at import time -- see
+#: :class:`_RpcCommand`'s docstring for the shape this covers and why some
+#: methods are deliberately not listed here.
+_RPC_DISPATCH: dict[str, _RpcCommand] = {
+    "movement.init": _RpcCommand(None, AutoPipetteService.init),
+    "movement.home": _RpcCommand(HomeArgs, AutoPipetteService.home),
+    "movement.move": _RpcCommand(MoveArgs, AutoPipetteService.move),
+    "movement.move_loc": _RpcCommand(MoveLocArgs, AutoPipetteService.move_loc),
+    "movement.move_rel": _RpcCommand(MoveRelArgs, AutoPipetteService.move_rel),
+    "pipette.aspirate": _RpcCommand(AspirateArgs, AutoPipetteService.aspirate),
+    "pipette.dispense": _RpcCommand(DispenseArgs, AutoPipetteService.dispense),
+    "pipette.transfer": _RpcCommand(PipetteArgs, AutoPipetteService.transfer),
+    "pipette.next_tip": _RpcCommand(None, AutoPipetteService.next_tip),
+    "pipette.eject_tip": _RpcCommand(None, AutoPipetteService.eject_tip),
+    "pipette.dispose_tip": _RpcCommand(None, AutoPipetteService.dispose_tip),
+    "pipette.change_tip": _RpcCommand(None, AutoPipetteService.change_tip),
+    "config.set": _RpcCommand(SetArgs, AutoPipetteService.set),
+    "config.coor": _RpcCommand(CoorArgs, AutoPipetteService.coor),
+    "config.plate": _RpcCommand(PlateArgs, AutoPipetteService.plate),
+    "config.reset_plate": _RpcCommand(ResetPlateArgs, AutoPipetteService.reset_plate),
+    "config.reset_plates": _RpcCommand(None, AutoPipetteService.reset_plates),
+    "config.del_loc": _RpcCommand(DelLocArgs, AutoPipetteService.del_loc),
+    "config.clear_locs": _RpcCommand(None, AutoPipetteService.clear_locs),
+    "config.load_locations": _RpcCommand(
+        LoadLocationsArgs, AutoPipetteService.load_locations
+    ),
+    "config.unload_locations": _RpcCommand(
+        UnloadLocationsArgs, AutoPipetteService.unload_locations
+    ),
+    "config.reset_tips": _RpcCommand(ResetTipsArgs, AutoPipetteService.reset_tips),
+    "config.reset_tips_all": _RpcCommand(None, AutoPipetteService.reset_tips_all),
+    "config.set_tips": _RpcCommand(SetTipsArgs, AutoPipetteService.set_tips),
+    "config.tips": _RpcCommand(TipsArgs, AutoPipetteService.tips),
+    "util.wait": _RpcCommand(WaitArgs, AutoPipetteService.wait),
+    "util.trigger": _RpcCommand(TriggerArgs, AutoPipetteService.trigger),
+    "util.gcode_print": _RpcCommand(GcodePrintArgs, AutoPipetteService.gcode_print),
+    "util.webcam_url": _RpcCommand(None, AutoPipetteService.webcam_url),
+    "util.vol_to_steps": _RpcCommand(VolToStepsArgs, AutoPipetteService.vol_to_steps),
+    "ws.status": _RpcCommand(None, AutoPipetteService.ws_status),
+    "ws.ping": _RpcCommand(None, AutoPipetteService.ping_moonraker),
+    "ws.read": _RpcCommand(None, AutoPipetteService.read_message),
+    "ws.read_all": _RpcCommand(None, AutoPipetteService.read_all_messages),
+    "ws.clear_queue": _RpcCommand(None, AutoPipetteService.clear_message_queue),
+    "ws.reconnect": _RpcCommand(None, AutoPipetteService.reconnect_websocket),
+    "ws.query_endstops": _RpcCommand(None, AutoPipetteService.query_endstops),
+    "config.list_locations": _RpcCommand(None, AutoPipetteService.list_locations),
+    "config.list_plates": _RpcCommand(None, AutoPipetteService.list_plates),
+    "config.list_liquids": _RpcCommand(None, AutoPipetteService.list_liquids),
+    "config.system_summary": _RpcCommand(None, AutoPipetteService.system_summary),
+}
 
 
 def _run_status_to_dict(status: RunStatus) -> dict[str, Any]:
@@ -250,65 +339,15 @@ class ControlServer:
                 already active.
             FileNotFoundError: If ``run.start`` names a missing protocol.
         """  # ruff: ignore[docstring-extraneous-exception]
-        if method == "movement.init":
-            return dataclasses.asdict(await self.service.dispatch(self.service.init))
-        if method == "movement.home":
-            return dataclasses.asdict(
-                await self.service.dispatch(
-                    lambda: self.service.home(HomeArgs(**params))
+        spec = _RPC_DISPATCH.get(method) if method is not None else None
+        if spec is not None:
+            if spec.args_cls is None:
+                return dataclasses.asdict(
+                    await self.service.dispatch(lambda: spec.method(self.service))
                 )
-            )
-        if method == "movement.move":
+            args = spec.args_cls(**params)
             return dataclasses.asdict(
-                await self.service.dispatch(
-                    lambda: self.service.move(MoveArgs(**params))
-                )
-            )
-        if method == "movement.move_loc":
-            return dataclasses.asdict(
-                await self.service.dispatch(
-                    lambda: self.service.move_loc(MoveLocArgs(**params))
-                )
-            )
-        if method == "movement.move_rel":
-            return dataclasses.asdict(
-                await self.service.dispatch(
-                    lambda: self.service.move_rel(MoveRelArgs(**params))
-                )
-            )
-        if method == "pipette.aspirate":
-            return dataclasses.asdict(
-                await self.service.dispatch(
-                    lambda: self.service.aspirate(AspirateArgs(**params))
-                )
-            )
-        if method == "pipette.dispense":
-            return dataclasses.asdict(
-                await self.service.dispatch(
-                    lambda: self.service.dispense(DispenseArgs(**params))
-                )
-            )
-        if method == "pipette.transfer":
-            return dataclasses.asdict(
-                await self.service.dispatch(
-                    lambda: self.service.transfer(PipetteArgs(**params))
-                )
-            )
-        if method == "pipette.next_tip":
-            return dataclasses.asdict(
-                await self.service.dispatch(self.service.next_tip)
-            )
-        if method == "pipette.eject_tip":
-            return dataclasses.asdict(
-                await self.service.dispatch(self.service.eject_tip)
-            )
-        if method == "pipette.dispose_tip":
-            return dataclasses.asdict(
-                await self.service.dispatch(self.service.dispose_tip)
-            )
-        if method == "pipette.change_tip":
-            return dataclasses.asdict(
-                await self.service.dispatch(self.service.change_tip)
+                await self.service.dispatch(lambda: spec.method(self.service, args))
             )
         if method == "config.switch_liquid":
             return dataclasses.asdict(
@@ -322,108 +361,10 @@ class ControlServer:
                     lambda: self.service.load_liquid(params["filename"])
                 )
             )
-        if method == "config.set":
-            return dataclasses.asdict(
-                await self.service.dispatch(lambda: self.service.set(SetArgs(**params)))
-            )
-        if method == "config.coor":
-            return dataclasses.asdict(
-                await self.service.dispatch(
-                    lambda: self.service.coor(CoorArgs(**params))
-                )
-            )
-        if method == "config.plate":
-            return dataclasses.asdict(
-                await self.service.dispatch(
-                    lambda: self.service.plate(PlateArgs(**params))
-                )
-            )
-        if method == "config.reset_plate":
-            return dataclasses.asdict(
-                await self.service.dispatch(
-                    lambda: self.service.reset_plate(ResetPlateArgs(**params))
-                )
-            )
-        if method == "config.reset_plates":
-            return dataclasses.asdict(
-                await self.service.dispatch(self.service.reset_plates)
-            )
-        if method == "config.del_loc":
-            return dataclasses.asdict(
-                await self.service.dispatch(
-                    lambda: self.service.del_loc(DelLocArgs(**params))
-                )
-            )
-        if method == "config.clear_locs":
-            return dataclasses.asdict(
-                await self.service.dispatch(self.service.clear_locs)
-            )
         if method == "config.save_locations":
             return dataclasses.asdict(
                 await self.service.dispatch(
                     lambda: self.service.save_locations(params["filename"])
-                )
-            )
-        if method == "config.load_locations":
-            return dataclasses.asdict(
-                await self.service.dispatch(
-                    lambda: self.service.load_locations(LoadLocationsArgs(**params))
-                )
-            )
-        if method == "config.unload_locations":
-            return dataclasses.asdict(
-                await self.service.dispatch(
-                    lambda: self.service.unload_locations(UnloadLocationsArgs(**params))
-                )
-            )
-        if method == "config.reset_tips":
-            return dataclasses.asdict(
-                await self.service.dispatch(
-                    lambda: self.service.reset_tips(ResetTipsArgs(**params))
-                )
-            )
-        if method == "config.reset_tips_all":
-            return dataclasses.asdict(
-                await self.service.dispatch(self.service.reset_tips_all)
-            )
-        if method == "config.set_tips":
-            return dataclasses.asdict(
-                await self.service.dispatch(
-                    lambda: self.service.set_tips(SetTipsArgs(**params))
-                )
-            )
-        if method == "config.tips":
-            return dataclasses.asdict(
-                await self.service.dispatch(
-                    lambda: self.service.tips(TipsArgs(**params))
-                )
-            )
-        if method == "util.wait":
-            return dataclasses.asdict(
-                await self.service.dispatch(
-                    lambda: self.service.wait(WaitArgs(**params))
-                )
-            )
-        if method == "util.trigger":
-            return dataclasses.asdict(
-                await self.service.dispatch(
-                    lambda: self.service.trigger(TriggerArgs(**params))
-                )
-            )
-        if method == "util.gcode_print":
-            return dataclasses.asdict(
-                await self.service.dispatch(
-                    lambda: self.service.gcode_print(GcodePrintArgs(**params))
-                )
-            )
-        if method == "util.webcam_url":
-            return dataclasses.asdict(
-                await self.service.dispatch(self.service.webcam_url)
-            )
-        if method == "util.vol_to_steps":
-            return dataclasses.asdict(
-                await self.service.dispatch(
-                    lambda: self.service.vol_to_steps(VolToStepsArgs(**params))
                 )
             )
         if method == "util.steps_to_vol":
@@ -470,14 +411,6 @@ class ControlServer:
                     for client_type in self._clients.values()
                 ]
             }
-        if method == "ws.status":
-            return dataclasses.asdict(
-                await self.service.dispatch(self.service.ws_status)
-            )
-        if method == "ws.ping":
-            return dataclasses.asdict(
-                await self.service.dispatch(self.service.ping_moonraker)
-            )
         if method == "ws.send":
             return dataclasses.asdict(
                 await self.service.dispatch(
@@ -513,41 +446,5 @@ class ControlServer:
                         params["file_name"], Path(params["file_path"])
                     )
                 )
-            )
-        if method == "ws.read":
-            return dataclasses.asdict(
-                await self.service.dispatch(self.service.read_message)
-            )
-        if method == "ws.read_all":
-            return dataclasses.asdict(
-                await self.service.dispatch(self.service.read_all_messages)
-            )
-        if method == "ws.clear_queue":
-            return dataclasses.asdict(
-                await self.service.dispatch(self.service.clear_message_queue)
-            )
-        if method == "ws.reconnect":
-            return dataclasses.asdict(
-                await self.service.dispatch(self.service.reconnect_websocket)
-            )
-        if method == "ws.query_endstops":
-            return dataclasses.asdict(
-                await self.service.dispatch(self.service.query_endstops)
-            )
-        if method == "config.list_locations":
-            return dataclasses.asdict(
-                await self.service.dispatch(self.service.list_locations)
-            )
-        if method == "config.list_plates":
-            return dataclasses.asdict(
-                await self.service.dispatch(self.service.list_plates)
-            )
-        if method == "config.list_liquids":
-            return dataclasses.asdict(
-                await self.service.dispatch(self.service.list_liquids)
-            )
-        if method == "config.system_summary":
-            return dataclasses.asdict(
-                await self.service.dispatch(self.service.system_summary)
             )
         raise ValueError(f"Unknown method: {method}")
