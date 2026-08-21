@@ -27,17 +27,17 @@ class Coordinate(BaseModel):
 
     x: float = Field(
         ...,
-        ge=0,
+        ge=-3,
         description="Position along the X-axis in millimeters",
     )
     y: float = Field(
         ...,
-        ge=0,
+        ge=-1,
         description="Position along the Y-axis in millimeters",
     )
     z: float = Field(
         ...,
-        ge=0,
+        ge=-5,
         description="Position along the Z-axis (height) in millimeters",
     )
 
