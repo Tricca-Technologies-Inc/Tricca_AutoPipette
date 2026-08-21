@@ -71,3 +71,28 @@ def test_tapping_again_restores_it(
         f"{live_kiosk_server_with_plates.url}/tips", timeout=5
     ).json()
     assert listing["data"]["boxes"][0]["present"] == [True, True]
+
+
+def test_a_rejected_set_reverts_the_optimistic_toggle(
+    page: Page, live_kiosk_server_with_plates: LiveKioskServer
+) -> None:
+    # `toggleCell`'s optimistic update (flip the cell, then POST) has a
+    # revert branch for exactly this case -- untested until now, since the
+    # two tests above only ever exercise a `/tips/set` that succeeds.
+    page.route(
+        "**/tips/set",
+        lambda route: route.fulfill(
+            status=200,
+            content_type="application/json",
+            body='{"ok": false, "message": "rejected", "data": null}',
+        ),
+    )
+    page.goto(live_kiosk_server_with_plates.url)
+    page.click('.tab-btn[data-page="tips"]')
+    card = page.locator('.tipbox-card[data-box="tipbox"]')
+    cell_a1 = card.locator('.tip-cell[data-index="0"]')
+    expect(cell_a1).to_have_class(PRESENT)
+
+    cell_a1.click()
+
+    expect(card.locator('.tip-cell[data-index="0"]')).to_have_class(PRESENT)

@@ -75,12 +75,12 @@
     const btn   = document.getElementById('runBtn');
 
     const s = data.status;
-    const icons = { idle: '○', running: '◌', done: '✓', error: '✕' };
+    const { label, icon: iconChar } = App.describeStatus(s);
 
     icon.className  = `status-icon ${s}`;
     state.className = `status-state ${s}`;
-    icon.textContent  = icons[s] || '○';
-    state.textContent = s.charAt(0).toUpperCase() + s.slice(1);
+    icon.textContent  = iconChar;
+    state.textContent = label;
     msg.textContent   = data.message || '';
 
     icon.classList.toggle('spinning', s === 'running');

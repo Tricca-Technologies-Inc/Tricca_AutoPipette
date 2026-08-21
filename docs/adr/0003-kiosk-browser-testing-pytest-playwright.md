@@ -55,3 +55,14 @@ Playwright screenshots are OS/font-rendering sensitive across machines, but
 since nothing here diffs against a baseline, that sensitivity doesn't bite
 yet. Revisit (e.g. a Docker-pinned browser image) if/when #19 lands and
 regression-suite runs need to be reproducible across machines.
+
+**Narrow update (2026-08-21).** `tips.js`'s toggle math (`wellId()` +
+consumed-range computation) was pulled out as `computeToggle`, a private
+pure function inside the same IIFE. This does not reopen the "no separate
+pure-logic-extraction layer" call above: assertions still land on the DOM
+via Playwright (`tests/kiosk/browser/test_tips_toggle.py`), including a new
+test for the previously-untested revert-on-failure branch, driven by
+`page.route`-mocking a rejected `/tips/set` rather than a unit test calling
+`computeToggle` directly. The extraction is a locality win for maintainers
+reading `toggleCell`, not a new test seam or a `node:test` layer — that call
+still stands.

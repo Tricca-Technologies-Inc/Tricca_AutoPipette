@@ -88,25 +88,36 @@
     return card;
   }
 
-  // ── mutations: set_tips replaces a box's whole state, so every toggle
-  // resends the box's full current consumed set restricted to eligible
-  // positions (masked-out positions are never listed either way) --
-  // immediate auto-save per tap, not a batched "Apply" (issue #17's Q2). ──
-  async function toggleCell(box, index, cell) {
-    const wasPresent = box.present[index];
-    box.present[index] = !wasPresent; // optimistic update
-    cell.classList.toggle('present', box.present[index]);
-    cell.classList.add('pending');
+  // ── toggle math: pure, no DOM/fetch -- given a box's current present/
+  // eligible state and the toggled index, the new present array and the
+  // full consumed-well-id list `set_tips` needs (issue #17's Q2: it
+  // replaces a box's whole state, so every toggle resends the box's full
+  // current consumed set restricted to eligible positions; masked-out
+  // positions are never listed either way). ──────────────────────────────
+  function computeToggle(box, index) {
+    const present = box.present.slice();
+    present[index] = !present[index];
 
     const eligible = new Set(box.eligible || []);
     const consumedRanges = [];
-    for (let i = 0; i < box.present.length; i++) {
-      if (eligible.has(i) && !box.present[i]) {
+    for (let i = 0; i < present.length; i++) {
+      if (eligible.has(i) && !present[i]) {
         const row = Math.floor(i / box.num_col);
         const col = i % box.num_col;
         consumedRanges.push(wellId(row, col));
       }
     }
+    return { present, consumedRanges };
+  }
+
+  // ── mutations: thin DOM+fetch adapter around computeToggle -- immediate
+  // auto-save per tap, not a batched "Apply" (issue #17's Q2). ──────────
+  async function toggleCell(box, index, cell) {
+    const wasPresent = box.present[index];
+    const { present, consumedRanges } = computeToggle(box, index);
+    box.present = present; // optimistic update
+    cell.classList.toggle('present', box.present[index]);
+    cell.classList.add('pending');
 
     try {
       const res = await fetch('/tips/set', {
