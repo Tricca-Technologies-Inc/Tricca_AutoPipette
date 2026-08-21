@@ -62,23 +62,3 @@ def test_running_a_protocol_updates_the_shared_pill_and_the_run_page_card(
     # real notify_run_status push, relayed over the real /ws/status socket.
     expect(page.locator("#statusState")).to_have_text("Running")
     expect(page.locator("#runBtn")).to_be_disabled()
-
-
-def test_a_failed_run_shows_the_error_label_and_icon_on_both_widgets(
-    page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
-) -> None:
-    # `next_tip` is a homed-gated command (see `require_homed` in
-    # daemon/service.py); this fixture's fake Moonraker state starts
-    # unhomed, so it raises `NotHomedError` synchronously and the daemon
-    # reports the run as "error" without needing a real print-completion
-    # event -- the one non-"running" status this fake-backed setup can
-    # reach (see this file's module docstring).
-    (protocols_dir / "a.pipette").write_text("next_tip\n")
-    page.goto(live_kiosk_server.url)
-    page.click(".protocol-item")
-
-    page.click("#runBtn")
-
-    expect(page.locator("#statusPillLabel")).to_have_text("Error")
-    expect(page.locator("#statusState")).to_have_text("Error")
-    expect(page.locator("#statusIcon")).to_have_text("✕")

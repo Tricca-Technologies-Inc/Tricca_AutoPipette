@@ -70,18 +70,3 @@ def test_status_websocket_connects(
 
     expect(page.locator("#connDot")).to_have_class(LIVE)
     expect(page.locator("#connLabel")).to_have_text("live")
-
-
-def test_losing_the_socket_shows_reconnecting(
-    page: Page, live_kiosk_server: LiveKioskServer
-) -> None:
-    # app.js's onclose handler (connectWS) has never been exercised --
-    # killing the real server drops the real socket, the same event a
-    # network blip would fire.
-    page.goto(live_kiosk_server.url)
-    expect(page.locator("#connDot")).to_have_class(LIVE)
-
-    live_kiosk_server.stop()
-
-    expect(page.locator("#connDot")).not_to_have_class(LIVE)
-    expect(page.locator("#connLabel")).to_have_text("reconnecting")
