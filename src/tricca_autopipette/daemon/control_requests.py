@@ -14,7 +14,6 @@ Example:
 from __future__ import annotations
 
 import dataclasses
-import uuid
 from typing import Any
 
 from tricca_autopipette.commands.tap_cmd_parsers import (
@@ -41,33 +40,11 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     VolToStepsArgs,
     WaitArgs,
 )
+from tricca_autopipette.moonraker.moonraker_requests import JsonRpcRequestBuilder
 
 
-class ControlRequests:
+class ControlRequests(JsonRpcRequestBuilder):
     """JSON-RPC request builder for the ``tapd`` control-plane protocol."""
-
-    JSON_RPC_VERSION: str = "2.0"
-
-    def gen_request(
-        self, method: str, params: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
-        """Generate a JSON-RPC 2.0 request.
-
-        Args:
-            method: Control-plane method to call.
-            params: Optional parameters dictionary for the method.
-
-        Returns:
-            Dictionary representing the JSON-RPC request.
-        """
-        request: dict[str, Any] = {
-            "jsonrpc": self.JSON_RPC_VERSION,
-            "method": method,
-            "id": str(uuid.uuid4()),
-        }
-        if params is not None:
-            request["params"] = params
-        return request
 
     def init(self) -> dict[str, Any]:
         """Build a request to initialise the pipette.

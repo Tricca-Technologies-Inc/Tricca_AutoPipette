@@ -44,11 +44,68 @@ from enum import StrEnum
 from pathlib import Path
 from queue import Empty, Queue
 from types import TracebackType
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urlparse
 
 import aiohttp
 from aiohttp import ClientSession, ClientWebSocketResponse, FormData, WSMsgType
+
+
+def as_dict(value: Any) -> dict[str, Any]:  # ruff:ignore[any-type]
+    """Narrow a loosely-typed JSON value to a dict, defaulting to empty.
+
+    Shared by every client that parses a JSON-RPC result/params/notification
+    payload of otherwise unknown shape over this module's `WebSocketClient`
+    -- the control-plane envelope is deliberately isomorphic to Moonraker's
+    own, so this narrowing helper is too.
+
+    Args:
+        value: Value to narrow, typically from a JSON-RPC response or
+            notification payload of otherwise unknown shape.
+
+    Returns:
+        ``value`` if it is a dict, otherwise an empty dict.
+    """
+    if isinstance(value, dict):
+        return cast("dict[str, Any]", value)
+    return {}
+
+
+class JsonRpcError(RuntimeError):
+    """Raised when a JSON-RPC response carries an ``"error"`` field.
+
+    A subclass of `RuntimeError` so every existing ``except RuntimeError``
+    call site keeps working unchanged; callers that need more than the
+    flattened message string (e.g. to branch on which daemon-side exception
+    was raised) can read `error_type` instead of parsing `str(exc)`.
+
+    Attributes:
+        error: The raw ``error`` payload, e.g. tapd control-plane's
+            ``{"type": "RunAlreadyActiveError", "message": "..."}``
+            (see ``daemon/control_server.py``) or Moonraker's own
+            ``{"code": ..., "message": ...}``.
+    """
+
+    def __init__(self, error: dict[str, Any]) -> None:
+        """Initialize with the raw error payload.
+
+        Args:
+            error: The JSON-RPC response's ``"error"`` field.
+        """
+        self.error = error
+        super().__init__(f"Server error: {error}")
+
+    @property
+    def error_type(self) -> str | None:
+        """The daemon-side exception class name, if the error carries one.
+
+        Returns:
+            tapd control-plane errors carry a ``"type"`` key (the raising
+            exception's class name); Moonraker's own errors don't, so this
+            is None for those.
+        """
+        value = self.error.get("type")
+        return value if isinstance(value, str) else None
 
 
 class MessageType(StrEnum):
@@ -553,9 +610,13 @@ class WebSocketClient:
                             self.logger.warning(
                                 "Server error for request %s: %s", msg_id, data["error"]
                             )
-                            fut.set_exception(
-                                RuntimeError(f"Server error: {data['error']}")
+                            raw_error = data["error"]
+                            error: dict[str, Any] = (
+                                cast("dict[str, Any]", raw_error)
+                                if isinstance(raw_error, dict)
+                                else {"message": str(raw_error)}
                             )
+                            fut.set_exception(JsonRpcError(error))
                         else:
                             self.logger.debug(f"Received response for request {msg_id}")
                             fut.set_result(data)
@@ -657,6 +718,7 @@ class WebSocketClient:
         Raises:
             RuntimeError: If WebSocket is not connected.
             TimeoutError: If response not received within timeout.
+            JsonRpcError: If the response carries an ``"error"`` field.
 
         Example:
             Requires a reachable Moonraker server, so this is illustrative
@@ -690,6 +752,13 @@ class WebSocketClient:
             raise TimeoutError(
                 f"Timed out waiting for response to method '{method}'"
             ) from None
+        except JsonRpcError:
+            # Already a well-formed, structured error from the server itself
+            # (see _process_message) -- let it propagate as-is rather than
+            # flattening it into the generic "unexpected error" case below,
+            # which would erase error_type for callers that branch on it.
+            self._pending.pop(request_id, None)
+            raise
         except Exception as e:
             self._pending.pop(request_id, None)
             self.logger.error("Error sending JSON-RPC: %s", e, exc_info=True)

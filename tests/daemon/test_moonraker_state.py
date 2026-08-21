@@ -13,6 +13,7 @@ from fakes.fake_websocket_client import FakeWebSocketClient
 from tricca_autopipette.daemon.moonraker_state import (
     DB_KEY_CURRENT_LIQUID,
     DB_KEY_HAS_LIQUID,
+    DB_KEY_TIP_LIQUID_STATE,
     DB_KEY_TIP_PRESENCE,
     DB_KEY_TIP_STATE,
     DB_NAMESPACE,
@@ -212,12 +213,18 @@ class TestPrintStateCallbacks:
 
 
 class TestLoadTipLiquidState:
-    def test_returns_all_three_keys_when_all_are_stored(
+    def test_returns_all_three_keys_when_stored(
         self, fake_websocket_client: FakeWebSocketClient
     ) -> None:
-        fake_websocket_client.queue_response({"result": {"value": "attached"}})
-        fake_websocket_client.queue_response({"result": {"value": True}})
-        fake_websocket_client.queue_response({"result": {"value": "water"}})
+        fake_websocket_client.queue_response({
+            "result": {
+                "value": {
+                    DB_KEY_TIP_STATE: "attached",
+                    DB_KEY_HAS_LIQUID: True,
+                    DB_KEY_CURRENT_LIQUID: "water",
+                }
+            }
+        })
         tracker = _tracker(fake_websocket_client)
 
         result = tracker.load_tip_liquid_state()
@@ -227,23 +234,17 @@ class TestLoadTipLiquidState:
             DB_KEY_HAS_LIQUID: True,
             DB_KEY_CURRENT_LIQUID: "water",
         }
-        methods = [r["method"] for r in fake_websocket_client.sent_requests]
-        assert methods == ["server.database.get_item"] * 3
-        keys = [r["params"]["key"] for r in fake_websocket_client.sent_requests]
-        assert keys == [DB_KEY_TIP_STATE, DB_KEY_HAS_LIQUID, DB_KEY_CURRENT_LIQUID]
-        assert all(
-            r["params"]["namespace"] == DB_NAMESPACE
-            for r in fake_websocket_client.sent_requests
-        )
+        requests = fake_websocket_client.sent_requests
+        assert [r["method"] for r in requests] == ["server.database.get_item"]
+        assert requests[0]["params"]["key"] == DB_KEY_TIP_LIQUID_STATE
+        assert requests[0]["params"]["namespace"] == DB_NAMESPACE
 
-    def test_omits_keys_with_no_stored_value(
+    def test_first_run_with_nothing_stored_returns_empty(
         self, fake_websocket_client: FakeWebSocketClient
     ) -> None:
-        # First run: none of the three keys have ever been persisted, so
-        # Moonraker's `get_item` response lacks the shape `load_tip_liquid_state`
-        # expects, and each lookup falls into the `except` branch.
-        fake_websocket_client.queue_response({})
-        fake_websocket_client.queue_response({})
+        # First run: the key has never been persisted, so Moonraker's
+        # `get_item` response lacks the shape `load_tip_liquid_state`
+        # expects, and the lookup falls into the `except` branch.
         fake_websocket_client.queue_response({})
         tracker = _tracker(fake_websocket_client)
 
@@ -251,24 +252,21 @@ class TestLoadTipLiquidState:
 
         assert result == {}
 
-    def test_partial_state_when_only_some_keys_are_stored(
+    def test_non_mapping_value_is_ignored(
         self, fake_websocket_client: FakeWebSocketClient
     ) -> None:
-        fake_websocket_client.queue_response({"result": {"value": "attached"}})
-        fake_websocket_client.queue_response({})  # has_liquid never stored
-        fake_websocket_client.queue_response({"result": {"value": "water"}})
+        # A stored value from before this key existed in this shape, or any
+        # other malformed record, must not raise or be handed onward.
+        fake_websocket_client.queue_response({"result": {"value": "not-a-dict"}})
         tracker = _tracker(fake_websocket_client)
 
         result = tracker.load_tip_liquid_state()
 
-        assert result == {
-            DB_KEY_TIP_STATE: "attached",
-            DB_KEY_CURRENT_LIQUID: "water",
-        }
+        assert result == {}
 
 
 class TestSaveTipLiquidState:
-    def test_sends_one_post_item_per_key_in_order(
+    def test_sends_one_post_item_for_all_three_fields(
         self, fake_websocket_client: FakeWebSocketClient
     ) -> None:
         tracker = _tracker(fake_websocket_client)
@@ -276,14 +274,14 @@ class TestSaveTipLiquidState:
         tracker.save_tip_liquid_state("attached", True, "water")
 
         requests = fake_websocket_client.sent_requests
-        assert [r["method"] for r in requests] == ["server.database.post_item"] * 3
-        assert [r["params"]["key"] for r in requests] == [
-            DB_KEY_TIP_STATE,
-            DB_KEY_HAS_LIQUID,
-            DB_KEY_CURRENT_LIQUID,
-        ]
-        assert [r["params"]["value"] for r in requests] == ["attached", True, "water"]
-        assert all(r["params"]["namespace"] == DB_NAMESPACE for r in requests)
+        assert [r["method"] for r in requests] == ["server.database.post_item"]
+        assert requests[0]["params"]["key"] == DB_KEY_TIP_LIQUID_STATE
+        assert requests[0]["params"]["namespace"] == DB_NAMESPACE
+        assert requests[0]["params"]["value"] == {
+            DB_KEY_TIP_STATE: "attached",
+            DB_KEY_HAS_LIQUID: True,
+            DB_KEY_CURRENT_LIQUID: "water",
+        }
 
     def test_current_liquid_none_is_persisted_as_none(
         self, fake_websocket_client: FakeWebSocketClient
@@ -293,7 +291,7 @@ class TestSaveTipLiquidState:
         tracker.save_tip_liquid_state("none", False, None)
 
         requests = fake_websocket_client.sent_requests
-        assert requests[2]["params"]["value"] is None
+        assert requests[0]["params"]["value"][DB_KEY_CURRENT_LIQUID] is None
 
 
 class TestLoadTipPresence:

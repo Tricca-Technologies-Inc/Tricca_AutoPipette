@@ -72,27 +72,12 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     args_from_namespace,
 )
 from tricca_autopipette.daemon.control_requests import ControlRequests
-from tricca_autopipette.moonraker.websocket_client import WebSocketClient
+from tricca_autopipette.moonraker.websocket_client import WebSocketClient, as_dict
 from tricca_autopipette.resources.string_constants import TAP_CLR_BANNER
 
 logger = logging.getLogger(__name__)
 
 WEBSOCKET_TIMEOUT_SECONDS = 10
-
-
-def _as_dict(value: Any) -> dict[str, Any]:  # ruff:ignore[any-type]
-    """Narrow a loosely-typed JSON-RPC result/params value to a dict.
-
-    Args:
-        value: Value to narrow, typically a JSON-RPC ``result`` or
-            notification ``params`` of otherwise unknown shape.
-
-    Returns:
-        ``value`` if it is a dict, otherwise an empty dict.
-    """
-    if isinstance(value, dict):
-        return cast("dict[str, Any]", value)
-    return {}
 
 
 class RemoteTapShell(Cmd):
@@ -159,7 +144,7 @@ class RemoteTapShell(Cmd):
             params: `{"status", "message", "run_id", "filename"}` as sent by
                 `AutoPipetteService._broadcast_status`.
         """
-        notification = _as_dict(params)
+        notification = as_dict(params)
         if not notification:
             return
         status = notification.get("status")
@@ -173,7 +158,7 @@ class RemoteTapShell(Cmd):
             params: `{"run_id", "filename", "pending"}` as sent by
                 `AutoPipetteService.request_breakpoint`/`confirm_breakpoint`.
         """
-        notification = _as_dict(params)
+        notification = as_dict(params)
         if notification.get("pending"):
             self.add_alert(
                 msg="⏸ Protocol paused at a breakpoint. "
@@ -417,14 +402,14 @@ class RemoteTapShell(Cmd):
             return
         # {"protocols": [{"name": stem, "filename": name}, ...]} -- a plain
         # dict, not the CommandResult "data" envelope _result_data expects.
-        protocols: list[dict[str, Any]] = _as_dict(response.get("result")).get(
-            "protocols"
-        ) or []
+        protocols: list[dict[str, Any]] = (
+            as_dict(response.get("result")).get("protocols") or []
+        )
         if not protocols:
             self.poutput("No protocol files found.")
             return
         for protocol in protocols:
-            self.poutput(str(_as_dict(protocol).get("filename", "")))
+            self.poutput(str(as_dict(protocol).get("filename", "")))
 
     def _confirm_breakpoint(self, *, proceed: bool) -> None:
         """Send a breakpoint confirmation to the daemon.
@@ -505,8 +490,8 @@ class RemoteTapShell(Cmd):
         response = self._send(self.requests.ws_status())
         if response is None:
             return
-        result = _as_dict(response.get("result"))
-        data = _as_dict(result.get("data"))
+        result = as_dict(response.get("result"))
+        data = as_dict(result.get("data"))
         if "queued_messages" not in data:
             # No Moonraker client configured at all (`tapd --no-connect`) --
             # only the configured URI is known, not live connection details.
@@ -535,7 +520,7 @@ class RemoteTapShell(Cmd):
             return
         # {"connected_to_moonraker": bool} -- a plain dict, not the
         # CommandResult "data" envelope _result_data expects.
-        connected = _as_dict(response.get("result")).get("connected_to_moonraker")
+        connected = as_dict(response.get("result")).get("connected_to_moonraker")
         self.poutput(
             "Connected to Moonraker" if connected else "Not connected to Moonraker"
         )
@@ -564,12 +549,12 @@ class RemoteTapShell(Cmd):
         response = self._send(self.requests.clients())
         if response is None:
             return
-        clients: list[Any] = _as_dict(response.get("result")).get("clients") or []
+        clients: list[Any] = as_dict(response.get("result")).get("clients") or []
         if not clients:
             self.poutput("(no clients connected)")
             return
         for client in clients:
-            self.poutput(str(_as_dict(client).get("client_type", "unknown")))
+            self.poutput(str(as_dict(client).get("client_type", "unknown")))
 
     @with_argparser(TAPCmdParsers.parser_send)  # type: ignore[arg-type]
     def do_send(self, args: SendArgs) -> None:
@@ -580,7 +565,7 @@ class RemoteTapShell(Cmd):
         response = self._send(self.requests.ws_send(args.method, params))
         if response is None:
             return
-        data = _as_dict(_as_dict(response.get("result")).get("data"))
+        data = as_dict(as_dict(response.get("result")).get("data"))
         self.poutput(json.dumps(data.get("response"), indent=2))
 
     @with_argparser(TAPCmdParsers.parser_notify)  # type: ignore[arg-type]
@@ -686,8 +671,8 @@ class RemoteTapShell(Cmd):
         )
         if response is None:
             return
-        result = _as_dict(response.get("result"))
-        data = _as_dict(result.get("data"))
+        result = as_dict(response.get("result"))
+        data = as_dict(result.get("data"))
 
         volumes_ul: list[float] = data.get("volumes_ul") or []
         travel_mm: list[float] = data.get("travel_mm") or []
@@ -729,7 +714,7 @@ class RemoteTapShell(Cmd):
         """
         if response is None:
             return None
-        return _as_dict(_as_dict(response.get("result")).get("data"))
+        return as_dict(as_dict(response.get("result")).get("data"))
 
     def _parse_json_params(
         self, raw: str | None
@@ -761,7 +746,7 @@ class RemoteTapShell(Cmd):
         if response is None:
             return
         raw_result: Any = response.get("result")
-        result = _as_dict(raw_result)
+        result = as_dict(raw_result)
         if "status" in result:
             # run.*-shaped reply: {"status", "message", "run_id", "filename"}.
             self.poutput(f"{result.get('status')}: {result.get('message', '')}")
@@ -800,7 +785,7 @@ class RemoteTapShell(Cmd):
             response = self.client.send_jsonrpc(self.requests.ws_status())
         except RuntimeError:
             return
-        data = _as_dict(_as_dict(response.get("result")).get("data"))
+        data = as_dict(as_dict(response.get("result")).get("data"))
         uri = data.get("uri")
         if not uri:
             return

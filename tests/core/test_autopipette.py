@@ -21,6 +21,8 @@ from tricca_autopipette.core.pipette_exceptions import (
     VolumeCapacityError,
 )
 from tricca_autopipette.core.pipette_models import TipState
+from tricca_autopipette.core.plates import PlateParams
+from tricca_autopipette.core.well import StrategyType, Well
 
 
 class TestSwitchLiquid:
@@ -142,6 +144,33 @@ class TestTipHandling:
         pipette_with_plates.dispose_tip()
 
         assert pipette_with_plates.state.tip_state == TipState.DETACHED
+
+    def test_next_tip_with_tipbox_name_draws_from_that_box(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        """A caller can request a specific box instead of registration order."""
+        location_manager = pipette_with_plates.location_manager
+        location_manager.set_plate(
+            "tipbox2",
+            PlateParams(
+                plate_type="tipbox",
+                well_template=Well(
+                    coor=Coordinate(x=200.0, y=10.0, z=5.0),
+                    dip_top=5.0,
+                    strategy_type=StrategyType.SIMPLE,
+                ),
+                num_row=1,
+                num_col=2,
+                spacing_row=0.0,
+                spacing_col=9.0,
+            ),
+        )
+
+        pipette_with_plates.next_tip(tipbox_name="tipbox2")
+
+        tipbox_manager = location_manager.tipbox_manager
+        assert tipbox_manager.boxes["tipbox2"].remaining == 1
+        assert tipbox_manager.boxes["tipbox"].remaining == 2
 
 
 class TestAspirateDispenseVolume:

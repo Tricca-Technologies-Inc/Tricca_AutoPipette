@@ -12,17 +12,29 @@ client-side class toggle -- a client-only assertion could pass while
 
 from __future__ import annotations
 
+import json
 import re
+import urllib.request
+from typing import Any
 
 import pytest
 
 pytest.importorskip("playwright")
 
-import requests
 from playwright.sync_api import Page, expect
 from support.live_kiosk_server import LiveKioskServer
 
 PRESENT = re.compile(r"\bpresent\b")
+
+
+def _get_json(url: str) -> Any:
+    """GET `url` and parse the JSON body. Stdlib stand-in for `requests.get`.
+
+    Returns:
+        The parsed JSON body.
+    """
+    with urllib.request.urlopen(url, timeout=5) as response:
+        return json.load(response)
 
 
 def test_tapping_a_present_cell_marks_it_consumed_end_to_end(
@@ -48,9 +60,7 @@ def test_tapping_a_present_cell_marks_it_consumed_end_to_end(
     # cell" from "toggled the wrong one and re-rendered anyway" -- confirm
     # against the server's own record, the same `GET /tips` tips.js itself
     # polls after every toggle.
-    listing = requests.get(
-        f"{live_kiosk_server_with_plates.url}/tips", timeout=5
-    ).json()
+    listing = _get_json(f"{live_kiosk_server_with_plates.url}/tips")
     assert listing["data"]["boxes"][0]["present"] == [False, True]
 
 
@@ -67,9 +77,7 @@ def test_tapping_again_restores_it(
     card.locator('.tip-cell[data-index="0"]').click()
     expect(card.locator('.tip-cell[data-index="0"]')).to_have_class(PRESENT)
 
-    listing = requests.get(
-        f"{live_kiosk_server_with_plates.url}/tips", timeout=5
-    ).json()
+    listing = _get_json(f"{live_kiosk_server_with_plates.url}/tips")
     assert listing["data"]["boxes"][0]["present"] == [True, True]
 
 
