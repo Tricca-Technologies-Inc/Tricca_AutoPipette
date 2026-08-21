@@ -32,21 +32,45 @@ const App = (() => {
     return status;
   }
 
+  // Shared label/icon for a run-status value -- the one place both the
+  // compact pill (below) and run.js's detailed card derive their text from,
+  // instead of each keeping its own capitalize expression / icon map.
+  const STATUS_LABELS = { idle: 'Idle', running: 'Running', done: 'Done', error: 'Error' };
+  const STATUS_ICONS = { idle: '○', running: '◌', done: '✓', error: '✕' };
+
+  function describeStatus(s) {
+    return {
+      label: STATUS_LABELS[s] || 'Unknown',
+      icon: STATUS_ICONS[s] || '○',
+    };
+  }
+
   // ── WebSocket connection ────────────────────────────────────────────────
+  // Pure: given the socket lifecycle event, the connection indicator's
+  // label and whether it counts as "live" -- the one thing onopen/onclose
+  // (below) agree on, instead of each writing the DOM its own way.
+  function wsState(eventType) {
+    return eventType === 'open'
+      ? { label: 'live', live: true }
+      : { label: 'reconnecting', live: false };
+  }
+
+  function renderConnIndicator(eventType) {
+    const state = wsState(eventType);
+    document.getElementById('connDot').classList.toggle('live', state.live);
+    document.getElementById('connLabel').textContent = state.label;
+  }
+
   function connectWS() {
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
     ws = new WebSocket(`${proto}://${location.host}/ws/status`);
 
-    ws.onopen = () => {
-      document.getElementById('connDot').classList.add('live');
-      document.getElementById('connLabel').textContent = 'live';
-    };
+    ws.onopen = () => renderConnIndicator('open');
 
     ws.onmessage = e => setStatus(JSON.parse(e.data));
 
     ws.onclose = () => {
-      document.getElementById('connDot').classList.remove('live');
-      document.getElementById('connLabel').textContent = 'reconnecting';
+      renderConnIndicator('close');
       setTimeout(connectWS, 2000);
     };
   }
@@ -57,7 +81,7 @@ const App = (() => {
     const label = document.getElementById('statusPillLabel');
     const s = status.status || 'idle';
     pill.className = `status-pill ${s}`;
-    label.textContent = s.charAt(0).toUpperCase() + s.slice(1);
+    label.textContent = describeStatus(s).label;
   }
 
   // ── global breakpoint banner ────────────────────────────────────────────
@@ -162,5 +186,5 @@ const App = (() => {
 
   document.addEventListener('DOMContentLoaded', init);
 
-  return { onStatus, getStatus, registerPage, switchTo };
+  return { onStatus, getStatus, registerPage, switchTo, describeStatus };
 })();

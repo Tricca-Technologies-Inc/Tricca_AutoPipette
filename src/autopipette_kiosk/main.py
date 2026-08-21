@@ -23,7 +23,7 @@ import re
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
@@ -74,7 +74,7 @@ class RunRequest(BaseModel):
 class RunStatus(BaseModel):
     """Current (or most recent) protocol run status."""
 
-    status: str  # "idle" | "running" | "done" | "error"
+    status: Literal["idle", "running", "done", "error"]
     message: str = ""
 
 
