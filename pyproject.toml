@@ -58,6 +58,14 @@ dev = [
     "sphinx-rtd-theme",
 ]
 
+# Kiosk browser testing (ADR-0003): a real browser driving the kiosk
+# frontend, plus the AI-review screenshot-capture tool. Kept out of `dev` --
+# `playwright install` pulls a real browser binary (~300MB) that most work
+# on this repo never touches.
+browser-test = [
+    "pytest-playwright",
+]
+
 
 # ============================================================================
 # Ruff
