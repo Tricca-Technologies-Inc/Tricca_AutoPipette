@@ -113,7 +113,7 @@ class Coordinate(BaseModel):
         new_y = self.y + dy
         new_z = self.z + dz
 
-        if new_x < -3 or new_y < -1 or new_z < 5:
+        if new_x < 0 or new_y < 0 or new_z < 0:
             raise ValueError(
                 f"Resulting coordinate ({new_x}, {new_y}, {new_z}) "
                 "has negative values"
