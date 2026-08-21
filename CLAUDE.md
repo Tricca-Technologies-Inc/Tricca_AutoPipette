@@ -188,3 +188,7 @@ The five canonical triage roles, each label string equal to its name, plus a rep
 ### Domain docs
 
 Single-context — `CONTEXT.md` and `docs/adr/` at the repo root (neither created yet; `CLAUDE.md` serves as the glossary meanwhile). See `docs/agents/domain.md`.
+
+### Test-driven development
+
+**Mandatory going forward.** Any new feature or bug fix with a concrete input and observable output (business logic, a control-plane RPC, a domain method, a transformation) is built via the `mattpocock-skills:tdd` skill (`/tdd`) — red before green, one seam at a time, seams named and confirmed before any test file exists — not implemented first and tested afterward. Do not batch tests into a later gap-fill/coverage-audit pass; that pattern was used once for a pre-existing backlog and is not to be repeated. See `docs/agents/tdd.md` for scope, this repo's test seams, and the current kiosk-frontend-JS exception.
