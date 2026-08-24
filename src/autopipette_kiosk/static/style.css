@@ -553,3 +553,170 @@ header {
   color: var(--muted);
   font-size: 13px;
 }
+
+/* ── Deck page (issue #87) ── */
+#page-deck.active {
+  grid-template-columns: 1fr;
+  grid-auto-rows: min-content;
+  align-content: start;
+  padding: 28px 36px;
+  gap: 20px;
+  overflow-y: auto;
+}
+
+.deck-hint {
+  font-size: 13px;
+  color: var(--muted);
+  max-width: 720px;
+}
+
+.deck-main {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+/* The coordinate space itself: a 40cm x 40cm square, machine origin (0,0)
+   at the top-right corner (see deck.js's toPercent). Tiles are positioned
+   with plain percent left/top, so this container's own pixel size never
+   enters the math. */
+.deck-square {
+  position: relative;
+  width: min(560px, 100%);
+  aspect-ratio: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.deck-origin-label {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  font-size: 10px;
+  font-family: var(--mono);
+  color: var(--muted);
+}
+
+/* Decorative background schematic -- plain CSS, no image/canvas/svg, and
+   not derived from config data (see index.html's markup comment). Roughly
+   centered inside .deck-square; "close is fine" per issue #87. */
+.deck-schematic {
+  position: absolute;
+  inset: 16%;
+  display: grid;
+  grid-template-columns: 0.6fr 1fr 1fr 0.6fr;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.deck-flank {
+  display: grid;
+  grid-template-rows: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.deck-slot {
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--surface2);
+}
+
+.deck-bays {
+  grid-column: 2 / 4;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.deck-bay {
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--surface2);
+}
+
+/* Real, config-driven location tiles -- absolutely positioned by deck.js
+   from each location's real x/y, layered on top of the decorative
+   schematic above. */
+.deck-tiles { position: absolute; inset: 0; }
+
+.deck-tile {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+}
+
+.deck-tile-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--surface);
+}
+
+.deck-tile-dot:hover, .deck-tile-dot.selected {
+  background: var(--running);
+}
+
+.deck-tile-tipbox {
+  padding: 3px;
+  border-radius: 4px;
+  background: var(--surface);
+  border: 2px solid var(--accent);
+}
+
+.deck-tile-tipbox.selected { border-color: var(--running); }
+
+.deck-mini-grid {
+  display: grid;
+  gap: 1px;
+  width: 40px;
+  height: 26px;
+}
+
+.deck-mini-cell { border-radius: 1px; background: var(--surface2); }
+.deck-mini-cell.present { background: var(--success); }
+.deck-mini-cell.empty { background: var(--error); }
+.deck-mini-cell.masked { background: transparent; }
+
+/* ── tap-to-select info panel (doubles as the tile "tooltip") ── */
+.deck-info {
+  min-width: 220px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 22px;
+  font-family: var(--mono);
+}
+
+.deck-info-placeholder {
+  color: var(--muted);
+  font-size: 13px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.deck-info-name {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.deck-info-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--muted);
+  padding: 3px 0;
+}
+
+.deck-info-row span:last-child { color: var(--text); }
+
+.deck-info-details {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--muted);
+}

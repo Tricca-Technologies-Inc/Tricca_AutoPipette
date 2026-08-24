@@ -40,6 +40,7 @@
   <nav class="tab-bar" id="tabBar">
     <button class="tab-btn active" data-page="run">Run</button>
     <button class="tab-btn" data-page="tips">Tips</button>
+    <button class="tab-btn" data-page="deck">Deck</button>
   </nav>
 
   <!-- Global breakpoint banner: reachable from any tab, not scoped to the
@@ -102,11 +103,48 @@
         <div class="tips-empty">Loading tip boxes…</div>
       </div>
     </div>
+
+    <!-- Deck page (issue #87) -->
+    <div class="page" id="page-deck">
+      <div class="deck-hint">
+        Read-only spatial map of the configured deck, for verifying the physical setup
+        against config before a run. Tap a tile for its name/type/coordinates; tapping a
+        tipbox switches to the Tips tab. Toolhead position isn't shown here (see #86).
+      </div>
+      <div class="deck-main">
+        <div class="deck-square" id="deckSquare">
+          <!-- Decorative-only background: 2x4 large bays flanked by small-slot
+               columns, not derived from config data (see deck.js). -->
+          <div class="deck-schematic">
+            <div class="deck-flank">
+              <div class="deck-slot"></div><div class="deck-slot"></div>
+              <div class="deck-slot"></div><div class="deck-slot"></div>
+            </div>
+            <div class="deck-bays">
+              <div class="deck-bay"></div><div class="deck-bay"></div>
+              <div class="deck-bay"></div><div class="deck-bay"></div>
+              <div class="deck-bay"></div><div class="deck-bay"></div>
+              <div class="deck-bay"></div><div class="deck-bay"></div>
+            </div>
+            <div class="deck-flank">
+              <div class="deck-slot"></div><div class="deck-slot"></div>
+              <div class="deck-slot"></div><div class="deck-slot"></div>
+            </div>
+          </div>
+          <div class="deck-origin-label">origin (0,0)</div>
+          <div class="deck-tiles" id="deckTiles"></div>
+        </div>
+        <div class="deck-info" id="deckInfo">
+          <div class="deck-info-placeholder">Tap a location to see its details.</div>
+        </div>
+      </div>
+    </div>
   </main>
 </div>
 
 <script src="/static/app.js"></script>
 <script src="/static/run.js"></script>
 <script src="/static/tips.js"></script>
+<script src="/static/deck.js"></script>
 </body>
 </html>
