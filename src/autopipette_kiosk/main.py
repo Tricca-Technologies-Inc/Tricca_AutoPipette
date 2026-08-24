@@ -104,14 +104,16 @@ class TipsSetRequest(BaseModel):
     available: bool = False
 
 
-class TipsResult(BaseModel):
-    """Response envelope for the `/tips*` routes.
+class CommandResultResponse(BaseModel):
+    """Response envelope for routes that just forward a `CommandResult`.
 
     Mirrors `CommandResult` (`ok`/`message`/`data`) rather than translating
-    to an HTTP error status: unlike `/run`/`/home`, the tip RPCs
-    (`config.tips`/`config.reset_tips`/`config.set_tips`) report failure
-    (e.g. "no such tipbox") as `CommandResult(ok=False, ...)`, not as a
-    raised exception, so there's no exception to translate.
+    to an HTTP error status: unlike `/run`/`/home`, the RPCs behind these
+    routes (`config.tips`/`config.reset_tips`/`config.set_tips`/
+    `config.list_locations`) report failure (e.g. "no such tipbox") as
+    `CommandResult(ok=False, ...)`, not as a raised exception, so there's no
+    exception to translate. Shared by the `/tips*` routes and `/locations`
+    (issue #87).
     """
 
     ok: bool
@@ -342,19 +344,20 @@ async def respond_to_breakpoint(req: BreakpointResponse) -> dict[str, bool]:
     return {"ok": True}
 
 
-async def _dispatch_tips_request(request: dict[str, Any]) -> TipsResult:
-    """Send a `config.tips*` control-plane request and forward its result.
+async def _dispatch_control_request(request: dict[str, Any]) -> CommandResultResponse:
+    """Send a control-plane request and forward its `CommandResult` as-is.
 
-    Shared by the three `/tips*` routes below -- each just builds the
-    request and lets this translate the daemon's `CommandResult` shape
-    (`ok`/`message`/`data`) into a `TipsResult`, or the connection state
-    into an `HTTPException`.
+    Shared by the `/tips*` routes and `/locations` below -- each just builds
+    the request and lets this translate the daemon's `CommandResult` shape
+    (`ok`/`message`/`data`) into a `CommandResultResponse`, or the connection
+    state into an `HTTPException`.
 
     Args:
-        request: A `ControlRequests.tips`/`reset_tips`/`set_tips` result.
+        request: A `ControlRequests` builder's result (e.g.
+            `tips`/`reset_tips`/`set_tips`/`list_locations`).
 
     Returns:
-        The forwarded `CommandResult`, as a `TipsResult`.
+        The forwarded `CommandResult`, as a `CommandResultResponse`.
 
     Raises:
         HTTPException: 503 if the control daemon isn't connected, or 500 if
@@ -369,15 +372,15 @@ async def _dispatch_tips_request(request: dict[str, Any]) -> TipsResult:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
     result: dict[str, Any] = response.get("result", {})
-    return TipsResult(
-        ok=bool(result.get("ok", False)),
+    return CommandResultResponse(
+        ok=bool(result.get("ok")),
         message=str(result.get("message", "")),
         data=result.get("data"),
     )
 
 
-@app.get("/tips", response_model=TipsResult)
-async def list_tips() -> TipsResult:
+@app.get("/tips", response_model=CommandResultResponse)
+async def list_tips() -> CommandResultResponse:
     """Report tip availability for every registered tipbox.
 
     Routing only, per issue #17's constraint -- `TipBoxManager.describe`
@@ -391,24 +394,24 @@ async def list_tips() -> TipsResult:
         `TipsResult` with `data["boxes"]`/`data["total_remaining"]`/
         `data["total_capacity"]`.
     """
-    return await _dispatch_tips_request(_control_requests.tips(TipsArgs()))
+    return await _dispatch_control_request(_control_requests.tips(TipsArgs()))
 
 
-@app.post("/tips/reset", response_model=TipsResult)
-async def reset_tips(req: TipsResetRequest) -> TipsResult:
+@app.post("/tips/reset", response_model=CommandResultResponse)
+async def reset_tips(req: TipsResetRequest) -> CommandResultResponse:
     """Mark one tipbox as full, after it's been physically reloaded.
 
     Returns:
-        `TipsResult` naming the box's new tip count, or `ok=False` if no
-        tipbox by that name is registered.
+        `CommandResultResponse` naming the box's new tip count, or
+        `ok=False` if no tipbox by that name is registered.
     """
-    return await _dispatch_tips_request(
+    return await _dispatch_control_request(
         _control_requests.reset_tips(ResetTipsArgs(name=req.name))
     )
 
 
-@app.post("/tips/set", response_model=TipsResult)
-async def set_tips(req: TipsSetRequest) -> TipsResult:
+@app.post("/tips/set", response_model=CommandResultResponse)
+async def set_tips(req: TipsSetRequest) -> CommandResultResponse:
     """Declare exactly which positions of a tipbox hold tips.
 
     Replaces the named box's state rather than adding to it -- the
@@ -416,14 +419,31 @@ async def set_tips(req: TipsSetRequest) -> TipsResult:
     set (see `TipsSetRequest`), never a single toggled cell.
 
     Returns:
-        `TipsResult` naming the box's new tip count, or `ok=False` if the
-        box is unknown or a range is invalid.
+        `CommandResultResponse` naming the box's new tip count, or
+        `ok=False` if the box is unknown or a range is invalid.
     """
-    return await _dispatch_tips_request(
+    return await _dispatch_control_request(
         _control_requests.set_tips(
             SetTipsArgs(name=req.name, ranges=req.ranges, available=req.available)
         )
     )
+
+
+@app.get("/locations", response_model=CommandResultResponse)
+async def list_locations() -> CommandResultResponse:
+    """Report every defined location, for the kiosk Deck page (issue #87).
+
+    Routing only, matching the `/tips` pattern -- `AutoPipetteService.
+    list_locations` (via `config.list_locations`) is the data source; this
+    adds no deck/location logic of its own. `data["locations"]` carries one
+    dict per location with `name`/`type`/`x`/`y`/`z`/`details` keys (`type`
+    is a plate class name, e.g. `"TipBox"`, or `"Coordinate"` for a bare
+    point).
+
+    Returns:
+        `CommandResultResponse` with `data["locations"]`.
+    """
+    return await _dispatch_control_request(_control_requests.list_locations())
 
 
 @app.get("/status", response_model=RunStatus)

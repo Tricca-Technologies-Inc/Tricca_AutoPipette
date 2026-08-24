@@ -322,6 +322,37 @@ class TestTipsEndpoints:
         assert response.status_code == 503
 
 
+class TestLocationsEndpoint:
+    """Tests for `GET /locations` (issue #87): a thin proxy over
+    `config.list_locations`, for the kiosk Deck page's spatial tiles.
+    """
+
+    def test_lists_registered_locations_sorted_by_name(
+        self, kiosk_client_with_plates: TestClient
+    ) -> None:
+        response = kiosk_client_with_plates.get("/locations")
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["ok"] is True
+        rows = body["data"]["locations"]
+        assert [row["name"] for row in rows] == ["plate_a", "tipbox", "waste"]
+        tipbox = next(row for row in rows if row["name"] == "tipbox")
+        assert tipbox["type"] == "TipBox"
+        assert tipbox["x"] == pytest.approx(10.0)
+        assert tipbox["y"] == pytest.approx(10.0)
+
+    def test_returns_503_when_the_daemon_is_not_connected(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(kiosk_main, "_control_client", None)
+
+        client = TestClient(kiosk_main.app)  # no lifespan, see TestRunEndpoint above
+        response = client.get("/locations")
+
+        assert response.status_code == 503
+
+
 class TestIndexRoute:
     def test_serves_the_frontend(self, kiosk_client: TestClient) -> None:
         response = kiosk_client.get("/")
