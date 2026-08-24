@@ -14,9 +14,11 @@ from unittest.mock import patch
 
 import pytest
 from fakes.fake_moonraker_state import FakeMoonrakerState
+from fakes.fake_websocket_client import FakeWebSocketClient
 
 from tricca_autopipette.core.pipette_constants import DefaultPaths
-from tricca_autopipette.core.pipette_exceptions import NotHomedError
+from tricca_autopipette.core.pipette_exceptions import NotALocationError, NotHomedError
+from tricca_autopipette.core.pipette_models import TipState
 from tricca_autopipette.daemon.service import AutoPipetteService, ProtocolAbortedError
 
 FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures" / "protocols"
@@ -141,6 +143,111 @@ class TestRunProtocolSync:
 
         gcode_arg = spy_write.call_args.args[0]
         assert any("G4" in line for line in gcode_arg)  # the post-break wait
+
+
+class TestDomainStateSnapshotRollback:
+    """Issue #35: a compile-time protocol failure must roll the deck model
+
+    back to exactly its pre-run state -- tip presence, traversal cursors, and
+    tip/liquid state -- including writing the restored values back through to
+    Moonraker's database, since the persist decorators already wrote the
+    (now-rolled-back) corrupted values before the failure. A runtime failure
+    (after G-code has already uploaded) must NOT roll anything back.
+    """
+
+    def test_compile_time_failure_restores_tip_presence_and_cursor(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        _set_homed(service_with_plates, True)
+        tipbox_manager = (
+            service_with_plates._autopipette.location_manager.tipbox_manager
+        )
+        location_manager = service_with_plates._autopipette.location_manager
+        pre_run_tip_snapshot = tipbox_manager.snapshot()
+        pre_run_cursors = location_manager.snapshot_cursors()
+
+        with pytest.raises(NotALocationError):
+            service_with_plates._run_protocol_sync("compile_fail.pipette")
+
+        assert tipbox_manager.snapshot() == pre_run_tip_snapshot
+        assert location_manager.snapshot_cursors() == pre_run_cursors
+
+    def test_compile_time_failure_restores_pipette_state(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        _set_homed(service_with_plates, True)
+        autopipette = service_with_plates._autopipette
+        pre_run_tip_state = autopipette.state.tip_state
+        pre_run_has_liquid = autopipette.state.has_liquid
+        pre_run_liquid = autopipette.active_liquid
+
+        with pytest.raises(NotALocationError):
+            service_with_plates._run_protocol_sync("compile_fail.pipette")
+
+        assert autopipette.state.tip_state == pre_run_tip_state
+        assert autopipette.state.has_liquid == pre_run_has_liquid
+        assert autopipette.active_liquid == pre_run_liquid
+
+    def test_compile_time_failure_writes_restored_state_back_to_moonraker_db(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        _set_homed(service_with_plates, True)
+        moonraker_state = service_with_plates.moonraker_state
+        assert isinstance(moonraker_state, FakeMoonrakerState)
+        pre_run_tip_snapshot = (
+            service_with_plates._autopipette.location_manager.tipbox_manager.snapshot()
+        )
+
+        with pytest.raises(NotALocationError):
+            service_with_plates._run_protocol_sync("compile_fail.pipette")
+
+        # next_tip's own persist_tip_presence/persist_tip_liquid_state calls
+        # already wrote the (corrupted) advanced state through -- the last
+        # write must be the rollback, restoring the DB to the pre-run value.
+        assert moonraker_state.saved_tip_presence[-1] == pre_run_tip_snapshot
+        assert moonraker_state.saved_states[-1] == (
+            TipState.UNKNOWN.value,
+            False,
+            "water",
+        )
+
+    def test_runtime_failure_after_upload_leaves_state_advanced(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        _set_homed(service_with_plates, True)
+        service_with_plates.client = FakeWebSocketClient()  # type: ignore[assignment]
+        tipbox_manager = (
+            service_with_plates._autopipette.location_manager.tipbox_manager
+        )
+        pre_run_tip_snapshot = tipbox_manager.snapshot()
+
+        with (
+            patch.object(
+                service_with_plates,
+                "upload_and_execute_gcode",
+                side_effect=RuntimeError("moonraker rejected the upload"),
+            ),
+            pytest.raises(RuntimeError, match="moonraker rejected"),
+        ):
+            service_with_plates._run_protocol_sync("tip_then_upload_fails.pipette")
+
+        assert tipbox_manager.snapshot() != pre_run_tip_snapshot
+        assert service_with_plates._autopipette.state.tip_state == TipState.ATTACHED
+
+    def test_successful_run_leaves_advanced_state_in_place(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        _set_homed(service_with_plates, True)
+        service_with_plates.client = FakeWebSocketClient()  # type: ignore[assignment]
+        tipbox_manager = (
+            service_with_plates._autopipette.location_manager.tipbox_manager
+        )
+        pre_run_tip_snapshot = tipbox_manager.snapshot()
+
+        service_with_plates._run_protocol_sync("tip_then_upload_fails.pipette")
+
+        assert tipbox_manager.snapshot() != pre_run_tip_snapshot
+        assert service_with_plates._autopipette.state.tip_state == TipState.ATTACHED
 
 
 class TestStartRunAndRunProtocol:

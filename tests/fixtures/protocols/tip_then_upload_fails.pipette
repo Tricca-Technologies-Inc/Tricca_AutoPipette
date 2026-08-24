@@ -1,0 +1,4 @@
+# Exercises runtime-failure classification (issue #35): this file compiles
+# cleanly and reaches upload, so a failure injected at upload must NOT roll
+# back the tip it already consumed.
+next_tip
