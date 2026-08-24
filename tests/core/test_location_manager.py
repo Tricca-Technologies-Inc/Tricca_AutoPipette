@@ -1010,3 +1010,40 @@ class TestRepr:
         manager.load_from_json("t.json")
 
         assert repr(manager) == "LocationManager(locations=2, tipboxes=1, waste=yes)"
+
+
+# ==================== Traversal cursor snapshot/restore (issue #35) ==============
+
+
+class TestCursorSnapshotRestore:
+    def test_snapshot_captures_and_restore_rewinds_plate_cursors(
+        self, manager: LocationManager, locations_dir: Path
+    ) -> None:
+        _write(
+            locations_dir,
+            "t.json",
+            {"plates": [_array_entry("plate_a", cols=3), _tipbox_entry("tips")]},
+        )
+        manager.load_from_json("t.json")
+
+        snapshot = manager.snapshot_cursors()
+        assert snapshot == {"plate_a": 0, "tips": 0}
+
+        manager.get_coordinate("plate_a")  # advances plate_a.curr to 1
+        manager.get_coordinate("plate_a")  # advances plate_a.curr to 2
+        assert manager.locations["plate_a"].curr == 2  # type: ignore[union-attr]
+
+        manager.restore_cursors(snapshot)
+
+        assert manager.locations["plate_a"].curr == 0  # type: ignore[union-attr]
+        assert manager.locations["tips"].curr == 0  # type: ignore[union-attr]
+
+    def test_restore_ignores_plates_no_longer_registered(
+        self, manager: LocationManager, locations_dir: Path
+    ) -> None:
+        _write(locations_dir, "t.json", {"plates": [_array_entry("plate_a", cols=3)]})
+        manager.load_from_json("t.json")
+        snapshot = manager.snapshot_cursors()
+        manager.remove_location("plate_a")
+
+        manager.restore_cursors(snapshot)  # must not raise

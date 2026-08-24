@@ -29,10 +29,11 @@ import shlex
 import threading
 import time
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Generator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from cmd2 import Cmd2ArgumentParser
 
@@ -2331,6 +2332,92 @@ class AutoPipetteService:
                 )
                 self._broadcast_status()
 
+    @contextmanager
+    def domain_state_snapshot(
+        self, *, restore: Literal["on_error", "always"] = "on_error"
+    ) -> Generator[None]:
+        """Snapshot deck/pipette state, restoring it depending on the outcome.
+
+        Captures three things a protocol replay can advance: every
+        registered tipbox's consumed-position map
+        (:meth:`TipBoxManager.snapshot`), every plate's traversal cursor
+        (:meth:`LocationManager.snapshot_cursors`), and the pipette's
+        tip/liquid state (``AutoPipette.state.tip_state``/``has_liquid`` plus
+        ``active_liquid``).
+
+        Issue #35's compile-time-rollback use (the default, ``restore=
+        "on_error"``) treats the two outcomes asymmetrically: a body that
+        raises is restored to exactly the pre-enter snapshot, while a body
+        that completes normally is left as-is -- a *runtime* failure (after
+        G-code has already uploaded and started executing physically) is
+        deliberately not caught by this context manager at all, since by
+        then the caller (:meth:`_run_protocol_sync`) is already past the
+        ``with`` block. Issue #36's dry-run use passes ``restore="always"``,
+        since every dry-run outcome -- success or failure -- means nothing
+        should be left standing.
+
+        Restoring also writes the restored tip-presence and tip/liquid state
+        back through to Moonraker's ``server.database`` (when a connection is
+        configured) rather than only resetting in-memory objects: the
+        ``persist_tip_presence``/``persist_tip_liquid_state`` decorators may
+        already have durably written the now-rolled-back values before the
+        failure, and an in-memory-only restore would leave the database wrong
+        until the next successful persist -- surviving a crash in between.
+
+        Args:
+            restore: ``"on_error"`` (default) restores only if the wrapped
+                body raises, discarding the snapshot on normal completion.
+                ``"always"`` restores unconditionally on exit, regardless of
+                outcome.
+
+        Yields:
+            Nothing; used purely for its enter/exit side effects.
+        """
+        autopipette = self._autopipette
+        location_manager = autopipette.location_manager
+        tipbox_manager = location_manager.tipbox_manager
+
+        tip_presence_snapshot = tipbox_manager.snapshot()
+        cursor_snapshot = location_manager.snapshot_cursors()
+        state = autopipette.state
+        pipette_state_snapshot = (
+            state.tip_state,
+            state.has_liquid,
+            autopipette.active_liquid,
+        )
+
+        def _restore() -> None:
+            tipbox_manager.restore(tip_presence_snapshot)
+            location_manager.restore_cursors(cursor_snapshot)
+
+            tip_state, has_liquid, active_liquid = pipette_state_snapshot
+            state.tip_state = tip_state
+            state.has_liquid = has_liquid
+            if active_liquid != autopipette.active_liquid:
+                autopipette.switch_liquid(active_liquid)
+
+            if self.moonraker_state is not None:
+                restored_tip_presence = tipbox_manager.snapshot()
+                self._persisted_tip_presence = restored_tip_presence
+                self.moonraker_state.save_tip_presence(restored_tip_presence)
+
+                restored_state = (
+                    state.tip_state.value,
+                    state.has_liquid,
+                    active_liquid,
+                )
+                self._last_persisted_state = restored_state
+                self.moonraker_state.save_tip_liquid_state(*restored_state)
+
+        try:
+            yield
+        except BaseException:
+            _restore()
+            raise
+        else:
+            if restore == "always":
+                _restore()
+
     def _run_protocol_sync(self, filename: str) -> None:
         """Synchronous half of :meth:`_run_protocol`; runs in a worker thread.
 
@@ -2345,17 +2432,26 @@ class AutoPipetteService:
         is the one unambiguous "this line failed" signal, rather than
         inferring it from cmd2's overloaded ``bool`` return value.
 
+        The per-line dispatch loop is wrapped in :meth:`domain_state_snapshot`
+        (issue #35): a line that raises here happens before any G-code has
+        uploaded, so it's a compile-time failure and the deck/pipette model
+        is rolled back to exactly its pre-run state. A failure once execution
+        reaches the upload below the dispatch loop is a runtime failure
+        instead and is left as-is -- see that method's docstring.
+
         Args:
             filename: Bare filename under ``protocols/``.
 
         Raises:
             ValueError: If the file can't be decoded as UTF-8.
             ProtocolAbortedError: If a ``break`` line's breakpoint is
-                answered "abort".
+                answered "abort" (a compile-time failure -- rolled back).
             Exception: Whatever a dispatched line's service method itself
                 raises (e.g. ``NotALocationError``, a not-homed
                 ``RuntimeError``) -- propagates uncaught, aborting the rest
-                of the protocol.
+                of the protocol (and rolled back, same as above). An
+                exception raised by the upload itself is a runtime failure
+                and is not rolled back.
         """  # ruff: ignore[docstring-extraneous-exception]
         proto_path = LocalConfigRoots.resolve("protocols", filename)
         try:
@@ -2375,7 +2471,14 @@ class AutoPipetteService:
 
         gcode_manager = self.gcode_manager
         try:
-            with gcode_manager.batch_mode():
+            # domain_state_snapshot wraps exactly the dispatch loop, not the
+            # upload below it -- a line raising here means nothing has
+            # physically happened yet (compile-time failure, issue #35), so
+            # the deck/pipette model is rolled back to its pre-run snapshot.
+            # A failure once execution reaches the upload call below is a
+            # runtime failure instead: tips were physically consumed, wells
+            # were physically visited, and the advanced record is left as-is.
+            with self.domain_state_snapshot(), gcode_manager.batch_mode():
                 for line in commands:
                     self._dispatch_protocol_line(line)
 

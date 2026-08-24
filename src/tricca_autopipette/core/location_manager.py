@@ -283,6 +283,63 @@ class LocationManager:
             if isinstance(location, Plate)
         ]
 
+    def snapshot_cursors(self) -> dict[str, int]:
+        """Capture every plate's traversal cursor (`Plate.curr`).
+
+        Companion to `TipBoxManager.snapshot`, which captures per-position tip
+        *presence* but not the traversal cursor -- a sample plate has no
+        presence map at all, so its cursor is the only progress a run can
+        leave behind. Used by `daemon/service.py`'s `domain_state_snapshot`
+        to roll a compile-time protocol failure back to a pristine deck.
+
+        Returns:
+            Mapping of plate name to its current `curr` value. Only plates
+            (including tipboxes) are included; plain coordinates have no
+            cursor.
+
+        Example:
+            >>> manager = LocationManager()
+            >>> well = Well(coor=Coordinate(x=10, y=10, z=5), dip_top=10.0)
+            >>> params = PlateParams(
+            ...     plate_type="array", well_template=well, num_row=1, num_col=4
+            ... )
+            >>> manager.set_plate("plate_a", params)
+            >>> manager.snapshot_cursors()
+            {'plate_a': 0}
+        """
+        return {
+            name: location.curr
+            for name, location in self.locations.items()
+            if isinstance(location, Plate)
+        }
+
+    def restore_cursors(self, cursors: dict[str, int]) -> None:
+        """Reapply a `snapshot_cursors` mapping to the live plates.
+
+        Args:
+            cursors: A mapping previously produced by `snapshot_cursors`.
+                Entries naming a plate that is no longer registered (e.g.
+                unloaded mid-run) are ignored rather than raising -- there is
+                nothing left to restore it onto.
+
+        Example:
+            >>> manager = LocationManager()
+            >>> well = Well(coor=Coordinate(x=10, y=10, z=5), dip_top=10.0)
+            >>> params = PlateParams(
+            ...     plate_type="array", well_template=well, num_row=1, num_col=4
+            ... )
+            >>> manager.set_plate("plate_a", params)
+            >>> manager.get_coordinate("plate_a")  # doctest: +ELLIPSIS
+            Coordinate(...)
+            >>> manager.restore_cursors({"plate_a": 0})
+            >>> manager.locations["plate_a"].curr
+            0
+        """
+        for name, curr in cursors.items():
+            location = self.locations.get(name)
+            if isinstance(location, Plate):
+                location.curr = curr
+
     def get_coordinate_names(self) -> list[str]:
         """Get names of all locations that are simple coordinates.
 
