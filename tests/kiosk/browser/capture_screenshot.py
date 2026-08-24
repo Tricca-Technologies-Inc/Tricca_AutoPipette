@@ -27,6 +27,7 @@ from support.live_kiosk_server import LiveKioskServer
 
 PAGES: dict[str, Callable[[Page], None]] = {
     "run": lambda page: None,  # loaded active by default, nothing to do
+    "move": lambda page: page.click('.tab-btn[data-page="move"]'),
     "tips": lambda page: page.click('.tab-btn[data-page="tips"]'),
 }
 

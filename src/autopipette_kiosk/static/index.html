@@ -39,6 +39,7 @@
        markup is the two tabs that registry currently knows about. -->
   <nav class="tab-bar" id="tabBar">
     <button class="tab-btn active" data-page="run">Run</button>
+    <button class="tab-btn" data-page="move">Move</button>
     <button class="tab-btn" data-page="tips">Tips</button>
   </nav>
 
@@ -91,6 +92,74 @@
       </div>
     </div>
 
+    <!-- Move page (issue #86) -->
+    <div class="page" id="page-move">
+      <div class="move-not-homed-banner" id="moveNotHomedBanner">
+        <span>⚠</span> Not homed — moves will be rejected until homing completes.
+      </div>
+
+      <div class="move-columns">
+        <div class="move-panel" id="movePanelJog">
+          <div class="panel-header">Jog</div>
+          <div class="step-selector" id="stepSelector">
+            <button class="step-btn" data-step="0.1">0.1 mm</button>
+            <button class="step-btn active" data-step="1">1 mm</button>
+            <button class="step-btn" data-step="10">10 mm</button>
+          </div>
+          <div class="dpad">
+            <div class="dpad-xy">
+              <button class="dpad-btn dpad-yplus" data-axis="y" data-dir="1" title="Y+">▲</button>
+              <button class="dpad-btn dpad-xminus" data-axis="x" data-dir="-1" title="X-">◀</button>
+              <div class="dpad-center" id="dpadStepLabel">1 mm</div>
+              <button class="dpad-btn dpad-xplus" data-axis="x" data-dir="1" title="X+">▶</button>
+              <button class="dpad-btn dpad-yminus" data-axis="y" data-dir="-1" title="Y-">▼</button>
+            </div>
+            <div class="dpad-z">
+              <button class="dpad-btn dpad-zplus" data-axis="z" data-dir="1" title="Z+">Z ▲</button>
+              <button class="dpad-btn dpad-zminus" data-axis="z" data-dir="-1" title="Z-">Z ▼</button>
+            </div>
+          </div>
+          <div class="move-feedback" id="moveJogFeedback"></div>
+        </div>
+
+        <div class="move-panel" id="movePanelAbs">
+          <div class="panel-header">Absolute position</div>
+          <div class="coord-fields">
+            <div class="coord-field">
+              <label for="moveXInput">X</label>
+              <input type="number" step="any" class="coord-input" id="moveXInput">
+              <div class="coord-live" id="moveXLive">--</div>
+            </div>
+            <div class="coord-field">
+              <label for="moveYInput">Y</label>
+              <input type="number" step="any" class="coord-input" id="moveYInput">
+              <div class="coord-live" id="moveYLive">--</div>
+            </div>
+            <div class="coord-field">
+              <label for="moveZInput">Z</label>
+              <input type="number" step="any" class="coord-input" id="moveZInput">
+              <div class="coord-live" id="moveZLive">--</div>
+            </div>
+          </div>
+          <button class="move-go-btn" id="moveAbsGoBtn">Go</button>
+          <div class="move-feedback" id="moveAbsFeedback"></div>
+        </div>
+
+        <div class="move-panel" id="movePanelLoc">
+          <div class="panel-header">Named location</div>
+          <select class="move-loc-select" id="moveLocSelect">
+            <option value="">Select a location…</option>
+          </select>
+          <div class="move-loc-rowcol" id="moveLocRowCol">
+            <label>Row <input type="number" id="moveLocRow" value="0" min="0"></label>
+            <label>Col <input type="number" id="moveLocCol" value="0" min="0"></label>
+          </div>
+          <button class="move-go-btn" id="moveLocGoBtn">Go</button>
+          <div class="move-feedback" id="moveLocFeedback"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- Tips page (issue #17) -->
     <div class="page" id="page-tips">
       <div class="tips-hint">
@@ -107,6 +176,7 @@
 
 <script src="/static/app.js"></script>
 <script src="/static/run.js"></script>
+<script src="/static/move.js"></script>
 <script src="/static/tips.js"></script>
 </body>
 </html>

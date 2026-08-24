@@ -417,9 +417,9 @@ class RemoteTapShell(Cmd):
             return
         # {"protocols": [{"name": stem, "filename": name}, ...]} -- a plain
         # dict, not the CommandResult "data" envelope _result_data expects.
-        protocols: list[dict[str, Any]] = _as_dict(response.get("result")).get(
-            "protocols"
-        ) or []
+        protocols: list[dict[str, Any]] = (
+            _as_dict(response.get("result")).get("protocols") or []
+        )
         if not protocols:
             self.poutput("No protocol files found.")
             return

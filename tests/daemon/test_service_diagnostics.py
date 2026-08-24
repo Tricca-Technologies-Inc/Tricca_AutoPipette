@@ -202,6 +202,59 @@ class TestSubscribeUnsubscribeRaw:
 
         assert result.ok is False
 
+    def test_subscribe_preserves_a_handler_already_registered_for_the_method(
+        self, service: AutoPipetteService
+    ) -> None:
+        # WebSocketClient.register_handler only ever holds one callback per
+        # method (see its own docstring) -- moonraker_state.py's
+        # MoonrakerStateTracker.start() already registers a
+        # "notify_status_update" handler that drives the homed-axes
+        # interlock for the entire daemon's uptime. A naive subscribe_raw
+        # that just replaced it would silently and permanently stop that
+        # tracking the moment *any* control-plane client (e.g. the kiosk's
+        # Move page, issue #86) subscribed raw to the same method. This
+        # locks in that subscribing chains onto -- rather than replaces --
+        # whatever handler was already registered.
+        client = _wire_fake_client(service)
+        prior_calls: list[object] = []
+        client.register_handler("notify_status_update", prior_calls.append)
+
+        service.subscribe_raw("notify_status_update")
+        client.trigger_notification("notify_status_update", {"foo": "bar"})
+
+        assert prior_calls == [{"foo": "bar"}]
+
+    def test_subscribe_still_forwards_alongside_a_preserved_prior_handler(
+        self, service: AutoPipetteService
+    ) -> None:
+        client = _wire_fake_client(service)
+        client.register_handler("notify_status_update", lambda _params: None)
+        broadcasts: list[tuple[str, dict[str, object]]] = []
+        service.set_broadcast_callback(lambda m, p: broadcasts.append((m, p)))
+
+        service.subscribe_raw("notify_status_update")
+        client.trigger_notification("notify_status_update", {"foo": "bar"})
+
+        assert broadcasts == [
+            (
+                "notify_raw_event",
+                {"method": "notify_status_update", "params": {"foo": "bar"}},
+            )
+        ]
+
+    def test_unsubscribe_restores_the_handler_that_was_there_before_subscribing(
+        self, service: AutoPipetteService
+    ) -> None:
+        client = _wire_fake_client(service)
+        prior_calls: list[object] = []
+        client.register_handler("notify_status_update", prior_calls.append)
+
+        service.subscribe_raw("notify_status_update")
+        service.unsubscribe_raw("notify_status_update")
+        client.trigger_notification("notify_status_update", {"foo": "bar"})
+
+        assert prior_calls == [{"foo": "bar"}]
+
 
 class TestMessageQueue:
     def test_read_message_raises_when_no_client(

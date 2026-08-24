@@ -377,6 +377,10 @@ class AutoPipetteService:
         self._breakpoint_proceed = False
         self._background_tasks: set[asyncio.Task[None]] = set()
         self._raw_subscriptions: set[str] = set()
+        # method -> whatever handler (if any) was already registered on
+        # `self.client` before subscribe_raw chained onto it -- restored by
+        # unsubscribe_raw. See subscribe_raw's docstring.
+        self._raw_subscription_priors: dict[str, Callable[[Any], None] | None] = {}
 
     @staticmethod
     def _load_locations(
@@ -1968,6 +1972,16 @@ class AutoPipetteService:
         Matching notifications are re-broadcast to every connected
         control-plane client as ``notify_raw_event``.
 
+        ``WebSocketClient.register_handler`` holds only one callback per
+        method, and ``moonraker_state.py``'s ``MoonrakerStateTracker``
+        already owns ``"notify_status_update"`` to drive the homed-axes
+        interlock for the daemon's whole uptime -- so this chains onto
+        whatever handler (if any) was already registered for ``method``
+        instead of replacing it, calling both on every notification. A
+        naive replace would silently and permanently stop that tracking
+        the moment any control-plane client subscribed raw to the same
+        method (e.g. the kiosk's Move page, issue #86).
+
         Args:
             method: Notification method name to subscribe to.
 
@@ -1981,9 +1995,18 @@ class AutoPipetteService:
             raise RuntimeError("WebSocket client not initialized.")
         if method not in self._raw_subscriptions:
             self._raw_subscriptions.add(method)
-            self.client.register_handler(
-                method, lambda params: self._forward_raw_notification(method, params)
-            )
+            prior_handler = self.client.handlers.get(method)
+            self._raw_subscription_priors[method] = prior_handler
+
+            def _relay(
+                params: Any,  # ruff:ignore[any-type]
+                _prior: Callable[[Any], None] | None = prior_handler,
+            ) -> None:
+                if _prior is not None:
+                    _prior(params)
+                self._forward_raw_notification(method, params)
+
+            self.client.register_handler(method, _relay)
         return CommandResult(ok=True, message=f"Subscribed to '{method}'.")
 
     def _forward_raw_notification(self, method: str, params: Any) -> None:  # ruff:ignore[any-type]
@@ -2001,6 +2024,11 @@ class AutoPipetteService:
     def unsubscribe_raw(self, method: str) -> CommandResult:
         """Unsubscribe from a raw Moonraker notification method.
 
+        Restores whatever handler ``subscribe_raw`` found already registered
+        for ``method`` (e.g. ``MoonrakerStateTracker``'s own
+        ``"notify_status_update"`` handler), rather than unregistering
+        unconditionally -- see ``subscribe_raw``'s docstring.
+
         Args:
             method: Notification method name to unsubscribe from.
 
@@ -2013,7 +2041,11 @@ class AutoPipetteService:
         if self.client is None:
             raise RuntimeError("WebSocket client not initialized.")
         if method in self._raw_subscriptions:
-            self.client.unregister_handler(method)
+            prior_handler = self._raw_subscription_priors.pop(method, None)
+            if prior_handler is not None:
+                self.client.register_handler(method, prior_handler)
+            else:
+                self.client.unregister_handler(method)
             self._raw_subscriptions.discard(method)
             return CommandResult(ok=True, message=f"Unsubscribed from '{method}'.")
         return CommandResult(

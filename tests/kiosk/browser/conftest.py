@@ -17,6 +17,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 
 import pytest
+from fakes.fake_websocket_client import FakeWebSocketClient
 from fastapi import WebSocket
 from support.live_control_plane import LiveControlPlane
 from support.live_kiosk_server import LiveKioskServer
@@ -41,6 +42,9 @@ def _start_live_kiosk(
     monkeypatch.setattr(kiosk_main, "TAPD_CONTROL_URI", live_control_plane.url)
     monkeypatch.setattr(kiosk_main, "_current_run", kiosk_main.RunStatus(status="idle"))
     monkeypatch.setattr(kiosk_main, "_current_breakpoint", None)
+    monkeypatch.setattr(
+        kiosk_main, "_current_toolhead", {"position": None, "homed_axes": None}
+    )
     monkeypatch.setattr(kiosk_main, "_ws_clients", empty_clients)
 
     server = LiveKioskServer(kiosk_main.app)
@@ -71,6 +75,26 @@ def live_kiosk_server_with_plates(
         The started `LiveKioskServer`, stopped after the test.
     """
     yield from _start_live_kiosk(live_control_plane_with_plates, monkeypatch)
+
+
+@pytest.fixture
+def live_kiosk_server_with_moonraker(
+    live_control_plane: LiveControlPlane, monkeypatch: pytest.MonkeyPatch
+) -> Iterator[LiveKioskServer]:
+    """A `live_kiosk_server` whose daemon has a (fake) Moonraker connection.
+
+    For the Move page's live toolhead-relay browser tests (issue #86) --
+    see `tests/kiosk/conftest.py`'s `kiosk_client_with_moonraker` for why
+    this is needed (a real Moonraker connection is what makes the daemon's
+    `ws.subscribe("notify_status_update")` succeed).
+
+    Yields:
+        The started `LiveKioskServer`, with `live_control_plane.service
+        .client` set to a `FakeWebSocketClient` the test can drive
+        directly, stopped after the test.
+    """
+    live_control_plane.service.client = FakeWebSocketClient(connected=True)  # type: ignore[assignment]
+    yield from _start_live_kiosk(live_control_plane, monkeypatch)
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
