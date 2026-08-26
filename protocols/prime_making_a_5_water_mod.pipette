@@ -1,0 +1,8 @@
+#adding water for the 5mL prime panel a kit making procedure updated version August 26, 2026 for "old"config replacing 465 with 466
+
+pipette 466.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 466.0 --tipbox tipbox --prewet 5
+pipette 466.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 466.0 --tipbox tipbox
+pipette 466.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 466.0 --tipbox tipbox
+pipette 466.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 466.0 --tipbox tipbox
+pipette 466.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 466.0 --tipbox tipbox
+pipette 466.0 --extra_air --after_air WATER KIT1 --dispense_vol 466.0 --tipbox tipbox
