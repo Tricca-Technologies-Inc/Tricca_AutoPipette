@@ -1080,6 +1080,7 @@ class AutoPipette:
                 z=raise_z
             ))    
             self.operate_syringe(FluidDisplacement.dispense, AIR_CUSHION_UL)
+            self.clear_syringe()
               
         if extra_air:
             AIR_CUSHION_UL = ext_vol
