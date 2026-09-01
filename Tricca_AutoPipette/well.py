@@ -319,7 +319,7 @@ class StrategyRegistry:
     _strategies: dict[StrategyType, DipStrategy] = {
         StrategyType.SIMPLE: SimpleDipStrategy(),
         StrategyType.CYLINDER: CylinderDipStrategy(),
-        StrategyType.FSTUBE: FStubeDipStrategy
+        StrategyType.FSTUBE: FStubeDipStrategy(),
     }
 
     @classmethod
