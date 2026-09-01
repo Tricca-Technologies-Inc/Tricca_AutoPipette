@@ -267,7 +267,7 @@ class FStubeDipStrategy(DipStrategy):
         return well.dip_curr
 
     def validate_well_config(
-        self, dip_btm: float | None
+        self, well_diameter: float | None, dip_btm: float | None
     ) -> None:
         """Validate that the well configuration supports this strategy.
 
@@ -279,7 +279,7 @@ class FStubeDipStrategy(DipStrategy):
 
         Example:
             >>> strategy = FStubeDipStrategy()
-            >>> strategy.validate_well_config(8.0, 50.0)  # Valid
+            >>> strategy.validate_well_config(50.0)  # Valid
             >>> strategy.validate_well_config(None, 50.0)  # Raises ValueError
         """
         if dip_btm is None:
