@@ -218,4 +218,3 @@ pipette 12.3 --touch --extra_air --src_row 5 --src_col 11 --dest_row 5 --dest_co
 pipette 12.3 --touch --extra_air --src_row 6 --src_col 11 --dest_row 6 --dest_col 11 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 12.3 --tipbox tipbox2
 pipette 12.3 --touch --extra_air --src_row 7 --src_col 11 --dest_row 7 --dest_col 11 96wellplatePCR2 96wellplateSAMPLE --dispense_vol 12.3 --tipbox tipbox2
 
-reset_plate 96wellplateSAMPLE
