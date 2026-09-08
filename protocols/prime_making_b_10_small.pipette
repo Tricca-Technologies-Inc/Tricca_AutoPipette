@@ -1,0 +1,63 @@
+# A protocol for making prime panel B CAL7-1 10mL
+
+# beta-Hydroxybutyric acid
+pipette 50.0 --keep_tip --extra_air --after_air --src_row 0 --src_col 0 manu5 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1 
+pipette 50.0 --extra_air --after_air --src_row 0 --src_col 0 manu5 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1 
+
+# alpha-Ketoglutaric acid
+pipette 50.0 --keep_tip --extra_air --after_air --src_row 0 --src_col 1 manu5 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1 
+pipette 50.0 --keep_tip --extra_air --after_air --src_row 0 --src_col 1 manu5 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1 
+pipette 50.0 --keep_tip --extra_air --after_air --src_row 0 --src_col 1 manu5 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1 
+pipette 50.0 --keep_tip --extra_air --after_air --src_row 0 --src_col 1 manu5 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1 
+pipette 50.0 --keep_tip --extra_air --after_air --src_row 0 --src_col 1 manu5 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1 
+pipette 50.0 --keep_tip --extra_air --after_air --src_row 0 --src_col 1 manu5 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1 
+pipette 50.0 --keep_tip --extra_air --after_air --src_row 0 --src_col 1 manu5 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1 
+pipette 50.0 --extra_air --after_air --src_row 0 --src_col 1 manu5 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1 
+
+# Citric acid
+pipette 50.0 --keep_tip --extra_air --after_air --src_row 0 --src_col 2 manu5 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1 
+pipette 50.0 --extra_air --after_air --src_row 0 --src_col 2 manu5 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1 
+
+# Butyric acid
+pipette 80.0 --extra_air --after_air --src_row 0 --src_col 3 manu5 KIT1 --dispense_vol 80.0 --tipbox tipbox --prewet 1 
+
+# Propionic acid
+pipette 50.0 --keep_tip --extra_air --after_air --src_row 0 --src_col 4 manu5 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1 
+pipette 50.0 --keep_tip --extra_air --after_air --src_row 0 --src_col 4 manu5 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1 
+pipette 50.0 --keep_tip --extra_air --after_air --src_row 0 --src_col 4 manu5 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1 
+pipette 50.0 --keep_tip --extra_air --after_air --src_row 0 --src_col 4 manu5 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1 
+pipette 50.0 --keep_tip --extra_air --after_air --src_row 0 --src_col 4 manu5 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1 
+pipette 50.0 --keep_tip --extra_air --after_air --src_row 0 --src_col 4 manu5 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1 
+pipette 50.0 --keep_tip --extra_air --after_air --src_row 0 --src_col 4 manu5 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1 
+pipette 50.0 --extra_air --after_air --src_row 0 --src_col 4 manu5 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1 
+
+# HPHPA
+pipette 80.0 --extra_air --after_air --src_row 0 --src_col 5 manu5 KIT1 --dispense_vol 80.0 --tipbox tipbox --prewet 1 
+
+# para-hydroxyhippuric acid
+pipette 80.0 --extra_air --after_air --src_row 0 --src_col 6 manu5 KIT1 --dispense_vol 80.0 --tipbox tipbox --prewet 1 
+
+# Succinic acid
+pipette 80.0 --extra_air --after_air --src_row 0 --src_col 0 manu6 KIT1 --dispense_vol 80.0 --tipbox tipbox --prewet 1 
+
+# Fumaric acid
+pipette 40.0 --extra_air --after_air --src_row 0 --src_col 1 manu6 KIT1 --dispense_vol 40.0 --tipbox tipbox --prewet 1 
+
+# Pyruvic acid
+pipette 50.0 --keep_tip --extra_air --after_air --src_row 0 --src_col 2 manu6 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1 
+pipette 50.0 --extra_air --after_air --src_row 0 --src_col 2 manu6 KIT1 --dispense_vol 50.0 --tipbox tipbox --prewet 1 
+
+# Isobutyric acid
+pipette 80.0 --extra_air --after_air --src_row 0 --src_col 3 manu6 KIT1 --dispense_vol 80.0 --tipbox tipbox --prewet 1 
+
+# Hippuric acid
+pipette 40.0 --extra_air --after_air --src_row 0 --src_col 4 manu6 KIT1 --dispense_vol 40.0 --tipbox tipbox --prewet 1 
+
+# Methylmalonic acid
+pipette 40.0 --extra_air --after_air --src_row 0 --src_col 5 manu6 KIT1 --dispense_vol 40.0 --tipbox tipbox --prewet 1 
+
+# Homovanillic acid
+pipette 8.0 --extra_air --after_air --src_row 0 --src_col 6 manu6 KIT1 --dispense_vol 8.0 --tipbox tipbox --prewet 1 
+
+# Indole acetic acid
+pipette 80.0 --extra_air --after_air --src_row 1 --src_col 0 manu5 KIT1 --dispense_vol 80.0 --tipbox tipbox --prewet 1 
