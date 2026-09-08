@@ -1,4 +1,4 @@
-# A protocol for making prime panel B 10mL, for the componentsrequiring the smaller pipette tips
+# A protocol for making prime panel B LIS 10mL, for the componentsrequiring the smaller pipette tips
 
 # Sodium 3-hydroxybutyrate-3,4,4,4-d4
 pipette 30.0 --extra_air --after_air --src_row 0 --src_col 0 manu2 KIT1 --dispense_vol 30.0 --tipbox tipbox --prewet 1 
