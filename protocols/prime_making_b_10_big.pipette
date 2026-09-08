@@ -1,0 +1,19 @@
+#large volume steps of prime panel B kit manufacturing
+
+# Lactic acid
+pipette 500.0 --extra_air --after_air --keep_tip MANU1 dest --dispense_vol 500.0 --tipbox tipbox --prewet 1
+pipette 500.0 --extra_air --after_air MANU1 dest --dispense_vol 500.0 --tipbox tipbox --prewet 1
+
+# 75% methanol
+pipette 441.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 441.0 --tipbox tipbox --prewet 5
+pipette 441.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 441.0 --tipbox tipbox
+pipette 441.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 441.0 --tipbox tipbox
+pipette 441.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 441.0 --tipbox tipbox
+pipette 441.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 441.0 --tipbox tipbox
+pipette 441.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 441.0 --tipbox tipbox
+pipette 441.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 441.0 --tipbox tipbox
+pipette 441.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 441.0 --tipbox tipbox
+pipette 441.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 441.0 --tipbox tipbox
+pipette 441.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 441.0 --tipbox tipbox
+pipette 441.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 441.0 --tipbox tipbox
+pipette 441.0 --extra_air --after_air WATER dest --dispense_vol 441.0 --tipbox tipbox
