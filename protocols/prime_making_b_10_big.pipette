@@ -1,0 +1,26 @@
+#adding the larger volumes for the 10mL prime panel B kit making procedure
+
+# Sodium L-Lactate-2-d1
+pipette 350.0 --extra_air --after_air --keep_tip MANU1 KIT1 --dispense_vol 350.0 --tipbox tipbox --prewet 1
+pipette 350.0 --extra_air --after_air MANU1 KIT1 --dispense_vol 350.0 --tipbox tipbox --prewet 1
+
+pipette 439.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 439.0 --tipbox tipbox --prewet 5
+pipette 439.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 439.0 --tipbox tipbox
+pipette 439.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 439.0 --tipbox tipbox
+pipette 439.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 439.0 --tipbox tipbox
+pipette 439.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 439.0 --tipbox tipbox
+pipette 439.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 439.0 --tipbox tipbox
+pipette 439.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 439.0 --tipbox tipbox
+pipette 439.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 439.0 --tipbox tipbox
+pipette 439.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 439.0 --tipbox tipbox
+pipette 439.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 439.0 --tipbox tipbox
+pipette 439.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 439.0 --tipbox tipbox
+pipette 439.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 439.0 --tipbox tipbox
+pipette 439.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 439.0 --tipbox tipbox
+pipette 439.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 439.0 --tipbox tipbox
+pipette 439.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 439.0 --tipbox tipbox
+pipette 439.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 439.0 --tipbox tipbox
+pipette 439.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 439.0 --tipbox tipbox
+pipette 439.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 439.0 --tipbox tipbox
+pipette 439.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 439.0 --tipbox tipbox
+pipette 439.0 --extra_air --after_air WATER KIT1 --dispense_vol 439.0 --tipbox tipbox
