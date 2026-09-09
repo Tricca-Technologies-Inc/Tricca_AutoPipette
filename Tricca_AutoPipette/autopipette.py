@@ -1102,7 +1102,7 @@ class AutoPipette:
             self.operate_syringe(FluidDisplacement.aspiration, aft_vol)
             self.gcode_wait(self.pipette_params.wait_aspirate)
         # Wait after things are picked up so that we can see if it stays
-        self.gcode_wait(500)
+        #self.gcode_wait(500)
     
     def dispense_volume(
         self,
