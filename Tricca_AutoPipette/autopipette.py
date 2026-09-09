@@ -784,7 +784,7 @@ class AutoPipette:
         )
         self.eject_tip()
         self.dip_z_return(curr_coor)
-        self.move_to(Coordinate(x=150, y=150, z=5))
+        self.move_to(Coordinate(x=150, y=150, z=0))
         self.home_z() # home z
 
     def dip_z_down(self, curr_coor: Coordinate, distance: float) -> None:
