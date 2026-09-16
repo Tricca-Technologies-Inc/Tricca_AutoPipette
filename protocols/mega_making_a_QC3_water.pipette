@@ -1,14 +1,14 @@
 #Final step of mega panel A kit manufacturing QC3 adding 5295uL of water to the vial
 
-pipette 441.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 441.0 --tipbox tipbox --prewet 5
-pipette 441.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 441.0 --tipbox tipbox
-pipette 441.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 441.0 --tipbox tipbox
-pipette 441.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 441.0 --tipbox tipbox
-pipette 441.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 441.0 --tipbox tipbox
-pipette 441.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 441.0 --tipbox tipbox
-pipette 441.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 441.0 --tipbox tipbox
-pipette 441.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 441.0 --tipbox tipbox
-pipette 441.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 441.0 --tipbox tipbox
-pipette 441.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 441.0 --tipbox tipbox
-pipette 441.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 441.0 --tipbox tipbox
-pipette 444.0 --extra_air --after_air WATER dest --dispense_vol 444.0 --tipbox tipbox
+pipette 441.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 441.0 --tipbox tipbox --prewet 5
+pipette 441.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 441.0 --tipbox tipbox
+pipette 441.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 441.0 --tipbox tipbox
+pipette 441.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 441.0 --tipbox tipbox
+pipette 441.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 441.0 --tipbox tipbox
+pipette 441.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 441.0 --tipbox tipbox
+pipette 441.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 441.0 --tipbox tipbox
+pipette 441.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 441.0 --tipbox tipbox
+pipette 441.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 441.0 --tipbox tipbox
+pipette 441.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 441.0 --tipbox tipbox
+pipette 441.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 441.0 --tipbox tipbox
+pipette 444.0 --extra_air --after_air WATER KIT1 --dispense_vol 444.0 --tipbox tipbox
