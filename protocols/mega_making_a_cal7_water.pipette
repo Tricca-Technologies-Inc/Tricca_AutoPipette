@@ -1,10 +1,10 @@
 #Final step of mega panel A kit manufacturing cal7 adding 3850uL of water to the vial
 
-pipette 481.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 481.0 --tipbox tipbox --prewet 5
-pipette 481.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 481.0 --tipbox tipbox
-pipette 481.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 481.0 --tipbox tipbox
-pipette 481.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 481.0 --tipbox tipbox
-pipette 481.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 481.0 --tipbox tipbox
-pipette 481.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 481.0 --tipbox tipbox
-pipette 481.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 481.0 --tipbox tipbox
-pipette 483.0 --extra_air --after_air WATER dest --dispense_vol 483.0 --tipbox tipbox
+pipette 481.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 481.0 --tipbox tipbox --prewet 5
+pipette 481.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 481.0 --tipbox tipbox
+pipette 481.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 481.0 --tipbox tipbox
+pipette 481.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 481.0 --tipbox tipbox
+pipette 481.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 481.0 --tipbox tipbox
+pipette 481.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 481.0 --tipbox tipbox
+pipette 481.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 481.0 --tipbox tipbox
+pipette 483.0 --extra_air --after_air WATER KIT1 --dispense_vol 483.0 --tipbox tipbox
