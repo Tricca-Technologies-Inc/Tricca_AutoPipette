@@ -1,4 +1,4 @@
-Protocol for the first half of making QC3 for Mega panel A on Murphy
+# Protocol for the first half of making QC3 for Mega panel A on Murphy
 
 # 1,3-Diaminopropane 45uL
 pipette 45 --extra_air --after_air --src_row 0 --src_col 0 manu5 KIT1 --dispense_vol 45 --tipbox tipbox --prewet 1
