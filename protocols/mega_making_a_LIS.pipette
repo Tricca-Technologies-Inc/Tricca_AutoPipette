@@ -5,7 +5,9 @@ pipette 50 --extra_air --after_air --src_row 0 --src_col 0 manu5 KIT1 --dispense
 # d6-ADMA 50uL
 pipette 50 --extra_air --after_air --src_row 0 --src_col 1 manu5 KIT1 --dispense_vol 50 --tipbox tipbox --prewet 1
 # 15N-His 100uL
-pipette 100 --extra_air --after_air --src_row 0 --src_col 2 manu5 KIT1 --dispense_vol 100 --tipbox tipbox --prewet 1
+pipette 50 --keep_tip --extra_air --after_air --src_row 0 --src_col 2 manu5 KIT1 --dispense_vol 50 --tipbox tipbox --prewet 1
+pipette 50 --extra_air --after_air --src_row 0 --src_col 2 manu5 KIT1 --dispense_vol 50 --tipbox tipbox --prewet 1
+
 # d3-Creatinine 50uL
 pipette 50 --extra_air --after_air --src_row 0 --src_col 3 manu5 KIT1 --dispense_vol 50 --tipbox tipbox --prewet 1
 # d3-DOPA 50uL
