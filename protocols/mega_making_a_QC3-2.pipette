@@ -1,4 +1,4 @@
-Protocol for the second half of making QC3 for Mega panel A on Murphy
+# Protocol for the second half of making QC3 for Mega panel A on Murphy
 
 # Nicotinamide ribotide 35uL
 pipette 35 --extra_air --after_air --src_row 0 --src_col 0 manu5 KIT1 --dispense_vol 35 --tipbox tipbox --prewet 1
