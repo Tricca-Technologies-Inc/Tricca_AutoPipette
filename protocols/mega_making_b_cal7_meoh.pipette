@@ -1,0 +1,13 @@
+#Final step of mega panel B kit manufacturing cal7 adding 5050uL of MEOH to the vial
+
+pipette 459.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 459.0 --tipbox tipbox --prewet 5
+pipette 459.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 459.0 --tipbox tipbox
+pipette 459.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 459.0 --tipbox tipbox
+pipette 459.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 459.0 --tipbox tipbox
+pipette 459.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 459.0 --tipbox tipbox
+pipette 459.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 459.0 --tipbox tipbox
+pipette 459.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 459.0 --tipbox tipbox
+pipette 459.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 459.0 --tipbox tipbox
+pipette 459.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 459.0 --tipbox tipbox
+pipette 459.0 --extra_air --after_air --keep_tip WATER dest --dispense_vol 459.0 --tipbox tipbox
+pipette 460.0 --extra_air --after_air WATER dest --dispense_vol 460.0 --tipbox tipbox
