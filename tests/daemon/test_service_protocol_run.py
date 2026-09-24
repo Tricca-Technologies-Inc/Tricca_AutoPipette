@@ -9,6 +9,7 @@ dispatch table (``_dispatch_protocol_line``) and the full run loop
 from __future__ import annotations
 
 import asyncio
+import json
 from pathlib import Path
 from unittest.mock import patch
 
@@ -248,6 +249,142 @@ class TestDomainStateSnapshotRollback:
 
         assert tipbox_manager.snapshot() != pre_run_tip_snapshot
         assert service_with_plates._autopipette.state.tip_state == TipState.ATTACHED
+
+    def test_restore_failure_does_not_mask_the_original_exception(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        # A failure inside _restore() itself (e.g. a dropped Moonraker
+        # connection mid-rollback) must not replace the real compile-time
+        # error the caller is supposed to see.
+        _set_homed(service_with_plates, True)
+        moonraker_state = service_with_plates.moonraker_state
+        assert isinstance(moonraker_state, FakeMoonrakerState)
+
+        # First call is next_tip's own persist_tip_presence write (must
+        # succeed so the real failure is the later move_loc); second call is
+        # the rollback's write, which is the one that must not be allowed to
+        # mask move_loc's NotALocationError.
+        with (
+            patch.object(
+                moonraker_state,
+                "save_tip_presence",
+                side_effect=[None, RuntimeError("moonraker connection dropped")],
+            ),
+            pytest.raises(NotALocationError),
+        ):
+            service_with_plates._run_protocol_sync("compile_fail.pipette")
+
+    def test_reconfigured_tipbox_is_reported_not_silently_left_full(
+        self,
+        service_with_plates: AutoPipetteService,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        _set_homed(service_with_plates, True)
+        location_manager = service_with_plates._autopipette.location_manager
+        (location_manager.locations_dir / "reconfigured_tipbox.json").write_text(
+            json.dumps({
+                "plates": [
+                    {
+                        "name": "tipbox",
+                        "type": "tipbox",
+                        "x": 150.0,
+                        "y": 20.0,
+                        "z": 5.0,
+                        "num_row": 1,
+                        "num_col": 1,
+                        "spacing_col": 9.0,
+                        "dip_top": 5.0,
+                    }
+                ]
+            }),
+            encoding="utf-8",
+        )
+
+        with (
+            caplog.at_level("WARNING"),
+            pytest.raises(NotALocationError),
+        ):
+            service_with_plates._run_protocol_sync(
+                "rollback_reconfigured_tipbox.pipette"
+            )
+
+        assert "could not restore tipbox" in caplog.text.lower()
+
+    def test_tipbox_registered_mid_run_is_reset_not_left_partially_drawn(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        _set_homed(service_with_plates, True)
+        location_manager = service_with_plates._autopipette.location_manager
+        tipbox_manager = location_manager.tipbox_manager
+        (location_manager.locations_dir / "new_tipbox_b.json").write_text(
+            json.dumps({
+                "plates": [
+                    {
+                        "name": "tipbox_b",
+                        "type": "tipbox",
+                        "x": 250.0,
+                        "y": 20.0,
+                        "z": 5.0,
+                        "num_row": 1,
+                        "num_col": 1,
+                        "spacing_col": 9.0,
+                        "dip_top": 5.0,
+                    }
+                ]
+            }),
+            encoding="utf-8",
+        )
+
+        with pytest.raises(NotALocationError):
+            service_with_plates._run_protocol_sync("rollback_new_tipbox.pipette")
+
+        # tipbox_b did not exist when the pre-run snapshot was taken, so
+        # rolling back to "exactly its pre-enter snapshot" means it should
+        # be reset to pristine, not left with its tip consumed.
+        assert tipbox_manager.boxes["tipbox_b"].present == [True]
+
+    def test_cursor_restore_skips_a_plate_reloaded_with_fewer_wells(
+        self,
+        service_with_plates: AutoPipetteService,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        _set_homed(service_with_plates, True)
+        location_manager = service_with_plates._autopipette.location_manager
+
+        # A prior, successful run leaves plate_a's cursor at 2.
+        service_with_plates._run_protocol_sync("advance_plate_a.pipette")
+        assert location_manager.locations["plate_a"].curr == 2  # type: ignore[union-attr]
+
+        # plate_a is then reloaded with only one well.
+        (location_manager.locations_dir / "smaller_plate_a.json").write_text(
+            json.dumps({
+                "plates": [
+                    {
+                        "name": "plate_a",
+                        "type": "array",
+                        "x": 150.0,
+                        "y": 20.0,
+                        "z": 5.0,
+                        "num_row": 1,
+                        "num_col": 1,
+                        "dip_top": 5.0,
+                    }
+                ]
+            }),
+            encoding="utf-8",
+        )
+
+        with (
+            caplog.at_level("WARNING"),
+            pytest.raises(NotALocationError),
+        ):
+            service_with_plates._run_protocol_sync("rollback_smaller_plate.pipette")
+
+        # The stale cursor (2) no longer fits the reloaded plate's single
+        # well; it must be left at the freshly-loaded plate's own value (0)
+        # rather than corrupted with an out-of-range cursor.
+        assert location_manager.locations["plate_a"].curr == 0  # type: ignore[union-attr]
+        assert "cursor" in caplog.text.lower()
 
 
 class TestStartRunAndRunProtocol:

@@ -2387,8 +2387,29 @@ class AutoPipetteService:
         )
 
         def _restore() -> None:
-            tipbox_manager.restore(tip_presence_snapshot)
-            location_manager.restore_cursors(cursor_snapshot)
+            skipped_tipboxes = tipbox_manager.restore(tip_presence_snapshot)
+            # Boxes registered after the snapshot was taken (e.g. loaded
+            # mid-run) have no snapshot entry at all, so `restore` above
+            # leaves them untouched -- reset them to pristine instead, since
+            # "restored to pre-enter state" means they didn't exist yet.
+            new_tipboxes = set(tipbox_manager.boxes) - set(tip_presence_snapshot)
+            for box_name in new_tipboxes:
+                tipbox_manager.reset_tips(box_name)
+            if skipped_tipboxes:
+                logger.warning(
+                    "Rollback could not restore tipbox(es) %s (reconfigured "
+                    "mid-run); left full. Run 'tips' to check, 'set_tips' to "
+                    "correct.",
+                    ", ".join(skipped_tipboxes),
+                )
+
+            skipped_cursors = location_manager.restore_cursors(cursor_snapshot)
+            if skipped_cursors:
+                logger.warning(
+                    "Rollback could not restore traversal cursor(s) for %s "
+                    "(plate reloaded mid-run); cursor left as-is.",
+                    ", ".join(skipped_cursors),
+                )
 
             tip_state, has_liquid, active_liquid = pipette_state_snapshot
             state.tip_state = tip_state
@@ -2403,7 +2424,7 @@ class AutoPipetteService:
 
                 restored_state = (
                     state.tip_state.value,
-                    state.has_liquid,
+                    has_liquid,
                     active_liquid,
                 )
                 self._last_persisted_state = restored_state
@@ -2412,7 +2433,13 @@ class AutoPipetteService:
         try:
             yield
         except BaseException:
-            _restore()
+            try:
+                _restore()
+            except Exception:
+                logger.exception(
+                    "Failed to roll back domain state after a protocol "
+                    "failure; the original error still takes precedence"
+                )
             raise
         else:
             if restore == "always":

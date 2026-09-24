@@ -313,7 +313,7 @@ class LocationManager:
             if isinstance(location, Plate)
         }
 
-    def restore_cursors(self, cursors: dict[str, int]) -> None:
+    def restore_cursors(self, cursors: dict[str, int]) -> list[str]:
         """Reapply a `snapshot_cursors` mapping to the live plates.
 
         Args:
@@ -321,6 +321,12 @@ class LocationManager:
                 Entries naming a plate that is no longer registered (e.g.
                 unloaded mid-run) are ignored rather than raising -- there is
                 nothing left to restore it onto.
+
+        Returns:
+            Names of plates whose stored cursor no longer fits the live
+            plate's traversal sequence (e.g. reloaded with fewer wells since
+            the snapshot was taken) and were therefore left untouched.
+            Callers should surface this -- the restored cursor is stale.
 
         Example:
             >>> manager = LocationManager()
@@ -332,13 +338,27 @@ class LocationManager:
             >>> manager.get_coordinate("plate_a")  # doctest: +ELLIPSIS
             Coordinate(...)
             >>> manager.restore_cursors({"plate_a": 0})
+            []
             >>> manager.locations["plate_a"].curr
             0
         """
+        skipped: list[str] = []
         for name, curr in cursors.items():
             location = self.locations.get(name)
-            if isinstance(location, Plate):
-                location.curr = curr
+            if not isinstance(location, Plate):
+                continue
+            if not 0 <= curr <= len(location.sequence):
+                logger.warning(
+                    "Plate %r's traversal sequence changed (stored cursor %d "
+                    "no longer fits its %d positions); cursor left as-is",
+                    name,
+                    curr,
+                    len(location.sequence),
+                )
+                skipped.append(name)
+                continue
+            location.curr = curr
+        return skipped
 
     def get_coordinate_names(self) -> list[str]:
         """Get names of all locations that are simple coordinates.
