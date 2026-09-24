@@ -1,0 +1,7 @@
+# Validation fixture: exercises `break` (informational finding, not a real
+# blocking wait) and `save_locations` (informational finding, no file
+# written) -- both must be skipped rather than executed for real.
+move 1 2 3
+break
+save_locations validate_scratch.json
+move 4 5 6

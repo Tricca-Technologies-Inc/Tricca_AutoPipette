@@ -309,6 +309,44 @@ class TestBreakpointFlow:
         assert poll_until(_run_is_error)
 
 
+class TestValidateCommand:
+    """Issue #36: `validate <file>` dry-runs a protocol over the control plane."""
+
+    def test_validate_reports_findings_without_homing_or_blocking(
+        self, shell: RemoteTapShell, protocol_dir: Path
+    ) -> None:
+        (protocol_dir / "check.pipette").write_text("move_loc missing\nbreak\n")
+
+        # live_control_plane's `service` fixture starts unhomed -- a real
+        # `run` of this file would raise NotHomedError before even reaching
+        # the bad location; `validate` must not.
+        shell.onecmd_plus_hooks("validate check.pipette")
+
+        output = _output(shell)
+        assert "2 finding(s)" in output
+        assert "missing is not a named location" in output
+        assert "[info]" in output  # the break line
+        assert "NotHomedError" not in output
+
+    def test_validate_clean_file_reports_no_issues(
+        self, shell: RemoteTapShell, protocol_dir: Path
+    ) -> None:
+        (protocol_dir / "clean.pipette").write_text('gcode_print "hi"\n')
+
+        shell.onecmd_plus_hooks("validate clean.pipette")
+
+        assert "No issues found." in _output(shell)
+
+    def test_validate_without_a_filename_reports_usage_locally(
+        self, shell: RemoteTapShell, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        capsys.readouterr()
+
+        shell.onecmd_plus_hooks("validate")
+
+        assert "Usage: validate <filename>" in capsys.readouterr().err
+
+
 class TestStructuredCommands:
     """One passing and one failing round trip through a hand-written `do_*`."""
 
