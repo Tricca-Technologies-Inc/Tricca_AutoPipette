@@ -401,7 +401,12 @@ class TestWebSocketStatusBroadcast:
         with kiosk_client.websocket_connect("/ws/status") as ws:
             payload = ws.receive_json()
 
-        assert payload == {"status": "idle", "message": "", "breakpoint": None}
+        assert payload == {
+            "status": "idle",
+            "message": "",
+            "breakpoint": None,
+            "toolhead": {"position": None, "homed_axes": None},
+        }
 
     def test_receives_a_push_when_a_run_starts(
         self, kiosk_client: TestClient, protocols_dir: Path
