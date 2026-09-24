@@ -194,6 +194,25 @@ def require_homed(
     return decorator
 
 
+def _pipette_state_triple(autopipette: AutoPipette) -> tuple[str, bool, str]:
+    """Build the tip/liquid triple persisted to Moonraker's DB.
+
+    One function so :func:`persist_tip_liquid_state`,
+    :meth:`AutoPipetteService._apply_persisted_state`, and
+    :meth:`AutoPipetteService.domain_state_snapshot`'s rollback can't
+    independently drift out of sync on the tuple's shape -- they previously
+    each built it inline.
+
+    Args:
+        autopipette: The domain object to read state off of.
+
+    Returns:
+        ``(tip_state.value, has_liquid, active_liquid)``.
+    """
+    state = autopipette.state
+    return (state.tip_state.value, state.has_liquid, autopipette.active_liquid)
+
+
 def persist_tip_liquid_state(
     func: Callable[..., CommandResult],
 ) -> Callable[..., CommandResult]:
@@ -234,12 +253,7 @@ def persist_tip_liquid_state(
             # caller breaking encapsulation.
             if self.moonraker_state is not None:
                 autopipette = self._autopipette  # pyright: ignore[reportPrivateUsage]
-                state = autopipette.state
-                snapshot = (
-                    state.tip_state.value,
-                    state.has_liquid,
-                    autopipette.active_liquid,
-                )
+                snapshot = _pipette_state_triple(autopipette)
                 if snapshot != self._last_persisted_state:  # pyright: ignore[reportPrivateUsage]
                     self._last_persisted_state = snapshot  # pyright: ignore[reportPrivateUsage]
                     self.moonraker_state.save_tip_liquid_state(*snapshot)
@@ -511,11 +525,7 @@ class AutoPipetteService:
         current_liquid = values.get("current_liquid")
         if current_liquid and current_liquid in self._autopipette.system_config.liquids:
             self._autopipette.switch_liquid(current_liquid)
-        self._last_persisted_state = (
-            state.tip_state.value,
-            state.has_liquid,
-            self._autopipette.active_liquid,
-        )
+        self._last_persisted_state = _pipette_state_triple(self._autopipette)
 
     def _apply_persisted_tip_presence(self, values: dict[str, Any]) -> None:
         """Rehydrate per-tipbox consumed positions from a prior run.
@@ -2419,16 +2429,14 @@ class AutoPipetteService:
 
             if self.moonraker_state is not None:
                 restored_tip_presence = tipbox_manager.snapshot()
-                self._persisted_tip_presence = restored_tip_presence
-                self.moonraker_state.save_tip_presence(restored_tip_presence)
+                if restored_tip_presence != self._persisted_tip_presence:
+                    self._persisted_tip_presence = restored_tip_presence
+                    self.moonraker_state.save_tip_presence(restored_tip_presence)
 
-                restored_state = (
-                    state.tip_state.value,
-                    has_liquid,
-                    active_liquid,
-                )
-                self._last_persisted_state = restored_state
-                self.moonraker_state.save_tip_liquid_state(*restored_state)
+                restored_state = _pipette_state_triple(autopipette)
+                if restored_state != self._last_persisted_state:
+                    self._last_persisted_state = restored_state
+                    self.moonraker_state.save_tip_liquid_state(*restored_state)
 
         try:
             yield
@@ -2460,11 +2468,8 @@ class AutoPipetteService:
         inferring it from cmd2's overloaded ``bool`` return value.
 
         The per-line dispatch loop is wrapped in :meth:`domain_state_snapshot`
-        (issue #35): a line that raises here happens before any G-code has
-        uploaded, so it's a compile-time failure and the deck/pipette model
-        is rolled back to exactly its pre-run state. A failure once execution
-        reaches the upload below the dispatch loop is a runtime failure
-        instead and is left as-is -- see that method's docstring.
+        (issue #35) -- see that method's docstring for the compile-time-vs
+        -runtime-failure distinction this relies on.
 
         Args:
             filename: Bare filename under ``protocols/``.
@@ -2499,12 +2504,8 @@ class AutoPipetteService:
         gcode_manager = self.gcode_manager
         try:
             # domain_state_snapshot wraps exactly the dispatch loop, not the
-            # upload below it -- a line raising here means nothing has
-            # physically happened yet (compile-time failure, issue #35), so
-            # the deck/pipette model is rolled back to its pre-run snapshot.
-            # A failure once execution reaches the upload call below is a
-            # runtime failure instead: tips were physically consumed, wells
-            # were physically visited, and the advanced record is left as-is.
+            # upload below it -- see its docstring for why that boundary is
+            # the compile-time/runtime-failure line.
             with self.domain_state_snapshot(), gcode_manager.batch_mode():
                 for line in commands:
                     self._dispatch_protocol_line(line)
