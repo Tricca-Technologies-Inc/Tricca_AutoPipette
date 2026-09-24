@@ -386,6 +386,25 @@ class RemoteTapShell(Cmd):
         """Report the active run's current status."""
         self._call_and_print(self.requests.run_status())
 
+    def do_validate(self, arg: Statement) -> None:
+        """Dry-run validate a protocol file without executing it: validate <file>."""
+        filename = arg.args.strip()
+        if not filename:
+            self.perror("Usage: validate <filename>")
+            return
+        response = self._send(self.requests.run_validate(filename))
+        if response is None:
+            return
+        result = _as_dict(response.get("result"))
+        self.poutput(str(result.get("message", "")))
+        findings: list[Any] = _as_dict(result.get("data")).get("findings") or []
+        for finding in findings:
+            f = _as_dict(finding)
+            self.poutput(
+                f"  line {f.get('line_number')} [{f.get('severity')}] "
+                f"{f.get('command')}: {f.get('message')}"
+            )
+
     def do_cancel(self, _: Statement) -> None:
         """Cancel the active run."""
         self._call_and_print(self.requests.run_cancel())

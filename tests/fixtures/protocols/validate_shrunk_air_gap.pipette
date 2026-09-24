@@ -1,0 +1,8 @@
+# Validation fixture: aspirating 95 uL of methanol (pre_air_gap_ul=5.0,
+# post_air_gap_ul=2.0) against the 98 uL usable capacity of the
+# service_with_plates fixture's default pipette leaves only 3 uL of
+# headroom, shrinking the pre_air_gap and logging fit_air_volumes' WARNING
+# -- validate_protocol must surface that as a "warning" finding.
+next_tip
+switch_liquid methanol
+aspirate 95 plate_a

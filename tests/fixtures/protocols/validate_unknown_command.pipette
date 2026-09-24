@@ -1,0 +1,4 @@
+# Validation fixture: an unrecognized command name (typo) reports as a
+# warning finding, not an error -- it never aborts a real run either.
+reset some_plate
+move 1 2 3

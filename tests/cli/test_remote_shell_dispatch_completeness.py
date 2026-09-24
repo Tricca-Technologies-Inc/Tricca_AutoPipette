@@ -70,6 +70,7 @@ _BUILDER_TO_COMMAND: dict[str, str] = {
     "steps_to_vol": "steps_to_vol",
     "see_calibration": "see_calibration",
     "run_start": "run",
+    "run_validate": "validate",
     "run_status": "run_status",
     "run_cancel": "cancel",
     "run_pause": "pause",

@@ -9,9 +9,12 @@ covers the shared persistence behavior once rather than per method.
 
 from __future__ import annotations
 
+import pytest
 from fakes.fake_moonraker_state import FakeMoonrakerState
 
-from tricca_autopipette.daemon.service import AutoPipetteService
+from tricca_autopipette.commands.tap_cmd_parsers import MoveArgs
+from tricca_autopipette.core.pipette_exceptions import NotHomedError
+from tricca_autopipette.daemon.service import AutoPipetteService, _dry_run
 
 
 def _set_homed(service: AutoPipetteService, homed: bool) -> None:
@@ -87,3 +90,59 @@ class TestPersistTipLiquidState:
         assert len(service.moonraker_state.saved_states) == 1
         _, _, current_liquid = service.moonraker_state.saved_states[0]
         assert current_liquid == "methanol"
+
+
+class TestDryRunShortCircuits:
+    """Issue #36: a module-level ``ContextVar`` lets ``validate_protocol``
+
+    no-op the homed check and both persist decorators for the duration of a
+    dry-run replay, without a per-call flag threading through every gated
+    method's signature.
+    """
+
+    def test_require_homed_is_bypassed_when_dry_run_is_set(
+        self, service: AutoPipetteService
+    ) -> None:
+        _set_homed(service, False)
+        token = _dry_run.set(True)
+        try:
+            result = service.move(MoveArgs(x=1.0, y=2.0, z=3.0))
+        finally:
+            _dry_run.reset(token)
+
+        assert result.ok is True
+
+    def test_require_homed_still_raises_once_dry_run_is_reset(
+        self, service: AutoPipetteService
+    ) -> None:
+        _set_homed(service, False)
+        token = _dry_run.set(True)
+        _dry_run.reset(token)
+
+        with pytest.raises(NotHomedError):
+            service.move(MoveArgs(x=1.0, y=2.0, z=3.0))
+
+    def test_persist_tip_liquid_state_skips_the_db_write_when_dry_run_is_set(
+        self, service: AutoPipetteService
+    ) -> None:
+        assert isinstance(service.moonraker_state, FakeMoonrakerState)
+        token = _dry_run.set(True)
+        try:
+            service.switch_liquid("methanol")
+        finally:
+            _dry_run.reset(token)
+
+        assert service.moonraker_state.saved_states == []
+
+    def test_persist_tip_presence_skips_the_db_write_when_dry_run_is_set(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        assert isinstance(service_with_plates.moonraker_state, FakeMoonrakerState)
+        _set_homed(service_with_plates, True)
+        token = _dry_run.set(True)
+        try:
+            service_with_plates.next_tip()
+        finally:
+            _dry_run.reset(token)
+
+        assert service_with_plates.moonraker_state.saved_tip_presence == []

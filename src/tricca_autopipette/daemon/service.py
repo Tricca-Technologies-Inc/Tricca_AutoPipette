@@ -31,6 +31,7 @@ import time
 import uuid
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
@@ -100,6 +101,17 @@ WEBSOCKET_TIMEOUT_SECONDS = 10
 #: which degrades gracefully instead -- see its docstring).
 _NOT_CONNECTED_MSG = "WebSocket not connected. Cannot communicate with pipette."
 
+#: Set for the duration of AutoPipetteService.validate_protocol's dry-run
+#: replay (issue #36). Checked directly by require_homed/
+#: persist_tip_liquid_state/persist_tip_presence so all three no-op the same
+#: way -- one mechanism, not three -- letting validation run on an unhomed
+#: machine and never durably persist anything. A ContextVar rather than a
+#: plain instance attribute per the issue's own decision: it's set and reset
+#: within validate_protocol's own synchronous call stack (the same stack
+#: every gated method it calls runs on), which is exactly what a ContextVar
+#: is for -- see validate_protocol's docstring.
+_dry_run: ContextVar[bool] = ContextVar("dry_run", default=False)
+
 
 class RunAlreadyActiveError(Exception):
     """Raised when a run is requested while another run is in progress."""
@@ -167,6 +179,11 @@ def require_homed(
     consistent behavior across every gated method beats optimizing the
     homed check away for a no-op input.
 
+    Short-circuited entirely (never even reads ``moonraker_state``) while
+    :data:`_dry_run` is set -- issue #36's ``validate_protocol`` needs gated
+    commands to run during a dry-run replay of an unhomed machine, since
+    checking a file at the bench or in CI was the whole point.
+
     Args:
         command_name: Name to include in the raised ``NotHomedError``'s
             message (e.g. "move", or "pipette" for ``transfer``).
@@ -184,9 +201,12 @@ def require_homed(
             *args: Any,  # ruff:ignore[any-type]
             **kwargs: Any,  # ruff:ignore[any-type]
         ) -> CommandResult:
-            homed = self.moonraker_state is not None and self.moonraker_state.is_homed()
-            if not homed:
-                raise NotHomedError(command_name)
+            if not _dry_run.get():
+                homed = (
+                    self.moonraker_state is not None and self.moonraker_state.is_homed()
+                )
+                if not homed:
+                    raise NotHomedError(command_name)
             return func(self, *args, **kwargs)
 
         return wrapper
@@ -243,6 +263,12 @@ def persist_tip_liquid_state(
     undone again by a compile-time rollback. ``domain_state_snapshot``
     itself flushes once the outcome is known instead -- see its docstring.
 
+    Also skipped entirely while :data:`_dry_run` is set (issue #36) --
+    ``validate_protocol`` already wraps its replay in batch mode, so this is
+    belt-and-suspenders with that deferral, but checking the same flag
+    ``require_homed`` checks keeps all three decorators' dry-run behavior
+    driven by one mechanism rather than two.
+
     Args:
         func: The ``AutoPipetteService`` method to wrap.
 
@@ -259,7 +285,7 @@ def persist_tip_liquid_state(
             # (same module, applied only to its methods), so reaching into the
             # service's privates here is deliberate rather than an outside
             # caller breaking encapsulation.
-            if not self.gcode_manager.is_batch_mode:
+            if not _dry_run.get() and not self.gcode_manager.is_batch_mode:
                 self._flush_tip_liquid_state()  # pyright: ignore[reportPrivateUsage]
 
     return wrapper
@@ -281,7 +307,8 @@ def persist_tip_presence(
     has still physically consumed that tip, and the record must reflect it.
 
     Deferred during batch mode the same way as :func:`persist_tip_liquid_state`
-    -- see that decorator's docstring.
+    -- see that decorator's docstring. Also skipped while :data:`_dry_run` is
+    set, for the same reason.
 
     Args:
         func: The ``AutoPipetteService`` method to wrap.
@@ -297,7 +324,7 @@ def persist_tip_presence(
         finally:
             # Same rationale as persist_tip_liquid_state: this decorator is
             # part of AutoPipetteService's own implementation.
-            if not self.gcode_manager.is_batch_mode:
+            if not _dry_run.get() and not self.gcode_manager.is_batch_mode:
                 self._flush_tip_presence()  # pyright: ignore[reportPrivateUsage]
 
     return wrapper
@@ -2621,6 +2648,38 @@ class AutoPipetteService:
         finally:
             gcode_manager.clear_buffer()
 
+    @staticmethod
+    def _tokenize_protocol_line(line: str) -> tuple[str, list[str]] | None:
+        """Split one protocol-file line into a command name and its rest-args.
+
+        Factored out of :meth:`_dispatch_protocol_line` so
+        :meth:`validate_protocol` (issue #36) can peek at a line's command
+        name -- to special-case ``break``/``save_locations`` before ever
+        reaching the real dispatch tables -- without duplicating the
+        comment/blank/shlex handling.
+
+        Args:
+            line: One raw line from a protocol file (may be blank, a ``;``
+                comment, or real command text).
+
+        Returns:
+            ``(command_name, rest_args)``, or None for a no-op line (blank,
+            or a ``;``-prefixed comment -- see :meth:`_dispatch_protocol_line`'s
+            docstring for why ``;`` is tolerated here).
+
+        Raises:
+            ValueError: If the line can't be tokenized (unbalanced quotes).
+        """
+        if line.strip().startswith(";"):
+            return None
+        try:
+            argv = shlex.split(line)
+        except ValueError as exc:
+            raise ValueError(f"Could not parse line: {line!r}") from exc
+        if not argv:
+            return None
+        return argv[0], argv[1:]
+
     def _dispatch_protocol_line(self, line: str) -> CommandResult:
         """Dispatch one protocol-file line to its typed service method.
 
@@ -2657,17 +2716,10 @@ class AutoPipetteService:
                 command's arguments fail to parse.
             Exception: Whatever the underlying service method raises.
         """  # ruff: ignore[docstring-extraneous-exception]
-        if line.strip().startswith(";"):
+        tokens = self._tokenize_protocol_line(line)
+        if tokens is None:
             return CommandResult(ok=True, message="")
-
-        try:
-            argv = shlex.split(line)
-        except ValueError as exc:
-            raise ValueError(f"Could not parse line: {line!r}") from exc
-        if not argv:
-            return CommandResult(ok=True, message="")
-
-        command_name, rest = argv[0], argv[1:]
+        command_name, rest = tokens
 
         if command_name == "break":
             if not self.request_breakpoint():
@@ -2728,6 +2780,165 @@ class AutoPipetteService:
         return CommandResult(
             ok=True, message=f"Protocol '{filename}' executed successfully."
         )
+
+    def validate_protocol(self, filename: str) -> CommandResult:
+        """Dry-run a protocol file, reporting problems without executing anything.
+
+        Issue #36. Replays ``filename`` through the exact same per-line
+        dispatch tables (:data:`_LINE_DISPATCH`/:data:`_STR_ARG_DISPATCH`)
+        :meth:`_run_protocol_sync` uses, inside
+        :meth:`domain_state_snapshot`'s ``restore="always"`` mode (issue
+        #35) so every change -- tip presence, traversal cursors, tip/liquid
+        state -- is discarded regardless of outcome. :data:`_dry_run` is set
+        for the duration of the replay, short-circuiting
+        :func:`require_homed`/:func:`persist_tip_liquid_state`/
+        :func:`persist_tip_presence` so validation works on an unhomed
+        machine and never durably persists anything. No G-code is ever
+        written or uploaded: wrapping the loop in
+        ``gcode_manager.batch_mode()`` already suppresses immediate
+        ``output_gcode`` I/O (as it does for a real run), and this method
+        never calls ``write_gcode_file``/``upload_and_execute_gcode`` at all.
+
+        Unlike a real run, a line that fails doesn't abort the rest of the
+        file -- see :meth:`_dispatch_protocol_line_for_validation` -- so one
+        bad line can't hide every other problem in the file. No new
+        per-line volume/location checks are added: a missing location or an
+        over-capacity liquid already raises ``NotALocationError``/
+        ``VolumeCapacityError`` deep in ``AutoPipette``/``LocationManager``
+        when the real command methods run, so both fall out of this replay
+        for free.
+
+        Args:
+            filename: Bare filename under ``protocols/``.
+
+        Returns:
+            Result whose ``data["findings"]`` is a list of
+            ``{"line_number", "command", "severity", "message"}`` dicts,
+            one per problem found, ``severity`` one of "error" (a raised
+            exception), "warning" (a soft ``CommandResult(ok=False)``, or a
+            WARNING the domain layer logged, e.g. a shrunk air gap), or
+            "info" (a ``break`` line, or a skipped ``save_locations``).
+            ``ok`` is True only if no finding is an "error".
+
+        Raises:
+            FileNotFoundError: If the protocol file does not exist.
+            ValueError: If the file can't be decoded as UTF-8.
+        """  # ruff: ignore[docstring-extraneous-exception]
+        proto_path = LocalConfigRoots.resolve("protocols", filename)
+        try:
+            lines = proto_path.read_text(encoding="utf-8").splitlines()
+        except UnicodeDecodeError as exc:
+            raise ValueError(
+                f"Error reading protocol file (encoding issue): {exc}"
+            ) from exc
+
+        findings: list[dict[str, Any]] = []
+        gcode_manager = self.gcode_manager
+        token = _dry_run.set(True)
+        try:
+            with (
+                self.domain_state_snapshot(restore="always"),
+                gcode_manager.batch_mode(),
+            ):
+                for line_number, raw_line in enumerate(lines, start=1):
+                    line = raw_line.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    self._dispatch_protocol_line_for_validation(
+                        line, line_number, findings
+                    )
+        finally:
+            _dry_run.reset(token)
+            gcode_manager.clear_buffer()
+
+        error_count = sum(1 for f in findings if f["severity"] == "error")
+        if not findings:
+            message = "No issues found."
+        else:
+            warning_count = sum(1 for f in findings if f["severity"] == "warning")
+            message = (
+                f"{len(findings)} finding(s): {error_count} error(s), "
+                f"{warning_count} warning(s)."
+            )
+        return CommandResult(
+            ok=error_count == 0, message=message, data={"findings": findings}
+        )
+
+    def _dispatch_protocol_line_for_validation(
+        self, line: str, line_number: int, findings: list[dict[str, Any]]
+    ) -> None:
+        """Dispatch one line during :meth:`validate_protocol`'s dry run.
+
+        The catch-and-continue counterpart to :meth:`_dispatch_protocol_line`:
+        a line that would normally abort the whole batch instead becomes one
+        recorded finding, appended to ``findings`` in place, and replay
+        continues with the next line. ``break``/``save_locations`` are
+        intercepted here, before ever reaching the real dispatch tables --
+        ``break`` would otherwise block on :meth:`request_breakpoint` forever
+        (no remote client is answering during validation), and
+        ``save_locations`` would otherwise write a real file -- so both are
+        recorded as informational findings and skipped rather than executed.
+        A WARNING the domain layer logs while dispatching the line (e.g.
+        ``AutoPipette.fit_air_volumes`` shrinking an air gap) is captured and
+        recorded as a "warning" finding too, the same translation this
+        method already does for a raised exception ("error") or a soft
+        ``CommandResult(ok=False)`` ("warning") -- no new per-check logic,
+        just one more source translated into the same finding shape.
+
+        Args:
+            line: One non-blank, non-comment protocol-file line.
+            line_number: The line's 1-indexed position in the source file,
+                for the finding's ``line_number`` field.
+            findings: The running list of findings for this validation pass;
+                appended to in place.
+        """
+        try:
+            tokens = self._tokenize_protocol_line(line)
+        except ValueError as exc:
+            findings.append(_finding(line_number, "", "error", str(exc)))
+            return
+        if tokens is None:
+            return
+        command_name, _rest = tokens
+
+        if command_name == "break":
+            findings.append(
+                _finding(
+                    line_number,
+                    command_name,
+                    "info",
+                    f"Breakpoint at line {line_number}.",
+                )
+            )
+            return
+        if command_name == "save_locations":
+            findings.append(
+                _finding(
+                    line_number,
+                    command_name,
+                    "info",
+                    "save_locations skipped during validation (no file written).",
+                )
+            )
+            return
+
+        warning_capture = _LineWarningCapture()
+        autopipette_logger = logging.getLogger(_AUTOPIPETTE_LOGGER_NAME)
+        autopipette_logger.addHandler(warning_capture)
+        try:
+            result = self._dispatch_protocol_line(line)
+        except Exception as exc:
+            findings.append(_finding(line_number, command_name, "error", str(exc)))
+            return
+        finally:
+            autopipette_logger.removeHandler(warning_capture)
+
+        for message in warning_capture.messages:
+            findings.append(_finding(line_number, command_name, "warning", message))
+        if not result.ok:
+            findings.append(
+                _finding(line_number, command_name, "warning", result.message)
+            )
 
     def emergency_stop(self) -> CommandResult:
         """Send an emergency stop to the pipette.
@@ -2979,6 +3190,64 @@ class AutoPipetteService:
                 "filename": self._current.filename,
             },
         )
+
+
+#: Logger name whose WARNING+ records validate_protocol's dry run captures
+#: as findings (e.g. AutoPipette.fit_air_volumes shrinking an air gap).
+#: Scoped narrowly to the domain layer -- not the root logger -- so it
+#: doesn't also double-count this module's own "Unknown command" warning,
+#: which _dispatch_protocol_line_for_validation already turns into a
+#: finding via its CommandResult(ok=False) instead.
+_AUTOPIPETTE_LOGGER_NAME = "tricca_autopipette.core.autopipette"
+
+
+class _LineWarningCapture(logging.Handler):
+    """Collects WARNING+ log messages emitted while dispatching one line.
+
+    Attached to :data:`_AUTOPIPETTE_LOGGER_NAME`'s logger only for the
+    duration of a single line's dispatch inside
+    ``_dispatch_protocol_line_for_validation``, then removed -- so messages
+    are attributed to the exact line that caused them.
+    """
+
+    def __init__(self) -> None:
+        """Initialize with an empty capture buffer."""
+        super().__init__(level=logging.WARNING)
+        self.messages: list[str] = []
+
+    def emit(self, record: logging.LogRecord) -> None:
+        """Record one log message's rendered text.
+
+        Args:
+            record: The captured log record.
+        """
+        self.messages.append(record.getMessage())
+
+
+def _finding(
+    line_number: int,
+    command: str,
+    severity: Literal["error", "warning", "info"],
+    message: str,
+) -> dict[str, Any]:
+    """Build one ``validate_protocol`` finding dict.
+
+    Args:
+        line_number: The finding's 1-indexed source line.
+        command: The line's command name, or "" if the line couldn't even
+            be tokenized.
+        severity: One of "error"/"warning"/"info".
+        message: Human-readable detail.
+
+    Returns:
+        ``{"line_number", "command", "severity", "message"}``.
+    """
+    return {
+        "line_number": line_number,
+        "command": command,
+        "severity": severity,
+        "message": message,
+    }
 
 
 @dataclass(frozen=True)

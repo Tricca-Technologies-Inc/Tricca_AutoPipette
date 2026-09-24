@@ -164,6 +164,7 @@ _BUILDER_CALLS: list[tuple[str, tuple[Any, ...]]] = [
     ("steps_to_vol", (100,)),
     ("see_calibration", (SeeCalibrationArgs(liquid=None),)),
     ("run_start", ("does_not_exist.pipette",)),
+    ("run_validate", ("does_not_exist.pipette",)),
     ("run_status", ()),
     ("run_cancel", ()),
     ("run_pause", ()),
