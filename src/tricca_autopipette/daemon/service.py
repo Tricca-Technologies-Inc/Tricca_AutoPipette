@@ -29,10 +29,11 @@ import shlex
 import threading
 import time
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Generator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from cmd2 import Cmd2ArgumentParser
 
@@ -193,6 +194,25 @@ def require_homed(
     return decorator
 
 
+def _pipette_state_triple(autopipette: AutoPipette) -> tuple[str, bool, str]:
+    """Build the tip/liquid triple persisted to Moonraker's DB.
+
+    One function so :func:`persist_tip_liquid_state`,
+    :meth:`AutoPipetteService._apply_persisted_state`, and
+    :meth:`AutoPipetteService.domain_state_snapshot`'s rollback can't
+    independently drift out of sync on the tuple's shape -- they previously
+    each built it inline.
+
+    Args:
+        autopipette: The domain object to read state off of.
+
+    Returns:
+        ``(tip_state.value, has_liquid, active_liquid)``.
+    """
+    state = autopipette.state
+    return (state.tip_state.value, state.has_liquid, autopipette.active_liquid)
+
+
 def persist_tip_liquid_state(
     func: Callable[..., CommandResult],
 ) -> Callable[..., CommandResult]:
@@ -215,6 +235,14 @@ def persist_tip_liquid_state(
     (a tip is or isn't attached) doesn't roll back just because a later
     step failed.
 
+    While :attr:`AutoPipetteService.gcode_manager`'s ``is_batch_mode`` is
+    true (i.e. inside :meth:`AutoPipetteService.domain_state_snapshot`'s
+    protocol-file dispatch loop), the write is deferred entirely rather
+    than fired per line: nothing physical has happened yet at that point
+    (no G-code has uploaded), so persisting mid-batch would just have to be
+    undone again by a compile-time rollback. ``domain_state_snapshot``
+    itself flushes once the outcome is known instead -- see its docstring.
+
     Args:
         func: The ``AutoPipetteService`` method to wrap.
 
@@ -231,17 +259,8 @@ def persist_tip_liquid_state(
             # (same module, applied only to its methods), so reaching into the
             # service's privates here is deliberate rather than an outside
             # caller breaking encapsulation.
-            if self.moonraker_state is not None:
-                autopipette = self._autopipette  # pyright: ignore[reportPrivateUsage]
-                state = autopipette.state
-                snapshot = (
-                    state.tip_state.value,
-                    state.has_liquid,
-                    autopipette.active_liquid,
-                )
-                if snapshot != self._last_persisted_state:  # pyright: ignore[reportPrivateUsage]
-                    self._last_persisted_state = snapshot  # pyright: ignore[reportPrivateUsage]
-                    self.moonraker_state.save_tip_liquid_state(*snapshot)
+            if not self.gcode_manager.is_batch_mode:
+                self._flush_tip_liquid_state()  # pyright: ignore[reportPrivateUsage]
 
     return wrapper
 
@@ -261,6 +280,9 @@ def persist_tip_presence(
     Runs in a ``finally`` block: a transfer that picks up a tip and then fails
     has still physically consumed that tip, and the record must reflect it.
 
+    Deferred during batch mode the same way as :func:`persist_tip_liquid_state`
+    -- see that decorator's docstring.
+
     Args:
         func: The ``AutoPipetteService`` method to wrap.
 
@@ -275,12 +297,8 @@ def persist_tip_presence(
         finally:
             # Same rationale as persist_tip_liquid_state: this decorator is
             # part of AutoPipetteService's own implementation.
-            if self.moonraker_state is not None:
-                manager = self._autopipette.location_manager.tipbox_manager  # pyright: ignore[reportPrivateUsage]
-                snapshot = manager.snapshot()
-                if snapshot != self._persisted_tip_presence:  # pyright: ignore[reportPrivateUsage]
-                    self._persisted_tip_presence = snapshot  # pyright: ignore[reportPrivateUsage]
-                    self.moonraker_state.save_tip_presence(snapshot)
+            if not self.gcode_manager.is_batch_mode:
+                self._flush_tip_presence()  # pyright: ignore[reportPrivateUsage]
 
     return wrapper
 
@@ -510,11 +528,7 @@ class AutoPipetteService:
         current_liquid = values.get("current_liquid")
         if current_liquid and current_liquid in self._autopipette.system_config.liquids:
             self._autopipette.switch_liquid(current_liquid)
-        self._last_persisted_state = (
-            state.tip_state.value,
-            state.has_liquid,
-            self._autopipette.active_liquid,
-        )
+        self._last_persisted_state = _pipette_state_triple(self._autopipette)
 
     def _apply_persisted_tip_presence(self, values: dict[str, Any]) -> None:
         """Rehydrate per-tipbox consumed positions from a prior run.
@@ -547,6 +561,37 @@ class AutoPipetteService:
             )
 
         self._persisted_tip_presence = manager.snapshot()
+
+    def _flush_tip_liquid_state(self) -> None:
+        """Write tip/liquid state to Moonraker's DB if it changed.
+
+        The single source of truth for this write, shared by
+        :func:`persist_tip_liquid_state`'s immediate (non-batch) path and
+        :meth:`domain_state_snapshot`'s post-batch flush -- both compare
+        against the same :attr:`_last_persisted_state` tracker, so whichever
+        one actually persists the current value is the one that "wins,"
+        and the other's dedup check then correctly sees nothing changed.
+        """
+        if self.moonraker_state is None:
+            return
+        snapshot = _pipette_state_triple(self._autopipette)
+        if snapshot != self._last_persisted_state:
+            self._last_persisted_state = snapshot
+            self.moonraker_state.save_tip_liquid_state(*snapshot)
+
+    def _flush_tip_presence(self) -> None:
+        """Write per-tipbox consumed positions to Moonraker's DB if changed.
+
+        The sibling of :meth:`_flush_tip_liquid_state`, for
+        :func:`persist_tip_presence`/:meth:`domain_state_snapshot` in the
+        same way.
+        """
+        if self.moonraker_state is None:
+            return
+        snapshot = self._autopipette.location_manager.tipbox_manager.snapshot()
+        if snapshot != self._persisted_tip_presence:
+            self._persisted_tip_presence = snapshot
+            self.moonraker_state.save_tip_presence(snapshot)
 
     def _run_startup_script(self) -> None:
         """Replay ``core/.init_pipette`` once, mirroring interactive startup.
@@ -2331,6 +2376,141 @@ class AutoPipetteService:
                 )
                 self._broadcast_status()
 
+    @contextmanager
+    def domain_state_snapshot(
+        self, *, restore: Literal["on_error", "always"] = "on_error"
+    ) -> Generator[None]:
+        """Snapshot deck/pipette state, restoring it depending on the outcome.
+
+        Captures three things a protocol replay can advance: every
+        registered tipbox's consumed-position map
+        (:meth:`TipBoxManager.snapshot`), every plate's traversal cursor
+        (:meth:`LocationManager.snapshot_cursors`), and the pipette's
+        tip/liquid state (``AutoPipette.state.tip_state``/``has_liquid`` plus
+        ``active_liquid``).
+
+        Issue #35's compile-time-rollback use (the default, ``restore=
+        "on_error"``) treats the two outcomes asymmetrically: a body that
+        raises is restored to exactly the pre-enter snapshot, while a body
+        that completes normally is left as-is -- a *runtime* failure (after
+        G-code has already uploaded and started executing physically) is
+        deliberately not caught by this context manager at all, since by
+        then the caller (:meth:`_run_protocol_sync`) is already past the
+        ``with`` block. Issue #36's dry-run use passes ``restore="always"``,
+        since every dry-run outcome -- success or failure -- means nothing
+        should be left standing.
+
+        The ``persist_tip_presence``/``persist_tip_liquid_state`` decorators
+        defer their own Moonraker ``server.database`` writes while
+        :attr:`gcode_manager`'s ``is_batch_mode`` is true (i.e. for the whole
+        body this context manager wraps), so nothing is durably written
+        until the outcome here is known: a body that raises is restored
+        purely in-memory, with nothing in the database to undo, while a body
+        that completes normally (``restore="on_error"``) triggers exactly
+        one flush of the final, advanced state. ``restore="always"`` never
+        flushes, matching its "nothing should be left standing" semantics.
+
+        Args:
+            restore: ``"on_error"`` (default) restores only if the wrapped
+                body raises, discarding the snapshot on normal completion.
+                ``"always"`` restores unconditionally on exit, regardless of
+                outcome.
+
+        Yields:
+            Nothing; used purely for its enter/exit side effects.
+        """
+        autopipette = self._autopipette
+        location_manager = autopipette.location_manager
+        tipbox_manager = location_manager.tipbox_manager
+
+        tip_presence_snapshot = tipbox_manager.snapshot()
+        cursor_snapshot = location_manager.snapshot_cursors()
+        state = autopipette.state
+        pipette_state_snapshot = (
+            state.tip_state,
+            state.has_liquid,
+            autopipette.active_liquid,
+        )
+
+        def _restore() -> None:
+            skipped_tipboxes = tipbox_manager.restore(tip_presence_snapshot)
+            # Boxes registered after the snapshot was taken (e.g. loaded
+            # mid-run) have no snapshot entry at all, so `restore` above
+            # leaves them untouched -- reset them to pristine instead, since
+            # "restored to pre-enter state" means they didn't exist yet.
+            new_tipboxes = set(tipbox_manager.boxes) - set(tip_presence_snapshot)
+            for box_name in new_tipboxes:
+                tipbox_manager.reset_tips(box_name)
+            if skipped_tipboxes:
+                logger.warning(
+                    "Rollback could not restore tipbox(es) %s (reconfigured "
+                    "mid-run); left full. Run 'tips' to check, 'set_tips' to "
+                    "correct.",
+                    ", ".join(skipped_tipboxes),
+                )
+
+            skipped_cursors = location_manager.restore_cursors(cursor_snapshot)
+            if skipped_cursors:
+                logger.warning(
+                    "Rollback could not restore traversal cursor(s) for %s "
+                    "(plate reloaded mid-run); cursor left as-is.",
+                    ", ".join(skipped_cursors),
+                )
+            # Plates (including tipboxes) registered after the snapshot was
+            # taken have no snapshot entry, so restore_cursors above leaves
+            # them untouched -- same gap as new_tipboxes above, but for the
+            # cursor rather than tip presence. Reset to 0 (their own fresh
+            # state), since "restored to pre-enter state" means they didn't
+            # exist yet.
+            new_plates = set(location_manager.get_plate_names()) - set(cursor_snapshot)
+            for plate_name in new_plates:
+                location = location_manager.locations[plate_name]
+                if isinstance(location, Plate):
+                    location.reset()
+
+            tip_state, has_liquid, active_liquid = pipette_state_snapshot
+            state.tip_state = tip_state
+            state.has_liquid = has_liquid
+            if active_liquid != autopipette.active_liquid:
+                autopipette.switch_liquid(active_liquid)
+            # Discard any G-code comment (e.g. from the switch_liquid call
+            # just above, or from a prior line in the now-aborted batch,
+            # such as its own switch_liquid) that accumulated in the domain
+            # object's buffer but was never drained via output_gcode --
+            # nothing here physically happened, so none of it may ride
+            # along with a future run's uploaded G-code.
+            autopipette.get_gcode()
+            # Nothing was ever written to Moonraker's DB during the batch
+            # (persist_tip_presence/persist_tip_liquid_state defer while
+            # is_batch_mode is true), so there's nothing to undo there.
+
+        def _flush() -> None:
+            try:
+                self._flush_tip_presence()
+                self._flush_tip_liquid_state()
+            except Exception:
+                logger.exception(
+                    "Failed to persist domain state after a successful "
+                    "protocol run; the run itself still succeeded"
+                )
+
+        try:
+            yield
+        except BaseException:
+            try:
+                _restore()
+            except Exception:
+                logger.exception(
+                    "Failed to roll back domain state after a protocol "
+                    "failure; the original error still takes precedence"
+                )
+            raise
+        else:
+            if restore == "always":
+                _restore()
+            else:
+                _flush()
+
     def _run_protocol_sync(self, filename: str) -> None:
         """Synchronous half of :meth:`_run_protocol`; runs in a worker thread.
 
@@ -2345,17 +2525,23 @@ class AutoPipetteService:
         is the one unambiguous "this line failed" signal, rather than
         inferring it from cmd2's overloaded ``bool`` return value.
 
+        The per-line dispatch loop is wrapped in :meth:`domain_state_snapshot`
+        (issue #35) -- see that method's docstring for the compile-time-vs
+        -runtime-failure distinction this relies on.
+
         Args:
             filename: Bare filename under ``protocols/``.
 
         Raises:
             ValueError: If the file can't be decoded as UTF-8.
             ProtocolAbortedError: If a ``break`` line's breakpoint is
-                answered "abort".
+                answered "abort" (a compile-time failure -- rolled back).
             Exception: Whatever a dispatched line's service method itself
                 raises (e.g. ``NotALocationError``, a not-homed
                 ``RuntimeError``) -- propagates uncaught, aborting the rest
-                of the protocol.
+                of the protocol (and rolled back, same as above). An
+                exception raised by the upload itself is a runtime failure
+                and is not rolled back.
         """  # ruff: ignore[docstring-extraneous-exception]
         proto_path = LocalConfigRoots.resolve("protocols", filename)
         try:
@@ -2375,7 +2561,10 @@ class AutoPipetteService:
 
         gcode_manager = self.gcode_manager
         try:
-            with gcode_manager.batch_mode():
+            # domain_state_snapshot wraps exactly the dispatch loop, not the
+            # upload below it -- see its docstring for why that boundary is
+            # the compile-time/runtime-failure line.
+            with self.domain_state_snapshot(), gcode_manager.batch_mode():
                 for line in commands:
                     self._dispatch_protocol_line(line)
 

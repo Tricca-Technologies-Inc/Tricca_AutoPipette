@@ -1,0 +1,10 @@
+# Regression fixture: drains the pre-existing tipbox, loads a second tipbox
+# mid-run (so it postdates the compile-time-rollback snapshot), draws from
+# it, then a bad location aborts the batch.
+next_tip
+eject_tip
+next_tip
+eject_tip
+load_locations new_tipbox_b.json
+next_tip
+move_loc does_not_exist

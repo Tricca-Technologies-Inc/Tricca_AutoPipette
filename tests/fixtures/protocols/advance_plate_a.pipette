@@ -1,0 +1,5 @@
+# Regression fixture: successfully advances plate_a's traversal cursor,
+# used as a prior "completed run" before a later rollback test reloads
+# plate_a smaller and fails.
+move_loc plate_a
+move_loc plate_a

@@ -1,0 +1,5 @@
+# Regression fixture: reloads plate_a with fewer wells than its pre-run
+# cursor snapshot fits, then a bad location aborts the batch.
+unload_locations plate_a
+load_locations smaller_plate_a.json
+move_loc does_not_exist

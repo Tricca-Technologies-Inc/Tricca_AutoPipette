@@ -1,0 +1,8 @@
+# Regression fixture: a tipbox is unloaded and reloaded under the same name
+# but with different dimensions mid-run, then a bad location aborts the
+# batch. Exercises the compile-time rollback path's handling of a tipbox
+# whose live shape no longer matches its pre-run snapshot.
+unload_locations tipbox
+load_locations reconfigured_tipbox.json
+next_tip
+move_loc does_not_exist
