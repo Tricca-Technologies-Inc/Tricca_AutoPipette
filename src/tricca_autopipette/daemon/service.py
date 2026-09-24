@@ -235,6 +235,14 @@ def persist_tip_liquid_state(
     (a tip is or isn't attached) doesn't roll back just because a later
     step failed.
 
+    While :attr:`AutoPipetteService.gcode_manager`'s ``is_batch_mode`` is
+    true (i.e. inside :meth:`AutoPipetteService.domain_state_snapshot`'s
+    protocol-file dispatch loop), the write is deferred entirely rather
+    than fired per line: nothing physical has happened yet at that point
+    (no G-code has uploaded), so persisting mid-batch would just have to be
+    undone again by a compile-time rollback. ``domain_state_snapshot``
+    itself flushes once the outcome is known instead -- see its docstring.
+
     Args:
         func: The ``AutoPipetteService`` method to wrap.
 
@@ -251,12 +259,8 @@ def persist_tip_liquid_state(
             # (same module, applied only to its methods), so reaching into the
             # service's privates here is deliberate rather than an outside
             # caller breaking encapsulation.
-            if self.moonraker_state is not None:
-                autopipette = self._autopipette  # pyright: ignore[reportPrivateUsage]
-                snapshot = _pipette_state_triple(autopipette)
-                if snapshot != self._last_persisted_state:  # pyright: ignore[reportPrivateUsage]
-                    self._last_persisted_state = snapshot  # pyright: ignore[reportPrivateUsage]
-                    self.moonraker_state.save_tip_liquid_state(*snapshot)
+            if not self.gcode_manager.is_batch_mode:
+                self._flush_tip_liquid_state()  # pyright: ignore[reportPrivateUsage]
 
     return wrapper
 
@@ -276,6 +280,9 @@ def persist_tip_presence(
     Runs in a ``finally`` block: a transfer that picks up a tip and then fails
     has still physically consumed that tip, and the record must reflect it.
 
+    Deferred during batch mode the same way as :func:`persist_tip_liquid_state`
+    -- see that decorator's docstring.
+
     Args:
         func: The ``AutoPipetteService`` method to wrap.
 
@@ -290,12 +297,8 @@ def persist_tip_presence(
         finally:
             # Same rationale as persist_tip_liquid_state: this decorator is
             # part of AutoPipetteService's own implementation.
-            if self.moonraker_state is not None:
-                manager = self._autopipette.location_manager.tipbox_manager  # pyright: ignore[reportPrivateUsage]
-                snapshot = manager.snapshot()
-                if snapshot != self._persisted_tip_presence:  # pyright: ignore[reportPrivateUsage]
-                    self._persisted_tip_presence = snapshot  # pyright: ignore[reportPrivateUsage]
-                    self.moonraker_state.save_tip_presence(snapshot)
+            if not self.gcode_manager.is_batch_mode:
+                self._flush_tip_presence()  # pyright: ignore[reportPrivateUsage]
 
     return wrapper
 
@@ -558,6 +561,37 @@ class AutoPipetteService:
             )
 
         self._persisted_tip_presence = manager.snapshot()
+
+    def _flush_tip_liquid_state(self) -> None:
+        """Write tip/liquid state to Moonraker's DB if it changed.
+
+        The single source of truth for this write, shared by
+        :func:`persist_tip_liquid_state`'s immediate (non-batch) path and
+        :meth:`domain_state_snapshot`'s post-batch flush -- both compare
+        against the same :attr:`_last_persisted_state` tracker, so whichever
+        one actually persists the current value is the one that "wins,"
+        and the other's dedup check then correctly sees nothing changed.
+        """
+        if self.moonraker_state is None:
+            return
+        snapshot = _pipette_state_triple(self._autopipette)
+        if snapshot != self._last_persisted_state:
+            self._last_persisted_state = snapshot
+            self.moonraker_state.save_tip_liquid_state(*snapshot)
+
+    def _flush_tip_presence(self) -> None:
+        """Write per-tipbox consumed positions to Moonraker's DB if changed.
+
+        The sibling of :meth:`_flush_tip_liquid_state`, for
+        :func:`persist_tip_presence`/:meth:`domain_state_snapshot` in the
+        same way.
+        """
+        if self.moonraker_state is None:
+            return
+        snapshot = self._autopipette.location_manager.tipbox_manager.snapshot()
+        if snapshot != self._persisted_tip_presence:
+            self._persisted_tip_presence = snapshot
+            self.moonraker_state.save_tip_presence(snapshot)
 
     def _run_startup_script(self) -> None:
         """Replay ``core/.init_pipette`` once, mirroring interactive startup.
@@ -2366,13 +2400,15 @@ class AutoPipetteService:
         since every dry-run outcome -- success or failure -- means nothing
         should be left standing.
 
-        Restoring also writes the restored tip-presence and tip/liquid state
-        back through to Moonraker's ``server.database`` (when a connection is
-        configured) rather than only resetting in-memory objects: the
-        ``persist_tip_presence``/``persist_tip_liquid_state`` decorators may
-        already have durably written the now-rolled-back values before the
-        failure, and an in-memory-only restore would leave the database wrong
-        until the next successful persist -- surviving a crash in between.
+        The ``persist_tip_presence``/``persist_tip_liquid_state`` decorators
+        defer their own Moonraker ``server.database`` writes while
+        :attr:`gcode_manager`'s ``is_batch_mode`` is true (i.e. for the whole
+        body this context manager wraps), so nothing is durably written
+        until the outcome here is known: a body that raises is restored
+        purely in-memory, with nothing in the database to undo, while a body
+        that completes normally (``restore="on_error"``) triggers exactly
+        one flush of the final, advanced state. ``restore="always"`` never
+        flushes, matching its "nothing should be left standing" semantics.
 
         Args:
             restore: ``"on_error"`` (default) restores only if the wrapped
@@ -2426,17 +2462,19 @@ class AutoPipetteService:
             state.has_liquid = has_liquid
             if active_liquid != autopipette.active_liquid:
                 autopipette.switch_liquid(active_liquid)
+            # Nothing was ever written to Moonraker's DB during the batch
+            # (persist_tip_presence/persist_tip_liquid_state defer while
+            # is_batch_mode is true), so there's nothing to undo there.
 
-            if self.moonraker_state is not None:
-                restored_tip_presence = tipbox_manager.snapshot()
-                if restored_tip_presence != self._persisted_tip_presence:
-                    self._persisted_tip_presence = restored_tip_presence
-                    self.moonraker_state.save_tip_presence(restored_tip_presence)
-
-                restored_state = _pipette_state_triple(autopipette)
-                if restored_state != self._last_persisted_state:
-                    self._last_persisted_state = restored_state
-                    self.moonraker_state.save_tip_liquid_state(*restored_state)
+        def _flush() -> None:
+            try:
+                self._flush_tip_presence()
+                self._flush_tip_liquid_state()
+            except Exception:
+                logger.exception(
+                    "Failed to persist domain state after a successful "
+                    "protocol run; the run itself still succeeded"
+                )
 
         try:
             yield
@@ -2452,6 +2490,8 @@ class AutoPipetteService:
         else:
             if restore == "always":
                 _restore()
+            else:
+                _flush()
 
     def _run_protocol_sync(self, filename: str) -> None:
         """Synchronous half of :meth:`_run_protocol`; runs in a worker thread.

@@ -1,0 +1,5 @@
+# Regression fixture: advances both tip presence and liquid state within
+# one successful batch, used to check that persistence flushes once with
+# the final state rather than once per line.
+next_tip
+switch_liquid methanol

@@ -189,27 +189,45 @@ class TestDomainStateSnapshotRollback:
         assert autopipette.state.has_liquid == pre_run_has_liquid
         assert autopipette.active_liquid == pre_run_liquid
 
-    def test_compile_time_failure_writes_restored_state_back_to_moonraker_db(
+    def test_compile_time_failure_makes_no_db_writes(
         self, service_with_plates: AutoPipetteService
     ) -> None:
+        # persist_tip_presence/persist_tip_liquid_state defer their DB
+        # writes while gcode_manager.is_batch_mode is true, so an aborted
+        # batch never wrote anything through in the first place -- there's
+        # nothing for a rollback to undo in the database.
         _set_homed(service_with_plates, True)
         moonraker_state = service_with_plates.moonraker_state
         assert isinstance(moonraker_state, FakeMoonrakerState)
-        pre_run_tip_snapshot = (
-            service_with_plates._autopipette.location_manager.tipbox_manager.snapshot()
-        )
 
         with pytest.raises(NotALocationError):
             service_with_plates._run_protocol_sync("compile_fail.pipette")
 
-        # next_tip's own persist_tip_presence/persist_tip_liquid_state calls
-        # already wrote the (corrupted) advanced state through -- the last
-        # write must be the rollback, restoring the DB to the pre-run value.
-        assert moonraker_state.saved_tip_presence[-1] == pre_run_tip_snapshot
+        assert moonraker_state.saved_tip_presence == []
+        assert moonraker_state.saved_states == []
+
+    def test_successful_run_flushes_final_state_exactly_once(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        _set_homed(service_with_plates, True)
+        service_with_plates.client = FakeWebSocketClient()  # type: ignore[assignment]
+        moonraker_state = service_with_plates.moonraker_state
+        assert isinstance(moonraker_state, FakeMoonrakerState)
+
+        # Two lines that each advance tip/liquid state -- if per-line
+        # persistence weren't deferred, this would write twice.
+        service_with_plates._run_protocol_sync("next_tip_then_switch.pipette")
+
+        assert len(moonraker_state.saved_tip_presence) == 1
+        assert len(moonraker_state.saved_states) == 1
+        tipbox_manager = (
+            service_with_plates._autopipette.location_manager.tipbox_manager
+        )
+        assert moonraker_state.saved_tip_presence[-1] == tipbox_manager.snapshot()
         assert moonraker_state.saved_states[-1] == (
-            TipState.UNKNOWN.value,
+            TipState.ATTACHED.value,
             False,
-            "water",
+            "methanol",
         )
 
     def test_runtime_failure_after_upload_leaves_state_advanced(
@@ -253,22 +271,21 @@ class TestDomainStateSnapshotRollback:
     def test_restore_failure_does_not_mask_the_original_exception(
         self, service_with_plates: AutoPipetteService
     ) -> None:
-        # A failure inside _restore() itself (e.g. a dropped Moonraker
-        # connection mid-rollback) must not replace the real compile-time
-        # error the caller is supposed to see.
+        # A failure inside _restore()'s own in-memory restore logic (e.g. a
+        # corrupted tipbox record) must not replace the real compile-time
+        # error the caller is supposed to see. (DB writes are deferred
+        # during batch mode and rollback no longer touches the database at
+        # all, so the injection point is the in-memory tipbox restore.)
         _set_homed(service_with_plates, True)
-        moonraker_state = service_with_plates.moonraker_state
-        assert isinstance(moonraker_state, FakeMoonrakerState)
+        tipbox_manager = (
+            service_with_plates._autopipette.location_manager.tipbox_manager
+        )
 
-        # First call is next_tip's own persist_tip_presence write (must
-        # succeed so the real failure is the later move_loc); second call is
-        # the rollback's write, which is the one that must not be allowed to
-        # mask move_loc's NotALocationError.
         with (
             patch.object(
-                moonraker_state,
-                "save_tip_presence",
-                side_effect=[None, RuntimeError("moonraker connection dropped")],
+                tipbox_manager,
+                "restore",
+                side_effect=RuntimeError("corrupted tipbox record"),
             ),
             pytest.raises(NotALocationError),
         ):
@@ -281,6 +298,7 @@ class TestDomainStateSnapshotRollback:
     ) -> None:
         _set_homed(service_with_plates, True)
         location_manager = service_with_plates._autopipette.location_manager
+        assert location_manager.locations_dir is not None
         (location_manager.locations_dir / "reconfigured_tipbox.json").write_text(
             json.dumps({
                 "plates": [
@@ -316,6 +334,7 @@ class TestDomainStateSnapshotRollback:
         _set_homed(service_with_plates, True)
         location_manager = service_with_plates._autopipette.location_manager
         tipbox_manager = location_manager.tipbox_manager
+        assert location_manager.locations_dir is not None
         (location_manager.locations_dir / "new_tipbox_b.json").write_text(
             json.dumps({
                 "plates": [
@@ -356,6 +375,7 @@ class TestDomainStateSnapshotRollback:
         assert location_manager.locations["plate_a"].curr == 2  # type: ignore[union-attr]
 
         # plate_a is then reloaded with only one well.
+        assert location_manager.locations_dir is not None
         (location_manager.locations_dir / "smaller_plate_a.json").write_text(
             json.dumps({
                 "plates": [
