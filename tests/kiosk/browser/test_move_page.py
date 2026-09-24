@@ -23,6 +23,7 @@ from support.live_control_plane import LiveControlPlane
 from support.live_kiosk_server import LiveKioskServer
 
 ACTIVE = re.compile(r"\bactive\b")
+ERROR = re.compile(r"\berror\b")
 
 
 def test_move_tab_shows_not_homed_banner_by_default(
@@ -94,6 +95,25 @@ def test_step_selector_is_mutually_exclusive(
     expect(page.locator('.step-btn[data-step="10"]')).to_have_class(ACTIVE)
     expect(page.locator('.step-btn[data-step="1"]')).not_to_have_class(ACTIVE)
     expect(page.locator("#dpadStepLabel")).to_have_text("10 mm")
+
+
+def test_absolute_move_with_a_blank_field_does_not_fire_and_shows_an_error(
+    page: Page, live_kiosk_server: LiveKioskServer
+) -> None:
+    # A blank/non-numeric field must never silently become 0 -- the page
+    # fires moves immediately with no confirmation dialog, so that would be
+    # an unconfirmed jump on a live machine (see move.js's own header
+    # comment on why immediate-fire is otherwise safe here).
+    page.goto(live_kiosk_server.url)
+    page.click('.tab-btn[data-page="move"]')
+    page.fill("#moveXInput", "")
+    page.fill("#moveYInput", "10")
+    page.fill("#moveZInput", "10")
+
+    page.click("#moveAbsGoBtn")
+
+    expect(page.locator("#moveAbsFeedback")).to_have_class(ERROR)
+    expect(page.locator("#moveAbsFeedback")).to_contain_text("Enter a number")
 
 
 def test_dpad_click_when_not_homed_shows_the_real_daemon_error(

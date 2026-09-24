@@ -109,12 +109,20 @@
   // ── absolute move ───────────────────────────────────────────────────────
   document.getElementById('moveAbsGoBtn').addEventListener('click', () => {
     if (running) return;
-    const body = {
-      x: parseFloat(document.getElementById('moveXInput').value) || 0,
-      y: parseFloat(document.getElementById('moveYInput').value) || 0,
-      z: parseFloat(document.getElementById('moveZInput').value) || 0,
-    };
-    postMove('/move', body, document.getElementById('moveAbsFeedback'));
+    const feedbackEl = document.getElementById('moveAbsFeedback');
+    const x = parseFloat(document.getElementById('moveXInput').value);
+    const y = parseFloat(document.getElementById('moveYInput').value);
+    const z = parseFloat(document.getElementById('moveZInput').value);
+    // A blank or non-numeric field must never silently become 0 -- this
+    // fires an immediate, unconfirmed move on a live machine, so treating
+    // "didn't finish typing" the same as "meant 0" risks a real mis-move.
+    if (![x, y, z].every(Number.isFinite)) {
+      feedbackEl.classList.add('error');
+      feedbackEl.textContent = 'Enter a number for X, Y, and Z before moving.';
+      setTimeout(() => { feedbackEl.textContent = ''; }, 6000);
+      return;
+    }
+    postMove('/move', { x, y, z }, feedbackEl);
   });
 
   // ── named-location move ─────────────────────────────────────────────────
@@ -123,6 +131,10 @@
     try {
       const res = await fetch('/locations');
       const result = await res.json();
+      if (!res.ok || !result.ok) {
+        select.innerHTML = `<option value="">${result.message || result.detail || 'Failed to load locations'}</option>`;
+        return;
+      }
       const locations = (result.data && result.data.locations) || [];
       locationsByName = {};
       locations.forEach(loc => { locationsByName[loc.name] = loc; });
