@@ -28,6 +28,17 @@ def _goto_deck(page: Page, server: LiveKioskServer) -> None:
     page.click('.tab-btn[data-page="deck"]')
 
 
+def test_no_locations_shows_a_message_instead_of_a_silently_empty_square(
+    page: Page, live_kiosk_server: LiveKioskServer
+) -> None:
+    # An operator must be able to tell "genuinely nothing configured" (or
+    # a load failure) apart from "the page is just broken" -- both cases
+    # would otherwise render as the exact same blank square.
+    _goto_deck(page, live_kiosk_server)
+
+    expect(page.locator("#deckTiles")).to_contain_text("No locations defined")
+
+
 def test_every_registered_location_gets_a_tile(
     page: Page, live_kiosk_server_with_plates: LiveKioskServer
 ) -> None:
@@ -42,12 +53,28 @@ def test_a_tile_is_positioned_from_its_real_mm_coordinates(
     page: Page, live_kiosk_server_with_plates: LiveKioskServer
 ) -> None:
     # tipbox sits at x=10, y=10 (tests/conftest.py). toPercent's formula
-    # (deck.js): leftPct = 100 + x/400*100, topPct = y/400*100.
+    # (deck.js): leftPct = 100 - x/400*100, topPct = y/400*100.
     _goto_deck(page, live_kiosk_server_with_plates)
 
     tile = page.locator('.deck-tile[data-name="tipbox"]')
-    assert tile.evaluate("el => el.style.left") == "102.5%"
+    assert tile.evaluate("el => el.style.left") == "97.5%"
     assert tile.evaluate("el => el.style.top") == "2.5%"
+
+
+def test_a_tile_with_a_realistic_larger_x_still_renders_inside_the_deck_square(
+    page: Page, live_kiosk_server_with_plates: LiveKioskServer
+) -> None:
+    # plate_a sits at x=100, y=100 (tests/conftest.py) -- a magnitude in
+    # line with the shared repo's own config/locations/examples_deck.json
+    # (real x values up to 150). A tile must render inside the visible
+    # 40x40cm square, not off its right edge.
+    _goto_deck(page, live_kiosk_server_with_plates)
+
+    tile = page.locator('.deck-tile[data-name="plate_a"]')
+    left = float(tile.evaluate("el => el.style.left").rstrip("%"))
+    top = float(tile.evaluate("el => el.style.top").rstrip("%"))
+    assert 0 <= left <= 100
+    assert 0 <= top <= 100
 
 
 def test_tipbox_tile_embeds_an_occupancy_mini_grid_from_tips_data(

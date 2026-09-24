@@ -14,31 +14,44 @@
 (() => {
   // The physical deck is roughly centered inside a 40cm x 40cm square, with
   // the machine's coordinate origin (0,0) at the square's top-right corner
-  // (operator-provided sketch, issue #87). Per core/plates.py's
-  // PlateArray._gen_wells (x = start.x - col*spacing_col, y = start.y +
-  // row*spacing_row), X decreases and Y increases moving away from the
-  // origin -- so a location's real mm coordinates map onto the square as
-  // straight-line distance from that top-right corner.
+  // (operator-provided sketch, issue #87). X increases and Y increases
+  // moving away from that corner -- so a location's real mm coordinates
+  // map onto the square as straight-line distance from the top-right,
+  // increasing X moving left and increasing Y moving down. Confirmed
+  // against the shared repo's own config/locations/examples_deck.json
+  // (real x values 20-150, all of which must land inside 0-100%); a
+  // previous X-decreases-away guess, extrapolated from core/plates.py's
+  // PlateArray._gen_wells (which describes wells *within* one plate's own
+  // local frame, not a plate's placement relative to the deck origin),
+  // put every one of those real positions off the square's right edge.
   const SQUARE_MM = 400;
 
   // ── coordinate transform (pure) ─────────────────────────────────────────
   function toPercent(xMm, yMm) {
     return {
-      leftPct: 100 + (xMm / SQUARE_MM) * 100,
+      leftPct: 100 - (xMm / SQUARE_MM) * 100,
       topPct: (yMm / SQUARE_MM) * 100,
     };
   }
 
   // ── data loading ─────────────────────────────────────────────────────────
   async function loadDeck() {
-    const [locations, tipsByName] = await Promise.all([
+    const [locationsResult, tipsByName] = await Promise.all([
       loadLocations(),
       loadTipsByName(),
     ]);
 
     const container = document.getElementById('deckTiles');
+    if (!locationsResult.ok) {
+      // Covers both a real load failure and a genuinely empty deck (the
+      // daemon reports the latter as ok=false too, e.g. "No locations
+      // defined.") -- either way an operator needs a reason, not a blank
+      // square indistinguishable from "the page is just broken".
+      container.innerHTML = `<div class="tips-empty">${locationsResult.message}</div>`;
+      return;
+    }
     container.innerHTML = '';
-    locations
+    locationsResult.locations
       .filter(loc => loc.x != null && loc.y != null)
       .forEach(loc => container.appendChild(renderTile(loc, tipsByName[loc.name])));
   }
@@ -47,9 +60,16 @@
     try {
       const res = await fetch('/locations');
       const result = await res.json();
-      return result.ok ? result.data.locations || [] : [];
+      if (!res.ok || !result.ok) {
+        return {
+          ok: false,
+          message: result.message || result.detail || 'Failed to load locations',
+          locations: [],
+        };
+      }
+      return { ok: true, locations: result.data.locations || [] };
     } catch (e) {
-      return [];
+      return { ok: false, message: 'Failed to load locations', locations: [] };
     }
   }
 

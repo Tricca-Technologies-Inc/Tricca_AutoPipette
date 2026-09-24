@@ -391,7 +391,7 @@ async def list_tips() -> CommandResultResponse:
     `next_well`.
 
     Returns:
-        `TipsResult` with `data["boxes"]`/`data["total_remaining"]`/
+        `CommandResultResponse` with `data["boxes"]`/`data["total_remaining"]`/
         `data["total_capacity"]`.
     """
     return await _dispatch_control_request(_control_requests.tips(TipsArgs()))
