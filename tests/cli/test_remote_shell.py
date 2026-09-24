@@ -312,9 +312,7 @@ class TestBreakpointFlow:
 class TestStructuredCommands:
     """One passing and one failing round trip through a hand-written `do_*`."""
 
-    def test_wait_dispatches_through_the_handler(
-        self, shell: RemoteTapShell
-    ) -> None:
+    def test_wait_dispatches_through_the_handler(self, shell: RemoteTapShell) -> None:
         shell.onecmd_plus_hooks("wait 5")
 
         assert "Wait: 5 ms" in _output(shell)

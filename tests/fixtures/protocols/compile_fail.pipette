@@ -1,0 +1,4 @@
+# Exercises compile-time rollback (issue #35): a tip is drawn, then a bad
+# location aborts the batch before any G-code uploads.
+next_tip
+move_loc does_not_exist
