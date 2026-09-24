@@ -261,6 +261,24 @@ class TestPersistence:
         assert rebuilt.restore(saved) == ["tips_a"]
         assert rebuilt.boxes["tips_a"].remaining == 8
 
+    def test_restore_actually_makes_a_reshaped_box_full(
+        self, manager: TipBoxManager
+    ) -> None:
+        """restore()'s own docstring, and both callers' log messages, say a
+
+        dimension-mismatched box is "left full" -- that must mean actually
+        full regardless of whatever consumption state the box already had
+        going into the call, not merely untouched.
+        """
+        manager.next_tip()
+        saved = manager.snapshot()
+
+        rebuilt = TipBoxManager()
+        rebuilt.register("tips_a", _box(rows=2, cols=4))
+        rebuilt.boxes["tips_a"].take_tip()  # box already partially consumed
+        assert rebuilt.restore(saved) == ["tips_a"]
+        assert rebuilt.boxes["tips_a"].remaining == 8
+
     def test_restore_ignores_unknown_box_names(self, manager: TipBoxManager) -> None:
         """A stale database entry for a removed box is harmless."""
         assert manager.restore({"long_gone": {"num_row": 1, "num_col": 3}}) == []

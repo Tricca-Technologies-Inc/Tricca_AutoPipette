@@ -2456,12 +2456,30 @@ class AutoPipetteService:
                     "(plate reloaded mid-run); cursor left as-is.",
                     ", ".join(skipped_cursors),
                 )
+            # Plates (including tipboxes) registered after the snapshot was
+            # taken have no snapshot entry, so restore_cursors above leaves
+            # them untouched -- same gap as new_tipboxes above, but for the
+            # cursor rather than tip presence. Reset to 0 (their own fresh
+            # state), since "restored to pre-enter state" means they didn't
+            # exist yet.
+            new_plates = set(location_manager.get_plate_names()) - set(cursor_snapshot)
+            for plate_name in new_plates:
+                location = location_manager.locations[plate_name]
+                if isinstance(location, Plate):
+                    location.reset()
 
             tip_state, has_liquid, active_liquid = pipette_state_snapshot
             state.tip_state = tip_state
             state.has_liquid = has_liquid
             if active_liquid != autopipette.active_liquid:
                 autopipette.switch_liquid(active_liquid)
+            # Discard any G-code comment (e.g. from the switch_liquid call
+            # just above, or from a prior line in the now-aborted batch,
+            # such as its own switch_liquid) that accumulated in the domain
+            # object's buffer but was never drained via output_gcode --
+            # nothing here physically happened, so none of it may ride
+            # along with a future run's uploaded G-code.
+            autopipette.get_gcode()
             # Nothing was ever written to Moonraker's DB during the batch
             # (persist_tip_presence/persist_tip_liquid_state defer while
             # is_batch_mode is true), so there's nothing to undo there.

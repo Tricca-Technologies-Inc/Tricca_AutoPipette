@@ -406,6 +406,54 @@ class TestDomainStateSnapshotRollback:
         assert location_manager.locations["plate_a"].curr == 0  # type: ignore[union-attr]
         assert "cursor" in caplog.text.lower()
 
+    def test_plate_registered_mid_run_gets_cursor_reset_not_left_advanced(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        _set_homed(service_with_plates, True)
+        location_manager = service_with_plates._autopipette.location_manager
+        assert location_manager.locations_dir is not None
+        (location_manager.locations_dir / "new_plate_b.json").write_text(
+            json.dumps({
+                "plates": [
+                    {
+                        "name": "plate_b",
+                        "type": "array",
+                        "x": 250.0,
+                        "y": 20.0,
+                        "z": 5.0,
+                        "num_row": 1,
+                        "num_col": 4,
+                        "dip_top": 5.0,
+                    }
+                ]
+            }),
+            encoding="utf-8",
+        )
+
+        with pytest.raises(NotALocationError):
+            service_with_plates._run_protocol_sync("rollback_new_plate.pipette")
+
+        # plate_b did not exist when the pre-run snapshot was taken, so
+        # rolling back to "exactly its pre-enter snapshot" means its cursor
+        # must be reset to 0, not left advanced by the aborted run's moves.
+        assert location_manager.locations["plate_b"].curr == 0  # type: ignore[union-attr]
+
+    def test_rollback_does_not_leak_gcode_into_the_next_run(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        # switch_liquid buffers a G-code comment ahead of whatever command
+        # comes next in the same run. On a compile-time failure nothing
+        # physically happened, so neither that comment nor the rollback's
+        # own restoring switch_liquid call may survive to prefix a later,
+        # unrelated run's uploaded G-code.
+        _set_homed(service_with_plates, True)
+        autopipette = service_with_plates._autopipette
+
+        with pytest.raises(NotALocationError):
+            service_with_plates._run_protocol_sync("switch_liquid_then_fail.pipette")
+
+        assert autopipette.get_gcode() == []
+
 
 class TestStartRunAndRunProtocol:
     def test_full_async_flow_reports_error_status_for_unhomed_run(

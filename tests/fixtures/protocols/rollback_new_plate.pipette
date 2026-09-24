@@ -1,0 +1,7 @@
+# Regression fixture: loads a second plate mid-run (so it postdates the
+# compile-time-rollback snapshot), advances its cursor, then a bad
+# location aborts the batch.
+load_locations new_plate_b.json
+move_loc plate_b
+move_loc plate_b
+move_loc does_not_exist

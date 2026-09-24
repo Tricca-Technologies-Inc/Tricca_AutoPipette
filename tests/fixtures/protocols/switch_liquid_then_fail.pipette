@@ -1,0 +1,5 @@
+# Regression fixture: switch_liquid buffers a G-code comment ahead of
+# whatever command comes next, then a bad location aborts the batch before
+# any later command drains that comment.
+switch_liquid methanol
+move_loc does_not_exist
