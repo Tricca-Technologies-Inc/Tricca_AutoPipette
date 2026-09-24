@@ -1,0 +1,4 @@
+# Regression fixture (issue #36 review): del_loc must be rolled back on a
+# compile-time failure, same as any other deck-state mutation.
+del_loc waste
+move_loc does_not_exist

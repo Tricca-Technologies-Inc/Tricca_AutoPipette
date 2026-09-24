@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, cast
 
@@ -41,6 +42,31 @@ from tricca_autopipette.core.well import StrategyType, Well
 logger = logging.getLogger(__name__)
 
 CONFIG_LOCATIONS = DefaultFilenames.CONFIG_LOCATIONS
+
+
+@dataclass
+class LocationMembershipSnapshot:
+    """Which locations/tipboxes are registered, for full deck-membership rollback.
+
+    Companion to `snapshot_cursors`/`TipBoxManager.snapshot`, which capture
+    *internal* per-object state (cursor position, tip presence) but assume
+    the same objects are still registered under the same names --
+    `del_loc`/`clear_locs`/`load_locations`/`unload_locations` change *which*
+    objects exist at all, which neither of those covers. Used by
+    `daemon/service.py`'s `domain_state_snapshot` so a compile-time failure
+    or dry-run validation can undo membership changes too, not just mutate
+    the objects that happen to still be there afterward.
+
+    Shallow copies only: the same `Coordinate`/`Plate`/`TipBox` objects are
+    kept, not cloned, so restoring membership plus the existing per-object
+    cursor/presence restore compose correctly (an object present both before
+    and after a run has its own internal state independently reset).
+    """
+
+    locations: dict[str, Coordinate | Plate]
+    waste_container: WasteContainer | None
+    sources: dict[str, str]
+    tipboxes: dict[str, TipBox]
 
 
 class LocationManager:
@@ -359,6 +385,61 @@ class LocationManager:
                 continue
             location.curr = curr
         return skipped
+
+    def snapshot_membership(self) -> LocationMembershipSnapshot:
+        """Capture exactly which locations/tipboxes are registered.
+
+        Companion to `snapshot_cursors`/`TipBoxManager.snapshot` -- see
+        `LocationMembershipSnapshot`'s docstring for why membership needs
+        its own snapshot separate from per-object internal state.
+
+        Returns:
+            A snapshot suitable for `restore_membership`.
+
+        Example:
+            >>> manager = LocationManager()
+            >>> manager.set_coordinate("bench", Coordinate(x=1, y=1, z=1))
+            >>> snapshot = manager.snapshot_membership()
+            >>> manager.remove_location("bench")
+            >>> manager.restore_membership(snapshot)
+            >>> manager.has_location("bench")
+            True
+        """
+        return LocationMembershipSnapshot(
+            locations=dict(self.locations),
+            waste_container=self.waste_container,
+            sources=dict(self._sources),
+            tipboxes=dict(self.tipbox_manager.boxes),
+        )
+
+    def restore_membership(self, snapshot: LocationMembershipSnapshot) -> None:
+        """Reapply a `snapshot_membership` snapshot, undoing any add/remove.
+
+        Restores the exact set of registered locations/tipboxes and which
+        objects they map to -- a location added after the snapshot is
+        dropped, one removed is brought back (as the same object, so its own
+        internal state -- e.g. tip presence -- reflects whatever it held at
+        snapshot time, not a freshly-reset default). Callers that also want
+        an object's *internal* state restored (cursor, tip presence) should
+        call `restore_cursors`/`TipBoxManager.restore` afterward -- this only
+        fixes which objects exist, not their contents.
+
+        Args:
+            snapshot: A snapshot previously produced by `snapshot_membership`.
+
+        Example:
+            >>> manager = LocationManager()
+            >>> manager.set_coordinate("bench", Coordinate(x=1, y=1, z=1))
+            >>> snapshot = manager.snapshot_membership()
+            >>> manager.set_coordinate("extra", Coordinate(x=2, y=2, z=2))
+            >>> manager.restore_membership(snapshot)
+            >>> manager.has_location("extra")
+            False
+        """
+        self.locations = dict(snapshot.locations)
+        self.waste_container = snapshot.waste_container
+        self._sources = dict(snapshot.sources)
+        self.tipbox_manager.boxes = dict(snapshot.tipboxes)
 
     def get_coordinate_names(self) -> list[str]:
         """Get names of all locations that are simple coordinates.

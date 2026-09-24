@@ -2441,12 +2441,20 @@ class AutoPipetteService:
     ) -> Generator[None]:
         """Snapshot deck/pipette state, restoring it depending on the outcome.
 
-        Captures three things a protocol replay can advance: every
-        registered tipbox's consumed-position map
+        Captures four things a protocol replay can advance: which
+        locations/tipboxes are registered at all
+        (:meth:`LocationManager.snapshot_membership` -- undoes
+        ``del_loc``/``clear_locs``/``load_locations``/``unload_locations``),
+        every registered tipbox's consumed-position map
         (:meth:`TipBoxManager.snapshot`), every plate's traversal cursor
         (:meth:`LocationManager.snapshot_cursors`), and the pipette's
         tip/liquid state (``AutoPipette.state.tip_state``/``has_liquid`` plus
-        ``active_liquid``).
+        ``active_liquid``). Membership is restored first, before the other
+        three: doing so brings back the exact original objects, so the
+        per-object presence/cursor restores that follow always find a
+        shape-matched target -- a location reconfigured under the same name
+        mid-run is therefore fully restored, not merely detected and left as
+        the (wrong) replacement.
 
         Issue #35's compile-time-rollback use (the default, ``restore=
         "on_error"``) treats the two outcomes asymmetrically: a body that
@@ -2482,6 +2490,7 @@ class AutoPipetteService:
         location_manager = autopipette.location_manager
         tipbox_manager = location_manager.tipbox_manager
 
+        membership_snapshot = location_manager.snapshot_membership()
         tip_presence_snapshot = tipbox_manager.snapshot()
         cursor_snapshot = location_manager.snapshot_cursors()
         state = autopipette.state
@@ -2492,40 +2501,14 @@ class AutoPipetteService:
         )
 
         def _restore() -> None:
-            skipped_tipboxes = tipbox_manager.restore(tip_presence_snapshot)
-            # Boxes registered after the snapshot was taken (e.g. loaded
-            # mid-run) have no snapshot entry at all, so `restore` above
-            # leaves them untouched -- reset them to pristine instead, since
-            # "restored to pre-enter state" means they didn't exist yet.
-            new_tipboxes = set(tipbox_manager.boxes) - set(tip_presence_snapshot)
-            for box_name in new_tipboxes:
-                tipbox_manager.reset_tips(box_name)
-            if skipped_tipboxes:
-                logger.warning(
-                    "Rollback could not restore tipbox(es) %s (reconfigured "
-                    "mid-run); left full. Run 'tips' to check, 'set_tips' to "
-                    "correct.",
-                    ", ".join(skipped_tipboxes),
-                )
-
-            skipped_cursors = location_manager.restore_cursors(cursor_snapshot)
-            if skipped_cursors:
-                logger.warning(
-                    "Rollback could not restore traversal cursor(s) for %s "
-                    "(plate reloaded mid-run); cursor left as-is.",
-                    ", ".join(skipped_cursors),
-                )
-            # Plates (including tipboxes) registered after the snapshot was
-            # taken have no snapshot entry, so restore_cursors above leaves
-            # them untouched -- same gap as new_tipboxes above, but for the
-            # cursor rather than tip presence. Reset to 0 (their own fresh
-            # state), since "restored to pre-enter state" means they didn't
-            # exist yet.
-            new_plates = set(location_manager.get_plate_names()) - set(cursor_snapshot)
-            for plate_name in new_plates:
-                location = location_manager.locations[plate_name]
-                if isinstance(location, Plate):
-                    location.reset()
+            # Restoring membership first means every name in
+            # tip_presence_snapshot/cursor_snapshot maps back onto the exact
+            # object it was captured from -- shape mismatches from a
+            # same-name reconfiguration mid-run can no longer happen, and
+            # neither can a mid-run registration surviving rollback.
+            location_manager.restore_membership(membership_snapshot)
+            tipbox_manager.restore(tip_presence_snapshot)
+            location_manager.restore_cursors(cursor_snapshot)
 
             tip_state, has_liquid, active_liquid = pipette_state_snapshot
             state.tip_state = tip_state
@@ -2570,6 +2553,36 @@ class AutoPipetteService:
             else:
                 _flush()
 
+    def _read_protocol_lines(self, filename: str) -> list[str]:
+        """Resolve and read a protocol file's raw lines.
+
+        Shared by :meth:`_run_protocol_sync` and :meth:`validate_protocol`
+        so file-loading behavior (path resolution, encoding-error handling)
+        can't silently diverge between a real run and a dry-run validation
+        of the same file.
+
+        Args:
+            filename: Bare filename under ``protocols/``.
+
+        Returns:
+            The file's lines, split on newlines -- not yet stripped or
+            filtered for blanks/comments, since the two callers do that
+            differently (one discards blanks/comments up front, the other
+            needs each line's original 1-indexed position for findings).
+
+        Raises:
+            FileNotFoundError: If the file doesn't exist in the shared or
+                local protocols directory.
+            ValueError: If the file can't be decoded as UTF-8.
+        """  # ruff: ignore[docstring-extraneous-exception]
+        proto_path = LocalConfigRoots.resolve("protocols", filename)
+        try:
+            return proto_path.read_text(encoding="utf-8").splitlines()
+        except UnicodeDecodeError as exc:
+            raise ValueError(
+                f"Error reading protocol file (encoding issue): {exc}"
+            ) from exc
+
     def _run_protocol_sync(self, filename: str) -> None:
         """Synchronous half of :meth:`_run_protocol`; runs in a worker thread.
 
@@ -2602,13 +2615,7 @@ class AutoPipetteService:
                 exception raised by the upload itself is a runtime failure
                 and is not rolled back.
         """  # ruff: ignore[docstring-extraneous-exception]
-        proto_path = LocalConfigRoots.resolve("protocols", filename)
-        try:
-            lines = proto_path.read_text(encoding="utf-8").splitlines()
-        except UnicodeDecodeError as exc:
-            raise ValueError(
-                f"Error reading protocol file (encoding issue): {exc}"
-            ) from exc
+        lines = self._read_protocol_lines(filename)
 
         commands = [
             line.strip()
@@ -2824,17 +2831,25 @@ class AutoPipetteService:
             FileNotFoundError: If the protocol file does not exist.
             ValueError: If the file can't be decoded as UTF-8.
         """  # ruff: ignore[docstring-extraneous-exception]
-        proto_path = LocalConfigRoots.resolve("protocols", filename)
-        try:
-            lines = proto_path.read_text(encoding="utf-8").splitlines()
-        except UnicodeDecodeError as exc:
-            raise ValueError(
-                f"Error reading protocol file (encoding issue): {exc}"
-            ) from exc
+        lines = self._read_protocol_lines(filename)
 
         findings: list[dict[str, Any]] = []
         gcode_manager = self.gcode_manager
         token = _dry_run.set(True)
+        # Captured once for the whole file, not per line: attaching/
+        # detaching a handler on every line means every one of them touches
+        # logging's process-wide lock for no behavioral benefit.
+        # setLevel(WARNING) is load-bearing, not just belt-and-suspenders --
+        # a logger with no explicit level of its own inherits the *root*
+        # logger's configured level (e.g. `tapd --log-level ERROR`), and
+        # Python's logging gates on that *before* any handler ever sees the
+        # record -- attaching a handler alone wouldn't be enough to still
+        # capture WARNINGs under a quieter root configuration.
+        autopipette_logger = logging.getLogger(AutoPipette.__module__)
+        warning_capture = _LineWarningCapture()
+        original_level = autopipette_logger.level
+        autopipette_logger.setLevel(logging.WARNING)
+        autopipette_logger.addHandler(warning_capture)
         try:
             with (
                 self.domain_state_snapshot(restore="always"),
@@ -2845,9 +2860,11 @@ class AutoPipetteService:
                     if not line or line.startswith("#"):
                         continue
                     self._dispatch_protocol_line_for_validation(
-                        line, line_number, findings
+                        line, line_number, findings, warning_capture
                     )
         finally:
+            autopipette_logger.removeHandler(warning_capture)
+            autopipette_logger.setLevel(original_level)
             _dry_run.reset(token)
             gcode_manager.clear_buffer()
 
@@ -2856,16 +2873,21 @@ class AutoPipetteService:
             message = "No issues found."
         else:
             warning_count = sum(1 for f in findings if f["severity"] == "warning")
+            info_count = sum(1 for f in findings if f["severity"] == "info")
             message = (
                 f"{len(findings)} finding(s): {error_count} error(s), "
-                f"{warning_count} warning(s)."
+                f"{warning_count} warning(s), {info_count} info."
             )
         return CommandResult(
             ok=error_count == 0, message=message, data={"findings": findings}
         )
 
     def _dispatch_protocol_line_for_validation(
-        self, line: str, line_number: int, findings: list[dict[str, Any]]
+        self,
+        line: str,
+        line_number: int,
+        findings: list[dict[str, Any]],
+        warning_capture: _LineWarningCapture,
     ) -> None:
         """Dispatch one line during :meth:`validate_protocol`'s dry run.
 
@@ -2883,7 +2905,9 @@ class AutoPipetteService:
         recorded as a "warning" finding too, the same translation this
         method already does for a raised exception ("error") or a soft
         ``CommandResult(ok=False)`` ("warning") -- no new per-check logic,
-        just one more source translated into the same finding shape.
+        just one more source translated into the same finding shape. Drained
+        regardless of whether the line also raised, so a warning logged
+        immediately before a failure in the same call isn't lost.
 
         Args:
             line: One non-blank, non-comment protocol-file line.
@@ -2891,6 +2915,9 @@ class AutoPipetteService:
                 for the finding's ``line_number`` field.
             findings: The running list of findings for this validation pass;
                 appended to in place.
+            warning_capture: The whole-file handler :meth:`validate_protocol`
+                attached; drained here so a captured message is attributed
+                to the line that caused it.
         """
         try:
             tokens = self._tokenize_protocol_line(line)
@@ -2922,19 +2949,20 @@ class AutoPipetteService:
             )
             return
 
-        warning_capture = _LineWarningCapture()
-        autopipette_logger = logging.getLogger(_AUTOPIPETTE_LOGGER_NAME)
-        autopipette_logger.addHandler(warning_capture)
+        error_message: str | None = None
+        result: CommandResult | None = None
         try:
             result = self._dispatch_protocol_line(line)
         except Exception as exc:
-            findings.append(_finding(line_number, command_name, "error", str(exc)))
-            return
-        finally:
-            autopipette_logger.removeHandler(warning_capture)
+            error_message = str(exc)
 
-        for message in warning_capture.messages:
+        for message in warning_capture.drain():
             findings.append(_finding(line_number, command_name, "warning", message))
+
+        if error_message is not None:
+            findings.append(_finding(line_number, command_name, "error", error_message))
+            return
+        assert result is not None
         if not result.ok:
             findings.append(
                 _finding(line_number, command_name, "warning", result.message)
@@ -3192,28 +3220,23 @@ class AutoPipetteService:
         )
 
 
-#: Logger name whose WARNING+ records validate_protocol's dry run captures
-#: as findings (e.g. AutoPipette.fit_air_volumes shrinking an air gap).
-#: Scoped narrowly to the domain layer -- not the root logger -- so it
-#: doesn't also double-count this module's own "Unknown command" warning,
-#: which _dispatch_protocol_line_for_validation already turns into a
-#: finding via its CommandResult(ok=False) instead.
-_AUTOPIPETTE_LOGGER_NAME = "tricca_autopipette.core.autopipette"
-
-
 class _LineWarningCapture(logging.Handler):
     """Collects WARNING+ log messages emitted while dispatching one line.
 
-    Attached to :data:`_AUTOPIPETTE_LOGGER_NAME`'s logger only for the
-    duration of a single line's dispatch inside
-    ``_dispatch_protocol_line_for_validation``, then removed -- so messages
-    are attributed to the exact line that caused them.
+    Attached to ``AutoPipette.__module__``'s logger (scoped narrowly to the
+    domain layer, not the root logger, so it doesn't also double-count this
+    module's own "Unknown command" warning, which
+    ``_dispatch_protocol_line_for_validation`` already turns into a finding
+    via its ``CommandResult(ok=False)`` instead) for the whole
+    :meth:`AutoPipetteService.validate_protocol` call, then drained once per
+    line via :meth:`drain` so messages are still attributed to the exact
+    line that caused them.
     """
 
     def __init__(self) -> None:
         """Initialize with an empty capture buffer."""
         super().__init__(level=logging.WARNING)
-        self.messages: list[str] = []
+        self._messages: list[str] = []
 
     def emit(self, record: logging.LogRecord) -> None:
         """Record one log message's rendered text.
@@ -3221,7 +3244,17 @@ class _LineWarningCapture(logging.Handler):
         Args:
             record: The captured log record.
         """
-        self.messages.append(record.getMessage())
+        self._messages.append(record.getMessage())
+
+    def drain(self) -> list[str]:
+        """Return and clear the messages captured since the last drain.
+
+        Returns:
+            The messages captured since construction or the last call to
+            this method, in order.
+        """
+        messages, self._messages = self._messages, []
+        return messages
 
 
 def _finding(

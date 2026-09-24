@@ -13,6 +13,7 @@ each finding shape.
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Any
 from unittest.mock import patch
@@ -21,7 +22,9 @@ import pytest
 from fakes.fake_moonraker_state import FakeMoonrakerState
 from fakes.fake_websocket_client import FakeWebSocketClient
 
+from tricca_autopipette.core.autopipette import AutoPipette
 from tricca_autopipette.core.pipette_constants import DefaultPaths
+from tricca_autopipette.core.pipette_exceptions import NotALocationError
 from tricca_autopipette.daemon.service import AutoPipetteService, CommandResult
 
 FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures" / "protocols"
@@ -154,6 +157,65 @@ class TestWarningLogCapture:
         # an error.
         assert result.ok is True
 
+    def test_warning_finding_survives_a_high_root_log_level(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        # `tapd --log-level ERROR` sets the root logger's level; the
+        # autopipette module logger has no explicit level of its own and
+        # would otherwise inherit that, silently suppressing every
+        # WARNING-derived finding.
+        root_logger = logging.getLogger()
+        original_level = root_logger.level
+        root_logger.setLevel(logging.ERROR)
+        try:
+            result = service_with_plates.validate_protocol(
+                "validate_shrunk_air_gap.pipette"
+            )
+        finally:
+            root_logger.setLevel(original_level)
+
+        warning_findings = [f for f in _findings(result) if f["severity"] == "warning"]
+        assert len(warning_findings) == 1
+
+    def test_a_warning_logged_before_a_raised_exception_is_still_recorded(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        # A line that both logs a domain-layer WARNING and then raises
+        # (e.g. fit_air_volumes shrinking an air gap immediately before
+        # some other failure in the same call) must not lose the warning
+        # just because the line also errored.
+        autopipette_logger = logging.getLogger(AutoPipette.__module__)
+
+        def _warn_then_raise(line: str) -> CommandResult:
+            autopipette_logger.warning("a shrunk air gap")
+            raise NotALocationError("boom")
+
+        with patch.object(
+            service_with_plates,
+            "_dispatch_protocol_line",
+            side_effect=_warn_then_raise,
+        ):
+            result = service_with_plates.validate_protocol("normal.pipette")
+
+        findings = _findings(result)
+        assert any(
+            f["severity"] == "warning" and "a shrunk air gap" in f["message"]
+            for f in findings
+        )
+        assert any(f["severity"] == "error" for f in findings)
+
+
+class TestFindingsSummaryMessage:
+    def test_summary_message_names_info_findings_too(
+        self, service: AutoPipetteService
+    ) -> None:
+        result = service.validate_protocol("validate_break_and_save.pipette")
+
+        findings = _findings(result)
+        info_count = sum(1 for f in findings if f["severity"] == "info")
+        assert info_count >= 1
+        assert f"{info_count} info" in result.message
+
 
 class TestIsolation:
     def test_never_writes_or_uploads_gcode(self, service: AutoPipetteService) -> None:
@@ -213,3 +275,20 @@ class TestIsolation:
         service_with_plates.validate_protocol("compile_fail.pipette")
 
         assert tipbox_manager.snapshot() == pre_tip_snapshot
+
+    def test_del_loc_does_not_permanently_remove_the_location(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        # domain_state_snapshot's rollback previously only restored tip
+        # presence, cursors, and tip/liquid state -- not which locations
+        # are registered at all, so del_loc/clear_locs/load_locations/
+        # unload_locations permanently mutated the live deck even during a
+        # dry run. del_loc itself succeeds (no exception), so this isn't
+        # caught as a finding -- the isolation guarantee must hold anyway.
+        location_manager = service_with_plates._autopipette.location_manager
+        assert location_manager.has_location("waste")
+
+        result = service_with_plates.validate_protocol("validate_del_loc.pipette")
+
+        assert result.ok is True
+        assert location_manager.has_location("waste")

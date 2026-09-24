@@ -1047,3 +1047,90 @@ class TestCursorSnapshotRestore:
         manager.remove_location("plate_a")
 
         manager.restore_cursors(snapshot)  # must not raise
+
+
+# ==================== Membership snapshot/restore (issue #36) ====================
+
+
+class TestMembershipSnapshotRestore:
+    """`domain_state_snapshot` (daemon/service.py) needs to fully undo which
+
+    locations/tipboxes exist, not just their internal cursor/presence state --
+    otherwise a `del_loc`/`clear_locs`/`load_locations`/`unload_locations`
+    line permanently mutates the live deck even during a dry-run validation
+    pass, which is supposed to leave nothing standing.
+    """
+
+    def test_restore_brings_back_a_removed_location(
+        self, manager: LocationManager, locations_dir: Path
+    ) -> None:
+        _write(locations_dir, "t.json", {"plates": [_array_entry("plate_a")]})
+        manager.load_from_json("t.json")
+        snapshot = manager.snapshot_membership()
+
+        manager.remove_location("plate_a")
+        assert not manager.has_location("plate_a")
+
+        manager.restore_membership(snapshot)
+
+        assert manager.has_location("plate_a")
+
+    def test_restore_removes_a_location_added_after_the_snapshot(
+        self, manager: LocationManager
+    ) -> None:
+        snapshot = manager.snapshot_membership()
+
+        manager.set_coordinate("new_spot", Coordinate(x=1, y=1, z=1))
+
+        manager.restore_membership(snapshot)
+
+        assert not manager.has_location("new_spot")
+
+    def test_restore_re_registers_an_unloaded_tipbox_as_the_same_object(
+        self, manager: LocationManager, locations_dir: Path
+    ) -> None:
+        _write(locations_dir, "t.json", {"plates": [_tipbox_entry("tips")]})
+        manager.load_from_json("t.json")
+        manager.tipbox_manager.next_tip()  # consume one of its 3 positions
+        snapshot = manager.snapshot_membership()
+
+        manager.unload("tips")
+        assert manager.tipbox_manager.names() == []
+
+        manager.restore_membership(snapshot)
+
+        # Identity, not just re-creation -- the earlier consumption (from
+        # before the snapshot was even taken) is still reflected, proving
+        # this is the original box object, not a fresh replacement.
+        assert manager.tipbox_manager.names() == ["tips"]
+        assert manager.tipbox_manager.remaining == 2
+
+    def test_restore_brings_back_the_waste_container_reference(
+        self, manager: LocationManager, locations_dir: Path
+    ) -> None:
+        _write(
+            locations_dir,
+            "t.json",
+            {
+                "plates": [
+                    {
+                        "name": "bin",
+                        "type": "waste_container",
+                        "x": 10.0,
+                        "y": 10.0,
+                        "z": 5.0,
+                        "num_row": 1,
+                        "num_col": 1,
+                    }
+                ]
+            },
+        )
+        manager.load_from_json("t.json")
+        snapshot = manager.snapshot_membership()
+
+        manager.remove_location("bin")
+        assert manager.waste_container is None
+
+        manager.restore_membership(snapshot)
+
+        assert manager.waste_container is manager.locations["bin"]
