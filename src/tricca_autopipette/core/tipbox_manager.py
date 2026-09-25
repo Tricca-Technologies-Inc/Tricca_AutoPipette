@@ -187,11 +187,16 @@ class TipBoxManager:
         """
         return sum(box.capacity for box in self.boxes.values())
 
-    def next_tip(self) -> tuple[str, TipBox, Coordinate]:
+    def next_tip(self, name: str | None = None) -> tuple[str, TipBox, Coordinate]:
         """Consume the next tip from the first box that still has one.
 
         Boxes are tried in registration order, so a box is fully drained before
-        the next is touched.
+        the next is touched -- unless a specific box is requested by name, in
+        which case only that box is drawn from.
+
+        Args:
+            name: If given, draw only from this box instead of trying every
+                registered box in order.
 
         Returns:
             Tuple of the supplying box's name, the box itself, and the
@@ -200,7 +205,9 @@ class TipBoxManager:
 
         Raises:
             NoTipboxError: If no tipbox is registered at all.
-            OutOfTipsError: If every registered box is exhausted.
+            NotALocationError: If `name` is given but no box is registered
+                under that name.
+            OutOfTipsError: If every tried box is exhausted.
 
         Example:
             ``name, box, coor = manager.next_tip()`` returns the supplying
@@ -210,12 +217,22 @@ class TipBoxManager:
         if not self.boxes:
             raise NoTipboxError()
 
-        for name, box in self.boxes.items():
+        if name is not None:
+            box = self.boxes.get(name)
+            if box is None:
+                raise NotALocationError(name)
+            try:
+                _index, coor = box.take_tip()
+            except PlateExhaustedError:
+                raise OutOfTipsError([name]) from None
+            return name, box, coor
+
+        for box_name, box in self.boxes.items():
             try:
                 _index, coor = box.take_tip()
             except PlateExhaustedError:
                 continue
-            return name, box, coor
+            return box_name, box, coor
 
         raise OutOfTipsError(list(self.boxes))
 

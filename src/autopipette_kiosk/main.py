@@ -19,7 +19,6 @@ See systemd/README.md before exposing it.
 import asyncio
 import logging
 import os
-import re
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -40,7 +39,11 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
 )
 from tricca_autopipette.core.pipette_constants import DefaultPaths
 from tricca_autopipette.daemon.control_requests import ControlRequests
-from tricca_autopipette.moonraker.websocket_client import WebSocketClient
+from tricca_autopipette.moonraker.websocket_client import (
+    JsonRpcError,
+    WebSocketClient,
+    as_dict,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -182,8 +185,6 @@ _current_breakpoint: dict[str, Any] | None = None
 # own `MoonrakerStateTracker.start()`).
 _current_toolhead: dict[str, Any] = {"position": None, "homed_axes": None}
 _ws_clients: set[WebSocket] = set()
-
-_ERROR_TYPE_RE = re.compile(r"'type':\s*'([^']+)'")
 
 
 @asynccontextmanager
@@ -336,12 +337,13 @@ async def run_protocol(req: RunRequest) -> RunStatus:
         response = await asyncio.to_thread(
             _control_client.send_jsonrpc, _control_requests.run_start(req.filename)
         )
-    except RuntimeError as exc:
-        error_type = _extract_error_type(exc)
-        if error_type == "RunAlreadyActiveError":
+    except JsonRpcError as exc:
+        if exc.error_type == "RunAlreadyActiveError":
             raise HTTPException(status_code=409, detail=str(exc)) from exc
-        if error_type == "FileNotFoundError":
+        if exc.error_type == "FileNotFoundError":
             raise HTTPException(status_code=404, detail=str(exc)) from exc
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    except RuntimeError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
     result: dict[str, Any] = response.get("result", {})
@@ -387,7 +389,7 @@ async def home_pipette() -> RunStatus:
     return RunStatus(status="done", message=message)
 
 
-def _translate_move_error(exc: RuntimeError) -> HTTPException:
+def _translate_move_error(exc: JsonRpcError) -> HTTPException:
     """Map a `movement.*` control-plane error to an HTTP status.
 
     Unlike `/tips*`'s ok/false-forwarding, `movement.move`/`move_loc`/
@@ -396,7 +398,7 @@ def _translate_move_error(exc: RuntimeError) -> HTTPException:
     translates -- see that route's own docstring for the general pattern.
 
     Args:
-        exc: The RuntimeError raised by `send_jsonrpc`.
+        exc: The `JsonRpcError` raised by `send_jsonrpc`.
 
     Returns:
         An `HTTPException` with a status matching the daemon's error type:
@@ -404,12 +406,11 @@ def _translate_move_error(exc: RuntimeError) -> HTTPException:
         homing, not a client mistake), 404 for `NotALocationError`, 400 for
         a bad `ValueError` (e.g. only one of row/col given), 500 otherwise.
     """
-    error_type = _extract_error_type(exc)
-    if error_type == "NotHomedError":
+    if exc.error_type == "NotHomedError":
         return HTTPException(status_code=409, detail=str(exc))
-    if error_type == "NotALocationError":
+    if exc.error_type == "NotALocationError":
         return HTTPException(status_code=404, detail=str(exc))
-    if error_type == "ValueError":
+    if exc.error_type == "ValueError":
         return HTTPException(status_code=400, detail=str(exc))
     return HTTPException(status_code=500, detail=str(exc))
 
@@ -433,8 +434,10 @@ async def move(req: MoveRequest) -> MoveResult:
             _control_client.send_jsonrpc,
             _control_requests.move(MoveArgs(x=req.x, y=req.y, z=req.z)),
         )
-    except RuntimeError as exc:
+    except JsonRpcError as exc:
         raise _translate_move_error(exc) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
     result: dict[str, Any] = response.get("result", {})
     return MoveResult(message=str(result.get("message", "")))
@@ -463,8 +466,10 @@ async def move_loc(req: MoveLocRequest) -> MoveResult:
                 MoveLocArgs(name_loc=req.name_loc, row=req.row, col=req.col)
             ),
         )
-    except RuntimeError as exc:
+    except JsonRpcError as exc:
         raise _translate_move_error(exc) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
     result: dict[str, Any] = response.get("result", {})
     return MoveResult(message=str(result.get("message", "")))
@@ -494,8 +499,10 @@ async def move_rel(req: MoveRelRequest) -> MoveResult:
             _control_client.send_jsonrpc,
             _control_requests.move_rel(MoveRelArgs(x=req.x, y=req.y, z=req.z)),
         )
-    except RuntimeError as exc:
+    except JsonRpcError as exc:
         raise _translate_move_error(exc) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
     result: dict[str, Any] = response.get("result", {})
     return MoveResult(message=str(result.get("message", "")))
@@ -652,26 +659,6 @@ async def status_ws(websocket: WebSocket) -> None:
 
 
 # ── internal ───────────────────────────────────────────────────────────────────
-def _extract_error_type(exc: RuntimeError) -> str | None:
-    """Recover the daemon's error type name from a control-plane RuntimeError.
-
-    `WebSocketClient.send_jsonrpc` raises `RuntimeError(f"Server error:
-    {data['error']}")` on any control-plane error response, folding the
-    structured `{"type": ..., "message": ...}` error payload into a string.
-    This picks the type name back out so callers can map it to an HTTP
-    status code without matching on message text.
-
-    Args:
-        exc: The RuntimeError raised by `send_jsonrpc`.
-
-    Returns:
-        The error's type name (e.g. "RunAlreadyActiveError"), or None if it
-        could not be recovered.
-    """
-    match = _ERROR_TYPE_RE.search(str(exc))
-    return match.group(1) if match else None
-
-
 def _on_run_status_notification(params: Any) -> None:  # ruff:ignore[any-type]
     """Handle a `notify_run_status` push from the tapd control daemon.
 
@@ -686,7 +673,7 @@ def _on_run_status_notification(params: Any) -> None:  # ruff:ignore[any-type]
     global _current_run, _current_breakpoint
     if not isinstance(params, dict):
         return
-    notification = cast("dict[str, Any]", params)
+    notification = as_dict(params)
     _current_run = RunStatus(
         status=notification.get("status", "idle"),
         message=notification.get("message", ""),
@@ -715,7 +702,7 @@ def _on_breakpoint_notification(params: Any) -> None:  # ruff:ignore[any-type]
     global _current_breakpoint
     if not isinstance(params, dict):
         return
-    notification = cast("dict[str, Any]", params)
+    notification = as_dict(params)
     _current_breakpoint = notification if notification.get("pending") else None
     if _main_loop is not None:
         asyncio.run_coroutine_threadsafe(_broadcast_status(), _main_loop)

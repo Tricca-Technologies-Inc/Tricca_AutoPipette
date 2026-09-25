@@ -554,18 +554,6 @@ class AutoPipette:
             f"{GCodeCommand.LINEAR_MOVE} Z{coordinate.z} F{speed_z}\n"
         )
 
-    def move_to_x(self, coordinate: Coordinate) -> None:
-        """Move only in X direction."""
-        speed = self.gantry.speed_xy
-        self.logger.debug("G-code move: X=%s (speed=%s)", coordinate.x, speed)
-        self.gcode_buffers.add(f"{GCodeCommand.LINEAR_MOVE} X{coordinate.x} F{speed}\n")
-
-    def move_to_y(self, coordinate: Coordinate) -> None:
-        """Move only in Y direction."""
-        speed = self.gantry.speed_xy
-        self.logger.debug("G-code move: Y=%s (speed=%s)", coordinate.y, speed)
-        self.gcode_buffers.add(f"{GCodeCommand.LINEAR_MOVE} Y{coordinate.y} F{speed}\n")
-
     def move_to_z(self, coordinate: Coordinate) -> None:
         """Move only in Z direction."""
         speed = self.gantry.speed_z
@@ -652,16 +640,22 @@ class AutoPipette:
         """
         return self.gcode_buffers.get_header()
 
-    def next_tip(self) -> None:
+    def next_tip(self, tipbox_name: str | None = None) -> None:
         """Pick up the next available tip from the configured tipboxes.
 
         Boxes are drawn from in the order they appear in the locations config,
         each in its own traversal order, and a consumed position is never
-        offered again.
+        offered again -- unless `tipbox_name` requests a specific box.
+
+        Args:
+            tipbox_name: If given, draw only from this box instead of the
+                registration-order default.
 
         Raises:
             NoTipboxError: If no tipbox has been configured.
-            OutOfTipsError: If every configured tipbox is exhausted. Reload the
+            NotALocationError: If `tipbox_name` is given but no box is
+                configured under that name.
+            OutOfTipsError: If every tried tipbox is exhausted. Reload the
                 boxes and run ``reset_tips`` rather than reusing a tip.
             TipAlreadyOnError: If a tip is already attached.
         """  # ruff: ignore[docstring-extraneous-exception]
@@ -670,7 +664,9 @@ class AutoPipette:
 
         # The supplying box comes back with the coordinate: boxes may sit at
         # different heights, so the dip distance must come from *that* box.
-        name, box, loc_tip = self.location_manager.tipbox_manager.next_tip()
+        name, box, loc_tip = self.location_manager.tipbox_manager.next_tip(
+            name=tipbox_name
+        )
         self.note_action(
             f"Picking up tip from '{name}' at (X:{loc_tip.x:.2f}, Y:{loc_tip.y:.2f})"
         )
@@ -1247,8 +1243,7 @@ class AutoPipette:
 
         # Pick up tip if needed
         if self.state.tip_state == TipState.DETACHED:
-            _ = tipbox_name
-            self.next_tip()  # TODO: Pass in preferred tipbox
+            self.next_tip(tipbox_name=tipbox_name)
 
         # Calculate transfer chunks based on max pipette capacity. The air
         # gaps ride along inside the same syringe, so they come out of the
@@ -1464,8 +1459,7 @@ class AutoPipette:
         )
 
         if self.state.tip_state == TipState.DETACHED:
-            _ = tipbox_name
-            self.next_tip()  # TODO: Pass in preferred tipbox
+            self.next_tip(tipbox_name=tipbox_name)
 
         destinations = ", ".join(f"{s.dest}:{s.vol_ul:g}μL" for s in splits)
         self.note_action(

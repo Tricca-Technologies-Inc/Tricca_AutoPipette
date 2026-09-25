@@ -24,12 +24,17 @@ from collections.abc import Callable
 from typing import Any, cast
 
 from tricca_autopipette.moonraker.moonraker_requests import MoonrakerRequests
-from tricca_autopipette.moonraker.websocket_client import WebSocketClient
+from tricca_autopipette.moonraker.websocket_client import WebSocketClient, as_dict
 
 logger = logging.getLogger(__name__)
 
 #: server.database namespace used to persist tip/liquid state.
 DB_NAMESPACE = "tricca_autopipette"
+
+#: Single key tip/liquid state is stored under, as one combined dict --
+#: one DB round trip instead of one per field (matching DB_KEY_TIP_PRESENCE's
+#: shape below). The three field names inside that dict.
+DB_KEY_TIP_LIQUID_STATE = "tip_liquid_state"
 DB_KEY_TIP_STATE = "tip_state"
 DB_KEY_HAS_LIQUID = "has_liquid"
 DB_KEY_CURRENT_LIQUID = "current_liquid"
@@ -41,21 +46,6 @@ DB_KEY_TIP_PRESENCE = "tip_presence"
 
 #: Axes that must all be reported homed by Klipper for the interlock to pass.
 REQUIRED_HOMED_AXES = frozenset({"x", "y", "z"})
-
-
-def _as_dict(value: Any) -> dict[str, Any]:  # ruff:ignore[any-type]
-    """Narrow a loosely-typed JSON value to a dict, defaulting to empty.
-
-    Args:
-        value: Value to narrow, typically from a JSON-RPC response or
-            notification payload of otherwise unknown shape.
-
-    Returns:
-        ``value`` if it is a dict, otherwise an empty dict.
-    """
-    if isinstance(value, dict):
-        return cast("dict[str, Any]", value)
-    return {}
 
 
 class MoonrakerStateTracker:
@@ -89,8 +79,8 @@ class MoonrakerStateTracker:
         self.client.register_handler("notify_status_update", self._on_status_update)
         request = self.mrr.request_sub_to_objs(["toolhead", "print_stats"])
         response = self.client.send_jsonrpc(request)
-        result = _as_dict(response.get("result"))
-        status = _as_dict(result.get("status"))
+        result = as_dict(response.get("result"))
+        status = as_dict(result.get("status"))
         self._apply_status(status)
 
     def is_homed(self) -> bool:
@@ -128,7 +118,7 @@ class MoonrakerStateTracker:
         if not params:
             return
         candidate = cast("list[Any]", params)[0] if isinstance(params, list) else params
-        status = _as_dict(candidate)
+        status = as_dict(candidate)
         if status:
             self._apply_status(status)
 
@@ -140,7 +130,7 @@ class MoonrakerStateTracker:
                 returned by both ``printer.objects.subscribe``'s initial
                 response and subsequent ``notify_status_update`` pushes.
         """
-        toolhead = _as_dict(status.get("toolhead"))
+        toolhead = as_dict(status.get("toolhead"))
         homed_axes = toolhead.get("homed_axes")
         if isinstance(homed_axes, str):
             self._homed_axes = frozenset(homed_axes)
@@ -149,7 +139,7 @@ class MoonrakerStateTracker:
                 str(axis) for axis in cast("list[Any]", homed_axes)
             )
 
-        print_stats = _as_dict(status.get("print_stats"))
+        print_stats = as_dict(status.get("print_stats"))
         new_state = print_stats.get("state")
         if isinstance(new_state, str) and new_state != self._print_state:
             self._print_state = new_state
@@ -164,18 +154,22 @@ class MoonrakerStateTracker:
         Returns:
             Mapping of the keys that had a stored value (``tip_state``,
             ``has_liquid``, ``current_liquid``) to their stored value.
-            Keys with no prior stored value (e.g. first run) are omitted.
+            Keys with no prior stored value (e.g. first run, or a value
+            persisted before this combined-key format) are omitted.
         """
-        result: dict[str, Any] = {}
-        for key in (DB_KEY_TIP_STATE, DB_KEY_HAS_LIQUID, DB_KEY_CURRENT_LIQUID):
-            try:
-                response = self.client.send_jsonrpc(
-                    self.mrr.server_database_get_item(DB_NAMESPACE, key)
-                )
-                result[key] = response["result"]["value"]
-            except Exception:
-                logger.info("No persisted value for '%s' (first run?)", key)
-        return result
+        try:
+            response = self.client.send_jsonrpc(
+                self.mrr.server_database_get_item(DB_NAMESPACE, DB_KEY_TIP_LIQUID_STATE)
+            )
+            value = response["result"]["value"]
+        except Exception:
+            logger.info("No persisted tip/liquid state (first run?)")
+            return {}
+
+        if not isinstance(value, dict):
+            logger.warning("Persisted tip/liquid state is not a mapping; ignoring")
+            return {}
+        return cast("dict[str, Any]", value)
 
     def save_tip_liquid_state(
         self,
@@ -185,20 +179,26 @@ class MoonrakerStateTracker:
     ) -> None:
         """Persist tip/liquid state to Moonraker's database.
 
+        One combined write rather than one per field -- matching
+        ``save_tip_presence``'s shape below.
+
         Args:
             tip_state: ``TipState`` value (as a string) to store.
             has_liquid: Whether liquid is currently in the tip.
             current_liquid: Name of the currently active liquid profile, or
                 None.
         """
-        for key, value in (
-            (DB_KEY_TIP_STATE, tip_state),
-            (DB_KEY_HAS_LIQUID, has_liquid),
-            (DB_KEY_CURRENT_LIQUID, current_liquid),
-        ):
-            self.client.send_jsonrpc(
-                self.mrr.server_database_post_item(DB_NAMESPACE, key, value)
+        self.client.send_jsonrpc(
+            self.mrr.server_database_post_item(
+                DB_NAMESPACE,
+                DB_KEY_TIP_LIQUID_STATE,
+                {
+                    DB_KEY_TIP_STATE: tip_state,
+                    DB_KEY_HAS_LIQUID: has_liquid,
+                    DB_KEY_CURRENT_LIQUID: current_liquid,
+                },
             )
+        )
 
     def load_tip_presence(self) -> dict[str, Any]:
         """Read persisted per-tipbox consumed-position maps.

@@ -720,6 +720,58 @@ class TestPlateFileReference:
         assert entry["dip_btm"] == 11.0  # ruff:ignore[float-equality-comparison]
         assert entry["well_diameter"] == 6.86  # ruff:ignore[float-equality-comparison]
 
+    def test_two_entries_sharing_a_plate_file_read_it_once(
+        self,
+        manager: LocationManager,
+        locations_dir: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Redundant disk reads/JSON parses of one shared template are wasted."""
+        _write(
+            locations_dir,
+            "t.json",
+            {
+                "plates": [
+                    {
+                        "name": "assay_a",
+                        "plate_file": "96_well_standard.json",
+                        "x": 100.0,
+                        "y": 20.0,
+                        "z": 5.0,
+                    },
+                    {
+                        "name": "assay_b",
+                        "plate_file": "96_well_standard.json",
+                        "x": 200.0,
+                        "y": 20.0,
+                        "z": 5.0,
+                    },
+                ]
+            },
+        )
+        calls = 0
+        original = LocationManager._load_plate_definition
+
+        def _counting_load(self: LocationManager, plate_file: Path) -> dict[str, Any]:
+            nonlocal calls
+            calls += 1
+            return original(self, plate_file)
+
+        monkeypatch.setattr(LocationManager, "_load_plate_definition", _counting_load)
+
+        manager.load_from_json("t.json")
+
+        assert calls == 1
+        # Each entry's own placement overrides survive -- the cached template
+        # dict must not have been mutated in place by the first entry's
+        # override before the second entry copied it.
+        plate_a = manager.locations["assay_a"]
+        plate_b = manager.locations["assay_b"]
+        assert isinstance(plate_a, Plate)
+        assert isinstance(plate_b, Plate)
+        assert plate_a.wells[0].coor.x == 100.0  # ruff:ignore[float-equality-comparison]
+        assert plate_b.wells[0].coor.x == 200.0  # ruff:ignore[float-equality-comparison]
+
 
 class TestPlateFileErrors:
     def test_missing_plate_file_raises(

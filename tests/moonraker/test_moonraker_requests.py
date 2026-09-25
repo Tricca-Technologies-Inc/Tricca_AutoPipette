@@ -782,7 +782,7 @@ def test_builder_call_table_matches_moonraker_requests_exactly() -> None:
         name
         for name in dir(MoonrakerRequests)
         if not name.startswith("_")
-        and name not in ("JSON_RPC_VERSION", "METHODS", "SUBSCRIBABLE", "gen_request")
+        and name not in ("JSON_RPC_VERSION", "SUBSCRIBABLE", "gen_request")
     }
     covered = {row[0] for row in _BUILDER_CALLS}
 
@@ -931,10 +931,7 @@ class TestDeviceGroupHelpers:
 
 
 class TestMethodRegistries:
-    """`METHODS`/`SUBSCRIBABLE` are plain data, but shouldn't silently rot."""
-
-    def test_methods_list_has_no_duplicates(self) -> None:
-        assert len(MoonrakerRequests.METHODS) == len(set(MoonrakerRequests.METHODS))
+    """`SUBSCRIBABLE` is plain data, but shouldn't silently rot."""
 
     def test_subscribable_list_has_no_duplicates(self) -> None:
         assert len(MoonrakerRequests.SUBSCRIBABLE) == len(

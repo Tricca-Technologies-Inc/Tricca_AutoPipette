@@ -16,7 +16,54 @@ import uuid
 from typing import Any, ClassVar
 
 
-class MoonrakerRequests:
+class JsonRpcRequestBuilder:
+    """Base envelope builder shared by every JSON-RPC request builder here.
+
+    Both `MoonrakerRequests` (talking to Moonraker itself) and
+    `daemon.control_requests.ControlRequests` (talking to `tapd`'s
+    control plane) build the identical JSON-RPC 2.0 envelope -- the
+    control-plane protocol is deliberately isomorphic to Moonraker's own, so
+    the envelope-building code is shared rather than copy-pasted.
+    """
+
+    # Protocol version
+    JSON_RPC_VERSION: str = "2.0"
+
+    def gen_request(
+        self, method: str, params: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Generate a JSON-RPC 2.0 request.
+
+        Args:
+            method: The API method to call.
+            params: Optional parameters dictionary for the method.
+
+        Returns:
+            Dictionary representing the JSON-RPC request with jsonrpc, method,
+            id, and optionally params fields.
+
+        Example:
+            >>> mrr = MoonrakerRequests()
+            >>> request = mrr.gen_request("printer.info")
+            >>> # {'jsonrpc': '2.0', 'method': 'printer.info', 'id': '...'}
+
+            >>> request = mrr.gen_request(
+            ...     "printer.print.start", {"filename": "test.gcode"}
+            ... )
+            >>> # {'jsonrpc': '2.0', 'method': 'printer.print.start', 'id': '...',
+            >>> #  'params': {'filename': 'test.gcode'}}
+        """
+        request: dict[str, Any] = {
+            "jsonrpc": self.JSON_RPC_VERSION,
+            "method": method,
+            "id": str(uuid.uuid4()),
+        }
+        if params is not None:
+            request["params"] = params
+        return request
+
+
+class MoonrakerRequests(JsonRpcRequestBuilder):
     """JSON-RPC request builder for Moonraker API.
 
     Provides type-safe methods for constructing JSON-RPC 2.0 requests for all
@@ -25,7 +72,6 @@ class MoonrakerRequests:
 
     Attributes:
         JSON_RPC_VERSION: JSON-RPC protocol version (always "2.0").
-        METHODS: List of all available Moonraker API methods.
         SUBSCRIBABLE: List of printer objects that support subscriptions.
 
     Example:
@@ -40,143 +86,6 @@ class MoonrakerRequests:
         >>> # Execute G-code
         >>> gcode_request = mrr.printer_gcode_script("G28")
     """
-
-    # Protocol version
-    JSON_RPC_VERSION: str = "2.0"
-
-    # All available Moonraker API methods
-    METHODS: ClassVar[list[str]] = [
-        # Server Administration
-        "server.info",
-        "server.config",
-        "server.temperature_store",
-        "server.gcode_store",
-        "server.logs.rollover",
-        "server.restart",
-        "server.connection.identify",
-        "server.websocket.id",
-        # Printer Administration
-        "printer.info",
-        "printer.emergency_stop",
-        "printer.restart",
-        # Printer Status
-        "printer.objects.list",
-        "printer.objects.query",
-        "printer.objects.subscribe",
-        "printer.query_endstops.status",
-        # GCode API
-        "printer.gcode.script",
-        "printer.gcode.help",
-        # Print Management
-        "printer.print.start",
-        "printer.print.pause",
-        "printer.print.resume",
-        "printer.print.cancel",
-        # Machine Requests
-        "machine.system_info",
-        "machine.shutdown",
-        "machine.reboot",
-        "machine.services.restart",
-        "machine.services.stop",
-        "machine.services.start",
-        "machine.proc_stats",
-        "machine.sudo.info",
-        "machine.sudo.password",
-        "machine.peripherals.usb",
-        "machine.peripherals.serial",
-        "machine.peripherals.video",
-        "machine.peripherals.canbus",
-        # File Operations
-        "server.files.list",
-        "server.files.roots",
-        "server.files.metadata",
-        "server.files.metascan",
-        "server.files.thumbnails",
-        "server.files.get_directory",
-        "server.files.post_directory",
-        "server.files.delete_directory",
-        "server.files.move",
-        "server.files.copy",
-        "server.files.zip",
-        "server.files.delete_file",
-        # Authorization
-        "access.login",
-        "access.logout",
-        "access.get_user",
-        "access.post_user",
-        "access.delete_user",
-        "access.users.list",
-        "access.user.password",
-        "access.refresh_jwt",
-        "access.oneshot_token",
-        "access.info",
-        "access.get_api_key",
-        "access.post_api_key",
-        # History APIs
-        "server.history.list",
-        "server.history.totals",
-        "server.history.reset_totals",
-        "server.history.get_job",
-        "server.history.delete_job",
-        # Database APIs
-        "server.database.list",
-        "server.database.get_item",
-        "server.database.post_item",
-        "server.database.delete_item",
-        "server.database.compact",
-        "server.database.post_backup",
-        "server.database.delete_backup",
-        "server.database.restore",
-        # Job Queue APIs
-        "server.job_queue.status",
-        "server.job_queue.post_job",
-        "server.job_queue.delete_job",
-        "server.job_queue.pause",
-        "server.job_queue.start",
-        "server.job_queue.jump",
-        # Announcement APIs
-        "server.announcements.list",
-        "server.announcements.update",
-        "server.announcements.dismiss",
-        "server.announcements.feeds",
-        "server.announcements.post_feed",
-        "server.announcements.delete_feed",
-        # Webcam APIs
-        "server.webcams.list",
-        "server.webcams.get_item",
-        "server.webcams.post_item",
-        "server.webcams.delete_item",
-        "server.webcams.test",
-        # Notifier APIs
-        "server.notifiers.list",
-        # Update Manager APIs
-        "machine.update.status",
-        "machine.update.refresh",
-        "machine.update.full",
-        "machine.update.moonraker",
-        "machine.update.klipper",
-        "machine.update.client",
-        "machine.update.system",
-        "machine.update.recover",
-        "machine.update.rollback",
-        # Power APIs
-        "machine.device_power.devices",
-        "machine.device_power.get_device",
-        "machine.device_power.post_device",
-        "machine.device_power.status",
-        "machine.device_power.on",
-        "machine.device_power.off",
-        # WLED APIs
-        "machine.wled.strips",
-        "machine.wled.status",
-        "machine.wled.on",
-        "machine.wled.off",
-        "machine.wled.toggle",
-        # Sensor APIs
-        "server.sensors.list",
-        "server.sensors.info",
-        "server.sensors.measurements",
-    ]
 
     # Printer objects available for subscription
     SUBSCRIBABLE: ClassVar[list[str]] = [
@@ -227,39 +136,6 @@ class MoonrakerRequests:
         "z_thermal_adjust",
         "z_tilt",
     ]
-
-    def gen_request(
-        self, method: str, params: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
-        """Generate a JSON-RPC 2.0 request.
-
-        Args:
-            method: The Moonraker API method to call.
-            params: Optional parameters dictionary for the method.
-
-        Returns:
-            Dictionary representing the JSON-RPC request with jsonrpc, method,
-            id, and optionally params fields.
-
-        Example:
-            >>> mrr = MoonrakerRequests()
-            >>> request = mrr.gen_request("printer.info")
-            >>> # {'jsonrpc': '2.0', 'method': 'printer.info', 'id': '...'}
-
-            >>> request = mrr.gen_request(
-            ...     "printer.print.start", {"filename": "test.gcode"}
-            ... )
-            >>> # {'jsonrpc': '2.0', 'method': 'printer.print.start', 'id': '...',
-            >>> #  'params': {'filename': 'test.gcode'}}
-        """
-        request: dict[str, Any] = {
-            "jsonrpc": self.JSON_RPC_VERSION,
-            "method": method,
-            "id": str(uuid.uuid4()),
-        }
-        if params is not None:
-            request["params"] = params
-        return request
 
     def request_sub_to_objs(self, objs: list[str]) -> dict[str, Any]:
         """Create subscription request for printer objects.

@@ -30,7 +30,11 @@ import pytest
 import websockets
 from websockets.exceptions import ConnectionClosed
 
-from tricca_autopipette.moonraker.websocket_client import MessageType, WebSocketClient
+from tricca_autopipette.moonraker.websocket_client import (
+    JsonRpcError,
+    MessageType,
+    WebSocketClient,
+)
 
 Handler = Callable[[websockets.WebSocketServerProtocol], Awaitable[None]]
 ServerFactory = Callable[[Handler], str]
@@ -202,6 +206,49 @@ class TestConcurrentRequests:
             assert set(results) == set(range(20))
             for n, response in results.items():
                 assert response["result"]["echo"] == {"n": n}
+        finally:
+            client.stop()
+
+
+class TestErrorResponse:
+    """An `"error"` JSON-RPC response must surface as a `JsonRpcError`.
+
+    Regression coverage for a bug where `send_jsonrpc`'s own broad
+    `except Exception` re-wrapped the structured `JsonRpcError` (raised from
+    `_process_message`) into a plain `RuntimeError`, erasing `error_type` --
+    the kiosk's `/run` endpoint depends on that surviving intact to map a
+    `RunAlreadyActiveError`/`FileNotFoundError` to the right HTTP status.
+    """
+
+    def test_error_response_raises_json_rpc_error_with_type_preserved(
+        self, real_server: ServerFactory
+    ) -> None:
+        async def handler(websocket: websockets.WebSocketServerProtocol) -> None:
+            async for raw in websocket:
+                data = json.loads(raw)
+                await websocket.send(
+                    json.dumps({
+                        "jsonrpc": "2.0",
+                        "id": data["id"],
+                        "error": {
+                            "type": "RunAlreadyActiveError",
+                            "message": "A protocol is already running: a.pipette",
+                        },
+                    })
+                )
+
+        url = real_server(handler)
+        client = WebSocketClient(url)
+        client.start()
+        try:
+            assert client.wait_for_connection(timeout=5)
+
+            with pytest.raises(JsonRpcError) as excinfo:
+                client.send_jsonrpc(
+                    {"jsonrpc": "2.0", "method": "run.start", "id": "1"}, timeout=5.0
+                )
+
+            assert excinfo.value.error_type == "RunAlreadyActiveError"
         finally:
             client.stop()
 
