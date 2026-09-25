@@ -44,7 +44,7 @@
     const nameEl = document.getElementById('selectionName');
     nameEl.textContent = name;
     nameEl.classList.remove('placeholder');
-    document.getElementById('runBtn').disabled = App.getStatus().status === 'running';
+    document.getElementById('runBtn').disabled = App.isRunActive(App.getStatus().status);
   };
 
   // ── run ────────────────────────────────────────────────────────────────
@@ -83,9 +83,9 @@
     state.textContent = label;
     msg.textContent   = data.message || '';
 
-    icon.classList.toggle('spinning', s === 'running');
-    bar.classList.toggle('active', s === 'running');
-    btn.disabled = s === 'running' || !selected;
+    icon.classList.toggle('spinning', App.isRunActive(s));
+    bar.classList.toggle('active', App.isRunActive(s));
+    btn.disabled = App.isRunActive(s) || !selected;
   }
 
   App.onStatus(renderStatusCard);

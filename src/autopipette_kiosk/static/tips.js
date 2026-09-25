@@ -161,7 +161,7 @@
   }
 
   App.onStatus(data => {
-    running = data.status === 'running';
+    running = App.isRunActive(data.status);
     applyRunningState();
   });
 
