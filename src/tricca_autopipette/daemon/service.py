@@ -29,10 +29,12 @@ import shlex
 import threading
 import time
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Generator
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from cmd2 import Cmd2ArgumentParser
 
@@ -98,6 +100,17 @@ WEBSOCKET_TIMEOUT_SECONDS = 10
 #: connection (as opposed to `output_gcode`'s own "no client at all" case,
 #: which degrades gracefully instead -- see its docstring).
 _NOT_CONNECTED_MSG = "WebSocket not connected. Cannot communicate with pipette."
+
+#: Set for the duration of AutoPipetteService.validate_protocol's dry-run
+#: replay (issue #36). Checked directly by require_homed/
+#: persist_tip_liquid_state/persist_tip_presence so all three no-op the same
+#: way -- one mechanism, not three -- letting validation run on an unhomed
+#: machine and never durably persist anything. A ContextVar rather than a
+#: plain instance attribute per the issue's own decision: it's set and reset
+#: within validate_protocol's own synchronous call stack (the same stack
+#: every gated method it calls runs on), which is exactly what a ContextVar
+#: is for -- see validate_protocol's docstring.
+_dry_run: ContextVar[bool] = ContextVar("dry_run", default=False)
 
 
 class RunAlreadyActiveError(Exception):
@@ -166,6 +179,11 @@ def require_homed(
     consistent behavior across every gated method beats optimizing the
     homed check away for a no-op input.
 
+    Short-circuited entirely (never even reads ``moonraker_state``) while
+    :data:`_dry_run` is set -- issue #36's ``validate_protocol`` needs gated
+    commands to run during a dry-run replay of an unhomed machine, since
+    checking a file at the bench or in CI was the whole point.
+
     Args:
         command_name: Name to include in the raised ``NotHomedError``'s
             message (e.g. "move", or "pipette" for ``transfer``).
@@ -183,14 +201,36 @@ def require_homed(
             *args: Any,  # ruff:ignore[any-type]
             **kwargs: Any,  # ruff:ignore[any-type]
         ) -> CommandResult:
-            homed = self.moonraker_state is not None and self.moonraker_state.is_homed()
-            if not homed:
-                raise NotHomedError(command_name)
+            if not _dry_run.get():
+                homed = (
+                    self.moonraker_state is not None and self.moonraker_state.is_homed()
+                )
+                if not homed:
+                    raise NotHomedError(command_name)
             return func(self, *args, **kwargs)
 
         return wrapper
 
     return decorator
+
+
+def _pipette_state_triple(autopipette: AutoPipette) -> tuple[str, bool, str]:
+    """Build the tip/liquid triple persisted to Moonraker's DB.
+
+    One function so :func:`persist_tip_liquid_state`,
+    :meth:`AutoPipetteService._apply_persisted_state`, and
+    :meth:`AutoPipetteService.domain_state_snapshot`'s rollback can't
+    independently drift out of sync on the tuple's shape -- they previously
+    each built it inline.
+
+    Args:
+        autopipette: The domain object to read state off of.
+
+    Returns:
+        ``(tip_state.value, has_liquid, active_liquid)``.
+    """
+    state = autopipette.state
+    return (state.tip_state.value, state.has_liquid, autopipette.active_liquid)
 
 
 def persist_tip_liquid_state(
@@ -215,6 +255,20 @@ def persist_tip_liquid_state(
     (a tip is or isn't attached) doesn't roll back just because a later
     step failed.
 
+    While :attr:`AutoPipetteService.gcode_manager`'s ``is_batch_mode`` is
+    true (i.e. inside :meth:`AutoPipetteService.domain_state_snapshot`'s
+    protocol-file dispatch loop), the write is deferred entirely rather
+    than fired per line: nothing physical has happened yet at that point
+    (no G-code has uploaded), so persisting mid-batch would just have to be
+    undone again by a compile-time rollback. ``domain_state_snapshot``
+    itself flushes once the outcome is known instead -- see its docstring.
+
+    Also skipped entirely while :data:`_dry_run` is set (issue #36) --
+    ``validate_protocol`` already wraps its replay in batch mode, so this is
+    belt-and-suspenders with that deferral, but checking the same flag
+    ``require_homed`` checks keeps all three decorators' dry-run behavior
+    driven by one mechanism rather than two.
+
     Args:
         func: The ``AutoPipetteService`` method to wrap.
 
@@ -231,17 +285,8 @@ def persist_tip_liquid_state(
             # (same module, applied only to its methods), so reaching into the
             # service's privates here is deliberate rather than an outside
             # caller breaking encapsulation.
-            if self.moonraker_state is not None:
-                autopipette = self._autopipette  # pyright: ignore[reportPrivateUsage]
-                state = autopipette.state
-                snapshot = (
-                    state.tip_state.value,
-                    state.has_liquid,
-                    autopipette.active_liquid,
-                )
-                if snapshot != self._last_persisted_state:  # pyright: ignore[reportPrivateUsage]
-                    self._last_persisted_state = snapshot  # pyright: ignore[reportPrivateUsage]
-                    self.moonraker_state.save_tip_liquid_state(*snapshot)
+            if not _dry_run.get() and not self.gcode_manager.is_batch_mode:
+                self._flush_tip_liquid_state()  # pyright: ignore[reportPrivateUsage]
 
     return wrapper
 
@@ -261,6 +306,10 @@ def persist_tip_presence(
     Runs in a ``finally`` block: a transfer that picks up a tip and then fails
     has still physically consumed that tip, and the record must reflect it.
 
+    Deferred during batch mode the same way as :func:`persist_tip_liquid_state`
+    -- see that decorator's docstring. Also skipped while :data:`_dry_run` is
+    set, for the same reason.
+
     Args:
         func: The ``AutoPipetteService`` method to wrap.
 
@@ -275,12 +324,8 @@ def persist_tip_presence(
         finally:
             # Same rationale as persist_tip_liquid_state: this decorator is
             # part of AutoPipetteService's own implementation.
-            if self.moonraker_state is not None:
-                manager = self._autopipette.location_manager.tipbox_manager  # pyright: ignore[reportPrivateUsage]
-                snapshot = manager.snapshot()
-                if snapshot != self._persisted_tip_presence:  # pyright: ignore[reportPrivateUsage]
-                    self._persisted_tip_presence = snapshot  # pyright: ignore[reportPrivateUsage]
-                    self.moonraker_state.save_tip_presence(snapshot)
+            if not _dry_run.get() and not self.gcode_manager.is_batch_mode:
+                self._flush_tip_presence()  # pyright: ignore[reportPrivateUsage]
 
     return wrapper
 
@@ -377,6 +422,10 @@ class AutoPipetteService:
         self._breakpoint_proceed = False
         self._background_tasks: set[asyncio.Task[None]] = set()
         self._raw_subscriptions: set[str] = set()
+        # method -> whatever handler (if any) was already registered on
+        # `self.client` before subscribe_raw chained onto it -- restored by
+        # unsubscribe_raw. See subscribe_raw's docstring.
+        self._raw_subscription_priors: dict[str, Callable[[Any], None] | None] = {}
 
     @staticmethod
     def _load_locations(
@@ -510,11 +559,7 @@ class AutoPipetteService:
         current_liquid = values.get("current_liquid")
         if current_liquid and current_liquid in self._autopipette.system_config.liquids:
             self._autopipette.switch_liquid(current_liquid)
-        self._last_persisted_state = (
-            state.tip_state.value,
-            state.has_liquid,
-            self._autopipette.active_liquid,
-        )
+        self._last_persisted_state = _pipette_state_triple(self._autopipette)
 
     def _apply_persisted_tip_presence(self, values: dict[str, Any]) -> None:
         """Rehydrate per-tipbox consumed positions from a prior run.
@@ -547,6 +592,37 @@ class AutoPipetteService:
             )
 
         self._persisted_tip_presence = manager.snapshot()
+
+    def _flush_tip_liquid_state(self) -> None:
+        """Write tip/liquid state to Moonraker's DB if it changed.
+
+        The single source of truth for this write, shared by
+        :func:`persist_tip_liquid_state`'s immediate (non-batch) path and
+        :meth:`domain_state_snapshot`'s post-batch flush -- both compare
+        against the same :attr:`_last_persisted_state` tracker, so whichever
+        one actually persists the current value is the one that "wins,"
+        and the other's dedup check then correctly sees nothing changed.
+        """
+        if self.moonraker_state is None:
+            return
+        snapshot = _pipette_state_triple(self._autopipette)
+        if snapshot != self._last_persisted_state:
+            self._last_persisted_state = snapshot
+            self.moonraker_state.save_tip_liquid_state(*snapshot)
+
+    def _flush_tip_presence(self) -> None:
+        """Write per-tipbox consumed positions to Moonraker's DB if changed.
+
+        The sibling of :meth:`_flush_tip_liquid_state`, for
+        :func:`persist_tip_presence`/:meth:`domain_state_snapshot` in the
+        same way.
+        """
+        if self.moonraker_state is None:
+            return
+        snapshot = self._autopipette.location_manager.tipbox_manager.snapshot()
+        if snapshot != self._persisted_tip_presence:
+            self._persisted_tip_presence = snapshot
+            self.moonraker_state.save_tip_presence(snapshot)
 
     def _run_startup_script(self) -> None:
         """Replay ``core/.init_pipette`` once, mirroring interactive startup.
@@ -1968,6 +2044,16 @@ class AutoPipetteService:
         Matching notifications are re-broadcast to every connected
         control-plane client as ``notify_raw_event``.
 
+        ``WebSocketClient.register_handler`` holds only one callback per
+        method, and ``moonraker_state.py``'s ``MoonrakerStateTracker``
+        already owns ``"notify_status_update"`` to drive the homed-axes
+        interlock for the daemon's whole uptime -- so this chains onto
+        whatever handler (if any) was already registered for ``method``
+        instead of replacing it, calling both on every notification. A
+        naive replace would silently and permanently stop that tracking
+        the moment any control-plane client subscribed raw to the same
+        method (e.g. the kiosk's Move page, issue #86).
+
         Args:
             method: Notification method name to subscribe to.
 
@@ -1981,9 +2067,18 @@ class AutoPipetteService:
             raise RuntimeError("WebSocket client not initialized.")
         if method not in self._raw_subscriptions:
             self._raw_subscriptions.add(method)
-            self.client.register_handler(
-                method, lambda params: self._forward_raw_notification(method, params)
-            )
+            prior_handler = self.client.handlers.get(method)
+            self._raw_subscription_priors[method] = prior_handler
+
+            def _relay(
+                params: Any,  # ruff:ignore[any-type]
+                _prior: Callable[[Any], None] | None = prior_handler,
+            ) -> None:
+                if _prior is not None:
+                    _prior(params)
+                self._forward_raw_notification(method, params)
+
+            self.client.register_handler(method, _relay)
         return CommandResult(ok=True, message=f"Subscribed to '{method}'.")
 
     def _forward_raw_notification(self, method: str, params: Any) -> None:  # ruff:ignore[any-type]
@@ -2001,6 +2096,11 @@ class AutoPipetteService:
     def unsubscribe_raw(self, method: str) -> CommandResult:
         """Unsubscribe from a raw Moonraker notification method.
 
+        Restores whatever handler ``subscribe_raw`` found already registered
+        for ``method`` (e.g. ``MoonrakerStateTracker``'s own
+        ``"notify_status_update"`` handler), rather than unregistering
+        unconditionally -- see ``subscribe_raw``'s docstring.
+
         Args:
             method: Notification method name to unsubscribe from.
 
@@ -2013,7 +2113,11 @@ class AutoPipetteService:
         if self.client is None:
             raise RuntimeError("WebSocket client not initialized.")
         if method in self._raw_subscriptions:
-            self.client.unregister_handler(method)
+            prior_handler = self._raw_subscription_priors.pop(method, None)
+            if prior_handler is not None:
+                self.client.register_handler(method, prior_handler)
+            else:
+                self.client.unregister_handler(method)
             self._raw_subscriptions.discard(method)
             return CommandResult(ok=True, message=f"Unsubscribed from '{method}'.")
         return CommandResult(
@@ -2331,6 +2435,154 @@ class AutoPipetteService:
                 )
                 self._broadcast_status()
 
+    @contextmanager
+    def domain_state_snapshot(
+        self, *, restore: Literal["on_error", "always"] = "on_error"
+    ) -> Generator[None]:
+        """Snapshot deck/pipette state, restoring it depending on the outcome.
+
+        Captures four things a protocol replay can advance: which
+        locations/tipboxes are registered at all
+        (:meth:`LocationManager.snapshot_membership` -- undoes
+        ``del_loc``/``clear_locs``/``load_locations``/``unload_locations``),
+        every registered tipbox's consumed-position map
+        (:meth:`TipBoxManager.snapshot`), every plate's traversal cursor
+        (:meth:`LocationManager.snapshot_cursors`), and the pipette's
+        tip/liquid state (``AutoPipette.state.tip_state``/``has_liquid`` plus
+        ``active_liquid``). Membership is restored first, before the other
+        three: doing so brings back the exact original objects, so the
+        per-object presence/cursor restores that follow always find a
+        shape-matched target -- a location reconfigured under the same name
+        mid-run is therefore fully restored, not merely detected and left as
+        the (wrong) replacement.
+
+        Issue #35's compile-time-rollback use (the default, ``restore=
+        "on_error"``) treats the two outcomes asymmetrically: a body that
+        raises is restored to exactly the pre-enter snapshot, while a body
+        that completes normally is left as-is -- a *runtime* failure (after
+        G-code has already uploaded and started executing physically) is
+        deliberately not caught by this context manager at all, since by
+        then the caller (:meth:`_run_protocol_sync`) is already past the
+        ``with`` block. Issue #36's dry-run use passes ``restore="always"``,
+        since every dry-run outcome -- success or failure -- means nothing
+        should be left standing.
+
+        The ``persist_tip_presence``/``persist_tip_liquid_state`` decorators
+        defer their own Moonraker ``server.database`` writes while
+        :attr:`gcode_manager`'s ``is_batch_mode`` is true (i.e. for the whole
+        body this context manager wraps), so nothing is durably written
+        until the outcome here is known: a body that raises is restored
+        purely in-memory, with nothing in the database to undo, while a body
+        that completes normally (``restore="on_error"``) triggers exactly
+        one flush of the final, advanced state. ``restore="always"`` never
+        flushes, matching its "nothing should be left standing" semantics.
+
+        Args:
+            restore: ``"on_error"`` (default) restores only if the wrapped
+                body raises, discarding the snapshot on normal completion.
+                ``"always"`` restores unconditionally on exit, regardless of
+                outcome.
+
+        Yields:
+            Nothing; used purely for its enter/exit side effects.
+        """
+        autopipette = self._autopipette
+        location_manager = autopipette.location_manager
+        tipbox_manager = location_manager.tipbox_manager
+
+        membership_snapshot = location_manager.snapshot_membership()
+        tip_presence_snapshot = tipbox_manager.snapshot()
+        cursor_snapshot = location_manager.snapshot_cursors()
+        state = autopipette.state
+        pipette_state_snapshot = (
+            state.tip_state,
+            state.has_liquid,
+            autopipette.active_liquid,
+        )
+
+        def _restore() -> None:
+            # Restoring membership first means every name in
+            # tip_presence_snapshot/cursor_snapshot maps back onto the exact
+            # object it was captured from -- shape mismatches from a
+            # same-name reconfiguration mid-run can no longer happen, and
+            # neither can a mid-run registration surviving rollback.
+            location_manager.restore_membership(membership_snapshot)
+            tipbox_manager.restore(tip_presence_snapshot)
+            location_manager.restore_cursors(cursor_snapshot)
+
+            tip_state, has_liquid, active_liquid = pipette_state_snapshot
+            state.tip_state = tip_state
+            state.has_liquid = has_liquid
+            if active_liquid != autopipette.active_liquid:
+                autopipette.switch_liquid(active_liquid)
+            # Discard any G-code comment (e.g. from the switch_liquid call
+            # just above, or from a prior line in the now-aborted batch,
+            # such as its own switch_liquid) that accumulated in the domain
+            # object's buffer but was never drained via output_gcode --
+            # nothing here physically happened, so none of it may ride
+            # along with a future run's uploaded G-code.
+            autopipette.get_gcode()
+            # Nothing was ever written to Moonraker's DB during the batch
+            # (persist_tip_presence/persist_tip_liquid_state defer while
+            # is_batch_mode is true), so there's nothing to undo there.
+
+        def _flush() -> None:
+            try:
+                self._flush_tip_presence()
+                self._flush_tip_liquid_state()
+            except Exception:
+                logger.exception(
+                    "Failed to persist domain state after a successful "
+                    "protocol run; the run itself still succeeded"
+                )
+
+        try:
+            yield
+        except BaseException:
+            try:
+                _restore()
+            except Exception:
+                logger.exception(
+                    "Failed to roll back domain state after a protocol "
+                    "failure; the original error still takes precedence"
+                )
+            raise
+        else:
+            if restore == "always":
+                _restore()
+            else:
+                _flush()
+
+    def _read_protocol_lines(self, filename: str) -> list[str]:
+        """Resolve and read a protocol file's raw lines.
+
+        Shared by :meth:`_run_protocol_sync` and :meth:`validate_protocol`
+        so file-loading behavior (path resolution, encoding-error handling)
+        can't silently diverge between a real run and a dry-run validation
+        of the same file.
+
+        Args:
+            filename: Bare filename under ``protocols/``.
+
+        Returns:
+            The file's lines, split on newlines -- not yet stripped or
+            filtered for blanks/comments, since the two callers do that
+            differently (one discards blanks/comments up front, the other
+            needs each line's original 1-indexed position for findings).
+
+        Raises:
+            FileNotFoundError: If the file doesn't exist in the shared or
+                local protocols directory.
+            ValueError: If the file can't be decoded as UTF-8.
+        """  # ruff: ignore[docstring-extraneous-exception]
+        proto_path = LocalConfigRoots.resolve("protocols", filename)
+        try:
+            return proto_path.read_text(encoding="utf-8").splitlines()
+        except UnicodeDecodeError as exc:
+            raise ValueError(
+                f"Error reading protocol file (encoding issue): {exc}"
+            ) from exc
+
     def _run_protocol_sync(self, filename: str) -> None:
         """Synchronous half of :meth:`_run_protocol`; runs in a worker thread.
 
@@ -2345,25 +2597,25 @@ class AutoPipetteService:
         is the one unambiguous "this line failed" signal, rather than
         inferring it from cmd2's overloaded ``bool`` return value.
 
+        The per-line dispatch loop is wrapped in :meth:`domain_state_snapshot`
+        (issue #35) -- see that method's docstring for the compile-time-vs
+        -runtime-failure distinction this relies on.
+
         Args:
             filename: Bare filename under ``protocols/``.
 
         Raises:
             ValueError: If the file can't be decoded as UTF-8.
             ProtocolAbortedError: If a ``break`` line's breakpoint is
-                answered "abort".
+                answered "abort" (a compile-time failure -- rolled back).
             Exception: Whatever a dispatched line's service method itself
                 raises (e.g. ``NotALocationError``, a not-homed
                 ``RuntimeError``) -- propagates uncaught, aborting the rest
-                of the protocol.
+                of the protocol (and rolled back, same as above). An
+                exception raised by the upload itself is a runtime failure
+                and is not rolled back.
         """  # ruff: ignore[docstring-extraneous-exception]
-        proto_path = LocalConfigRoots.resolve("protocols", filename)
-        try:
-            lines = proto_path.read_text(encoding="utf-8").splitlines()
-        except UnicodeDecodeError as exc:
-            raise ValueError(
-                f"Error reading protocol file (encoding issue): {exc}"
-            ) from exc
+        lines = self._read_protocol_lines(filename)
 
         commands = [
             line.strip()
@@ -2375,7 +2627,10 @@ class AutoPipetteService:
 
         gcode_manager = self.gcode_manager
         try:
-            with gcode_manager.batch_mode():
+            # domain_state_snapshot wraps exactly the dispatch loop, not the
+            # upload below it -- see its docstring for why that boundary is
+            # the compile-time/runtime-failure line.
+            with self.domain_state_snapshot(), gcode_manager.batch_mode():
                 for line in commands:
                     self._dispatch_protocol_line(line)
 
@@ -2399,6 +2654,38 @@ class AutoPipetteService:
             self.upload_and_execute_gcode(output_filename, file_path, delete_file=True)
         finally:
             gcode_manager.clear_buffer()
+
+    @staticmethod
+    def _tokenize_protocol_line(line: str) -> tuple[str, list[str]] | None:
+        """Split one protocol-file line into a command name and its rest-args.
+
+        Factored out of :meth:`_dispatch_protocol_line` so
+        :meth:`validate_protocol` (issue #36) can peek at a line's command
+        name -- to special-case ``break``/``save_locations`` before ever
+        reaching the real dispatch tables -- without duplicating the
+        comment/blank/shlex handling.
+
+        Args:
+            line: One raw line from a protocol file (may be blank, a ``;``
+                comment, or real command text).
+
+        Returns:
+            ``(command_name, rest_args)``, or None for a no-op line (blank,
+            or a ``;``-prefixed comment -- see :meth:`_dispatch_protocol_line`'s
+            docstring for why ``;`` is tolerated here).
+
+        Raises:
+            ValueError: If the line can't be tokenized (unbalanced quotes).
+        """
+        if line.strip().startswith(";"):
+            return None
+        try:
+            argv = shlex.split(line)
+        except ValueError as exc:
+            raise ValueError(f"Could not parse line: {line!r}") from exc
+        if not argv:
+            return None
+        return argv[0], argv[1:]
 
     def _dispatch_protocol_line(self, line: str) -> CommandResult:
         """Dispatch one protocol-file line to its typed service method.
@@ -2436,17 +2723,10 @@ class AutoPipetteService:
                 command's arguments fail to parse.
             Exception: Whatever the underlying service method raises.
         """  # ruff: ignore[docstring-extraneous-exception]
-        if line.strip().startswith(";"):
+        tokens = self._tokenize_protocol_line(line)
+        if tokens is None:
             return CommandResult(ok=True, message="")
-
-        try:
-            argv = shlex.split(line)
-        except ValueError as exc:
-            raise ValueError(f"Could not parse line: {line!r}") from exc
-        if not argv:
-            return CommandResult(ok=True, message="")
-
-        command_name, rest = argv[0], argv[1:]
+        command_name, rest = tokens
 
         if command_name == "break":
             if not self.request_breakpoint():
@@ -2507,6 +2787,186 @@ class AutoPipetteService:
         return CommandResult(
             ok=True, message=f"Protocol '{filename}' executed successfully."
         )
+
+    def validate_protocol(self, filename: str) -> CommandResult:
+        """Dry-run a protocol file, reporting problems without executing anything.
+
+        Issue #36. Replays ``filename`` through the exact same per-line
+        dispatch tables (:data:`_LINE_DISPATCH`/:data:`_STR_ARG_DISPATCH`)
+        :meth:`_run_protocol_sync` uses, inside
+        :meth:`domain_state_snapshot`'s ``restore="always"`` mode (issue
+        #35) so every change -- tip presence, traversal cursors, tip/liquid
+        state -- is discarded regardless of outcome. :data:`_dry_run` is set
+        for the duration of the replay, short-circuiting
+        :func:`require_homed`/:func:`persist_tip_liquid_state`/
+        :func:`persist_tip_presence` so validation works on an unhomed
+        machine and never durably persists anything. No G-code is ever
+        written or uploaded: wrapping the loop in
+        ``gcode_manager.batch_mode()`` already suppresses immediate
+        ``output_gcode`` I/O (as it does for a real run), and this method
+        never calls ``write_gcode_file``/``upload_and_execute_gcode`` at all.
+
+        Unlike a real run, a line that fails doesn't abort the rest of the
+        file -- see :meth:`_dispatch_protocol_line_for_validation` -- so one
+        bad line can't hide every other problem in the file. No new
+        per-line volume/location checks are added: a missing location or an
+        over-capacity liquid already raises ``NotALocationError``/
+        ``VolumeCapacityError`` deep in ``AutoPipette``/``LocationManager``
+        when the real command methods run, so both fall out of this replay
+        for free.
+
+        Args:
+            filename: Bare filename under ``protocols/``.
+
+        Returns:
+            Result whose ``data["findings"]`` is a list of
+            ``{"line_number", "command", "severity", "message"}`` dicts,
+            one per problem found, ``severity`` one of "error" (a raised
+            exception), "warning" (a soft ``CommandResult(ok=False)``, or a
+            WARNING the domain layer logged, e.g. a shrunk air gap), or
+            "info" (a ``break`` line, or a skipped ``save_locations``).
+            ``ok`` is True only if no finding is an "error".
+
+        Raises:
+            FileNotFoundError: If the protocol file does not exist.
+            ValueError: If the file can't be decoded as UTF-8.
+        """  # ruff: ignore[docstring-extraneous-exception]
+        lines = self._read_protocol_lines(filename)
+
+        findings: list[dict[str, Any]] = []
+        gcode_manager = self.gcode_manager
+        token = _dry_run.set(True)
+        # Captured once for the whole file, not per line: attaching/
+        # detaching a handler on every line means every one of them touches
+        # logging's process-wide lock for no behavioral benefit.
+        # setLevel(WARNING) is load-bearing, not just belt-and-suspenders --
+        # a logger with no explicit level of its own inherits the *root*
+        # logger's configured level (e.g. `tapd --log-level ERROR`), and
+        # Python's logging gates on that *before* any handler ever sees the
+        # record -- attaching a handler alone wouldn't be enough to still
+        # capture WARNINGs under a quieter root configuration.
+        autopipette_logger = logging.getLogger(AutoPipette.__module__)
+        warning_capture = _LineWarningCapture()
+        original_level = autopipette_logger.level
+        autopipette_logger.setLevel(logging.WARNING)
+        autopipette_logger.addHandler(warning_capture)
+        try:
+            with (
+                self.domain_state_snapshot(restore="always"),
+                gcode_manager.batch_mode(),
+            ):
+                for line_number, raw_line in enumerate(lines, start=1):
+                    line = raw_line.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    self._dispatch_protocol_line_for_validation(
+                        line, line_number, findings, warning_capture
+                    )
+        finally:
+            autopipette_logger.removeHandler(warning_capture)
+            autopipette_logger.setLevel(original_level)
+            _dry_run.reset(token)
+            gcode_manager.clear_buffer()
+
+        error_count = sum(1 for f in findings if f["severity"] == "error")
+        if not findings:
+            message = "No issues found."
+        else:
+            warning_count = sum(1 for f in findings if f["severity"] == "warning")
+            info_count = sum(1 for f in findings if f["severity"] == "info")
+            message = (
+                f"{len(findings)} finding(s): {error_count} error(s), "
+                f"{warning_count} warning(s), {info_count} info."
+            )
+        return CommandResult(
+            ok=error_count == 0, message=message, data={"findings": findings}
+        )
+
+    def _dispatch_protocol_line_for_validation(
+        self,
+        line: str,
+        line_number: int,
+        findings: list[dict[str, Any]],
+        warning_capture: _LineWarningCapture,
+    ) -> None:
+        """Dispatch one line during :meth:`validate_protocol`'s dry run.
+
+        The catch-and-continue counterpart to :meth:`_dispatch_protocol_line`:
+        a line that would normally abort the whole batch instead becomes one
+        recorded finding, appended to ``findings`` in place, and replay
+        continues with the next line. ``break``/``save_locations`` are
+        intercepted here, before ever reaching the real dispatch tables --
+        ``break`` would otherwise block on :meth:`request_breakpoint` forever
+        (no remote client is answering during validation), and
+        ``save_locations`` would otherwise write a real file -- so both are
+        recorded as informational findings and skipped rather than executed.
+        A WARNING the domain layer logs while dispatching the line (e.g.
+        ``AutoPipette.fit_air_volumes`` shrinking an air gap) is captured and
+        recorded as a "warning" finding too, the same translation this
+        method already does for a raised exception ("error") or a soft
+        ``CommandResult(ok=False)`` ("warning") -- no new per-check logic,
+        just one more source translated into the same finding shape. Drained
+        regardless of whether the line also raised, so a warning logged
+        immediately before a failure in the same call isn't lost.
+
+        Args:
+            line: One non-blank, non-comment protocol-file line.
+            line_number: The line's 1-indexed position in the source file,
+                for the finding's ``line_number`` field.
+            findings: The running list of findings for this validation pass;
+                appended to in place.
+            warning_capture: The whole-file handler :meth:`validate_protocol`
+                attached; drained here so a captured message is attributed
+                to the line that caused it.
+        """
+        try:
+            tokens = self._tokenize_protocol_line(line)
+        except ValueError as exc:
+            findings.append(_finding(line_number, "", "error", str(exc)))
+            return
+        if tokens is None:
+            return
+        command_name, _rest = tokens
+
+        if command_name == "break":
+            findings.append(
+                _finding(
+                    line_number,
+                    command_name,
+                    "info",
+                    f"Breakpoint at line {line_number}.",
+                )
+            )
+            return
+        if command_name == "save_locations":
+            findings.append(
+                _finding(
+                    line_number,
+                    command_name,
+                    "info",
+                    "save_locations skipped during validation (no file written).",
+                )
+            )
+            return
+
+        error_message: str | None = None
+        result: CommandResult | None = None
+        try:
+            result = self._dispatch_protocol_line(line)
+        except Exception as exc:
+            error_message = str(exc)
+
+        for message in warning_capture.drain():
+            findings.append(_finding(line_number, command_name, "warning", message))
+
+        if error_message is not None:
+            findings.append(_finding(line_number, command_name, "error", error_message))
+            return
+        assert result is not None
+        if not result.ok:
+            findings.append(
+                _finding(line_number, command_name, "warning", result.message)
+            )
 
     def emergency_stop(self) -> CommandResult:
         """Send an emergency stop to the pipette.
@@ -2758,6 +3218,69 @@ class AutoPipetteService:
                 "filename": self._current.filename,
             },
         )
+
+
+class _LineWarningCapture(logging.Handler):
+    """Collects WARNING+ log messages emitted while dispatching one line.
+
+    Attached to ``AutoPipette.__module__``'s logger (scoped narrowly to the
+    domain layer, not the root logger, so it doesn't also double-count this
+    module's own "Unknown command" warning, which
+    ``_dispatch_protocol_line_for_validation`` already turns into a finding
+    via its ``CommandResult(ok=False)`` instead) for the whole
+    :meth:`AutoPipetteService.validate_protocol` call, then drained once per
+    line via :meth:`drain` so messages are still attributed to the exact
+    line that caused them.
+    """
+
+    def __init__(self) -> None:
+        """Initialize with an empty capture buffer."""
+        super().__init__(level=logging.WARNING)
+        self._messages: list[str] = []
+
+    def emit(self, record: logging.LogRecord) -> None:
+        """Record one log message's rendered text.
+
+        Args:
+            record: The captured log record.
+        """
+        self._messages.append(record.getMessage())
+
+    def drain(self) -> list[str]:
+        """Return and clear the messages captured since the last drain.
+
+        Returns:
+            The messages captured since construction or the last call to
+            this method, in order.
+        """
+        messages, self._messages = self._messages, []
+        return messages
+
+
+def _finding(
+    line_number: int,
+    command: str,
+    severity: Literal["error", "warning", "info"],
+    message: str,
+) -> dict[str, Any]:
+    """Build one ``validate_protocol`` finding dict.
+
+    Args:
+        line_number: The finding's 1-indexed source line.
+        command: The line's command name, or "" if the line couldn't even
+            be tokenized.
+        severity: One of "error"/"warning"/"info".
+        message: Human-readable detail.
+
+    Returns:
+        ``{"line_number", "command", "severity", "message"}``.
+    """
+    return {
+        "line_number": line_number,
+        "command": command,
+        "severity": severity,
+        "message": message,
+    }
 
 
 @dataclass(frozen=True)

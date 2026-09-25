@@ -382,6 +382,12 @@ class ControlServer:
         if method == "run.start":
             status = await self.service.start_run(params["filename"])
             return _run_status_to_dict(status)
+        if method == "run.validate":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.validate_protocol(params["filename"])
+                )
+            )
         if method == "run.status":
             return _run_status_to_dict(self.service.get_status())
         if method == "run.cancel":

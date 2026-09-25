@@ -22,7 +22,7 @@ import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
@@ -30,6 +30,9 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from tricca_autopipette.commands.tap_cmd_parsers import (
+    MoveArgs,
+    MoveLocArgs,
+    MoveRelArgs,
     ResetTipsArgs,
     SetTipsArgs,
     TipsArgs,
@@ -107,19 +110,60 @@ class TipsSetRequest(BaseModel):
     available: bool = False
 
 
-class TipsResult(BaseModel):
-    """Response envelope for the `/tips*` routes.
+class CommandResultResponse(BaseModel):
+    """Response envelope for routes that just forward a `CommandResult`.
 
     Mirrors `CommandResult` (`ok`/`message`/`data`) rather than translating
-    to an HTTP error status: unlike `/run`/`/home`, the tip RPCs
-    (`config.tips`/`config.reset_tips`/`config.set_tips`) report failure
-    (e.g. "no such tipbox") as `CommandResult(ok=False, ...)`, not as a
-    raised exception, so there's no exception to translate.
+    to an HTTP error status: unlike `/run`/`/home`, the RPCs behind these
+    routes (`config.tips`/`config.reset_tips`/`config.set_tips`/
+    `config.list_locations`) report failure (e.g. "no such tipbox") as
+    `CommandResult(ok=False, ...)`, not as a raised exception, so there's no
+    exception to translate. Shared by the `/tips*` routes and `/locations`
+    (issue #87, also consumed by the Move page's location dropdown, issue
+    #86).
     """
 
     ok: bool
     message: str = ""
     data: dict[str, Any] | None = None
+
+
+class MoveRequest(BaseModel):
+    """Request body for `POST /move` (absolute XYZ, mirrors `MoveArgs`)."""
+
+    x: float
+    y: float
+    z: float
+
+
+class MoveLocRequest(BaseModel):
+    """Request body for `POST /move_loc` (mirrors `MoveLocArgs`)."""
+
+    name_loc: str
+    row: int | None = None
+    col: int | None = None
+
+
+class MoveRelRequest(BaseModel):
+    """Request body for `POST /move_rel` (mirrors `MoveRelArgs`)."""
+
+    x: float = 0.0
+    y: float = 0.0
+    z: float = 0.0
+
+
+class MoveResult(BaseModel):
+    """Response body for `POST /move`, `/move_loc`, `/move_rel`.
+
+    A move that fails outright (not homed, unknown location, ...) is a
+    raised daemon exception translated to an HTTP error status (see
+    `_translate_move_error`), not a field on this model -- so a 200 here
+    always means the daemon accepted and ran the move (or, for
+    `move_rel`'s all-zero-offset case, a soft no-op it reported instead of
+    raising; `message` says which).
+    """
+
+    message: str
 
 
 # ── daemon control-plane connection ────────────────────────────────────────────
@@ -132,6 +176,14 @@ _current_run: RunStatus = RunStatus(status="idle")
 # Pending breakpoint, mirrored from notify_breakpoint pushes: {"run_id",
 # "filename", "pending"} while one is awaiting a response, None otherwise.
 _current_breakpoint: dict[str, Any] | None = None
+# Live toolhead state (Move page, issue #86), mirrored from notify_raw_event
+# pushes carrying a raw Moonraker "notify_status_update" for the "toolhead"
+# object -- see `_on_raw_event_notification`. Klipper only sends the fields
+# that actually changed in each push, so these are updated field-by-field,
+# never wholesale replaced, and start unset until the first real push
+# arrives (there's no synchronous initial value here, unlike the daemon's
+# own `MoonrakerStateTracker.start()`).
+_current_toolhead: dict[str, Any] = {"position": None, "homed_axes": None}
 _ws_clients: set[WebSocket] = set()
 
 
@@ -152,6 +204,7 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
     client = WebSocketClient(TAPD_CONTROL_URI)
     client.register_handler("notify_run_status", _on_run_status_notification)
     client.register_handler("notify_breakpoint", _on_breakpoint_notification)
+    client.register_handler("notify_raw_event", _on_raw_event_notification)
     client.start()
     connected = await asyncio.to_thread(
         client.wait_for_connection, TAPD_CONNECT_TIMEOUT_SECONDS
@@ -169,6 +222,21 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
             )
         except RuntimeError:
             logger.warning("Failed to identify this connection to tapd.")
+        # Ask the daemon to relay live toolhead (position/homed_axes)
+        # updates as notify_raw_event pushes, for the Move page (issue
+        # #86). Opt-in and kiosk-only -- ws.subscribe re-broadcasts to
+        # *every* connected control-plane client, so subscribing
+        # unconditionally would also spam a `tap` session with raw
+        # per-move notifications it has no use for. Non-fatal on failure
+        # (e.g. `tapd --no-connect`, or the daemon's own Moonraker
+        # connection being down), same as `identify` above.
+        try:
+            await asyncio.to_thread(
+                client.send_jsonrpc,
+                _control_requests.ws_subscribe("notify_status_update"),
+            )
+        except RuntimeError:
+            logger.warning("Failed to subscribe to live toolhead updates.")
     _control_client = client
 
     try:
@@ -321,6 +389,125 @@ async def home_pipette() -> RunStatus:
     return RunStatus(status="done", message=message)
 
 
+def _translate_move_error(exc: JsonRpcError) -> HTTPException:
+    """Map a `movement.*` control-plane error to an HTTP status.
+
+    Unlike `/tips*`'s ok/false-forwarding, `movement.move`/`move_loc`/
+    `move_rel` report failure by raising (`NotHomedError`,
+    `NotALocationError`, `ValueError`), the same shape `/run` already
+    translates -- see that route's own docstring for the general pattern.
+
+    Args:
+        exc: The `JsonRpcError` raised by `send_jsonrpc`.
+
+    Returns:
+        An `HTTPException` with a status matching the daemon's error type:
+        409 for `NotHomedError` (a precondition the operator can clear by
+        homing, not a client mistake), 404 for `NotALocationError`, 400 for
+        a bad `ValueError` (e.g. only one of row/col given), 500 otherwise.
+    """
+    if exc.error_type == "NotHomedError":
+        return HTTPException(status_code=409, detail=str(exc))
+    if exc.error_type == "NotALocationError":
+        return HTTPException(status_code=404, detail=str(exc))
+    if exc.error_type == "ValueError":
+        return HTTPException(status_code=400, detail=str(exc))
+    return HTTPException(status_code=500, detail=str(exc))
+
+
+@app.post("/move", response_model=MoveResult)
+async def move(req: MoveRequest) -> MoveResult:
+    """Move to absolute XYZ coordinates via the tapd control daemon.
+
+    Returns:
+        The completed move's message.
+
+    Raises:
+        HTTPException: 503 if the control daemon isn't connected, 409 if
+            not homed, or 500 for any other dispatch failure.
+    """  # ruff: ignore[docstring-missing-exception]
+    if _control_client is None:
+        raise HTTPException(status_code=503, detail="Control daemon not connected")
+
+    try:
+        response = await asyncio.to_thread(
+            _control_client.send_jsonrpc,
+            _control_requests.move(MoveArgs(x=req.x, y=req.y, z=req.z)),
+        )
+    except JsonRpcError as exc:
+        raise _translate_move_error(exc) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    result: dict[str, Any] = response.get("result", {})
+    return MoveResult(message=str(result.get("message", "")))
+
+
+@app.post("/move_loc", response_model=MoveResult)
+async def move_loc(req: MoveLocRequest) -> MoveResult:
+    """Move to a named location via the tapd control daemon.
+
+    Returns:
+        The completed move's message.
+
+    Raises:
+        HTTPException: 503 if the control daemon isn't connected, 409 if
+            not homed, 404 if `req.name_loc` is not a defined location, 400
+            if only one of `req.row`/`req.col` is given for a plate
+            location, or 500 for any other dispatch failure.
+    """  # ruff: ignore[docstring-missing-exception]
+    if _control_client is None:
+        raise HTTPException(status_code=503, detail="Control daemon not connected")
+
+    try:
+        response = await asyncio.to_thread(
+            _control_client.send_jsonrpc,
+            _control_requests.move_loc(
+                MoveLocArgs(name_loc=req.name_loc, row=req.row, col=req.col)
+            ),
+        )
+    except JsonRpcError as exc:
+        raise _translate_move_error(exc) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    result: dict[str, Any] = response.get("result", {})
+    return MoveResult(message=str(result.get("message", "")))
+
+
+@app.post("/move_rel", response_model=MoveResult)
+async def move_rel(req: MoveRelRequest) -> MoveResult:
+    """Move relative to the current position via the tapd control daemon.
+
+    An all-zero offset is a soft no-op the daemon reports as
+    `CommandResult(ok=False, ...)` rather than raising, so unlike the other
+    error cases below it's still a 200 here -- `message` explains why
+    nothing moved.
+
+    Returns:
+        The completed (or no-op) move's message.
+
+    Raises:
+        HTTPException: 503 if the control daemon isn't connected, 409 if
+            not homed, or 500 for any other dispatch failure.
+    """  # ruff: ignore[docstring-missing-exception]
+    if _control_client is None:
+        raise HTTPException(status_code=503, detail="Control daemon not connected")
+
+    try:
+        response = await asyncio.to_thread(
+            _control_client.send_jsonrpc,
+            _control_requests.move_rel(MoveRelArgs(x=req.x, y=req.y, z=req.z)),
+        )
+    except JsonRpcError as exc:
+        raise _translate_move_error(exc) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    result: dict[str, Any] = response.get("result", {})
+    return MoveResult(message=str(result.get("message", "")))
+
+
 @app.post("/breakpoint/respond")
 async def respond_to_breakpoint(req: BreakpointResponse) -> dict[str, bool]:
     """Answer a pending protocol breakpoint (Continue/Abort).
@@ -344,19 +531,20 @@ async def respond_to_breakpoint(req: BreakpointResponse) -> dict[str, bool]:
     return {"ok": True}
 
 
-async def _dispatch_tips_request(request: dict[str, Any]) -> TipsResult:
-    """Send a `config.tips*` control-plane request and forward its result.
+async def _dispatch_control_request(request: dict[str, Any]) -> CommandResultResponse:
+    """Send a control-plane request and forward its `CommandResult` as-is.
 
-    Shared by the three `/tips*` routes below -- each just builds the
-    request and lets this translate the daemon's `CommandResult` shape
-    (`ok`/`message`/`data`) into a `TipsResult`, or the connection state
-    into an `HTTPException`.
+    Shared by the `/tips*` routes and `/locations` below -- each just builds
+    the request and lets this translate the daemon's `CommandResult` shape
+    (`ok`/`message`/`data`) into a `CommandResultResponse`, or the connection
+    state into an `HTTPException`.
 
     Args:
-        request: A `ControlRequests.tips`/`reset_tips`/`set_tips` result.
+        request: A `ControlRequests` builder's result (e.g.
+            `tips`/`reset_tips`/`set_tips`/`list_locations`).
 
     Returns:
-        The forwarded `CommandResult`, as a `TipsResult`.
+        The forwarded `CommandResult`, as a `CommandResultResponse`.
 
     Raises:
         HTTPException: 503 if the control daemon isn't connected, or 500 if
@@ -371,15 +559,15 @@ async def _dispatch_tips_request(request: dict[str, Any]) -> TipsResult:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
     result: dict[str, Any] = response.get("result", {})
-    return TipsResult(
+    return CommandResultResponse(
         ok=bool(result.get("ok")),
         message=str(result.get("message", "")),
         data=result.get("data"),
     )
 
 
-@app.get("/tips", response_model=TipsResult)
-async def list_tips() -> TipsResult:
+@app.get("/tips", response_model=CommandResultResponse)
+async def list_tips() -> CommandResultResponse:
     """Report tip availability for every registered tipbox.
 
     Routing only, per issue #17's constraint -- `TipBoxManager.describe`
@@ -390,27 +578,27 @@ async def list_tips() -> TipsResult:
     `next_well`.
 
     Returns:
-        `TipsResult` with `data["boxes"]`/`data["total_remaining"]`/
+        `CommandResultResponse` with `data["boxes"]`/`data["total_remaining"]`/
         `data["total_capacity"]`.
     """
-    return await _dispatch_tips_request(_control_requests.tips(TipsArgs()))
+    return await _dispatch_control_request(_control_requests.tips(TipsArgs()))
 
 
-@app.post("/tips/reset", response_model=TipsResult)
-async def reset_tips(req: TipsResetRequest) -> TipsResult:
+@app.post("/tips/reset", response_model=CommandResultResponse)
+async def reset_tips(req: TipsResetRequest) -> CommandResultResponse:
     """Mark one tipbox as full, after it's been physically reloaded.
 
     Returns:
-        `TipsResult` naming the box's new tip count, or `ok=False` if no
-        tipbox by that name is registered.
+        `CommandResultResponse` naming the box's new tip count, or
+        `ok=False` if no tipbox by that name is registered.
     """
-    return await _dispatch_tips_request(
+    return await _dispatch_control_request(
         _control_requests.reset_tips(ResetTipsArgs(name=req.name))
     )
 
 
-@app.post("/tips/set", response_model=TipsResult)
-async def set_tips(req: TipsSetRequest) -> TipsResult:
+@app.post("/tips/set", response_model=CommandResultResponse)
+async def set_tips(req: TipsSetRequest) -> CommandResultResponse:
     """Declare exactly which positions of a tipbox hold tips.
 
     Replaces the named box's state rather than adding to it -- the
@@ -418,14 +606,32 @@ async def set_tips(req: TipsSetRequest) -> TipsResult:
     set (see `TipsSetRequest`), never a single toggled cell.
 
     Returns:
-        `TipsResult` naming the box's new tip count, or `ok=False` if the
-        box is unknown or a range is invalid.
+        `CommandResultResponse` naming the box's new tip count, or
+        `ok=False` if the box is unknown or a range is invalid.
     """
-    return await _dispatch_tips_request(
+    return await _dispatch_control_request(
         _control_requests.set_tips(
             SetTipsArgs(name=req.name, ranges=req.ranges, available=req.available)
         )
     )
+
+
+@app.get("/locations", response_model=CommandResultResponse)
+async def list_locations() -> CommandResultResponse:
+    """Report every defined location.
+
+    Populates the kiosk Deck page's spatial map (issue #87) and the Move
+    page's named-location dropdown (issue #86). Routing only, matching the
+    `/tips` pattern -- `AutoPipetteService.list_locations` (via
+    `config.list_locations`) is the data source; this adds no deck/location
+    logic of its own. `data["locations"]` carries one dict per location with
+    `name`/`type`/`x`/`y`/`z`/`details` keys (`type` is a plate class name,
+    e.g. `"TipBox"`, or `"Coordinate"` for a bare point).
+
+    Returns:
+        `CommandResultResponse` with `data["locations"]`.
+    """
+    return await _dispatch_control_request(_control_requests.list_locations())
 
 
 @app.get("/status", response_model=RunStatus)
@@ -502,14 +708,112 @@ def _on_breakpoint_notification(params: Any) -> None:  # ruff:ignore[any-type]
         asyncio.run_coroutine_threadsafe(_broadcast_status(), _main_loop)
 
 
+def _first_status_dict(raw_params: Any) -> dict[str, Any] | None:  # ruff:ignore[any-type]
+    """Extract the status dict from a Moonraker `notify_status_update`'s params.
+
+    Moonraker's own notification carries `[status_dict, eventtime]`;
+    defensively also accepts a bare status dict.
+
+    Args:
+        raw_params: The raw notification params of unknown shape.
+
+    Returns:
+        The status dict, or None if `raw_params` didn't carry one.
+    """
+    candidate: Any = raw_params
+    if isinstance(raw_params, list):
+        items = cast("list[Any]", raw_params)
+        candidate = items[0] if items else None
+    if isinstance(candidate, dict):
+        return cast("dict[str, Any]", candidate)
+    return None
+
+
+def _on_raw_event_notification(params: Any) -> None:  # ruff:ignore[any-type]
+    """Handle a `notify_raw_event` push from the tapd control daemon.
+
+    Only acts on a relayed raw Moonraker `"notify_status_update"` naming
+    the `"toolhead"` object (Move page, issue #86) -- the kiosk's own
+    `ws.subscribe("notify_status_update")` call in `lifespan` is what makes
+    this arrive at all; anything else relayed under a different method name
+    is ignored.
+
+    Args:
+        params: `{"method": <relayed Moonraker method>, "params": <that
+            method's own raw notification params>}`, as sent by
+            `AutoPipetteService._forward_raw_notification`. For
+            `"notify_status_update"`, `params["params"]` is Moonraker's own
+            `[status_dict, eventtime]` shape (or, defensively, a bare
+            status dict).
+
+    Note:
+        Invoked from the control-plane WebSocketClient's background thread;
+        marshals the browser-facing broadcast back onto the main event loop.
+    """
+    if not isinstance(params, dict):
+        return
+    envelope = cast("dict[str, Any]", params)
+    if envelope.get("method") != "notify_status_update":
+        return
+    status = _first_status_dict(envelope.get("params"))
+    if status is None:
+        return
+    toolhead = status.get("toolhead")
+    if not isinstance(toolhead, dict):
+        return
+    updated = _apply_toolhead_update(cast("dict[str, Any]", toolhead))
+    if updated and _main_loop is not None:
+        asyncio.run_coroutine_threadsafe(_broadcast_status(), _main_loop)
+
+
+def _apply_toolhead_update(toolhead: dict[str, Any]) -> bool:
+    """Merge a partial toolhead status update into `_current_toolhead`.
+
+    Klipper only includes the fields that actually changed in each
+    `notify_status_update` push (`position` changes on every move,
+    `homed_axes` only at homing time), so this updates known fields
+    in place rather than replacing the cached dict wholesale -- otherwise
+    a position-only push would clobber a previously-known `homed_axes`
+    back to unset.
+
+    Args:
+        toolhead: The `"toolhead"` sub-dict from one status update.
+
+    Returns:
+        True if anything was actually updated (worth broadcasting), False
+        if `toolhead` carried neither field.
+    """
+    changed = False
+    if "position" in toolhead:
+        _current_toolhead["position"] = toolhead["position"]
+        changed = True
+    homed_axes = toolhead.get("homed_axes")
+    if isinstance(homed_axes, str):
+        _current_toolhead["homed_axes"] = homed_axes
+        changed = True
+    elif isinstance(homed_axes, list):
+        _current_toolhead["homed_axes"] = "".join(
+            str(axis) for axis in cast("list[Any]", homed_axes)
+        )
+        changed = True
+    return changed
+
+
 def _status_payload() -> dict[str, Any]:
     """Build the JSON payload pushed over `/ws/status`.
 
     Returns:
-        The current `RunStatus` fields plus a `breakpoint` key: the pending
-        breakpoint's `{"run_id", "filename", "pending"}` dict, or None.
+        The current `RunStatus` fields plus `breakpoint` (the pending
+        breakpoint's `{"run_id", "filename", "pending"}` dict, or None) and
+        `toolhead` (`{"position", "homed_axes"}`, either possibly still
+        None if no live update has arrived yet -- see
+        `_on_raw_event_notification`).
     """
-    return {**_current_run.model_dump(), "breakpoint": _current_breakpoint}
+    return {
+        **_current_run.model_dump(),
+        "breakpoint": _current_breakpoint,
+        "toolhead": dict(_current_toolhead),
+    }
 
 
 async def _broadcast_status() -> None:

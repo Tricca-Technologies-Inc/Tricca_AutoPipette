@@ -1,0 +1,4 @@
+# Validation fixture: a bad location on line 2 must become a recorded
+# finding rather than aborting the rest of the file (catch-and-continue).
+move_loc does_not_exist
+move 10 20 5

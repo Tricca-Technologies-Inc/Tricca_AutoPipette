@@ -432,6 +432,22 @@ class ControlRequests(JsonRpcRequestBuilder):
         """
         return self.gen_request("run.start", {"filename": filename})
 
+    def run_validate(self, filename: str) -> dict[str, Any]:
+        """Build a request to dry-run validate a protocol file.
+
+        Issue #36: replays ``filename`` without executing anything (no
+        homed check required, no G-code written or uploaded, no state
+        durably changed) and reports problems as a list of findings rather
+        than running or aborting.
+
+        Args:
+            filename: Bare filename under ``protocols/`` (e.g. "A1.pipette").
+
+        Returns:
+            Request to validate the protocol.
+        """
+        return self.gen_request("run.validate", {"filename": filename})
+
     def run_status(self) -> dict[str, Any]:
         """Build a request for the current run status.
 

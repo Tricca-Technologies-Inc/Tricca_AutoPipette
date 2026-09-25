@@ -6,6 +6,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from fakes.fake_websocket_client import FakeWebSocketClient
 from fastapi import WebSocket
 from fastapi.testclient import TestClient
 from support.live_control_plane import LiveControlPlane
@@ -48,7 +49,7 @@ def kiosk_client(
     connected" tests, which rely on exactly that to get a clean
     `_control_client is None` state for free).
 
-    Also resets the run/breakpoint/websocket-client module globals
+    Also resets the run/breakpoint/toolhead/websocket-client module globals
     `autopipette_kiosk/main.py` keeps instead of per-request state (it's a
     long-lived singleton in production) -- tests share that same module
     across the whole session, so leftover state from one test would
@@ -61,6 +62,44 @@ def kiosk_client(
     monkeypatch.setattr(kiosk_main, "TAPD_CONTROL_URI", live_control_plane.url)
     monkeypatch.setattr(kiosk_main, "_current_run", kiosk_main.RunStatus(status="idle"))
     monkeypatch.setattr(kiosk_main, "_current_breakpoint", None)
+    monkeypatch.setattr(
+        kiosk_main, "_current_toolhead", {"position": None, "homed_axes": None}
+    )
+    monkeypatch.setattr(kiosk_main, "_ws_clients", empty_clients)
+
+    with TestClient(kiosk_main.app) as client:
+        yield client
+
+
+@pytest.fixture
+def kiosk_client_with_moonraker(
+    live_control_plane: LiveControlPlane, monkeypatch: pytest.MonkeyPatch
+) -> Iterator[TestClient]:
+    """A `kiosk_client` whose daemon has a (fake) Moonraker connection.
+
+    For the live toolhead-relay tests (issue #86): `live_control_plane`'s
+    plain `service.client` is None (see `tests/conftest.py`'s `service`
+    fixture), so the `ws.subscribe("notify_status_update")` call the
+    kiosk's `lifespan` makes on connect would raise before ever
+    registering a handler. Wiring a `FakeWebSocketClient` in as the
+    daemon's own "Moonraker connection" lets that subscribe succeed, so a
+    test can then call `client.trigger_notification(...)` on it to
+    simulate a real Moonraker push and assert it reaches the kiosk over
+    `/ws/status`.
+
+    Yields:
+        A `TestClient` for the kiosk app, with its `lifespan` running and
+        `live_control_plane.service.client` set to a `FakeWebSocketClient`
+        the test can drive directly.
+    """
+    live_control_plane.service.client = FakeWebSocketClient(connected=True)  # type: ignore[assignment]
+    empty_clients: set[WebSocket] = set()
+    monkeypatch.setattr(kiosk_main, "TAPD_CONTROL_URI", live_control_plane.url)
+    monkeypatch.setattr(kiosk_main, "_current_run", kiosk_main.RunStatus(status="idle"))
+    monkeypatch.setattr(kiosk_main, "_current_breakpoint", None)
+    monkeypatch.setattr(
+        kiosk_main, "_current_toolhead", {"position": None, "homed_axes": None}
+    )
     monkeypatch.setattr(kiosk_main, "_ws_clients", empty_clients)
 
     with TestClient(kiosk_main.app) as client:
@@ -87,6 +126,9 @@ def kiosk_client_with_plates(
     )
     monkeypatch.setattr(kiosk_main, "_current_run", kiosk_main.RunStatus(status="idle"))
     monkeypatch.setattr(kiosk_main, "_current_breakpoint", None)
+    monkeypatch.setattr(
+        kiosk_main, "_current_toolhead", {"position": None, "homed_axes": None}
+    )
     monkeypatch.setattr(kiosk_main, "_ws_clients", empty_clients)
 
     with TestClient(kiosk_main.app) as client:

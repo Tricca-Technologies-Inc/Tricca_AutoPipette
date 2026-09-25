@@ -1,0 +1,3 @@
+# Regression fixture (issue #36 review): a validation dry-run must not
+# permanently remove a real configured location from the live deck.
+del_loc waste

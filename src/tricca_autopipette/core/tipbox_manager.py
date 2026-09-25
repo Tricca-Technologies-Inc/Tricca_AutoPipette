@@ -367,6 +367,7 @@ class TipBoxManager:
             present = self._validate_record(name, box, record)
             if present is None:
                 skipped.append(name)
+                box.reset_tips()  # actually "left full", as documented/logged
                 continue
 
             box.set_presence(present)
