@@ -388,6 +388,69 @@ header {
 
 .run-btn svg { width: 18px; height: 18px; fill: currentColor; }
 
+.run-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  max-width: 360px;
+}
+
+.run-actions .run-btn { max-width: none; flex: 1; }
+
+.check-btn {
+  height: 56px;
+  padding: 0 20px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s, transform 0.1s;
+}
+
+.check-btn:hover:not(:disabled) { background: var(--surface); }
+.check-btn:active:not(:disabled) { transform: scale(0.98); }
+.check-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── pre-flight check findings (issue #88) ── */
+.findings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-width: 360px;
+}
+
+.finding-item {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 13px;
+  font-family: var(--mono);
+}
+
+.finding-severity {
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+}
+
+.finding-line { color: var(--muted); }
+.finding-message { color: var(--text); }
+
+.finding-item.error { border-color: color-mix(in srgb, var(--error) 40%, var(--border)); }
+.finding-item.error .finding-severity { color: var(--error); }
+.finding-item.warning { border-color: color-mix(in srgb, var(--running) 40%, var(--border)); }
+.finding-item.warning .finding-severity { color: var(--running); }
+.finding-item.info .finding-severity { color: var(--muted); }
+
 /* ── status card (Run page's own detailed view) ── */
 .status-card {
   background: var(--surface);

@@ -82,3 +82,36 @@ def test_a_failed_run_shows_the_error_label_and_icon_on_both_widgets(
     expect(page.locator("#statusPillLabel")).to_have_text("Error")
     expect(page.locator("#statusState")).to_have_text("Error")
     expect(page.locator("#statusIcon")).to_have_text("✕")
+
+
+def test_check_button_reports_no_issues_for_a_clean_protocol(
+    page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
+) -> None:
+    (protocols_dir / "a.pipette").write_text("wait 1\n")
+    page.goto(live_kiosk_server.url)
+    page.click(".protocol-item")
+
+    page.click("#checkBtn")
+
+    expect(page.locator("#findingsList")).to_contain_text("No issues found")
+
+
+def test_check_button_lists_findings_without_disabling_run(
+    page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
+) -> None:
+    # move_loc references an undefined location -- run.validate reports it
+    # as an "error"-severity finding (see test_control_server_run_validate.py)
+    # but never touches the machine, so it works on this fixture's unhomed
+    # fake Moonraker state.
+    (protocols_dir / "a.pipette").write_text("move_loc missing\n")
+    page.goto(live_kiosk_server.url)
+    page.click(".protocol-item")
+
+    page.click("#checkBtn")
+
+    finding = page.locator(".finding-item.error")
+    expect(finding).to_be_visible()
+    expect(finding).to_contain_text("error")
+    # Warn-only (issue #88): Check never disables/blocks Run, regardless of
+    # what it finds.
+    expect(page.locator("#runBtn")).to_be_enabled()
