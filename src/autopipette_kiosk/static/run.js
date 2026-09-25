@@ -45,6 +45,8 @@
     nameEl.textContent = name;
     nameEl.classList.remove('placeholder');
     document.getElementById('runBtn').disabled = App.isRunActive(App.getStatus().status);
+    document.getElementById('checkBtn').disabled = false;
+    document.getElementById('findingsList').innerHTML = '';
   };
 
   // ── run ────────────────────────────────────────────────────────────────
@@ -64,6 +66,46 @@
       renderStatusCard({ status: 'error', message: e.message });
     }
   });
+
+  // ── check (pre-flight validation, issue #88) ──────────────────────────
+  // Explicit trigger only (no auto-validate on selection, no bulk
+  // pre-validation of the list) and warn-only: findings are advisory
+  // display, never disable/block the Run button.
+  document.getElementById('checkBtn').addEventListener('click', async () => {
+    if (!selected) return;
+    const list = document.getElementById('findingsList');
+    list.innerHTML = '<div class="empty-state">Checking…</div>';
+    try {
+      const res = await fetch('/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: selected }),
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        list.innerHTML = `<div class="finding-item error">${body.detail}</div>`;
+        return;
+      }
+      renderFindings(body.data && body.data.findings ? body.data.findings : []);
+    } catch (e) {
+      list.innerHTML = `<div class="finding-item error">${e.message}</div>`;
+    }
+  });
+
+  function renderFindings(findings) {
+    const list = document.getElementById('findingsList');
+    if (!findings.length) {
+      list.innerHTML = '<div class="empty-state">No issues found</div>';
+      return;
+    }
+    list.innerHTML = findings.map(f => `
+      <div class="finding-item ${f.severity}">
+        <span class="finding-severity">${f.severity}</span>
+        <span class="finding-line">line ${f.line_number}</span>
+        <span class="finding-message">${f.message}</span>
+      </div>
+    `).join('');
+  }
 
   // ── detailed status card (Run-page-specific; the compact pill + global
   // breakpoint banner in the header are app.js's job) ─────────────────────
