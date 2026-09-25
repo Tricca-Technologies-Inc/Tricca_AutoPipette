@@ -28,6 +28,7 @@ from typing import Any, cast
 
 import pytest
 import websockets
+from websockets.asyncio.server import Server, ServerConnection
 from websockets.exceptions import ConnectionClosed
 
 from tricca_autopipette.moonraker.websocket_client import (
@@ -36,7 +37,7 @@ from tricca_autopipette.moonraker.websocket_client import (
     WebSocketClient,
 )
 
-Handler = Callable[[websockets.WebSocketServerProtocol], Awaitable[None]]
+Handler = Callable[[ServerConnection], Awaitable[None]]
 ServerFactory = Callable[[Handler], str]
 
 
@@ -58,7 +59,7 @@ class _RealServer:
         self._handler = handler
         self._loop = asyncio.new_event_loop()
         self._ready = threading.Event()
-        self._server: websockets.WebSocketServer | None = None
+        self._server: Server | None = None
         self._port = 0
         self._thread = threading.Thread(target=self._run, daemon=True)
 
@@ -151,7 +152,7 @@ class TestConcurrentRequests:
         get back another thread's echoed payload instead of its own.
         """
 
-        async def handler(websocket: websockets.WebSocketServerProtocol) -> None:
+        async def handler(websocket: ServerConnection) -> None:
             async def respond(raw: str | bytes) -> None:
                 data = json.loads(raw)
                 # Vary the delay so responses can arrive out of send order,
@@ -223,7 +224,7 @@ class TestErrorResponse:
     def test_error_response_raises_json_rpc_error_with_type_preserved(
         self, real_server: ServerFactory
     ) -> None:
-        async def handler(websocket: websockets.WebSocketServerProtocol) -> None:
+        async def handler(websocket: ServerConnection) -> None:
             async for raw in websocket:
                 data = json.loads(raw)
                 await websocket.send(
@@ -259,7 +260,7 @@ class TestNotificationDelivery:
     def test_preserves_send_order_through_the_registered_handler(
         self, real_server: ServerFactory
     ) -> None:
-        async def handler(websocket: websockets.WebSocketServerProtocol) -> None:
+        async def handler(websocket: ServerConnection) -> None:
             for i in range(20):
                 await websocket.send(
                     json.dumps({
@@ -293,7 +294,7 @@ class TestNotificationDelivery:
     ) -> None:
         release = threading.Event()
 
-        async def handler(websocket: websockets.WebSocketServerProtocol) -> None:
+        async def handler(websocket: ServerConnection) -> None:
             await websocket.send(
                 json.dumps({"jsonrpc": "2.0", "method": "notify_x", "params": {}})
             )
@@ -335,7 +336,7 @@ class TestNotificationDelivery:
     def test_unhandled_notification_lands_in_the_message_queue(
         self, real_server: ServerFactory
     ) -> None:
-        async def handler(websocket: websockets.WebSocketServerProtocol) -> None:
+        async def handler(websocket: ServerConnection) -> None:
             await websocket.send(
                 json.dumps({
                     "jsonrpc": "2.0",
@@ -375,7 +376,7 @@ class TestConnectionDrop:
         behavior; see issue #38 if that's ever worth changing.
         """
 
-        async def handler(websocket: websockets.WebSocketServerProtocol) -> None:
+        async def handler(websocket: ServerConnection) -> None:
             await websocket.recv()
             await websocket.close()
 
@@ -402,7 +403,7 @@ class TestConnectionDrop:
         """
         connection_count = 0
 
-        async def handler(websocket: websockets.WebSocketServerProtocol) -> None:
+        async def handler(websocket: ServerConnection) -> None:
             nonlocal connection_count
             connection_count += 1
             if connection_count == 1:

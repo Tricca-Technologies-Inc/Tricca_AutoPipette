@@ -17,6 +17,7 @@ plane is (``--control-uri``).
 from __future__ import annotations
 
 import argparse
+import importlib.metadata
 import logging
 import sys
 
@@ -62,6 +63,11 @@ def parse_arguments() -> argparse.Namespace:
     """
     parser = argparse.ArgumentParser(
         description="Tricca AutoPipette Shell - thin client for the tapd control daemon"
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {importlib.metadata.version('tricca-autopipette')}",
     )
     parser.add_argument(
         "--control-uri",

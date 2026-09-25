@@ -128,7 +128,7 @@ class RunStatus:
         filename: Protocol filename for the run, or None if idle.
     """
 
-    status: str
+    status: Literal["idle", "running", "done", "error"]
     message: str = ""
     run_id: str | None = None
     filename: str | None = None

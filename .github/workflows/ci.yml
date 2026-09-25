@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+env:
+  # Stopgap tool pins (issue #19) -- ahead of issue #24's real
+  # dependency-pinning work, so a ruff/pyright upstream release can't
+  # silently redden CI (the cmd2 4.0 API break already happened once).
+  # Pinned here, not in pyproject.toml -- that's #24's job.
+  RUFF_VERSION: "0.16.4"
+  PYRIGHT_VERSION: "1.1.411"
+  # Pin for the browser-test job too, so the actions/cache key below is
+  # stable rather than tracking whatever pytest-playwright resolves to.
+  PYTEST_PLAYWRIGHT_VERSION: "0.9.0"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install "ruff==${{ env.RUFF_VERSION }}"
+      - run: ruff check .
+      - run: ruff format --check .
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # browser-test is installed too (not just dev) -- pyright type-checks
+      # tests/kiosk/browser/*.py by default (testpaths covers all of
+      # tests/), and without the playwright package on the path every
+      # import there is unresolved, cascading into hundreds of spurious
+      # Unknown-type errors unrelated to the actual code.
+      - run: pip install -e ".[dev,browser-test]" "pyright==${{ env.PYRIGHT_VERSION }}"
+      - run: pyright
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: pytest -q
+
+  test-browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          pip install -e ".[dev,browser-test]" \
+            "pytest-playwright==${{ env.PYTEST_PLAYWRIGHT_VERSION }}"
+      - name: Cache chromium
+        id: cache-chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: chromium-${{ runner.os }}-pytest-playwright-${{ env.PYTEST_PLAYWRIGHT_VERSION }}
+      - name: Install chromium
+        if: steps.cache-chromium.outputs.cache-hit != 'true'
+        run: playwright install --with-deps chromium
+      - name: Install chromium OS deps only (cache hit)
+        if: steps.cache-chromium.outputs.cache-hit == 'true'
+        run: playwright install-deps chromium
+      - run: pytest -q

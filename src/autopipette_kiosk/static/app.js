@@ -45,6 +45,13 @@ const App = (() => {
     };
   }
 
+  // Shared "is a run currently active" predicate -- the boolean counterpart
+  // to describeStatus above, replacing raw `=== 'running'` comparisons
+  // scattered across run.js/tips.js (issue #83).
+  function isRunActive(s) {
+    return s === 'running';
+  }
+
   // ── WebSocket connection ────────────────────────────────────────────────
   // Pure: given the socket lifecycle event, the connection indicator's
   // label and whether it counts as "live" -- the one thing onopen/onclose
@@ -186,5 +193,5 @@ const App = (() => {
 
   document.addEventListener('DOMContentLoaded', init);
 
-  return { onStatus, getStatus, registerPage, switchTo, describeStatus };
+  return { onStatus, getStatus, registerPage, switchTo, describeStatus, isRunActive };
 })();

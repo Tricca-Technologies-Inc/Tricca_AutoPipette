@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import importlib.metadata
 import logging
 import shutil
 import signal
@@ -90,6 +91,11 @@ def parse_arguments() -> argparse.Namespace:
     """
     parser = argparse.ArgumentParser(
         description="Tricca AutoPipette control daemon (tapd)"
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {importlib.metadata.version('tricca-autopipette')}",
     )
     parser.add_argument(
         "--config",
