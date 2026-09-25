@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import importlib.metadata
 import io
 import logging
 import os
@@ -162,6 +163,18 @@ class TestParseArguments:
 
         with pytest.raises(SystemExit):
             main_module.parse_arguments()
+
+    def test_version_flag_prints_installed_package_version_and_exits(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        monkeypatch.setattr("sys.argv", ["tapd", "--version"])
+
+        with pytest.raises(SystemExit) as exc_info:
+            main_module.parse_arguments()
+
+        assert exc_info.value.code == 0
+        installed_version = importlib.metadata.version("tricca-autopipette")
+        assert installed_version in capsys.readouterr().out
 
 
 class TestSetupLogging:
