@@ -8,7 +8,7 @@ Tricca AutoPipette controls an automated liquid handling system (ALHS) built on 
 
 The root `README.md` is a thin front door (quickstart + links) — this file is the architecture deep-dive it links out to, and is where current structure should be confirmed.
 
-This file describes the system as it **is**. Planned-but-unimplemented work lives in **GitHub Issues** — start from the backlog map (issue #34), which carries the dependency order, the standing findings, and an index of every entry. Check it before starting anything non-trivial, since several issues record decisions already taken and open questions that must be settled first. The backlog also flags problems that are true of the code *today*: the "steps" vocabulary in `VolumeConverter`/`vol_to_steps` actually denotes **millimetres** (Klipper's `MANUAL_STEPPER` takes `MOVE` in mm, `SPEED` in mm/s, `ACCEL` in mm/s²) — a naming bug rather than a correctness one, but the names lie; and the non-atomic/lossy config writer. Note that neither `tapd`'s control plane nor the kiosk has **any** authentication — both are protected solely by binding loopback, so treat any change to a bind address as a security decision (see `systemd/README.md`).
+This file describes the system as it **is**. Planned-but-unimplemented work lives in **GitHub Issues** — start from the backlog map (issue #34), which carries the dependency order, the standing findings, and an index of every entry. Check it before starting anything non-trivial, since several issues record decisions already taken and open questions that must be settled first. The backlog also flags problems that are true of the code *today*: the "steps" vocabulary in `VolumeConverter`/`vol_to_steps` actually denotes **millimetres** (Klipper's `MANUAL_STEPPER` takes `MOVE` in mm, `SPEED` in mm/s, `ACCEL` in mm/s²) — a naming bug rather than a correctness one, but the names lie; and the non-atomic/lossy config writer. Note that neither `tapd`'s control plane nor the kiosk has **any** authentication — both are protected solely by binding loopback, so treat any change to a bind address as a security decision (see `systemd/README.md` and `docs/adr/0002-loopback-only-trust-boundary.md`). `tapd` enforces this fail-closed: `daemon/main.py`'s `check_bind_host` refuses a non-loopback `--host` unless `--allow-insecure-bind` is passed. The kiosk has no such guard (its bind is uvicorn's own `--host`), so its systemd unit's `127.0.0.1` is the only thing keeping it local.
 
 ## Commands
 
@@ -23,7 +23,8 @@ tapd --no-connect             # start without a Moonraker connection (local test
 tapd --local-connect          # connect to ws://localhost/websocket (e.g. local Moonraker/mock)
 tapd --config <name>          # load a named local system config profile by name (resolved under the local root's system/, never config/)
 tapd --init-local-config [name] # bootstrap a local system config profile from the shared template, then exit
-tapd --host / --port          # control-plane bind address (default 127.0.0.1:8765)
+tapd --host / --port          # control-plane bind address (default 127.0.0.1:8765); non-loopback host refuses to start...
+tapd --allow-insecure-bind    # ...unless this is passed too (bare acknowledgment, logs a loud warning -- see ADR-0002)
 tapd --log-level DEBUG
 
 # Run the interactive shell (a thin tapd client -- start tapd first)

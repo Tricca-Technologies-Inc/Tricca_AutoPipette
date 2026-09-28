@@ -55,6 +55,7 @@ def _base_args(**overrides: Any) -> argparse.Namespace:
         "local_connect": False,
         "host": DEFAULT_HOST,
         "port": DEFAULT_PORT,
+        "allow_insecure_bind": False,
     }
     defaults.update(overrides)
     return argparse.Namespace(**defaults)
@@ -78,6 +79,14 @@ class TestParseArguments:
         assert args.local_connect is False
         assert args.host == DEFAULT_HOST
         assert args.port == DEFAULT_PORT
+        assert args.allow_insecure_bind is False
+
+    def test_allow_insecure_bind_flag(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr("sys.argv", ["tapd", "--allow-insecure-bind"])
+
+        args = main_module.parse_arguments()
+
+        assert args.allow_insecure_bind is True
 
     def test_config_flags(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
@@ -695,3 +704,53 @@ class TestPromptForSystemConfig:
         result = main_module._prompt_for_system_config(["a.json", "b.json"], "a.json")
 
         assert result == "c.json"
+
+
+class TestMainBindHostGuard:
+    """Issue #32 / ADR-0002: tapd refuses a non-loopback bind by default."""
+
+    _patch_common = TestMain._patch_common  # pyright: ignore[reportPrivateUsage]
+
+    @pytest.mark.parametrize(
+        "host", ["127.0.0.1", "127.5.6.7", "::1", "localhost", "LOCALHOST"]
+    )
+    def test_loopback_hosts_start(
+        self, monkeypatch: pytest.MonkeyPatch, host: str
+    ) -> None:
+        calls = self._patch_common(monkeypatch, _base_args(host=host))
+
+        assert main_module.main() == 0
+        assert calls["asyncio_run_called"] is True
+
+    @pytest.mark.parametrize(
+        "host", ["0.0.0.0", "::", "192.168.1.20", "", "rig.local", "localhost.evil"]
+    )
+    def test_non_loopback_host_refuses_to_start(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+        host: str,
+    ) -> None:
+        calls = self._patch_common(monkeypatch, _base_args(host=host))
+
+        assert main_module.main() == 1
+        assert "asyncio_run_called" not in calls
+        err = capsys.readouterr().err
+        assert "--allow-insecure-bind" in err
+        assert "0002" in err
+
+    def test_escape_hatch_starts_and_warns_loudly(
+        self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        calls = self._patch_common(
+            monkeypatch, _base_args(host="0.0.0.0", allow_insecure_bind=True)
+        )
+
+        with caplog.at_level(logging.WARNING):
+            assert main_module.main() == 0
+
+        assert calls["asyncio_run_called"] is True
+        assert any(
+            r.levelno >= logging.WARNING and "0.0.0.0" in r.getMessage()
+            for r in caplog.records
+        )
