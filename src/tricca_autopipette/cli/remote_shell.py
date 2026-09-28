@@ -43,6 +43,7 @@ from tricca_autopipette.cli.report_tables import (
 )
 from tricca_autopipette.commands.tap_cmd_parsers import (
     AspirateArgs,
+    ChangeTipArgs,
     CoorArgs,
     DelLocArgs,
     DispenseArgs,
@@ -237,9 +238,12 @@ class RemoteTapShell(Cmd):
         """Move to the waste container and eject the current tip."""
         self._call_and_print(self.requests.dispose_tip())
 
-    def do_change_tip(self, _: Statement) -> None:
-        """Dispose the current tip and pick up a fresh one."""
-        self._call_and_print(self.requests.change_tip())
+    @with_argparser(TAPCmdParsers.parser_change_tip)  # type: ignore[arg-type]
+    def do_change_tip(self, args: ChangeTipArgs) -> None:
+        """Put away the current tip and pick up a fresh one."""
+        self._call_and_print(
+            self.requests.change_tip(args_from_namespace(ChangeTipArgs, args))
+        )
 
     # ==================== configuration & locations ====================
 

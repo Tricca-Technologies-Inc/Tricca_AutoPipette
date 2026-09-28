@@ -192,6 +192,38 @@ class TestRunEndpoint:
         assert response.status_code == 404
         assert "not found" in response.json()["detail"].lower()
 
+    def test_a_status_push_arriving_before_the_run_response_is_not_clobbered(
+        self,
+        kiosk_client: TestClient,
+        protocols_dir: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Issue #102: the daemon's `notify_run_status` push for a run that
+        fails immediately can reach the kiosk *before* the `run.start` RPC
+        response does. `/run` must not then overwrite that newer status with
+        the RPC's stale "running" result -- doing so left the kiosk (and
+        every browser, via the next broadcast) stuck on "Running" forever.
+        """
+        # `next_tip` is homed-gated and the fake Moonraker starts unhomed, so
+        # the daemon's run fails on line 1 and pushes "error" for real.
+        (protocols_dir / "a.pipette").write_text("next_tip\n")
+        client = kiosk_main._control_client  # pyright: ignore[reportPrivateUsage]
+        assert client is not None
+        real_send = client.send_jsonrpc
+
+        def send_then_await_error_push(request: dict[str, object], **kwargs: object):
+            response = real_send(request, **kwargs)  # pyright: ignore[reportArgumentType]
+            # Hold the RPC response back until the real error push has
+            # landed -- forcing the losing interleaving deterministically.
+            poll_until(lambda: kiosk_main._current_run.status == "error")  # pyright: ignore[reportPrivateUsage]
+            return response
+
+        monkeypatch.setattr(client, "send_jsonrpc", send_then_await_error_push)
+
+        kiosk_client.post("/run", json={"filename": "a.pipette"})
+
+        assert kiosk_client.get("/status").json()["status"] == "error"
+
     def test_second_run_while_one_is_active_returns_409(
         self, kiosk_client: TestClient, protocols_dir: Path
     ) -> None:

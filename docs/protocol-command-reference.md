@@ -148,7 +148,8 @@ Usage: pipette [-h] [--dispense_vol DISP_VOL_UL] [--src_row SRC_ROW]
                [--tipbox TIPBOX_NAME] [--pre_air_gap PRE_AIR_GAP_UL]
                [--post_air_gap POST_AIR_GAP_UL] [--prewet PREWET_CYCLES]
                [--prewet_vol PREWET_VOL_UL] [--wiggle] [--keep_tip]
-               [--splits SPLITS] [--leftover {keep,waste}]
+               [--tip_end {keep,waste,return}] [--splits SPLITS]
+               [--leftover {keep,waste}]
                vol_ul source dest
 
 Transfer liquid from source to destination.
@@ -182,8 +183,11 @@ Options:
                         profile)
   --wiggle              Wiggle tip during dispensing to dislodge residual
                         droplets
-  --keep_tip            Keep tip attached after the operation (default: eject
-                        tip)
+  --keep_tip            Deprecated: same as --tip_end keep
+  --tip_end {keep,waste,return}
+                        Where the tip goes afterwards: keep it on, waste it
+                        (default; returned to its slot if no waste container),
+                        or return it to the slot it came from
   --splits SPLITS       Multi-dispense from one aspirate:
                         'DEST:VOL[@WELL];...', e.g.
                         'plate_a:12@A1;plate_b:8@C3'. Overrides the dest
@@ -221,9 +225,16 @@ Move to the configured waste container and eject the current tip into it.
 ### `change_tip`
 
 ```
-Usage: change_tip
+Usage: change_tip [-h] [--tip_end {waste,return}]
 
-Dispose the current tip (if any) and pick up a fresh one.
+Put away the current tip (if any) and pick up a fresh one.
+
+Options:
+  -h, --help            show this help message and exit
+  --tip_end {waste,return}
+                        Where the old tip goes: waste (default; returned to
+                        its slot if no waste container) or return to the slot
+                        it came from
 ```
 
 ### `switch_liquid`

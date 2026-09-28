@@ -40,6 +40,7 @@ from cmd2 import Cmd2ArgumentParser
 
 from tricca_autopipette.commands.tap_cmd_parsers import (
     AspirateArgs,
+    ChangeTipArgs,
     CoorArgs,
     DelLocArgs,
     DispenseArgs,
@@ -66,6 +67,7 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
 from tricca_autopipette.core.autopipette import AutoPipette
 from tricca_autopipette.core.config_writer import set_config_value
 from tricca_autopipette.core.coordinate import Coordinate
+from tricca_autopipette.core.gcode_commands import GCode
 from tricca_autopipette.core.gcode_manager import GCodeManager
 from tricca_autopipette.core.json_config_manager import JsonConfigManager
 from tricca_autopipette.core.location_manager import LocationManager
@@ -965,9 +967,12 @@ class AutoPipetteService:
                 configured.
             TipAlreadyOnError: If a tip is already attached when one is
                 needed.
-            NoWasteContainerError: If the transfer disposes of its tip (i.e.
-                ``keep_tip`` is False) and no waste container is configured,
-                or if ``args.leftover`` is ``"waste"`` and there is none.
+            NoWasteContainerError: If ``args.leftover`` is ``"waste"`` with no
+                waste container, or the tip goes to waste with neither a
+                container nor a known origin slot to fall back to.
+            NoTipOriginError: If ``--tip_end return`` and the tip's origin
+                slot is unknown.
+            ValueError: If ``--keep_tip`` conflicts with ``--tip_end``.
             NotALocationError: If ``args.source``/``args.dest`` (or a
                 ``--splits`` destination) is not a defined location.
             ValueError: If a ``--splits`` spec fails validation against the
@@ -979,6 +984,7 @@ class AutoPipetteService:
             return CommandResult(ok=False, message="Volume must be greater than zero.")
 
         autopipette = self._autopipette
+        tip_end = autopipette.resolve_tip_end(args.tip_end, args.keep_tip)
 
         if args.splits:
             try:
@@ -999,7 +1005,7 @@ class AutoPipetteService:
                 prewet_vol_ul=args.prewet_vol_ul,
                 wiggle=args.wiggle,
                 leftover=args.leftover,
-                keep_tip=args.keep_tip,
+                tip_end=tip_end,
             )
             destination = ", ".join(f"{s.dest}:{s.vol_ul}" for s in splits)
             split_count = len(splits)
@@ -1019,7 +1025,7 @@ class AutoPipetteService:
                 prewet_cycles=args.prewet_cycles,
                 prewet_vol_ul=args.prewet_vol_ul,
                 wiggle=args.wiggle,
-                keep_tip=args.keep_tip,
+                tip_end=tip_end,
             )
             destination = args.dest
             split_count = 0
@@ -1029,8 +1035,8 @@ class AutoPipetteService:
             features.append(f"prewet×{args.prewet_cycles}")
         if args.wiggle:
             features.append("wiggle")
-        if args.keep_tip:
-            features.append("keep-tip")
+        if tip_end != "waste":
+            features.append(f"tip_end={tip_end}")
         if split_count:
             features.append(f"splits×{split_count}")
         if args.leftover:
@@ -1041,7 +1047,9 @@ class AutoPipetteService:
             comment += f" [{', '.join(features)}]"
         comment += "\n"
 
-        self.output_gcode([comment, *autopipette.get_gcode(), "\n"])
+        # A comment block, not a Klipper command -- the explicit GCode casts
+        # are GCodeBuffer's documented escape hatch.
+        self.output_gcode([GCode(comment), *autopipette.get_gcode(), GCode("\n")])
         return CommandResult(
             ok=True,
             message=(
@@ -1122,8 +1130,12 @@ class AutoPipetteService:
     @require_homed("change_tip")
     @persist_tip_liquid_state
     @persist_tip_presence
-    def change_tip(self) -> CommandResult:
-        """Dispose the current tip (if any) and pick up a fresh one.
+    def change_tip(self, args: ChangeTipArgs | None = None) -> CommandResult:
+        """Put away the current tip (if any) and pick up a fresh one.
+
+        Args:
+            args: Where the old tip goes; defaults to waste (which falls back
+                to its origin slot with no waste container).
 
         Returns:
             Result describing the completed change.
@@ -1131,12 +1143,14 @@ class AutoPipetteService:
         Raises:
             NotHomedError: If the pipette is not homed.
             NoTipboxError: If no tipbox is configured.
-            NoWasteContainerError: If a tip is currently attached and no
-                waste container is configured to dispose of it.
+            NoWasteContainerError: If the old tip goes to waste with neither
+                a container nor a known origin slot to fall back to.
+            NoTipOriginError: If ``--tip_end return`` and the old tip's
+                origin slot is unknown.
         """  # ruff: ignore[docstring-extraneous-exception]
         autopipette = self._autopipette
         if autopipette.state.tip_state == TipState.ATTACHED:
-            autopipette.dispose_tip()
+            autopipette.finish_tip(args.tip_end if args else "waste")
 
         autopipette.next_tip()
         self.output_gcode(autopipette.get_gcode())
@@ -1815,7 +1829,7 @@ class AutoPipetteService:
 
     def output_gcode(
         self,
-        gcode: list[str],
+        gcode: list[GCode],
         filename: str | None = None,
         append_header: bool = False,
     ) -> None:
@@ -2480,9 +2494,9 @@ class AutoPipetteService:
         every registered tipbox's consumed-position map
         (:meth:`TipBoxManager.snapshot`), every plate's traversal cursor
         (:meth:`LocationManager.snapshot_cursors`), and the pipette's
-        tip/liquid state (``AutoPipette.state.tip_state``/``has_liquid`` plus
-        ``active_liquid``). Membership is restored first, before the other
-        three: doing so brings back the exact original objects, so the
+        tip/liquid state (``AutoPipette.state.tip_state``/``tip_origin``/
+        ``has_liquid`` plus ``active_liquid``). Membership is restored first,
+        before the other three: doing so brings back the exact original objects, so the
         per-object presence/cursor restores that follow always find a
         shape-matched target -- a location reconfigured under the same name
         mid-run is therefore fully restored, not merely detected and left as
@@ -2528,6 +2542,7 @@ class AutoPipetteService:
         state = autopipette.state
         pipette_state_snapshot = (
             state.tip_state,
+            state.tip_origin,
             state.has_liquid,
             autopipette.active_liquid,
         )
@@ -2542,8 +2557,9 @@ class AutoPipetteService:
             tipbox_manager.restore(tip_presence_snapshot)
             location_manager.restore_cursors(cursor_snapshot)
 
-            tip_state, has_liquid, active_liquid = pipette_state_snapshot
+            tip_state, tip_origin, has_liquid, active_liquid = pipette_state_snapshot
             state.tip_state = tip_state
+            state.tip_origin = tip_origin
             state.has_liquid = has_liquid
             if active_liquid != autopipette.active_liquid:
                 autopipette.switch_liquid(active_liquid)
@@ -3374,7 +3390,9 @@ _LINE_DISPATCH: dict[str, _LineCommand] = {
     "next_tip": _LineCommand(None, None, AutoPipetteService.next_tip),
     "eject_tip": _LineCommand(None, None, AutoPipetteService.eject_tip),
     "dispose_tip": _LineCommand(None, None, AutoPipetteService.dispose_tip),
-    "change_tip": _LineCommand(None, None, AutoPipetteService.change_tip),
+    "change_tip": _LineCommand(
+        TAPCmdParsers.parser_change_tip, ChangeTipArgs, AutoPipetteService.change_tip
+    ),
     "set": _LineCommand(TAPCmdParsers.parser_set, SetArgs, AutoPipetteService.set),
     "coor": _LineCommand(TAPCmdParsers.parser_coor, CoorArgs, AutoPipetteService.coor),
     "plate": _LineCommand(

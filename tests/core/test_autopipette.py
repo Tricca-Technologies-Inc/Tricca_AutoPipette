@@ -362,17 +362,17 @@ class TestPipetteTransfer:
 
         pipette_with_plates.pipette(vol_ul=50.0, source="plate_a", dest="plate_a")
 
-        # keep_tip defaults to False -> tip is disposed of at the end.
+        # tip_end defaults to "waste" -> tip is disposed of at the end.
         assert pipette_with_plates.state.tip_state == TipState.DETACHED
         assert pipette_with_plates.state.has_liquid is False
 
-    def test_keep_tip_leaves_tip_attached(
+    def test_tip_end_keep_leaves_tip_attached(
         self, pipette_with_plates: AutoPipette
     ) -> None:
         pipette_with_plates.state.tip_state = TipState.ATTACHED
 
         pipette_with_plates.pipette(
-            vol_ul=50.0, source="plate_a", dest="plate_a", keep_tip=True
+            vol_ul=50.0, source="plate_a", dest="plate_a", tip_end="keep"
         )
 
         assert pipette_with_plates.state.tip_state == TipState.ATTACHED
@@ -391,7 +391,7 @@ class TestPipetteTransfer:
             wraps=pipette_with_plates.aspirate_volume,
         ) as spy_aspirate:
             pipette_with_plates.pipette(
-                vol_ul=250.0, source="plate_a", dest="plate_a", keep_tip=True
+                vol_ul=250.0, source="plate_a", dest="plate_a", tip_end="keep"
             )
 
         aspirated_volumes = [call.args[0] for call in spy_aspirate.call_args_list]
@@ -416,7 +416,7 @@ class TestPipetteTransfer:
                 dest="plate_a",
                 pre_air_gap_ul=30.0,
                 post_air_gap_ul=2.0,
-                keep_tip=True,
+                tip_end="keep",
             )
 
         aspirated_volumes = [call.args[0] for call in spy_aspirate.call_args_list]

@@ -141,13 +141,7 @@ _COMMANDS: list[_CommandDoc] = [
             "tip into it."
         ),
     ),
-    _CommandDoc(
-        "change_tip",
-        manual_usage=(
-            "Usage: change_tip\n\n"
-            "Dispose the current tip (if any) and pick up a fresh one."
-        ),
-    ),
+    _CommandDoc("change_tip", parser=TAPCmdParsers.parser_change_tip),
     _CommandDoc(
         "switch_liquid",
         manual_usage=(

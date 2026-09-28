@@ -17,7 +17,6 @@ __all__ = [
     "CoordinateSystem",
     "DefaultFilenames",
     "DefaultPaths",
-    "GCodeCommand",
     "HomingTargets",
     "LocalConfigRoots",
     "PhysicalConstants",
@@ -57,41 +56,6 @@ class PlateType(StrEnum):
     WASTE_CONTAINER = "waste_container"
     TIPBOX = "tipbox"
     ARRAY = "array"
-
-
-class GCodeCommand:
-    """G-code command constants.
-
-    Standard G-code commands used for pipette control.
-
-    Example:
-        >>> from tricca_autopipette.core.pipette_constants import GCodeCommand
-        >>> home_cmd = GCodeCommand.HOME_ALL
-        >>> home_cmd
-        'G28'
-    """
-
-    # Coordinate systems
-    ABSOLUTE_MODE = "G90"
-    RELATIVE_MODE = "G91"
-
-    # Homing
-    HOME_ALL = "G28"
-    HOME_X = "G28 X"
-    HOME_Y = "G28 Y"
-    HOME_Z = "G28 Z"
-
-    # Movement
-    LINEAR_MOVE = "G1"
-
-    # Timing
-    DWELL = "G4"
-
-    # Display
-    DISPLAY_MESSAGE = "M117"
-
-    # Speed control
-    SPEED_FACTOR = "M220"
 
 
 class PhysicalConstants:
