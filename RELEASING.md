@@ -18,9 +18,17 @@ for people who clone the repo," matching the existing
 `AUTOPIPETTE_REPO_ROOT`-env-var install model, not advertised as turnkey.
 Closing that gap is out of scope for this process; see issue #22.
 
-**First tag:** `v0.2.0` is meant to be the first real tag. Don't cut it (or
-any tag) until issue #19's CI workflow is live and green on `main` — a
-release built off an unverified `main` has nothing checking it.
+**First tag:** `v0.2.0` was the first real tag, cut once issue #19's CI
+workflow was live and green on `main` and the branch ruleset below existed
+— a release built off an unverified `main` has nothing checking it.
+
+**Branch protection:** `main` is protected by a repo ruleset (added
+alongside `v0.2.0` — see issue #19): direct pushes are blocked, a PR is
+required, and it must show all four CI jobs (`lint`/`typecheck`/`test`/
+`test-browser`) green before merging. No required approvals (solo
+maintainer), and repo admins can bypass in a genuine emergency — but the
+version-bump/changelog commit below should go through a normal PR like any
+other change, not the bypass.
 
 ## Steps
 
@@ -38,8 +46,10 @@ release built off an unverified `main` has nothing checking it.
      format under a new `## [X.Y.Z] - YYYY-MM-DD` heading, sorted into
      `Added`/`Changed`/`Fixed`/`Removed` as appropriate.
 3. Commit both changes (`pyproject.toml` version bump + `CHANGELOG.md`
-   entry) to `main`.
-4. Tag the commit: `git tag vX.Y.Z`
+   entry) on a branch, open a PR against `main`, and merge it once CI is
+   green (the ruleset above requires this — there's no more direct-push
+   path).
+4. Once merged, tag the resulting commit on `main`: `git tag vX.Y.Z`
 5. Push the tag: `git push --tags`
 
 Pushing the tag triggers `.github/workflows/release.yml`, which builds the
