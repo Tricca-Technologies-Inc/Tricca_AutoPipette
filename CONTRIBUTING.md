@@ -22,22 +22,28 @@ below will save you a round-trip.
 
 ## Dev setup
 
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then:
+
 ```bash
-pip install -e ".[dev]"
+uv sync --extra dev    # add --extra browser-test for the kiosk browser tests
 ```
+
+Dependency versions are locked in the committed `uv.lock`. After changing
+`dependencies` or an extra in `pyproject.toml`, run `uv lock` and commit the
+result; CI installs with `uv sync --frozen` and fails on a stale lock.
 
 Run the daemon first — `tap` and the kiosk are both thin clients of it and do
 nothing useful until it's running:
 
 ```bash
-tapd --no-connect       # or --local-connect against a local/mock Moonraker
+uv run tapd --no-connect       # or --local-connect against a local/mock Moonraker
 ```
 
 Then, in another terminal:
 
 ```bash
-tap                                    # interactive shell
-uvicorn autopipette_kiosk.main:app --host 127.0.0.1 --port 8000   # kiosk
+uv run tap                                    # interactive shell
+uv run uvicorn autopipette_kiosk.main:app --host 127.0.0.1 --port 8000   # kiosk
 ```
 
 Both the daemon's control plane and the kiosk are loopback-only with no
@@ -50,22 +56,22 @@ Run all four before opening a PR — there's no CI yet ([#19](https://github.com
 what stands behind a review today:
 
 ```bash
-ruff check .
-ruff format .
-pyright
-pytest
+uv run ruff check .
+uv run ruff format .
+uv run pyright
+uv run pytest
 ```
 
 If you touched a docstring's `>>> ` example, also run:
 
 ```bash
-pytest --doctest-modules
+uv run pytest --doctest-modules
 ```
 
 If you touched a docstring or anything under `docs/`, also run:
 
 ```bash
-sphinx-build -W docs docs/_build/html
+uv run sphinx-build -W docs docs/_build/html
 ```
 
 (`-W` treats warnings as errors — this is the check to run before a

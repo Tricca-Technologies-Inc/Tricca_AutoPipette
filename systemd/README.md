@@ -14,6 +14,19 @@ Both `ExecStart` lines point at a placeholder path
 actual virtualenv location and, if needed, add a `User=`/`WorkingDirectory=`
 appropriate for your setup before installing.
 
+To populate that virtualenv with exactly the locked dependency versions
+(no dev tools), from a checkout at `/opt/tricca-autopipette`:
+
+```bash
+UV_PROJECT_ENVIRONMENT=/opt/tricca-autopipette/venv uv sync --frozen
+```
+
+`--frozen` installs what the committed `uv.lock` says and refuses to
+re-resolve, so every rig runs the versions CI tested. The lock covers both
+x86_64 and aarch64 Linux. `uv sync` produces an ordinary venv with real
+entry-point scripts in `venv/bin/`, so the units' `ExecStart` lines don't
+change.
+
 ## `AUTOPIPETTE_REPO_ROOT`
 
 Both units set `Environment=AUTOPIPETTE_REPO_ROOT=/opt/tricca-autopipette`.
