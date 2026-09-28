@@ -64,6 +64,7 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     args_from_namespace,
 )
 from tricca_autopipette.core.autopipette import AutoPipette
+from tricca_autopipette.core.config_writer import set_config_value
 from tricca_autopipette.core.coordinate import Coordinate
 from tricca_autopipette.core.gcode_manager import GCodeManager
 from tricca_autopipette.core.json_config_manager import JsonConfigManager
@@ -1378,7 +1379,7 @@ class AutoPipetteService:
         return CommandResult(ok=True, message=f"Cleared {count} location(s).")
 
     def save_locations(self, filename: str) -> CommandResult:
-        """Save current locations to a JSON file under ``config/locations/``.
+        """Save current locations to a JSON file in the local root's ``locations/``.
 
         Args:
             filename: Output filename.
@@ -1388,6 +1389,37 @@ class AutoPipetteService:
         """
         self._autopipette.location_manager.save_to_json(filename)
         return CommandResult(ok=True, message=f"Saved locations to {filename}")
+
+    def set_config_value(
+        self, category: str, filename: str, key_path: str, value: object
+    ) -> CommandResult:
+        """Set one value in one config file, saved to the local config root.
+
+        A thin adapter over `config_writer.set_config_value`: copy-on-write
+        from the shared repo, rejected if the result would not load, written
+        atomically. Only the file changes -- the running daemon does not
+        reload it (hot-reload is issue #33's next slice).
+
+        Args:
+            category: ``system``, ``gantry``, ``pipettes``, ``liquids``,
+                ``locations`` or ``plates``.
+            filename: Bare filename within that category.
+            key_path: Dotted key path, e.g. ``syringe.max_volume_ul``.
+            value: New JSON value.
+
+        Returns:
+            Result naming the written file, or ``ok=False`` with the reason a
+            write was refused (nothing is written in that case).
+        """
+        try:
+            path = set_config_value(category, filename, key_path, value)
+        except (ValueError, FileNotFoundError) as e:
+            return CommandResult(ok=False, message=str(e))
+        return CommandResult(
+            ok=True,
+            message=f"Set {key_path} = {value!r} in {path}",
+            data={"path": str(path)},
+        )
 
     @persist_tip_presence
     def load_locations(self, args: LoadLocationsArgs) -> CommandResult:

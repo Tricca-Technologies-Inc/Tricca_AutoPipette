@@ -56,6 +56,7 @@ _BUILDER_TO_COMMAND: dict[str, str] = {
     "del_loc": "del_loc",
     "clear_locs": "clear_locs",
     "save_locations": "save_locations",
+    "set_config_value": "set_config",
     "load_locations": "load_locations",
     "unload_locations": "unload_locations",
     "reset_tips": "reset_tips",

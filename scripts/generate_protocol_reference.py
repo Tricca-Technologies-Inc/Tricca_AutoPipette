@@ -189,7 +189,9 @@ _COMMANDS: list[_CommandDoc] = [
         "save_locations",
         manual_usage=(
             "Usage: save_locations [filename]\n\n"
-            "Save the current deck to config/locations/. filename defaults "
+            "Save the current deck to the local config root's locations/, "
+            "atomically; file-loaded entries are written back as loaded. "
+            "filename defaults "
             "to 'custom_locations.json' when omitted on a protocol-file "
             "line."
         ),

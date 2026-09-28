@@ -367,6 +367,17 @@ class ControlServer:
                     lambda: self.service.save_locations(params["filename"])
                 )
             )
+        if method == "config.set_value":
+            return dataclasses.asdict(
+                await self.service.dispatch(
+                    lambda: self.service.set_config_value(
+                        params["category"],
+                        params["filename"],
+                        params["key_path"],
+                        params["value"],
+                    )
+                )
+            )
         if method == "util.steps_to_vol":
             return dataclasses.asdict(
                 await self.service.dispatch(

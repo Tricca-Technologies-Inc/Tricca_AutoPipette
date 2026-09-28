@@ -388,7 +388,7 @@ Options:
 ```
 Usage: save_locations [filename]
 
-Save the current deck to config/locations/. filename defaults to 'custom_locations.json' when omitted on a protocol-file line.
+Save the current deck to the local config root's locations/, atomically; file-loaded entries are written back as loaded. filename defaults to 'custom_locations.json' when omitted on a protocol-file line.
 ```
 
 ### `reset_tips`
