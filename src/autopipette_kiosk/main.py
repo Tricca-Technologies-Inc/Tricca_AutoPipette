@@ -324,8 +324,6 @@ async def run_protocol(req: RunRequest) -> RunStatus:
             already active, 503 if the control daemon isn't connected, or
             500 for any other dispatch failure.
     """
-    global _current_run
-
     # Fails fast without round-tripping to the daemon only when the file is
     # missing from *both* roots the kiosk itself can see -- a file that
     # exists only in the local root still passes this and reaches the
@@ -352,12 +350,16 @@ async def run_protocol(req: RunRequest) -> RunStatus:
     except RuntimeError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
+    # Deliberately not written to `_current_run`: the daemon's
+    # `notify_run_status` push is its sole writer. That push can arrive
+    # before this response does (a run that fails on its first line), and
+    # overwriting it here with this now-stale "running" left the kiosk stuck
+    # on "Running" (issue #102).
     result: dict[str, Any] = response.get("result", {})
-    _current_run = RunStatus(
+    return RunStatus(
         status=result.get("status", "running"),
         message=result.get("message", ""),
     )
-    return _current_run
 
 
 @app.post("/validate", response_model=CommandResultResponse)
