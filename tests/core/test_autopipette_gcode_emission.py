@@ -13,10 +13,21 @@ recomputation of what the builders do. One deliberate edit since: the old
 other ``MANUAL_STEPPER`` site emitted ``MOVE=`` first; the builder has one
 fixed parameter order, so those two lines now read ``MOVE= SPEED=``.
 Klipper parses extended parameters by name, so the machine sees no change.
+
+The comparison is exact on everything except the *value* of each number,
+which is checked with ``math.isclose(rel_tol=1e-9)``. Stepper distances come
+from the volume converter's numpy polyfit, whose last few float digits vary
+with the numpy build and the platform's BLAS (x86 vs arm64 CI differ in
+e.g. ``499.03429068615003`` vs ``499.0342906861499``) -- noise far below
+anything a stepper can resolve, and not what this test guards. Each
+number's *shape* (integer vs decimal) still has to match exactly, so a
+formatting change like ``S100`` -> ``S100.0`` is still caught.
 """
 
 from __future__ import annotations
 
+import math
+import re
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -26,8 +37,22 @@ from tricca_autopipette.core.coordinate import Coordinate
 GOLDEN = Path(__file__).parents[1] / "fixtures" / "gcode" / "autopipette_emission.gcode"
 
 
+_NUMBER = re.compile(r"-?\d+(\.\d+)?")
+
+
 def _as_written(entries: Sequence[str]) -> str:
     return "".join(entry.rstrip("\n") + "\n" for entry in entries)
+
+
+def _split_numbers(text: str) -> tuple[str, list[float]]:
+    """Split G-code text into a number-free skeleton and its numbers.
+
+    Returns:
+        The text with each number replaced by ``<int>``/``<dec>``, and the
+        numbers themselves in order.
+    """
+    skeleton = _NUMBER.sub(lambda m: "<dec>" if m.group(1) else "<int>", text)
+    return skeleton, [float(m.group(0)) for m in _NUMBER.finditer(text)]
 
 
 def test_every_emission_site_emits_unchanged_gcode(
@@ -50,4 +75,12 @@ def test_every_emission_site_emits_unchanged_gcode(
     ap.clear_syringe()
     ap.pipette(20.0, "plate_a", "plate_a")
 
-    assert _as_written(ap.get_gcode()) == GOLDEN.read_text(encoding="utf-8")
+    actual_text, actual_numbers = _split_numbers(_as_written(ap.get_gcode()))
+    golden_text, golden_numbers = _split_numbers(GOLDEN.read_text(encoding="utf-8"))
+
+    assert actual_text == golden_text
+    assert len(actual_numbers) == len(golden_numbers)
+    for index, (actual, golden) in enumerate(
+        zip(actual_numbers, golden_numbers, strict=True)
+    ):
+        assert math.isclose(actual, golden, rel_tol=1e-9), (index, actual, golden)
