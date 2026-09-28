@@ -75,10 +75,15 @@
           <div class="selection-name placeholder" id="selectionName">Select a protocol from the list</div>
         </div>
 
-        <button class="run-btn" id="runBtn" disabled>
-          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-          Run protocol
-        </button>
+        <div class="run-actions">
+          <button class="run-btn" id="runBtn" disabled>
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            Run protocol
+          </button>
+          <button class="check-btn" id="checkBtn" disabled>Check</button>
+        </div>
+
+        <div class="findings-list" id="findingsList"></div>
 
         <div class="status-card">
           <div class="status-icon idle" id="statusIcon">○</div>

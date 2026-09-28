@@ -353,6 +353,59 @@ class TestLocationsEndpoint:
         assert response.status_code == 503
 
 
+class TestValidateEndpoint:
+    """Tests for `POST /validate` (issue #88): a thin proxy over
+    `run.validate`, for the Run tab's pre-flight "Check" button.
+    """
+
+    def test_clean_protocol_reports_ok_with_no_findings(
+        self, kiosk_client: TestClient, protocols_dir: Path
+    ) -> None:
+        (protocols_dir / "a.pipette").write_text("wait 1\n")
+
+        response = kiosk_client.post("/validate", json={"filename": "a.pipette"})
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["ok"] is True
+        assert body["data"]["findings"] == []
+
+    def test_bad_location_reports_ok_false_with_an_error_finding(
+        self, kiosk_client: TestClient, protocols_dir: Path
+    ) -> None:
+        (protocols_dir / "a.pipette").write_text("move_loc missing\n")
+
+        response = kiosk_client.post("/validate", json={"filename": "a.pipette"})
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["ok"] is False
+        findings = body["data"]["findings"]
+        assert len(findings) == 1
+        assert findings[0]["severity"] == "error"
+
+    def test_missing_file_in_the_kiosk_dir_returns_404_without_contacting_daemon(
+        self, kiosk_client: TestClient, protocols_dir: Path
+    ) -> None:
+        del protocols_dir
+        response = kiosk_client.post(
+            "/validate", json={"filename": "does-not-exist.pipette"}
+        )
+
+        assert response.status_code == 404
+
+    def test_returns_503_when_the_daemon_is_not_connected(
+        self, protocols_dir: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        (protocols_dir / "a.pipette").write_text("wait 1\n")
+        monkeypatch.setattr(kiosk_main, "_control_client", None)
+
+        client = TestClient(kiosk_main.app)  # no lifespan, see TestRunEndpoint above
+        response = client.post("/validate", json={"filename": "a.pipette"})
+
+        assert response.status_code == 503
+
+
 class TestIndexRoute:
     def test_serves_the_frontend(self, kiosk_client: TestClient) -> None:
         response = kiosk_client.get("/")

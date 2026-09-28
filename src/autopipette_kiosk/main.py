@@ -77,6 +77,12 @@ class RunRequest(BaseModel):
     filename: str  # e.g. "A1.pipette"
 
 
+class ValidateRequest(BaseModel):
+    """Request body for `POST /validate`."""
+
+    filename: str  # e.g. "A1.pipette"
+
+
 class RunStatus(BaseModel):
     """Current (or most recent) protocol run status."""
 
@@ -352,6 +358,38 @@ async def run_protocol(req: RunRequest) -> RunStatus:
         message=result.get("message", ""),
     )
     return _current_run
+
+
+@app.post("/validate", response_model=CommandResultResponse)
+async def validate_protocol(req: ValidateRequest) -> CommandResultResponse:
+    """Dry-run validate a protocol via the tapd control daemon's `run.validate`.
+
+    Read-only pre-flight check for the Run tab's "Check" button (issue #88,
+    following on from #36): reports per-line findings without executing
+    anything, uploading G-code, or requiring the machine to be homed --
+    `domain_state_snapshot(restore="always")` guarantees nothing durable
+    changes, so unlike `/run` this needs no destructive-action handling.
+    Routing only, matching the `/tips`/`/locations` forwarding pattern --
+    `AutoPipetteService.validate_protocol` is the data source.
+
+    Returns:
+        `CommandResultResponse` with `data["findings"]`, a list of
+        `{"line_number", "command", "severity", "message"}` dicts (severity
+        one of "error"/"warning"/"info"). `ok` is True only if no finding
+        is an "error".
+
+    Raises:
+        HTTPException: 404 if `req.filename` doesn't exist in either
+            protocols root, 503 if the control daemon isn't connected, or
+            500 for any other dispatch failure.
+    """
+    known_names = {path.name for path in _list_protocol_files()}
+    if req.filename not in known_names:
+        raise HTTPException(
+            status_code=404, detail=f"Protocol not found: {req.filename}"
+        )
+
+    return await _dispatch_control_request(_control_requests.run_validate(req.filename))
 
 
 @app.post("/home", response_model=RunStatus)
