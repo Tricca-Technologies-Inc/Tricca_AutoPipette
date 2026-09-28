@@ -10,11 +10,13 @@ from __future__ import annotations
 
 import json
 import shutil
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import pytest
 
+from tricca_autopipette.core.config_writer import set_config_value
 from tricca_autopipette.core.location_manager import LocationManager
 from tricca_autopipette.core.pipette_constants import DefaultPaths
 
@@ -30,12 +32,12 @@ _CATEGORY_ATTRS = {
 }
 
 
+@dataclass
 class Roots:
     """The scratch shared/local roots a test runs against."""
 
-    def __init__(self, shared: Path, local: Path) -> None:
-        self.shared = shared
-        self.local = local
+    shared: Path
+    local: Path
 
 
 @pytest.fixture
@@ -94,9 +96,7 @@ class TestLocationsRoundTrip:
 
         assert _read(roots.local / "locations" / "out.json") == deck
 
-    def test_tipbox_tips_block_reflects_current_consumption(
-        self, roots: Roots
-    ) -> None:
+    def test_tipbox_tips_block_reflects_current_consumption(self, roots: Roots) -> None:
         manager = LocationManager()
         manager.load_from_json("examples_deck.json")
         manager.tipbox_manager.set_consumed("example_tipbox", {0, 1})
@@ -106,3 +106,130 @@ class TestLocationsRoundTrip:
         saved = _read(roots.local / "locations" / "out.json")
         tipbox = next(p for p in saved["plates"] if p["name"] == "example_tipbox")
         assert tipbox["tips"] == {"consumed": ["A1:A2"]}
+
+
+class TestSetConfigValue:
+    def test_shared_only_file_is_copied_into_local_then_edited(
+        self, roots: Roots
+    ) -> None:
+        shared_file = roots.shared / "liquids" / "water.json"
+        shared_before = shared_file.read_bytes()
+
+        written = set_config_value("liquids", "water.json", "density_g_ml", 1.2)
+
+        assert written == roots.local / "liquids" / "water.json"
+        expected = {**json.loads(shared_before), "density_g_ml": 1.2}
+        assert _read(written) == expected
+        assert list(_read(written)) == list(expected)  # key order kept
+        assert shared_file.read_bytes() == shared_before
+
+    @pytest.mark.parametrize(
+        ("category", "filename", "key_path", "value"),
+        [
+            ("liquids", "water.json", "density_g_ml", "dense"),
+            ("gantry", "default_gantry.json", "speed_xy", -5),
+            ("pipettes", "default_pipette.json", "syringe", "nope"),
+            ("locations", "examples_deck.json", "plates.0.num_row", "two"),
+            ("plates", "96_well_standard.json", "num_col", "twelve"),
+        ],
+    )
+    def test_write_that_would_not_load_is_rejected_and_nothing_is_written(
+        self, roots: Roots, category: str, filename: str, key_path: str, value: Any
+    ) -> None:
+        with pytest.raises(ValueError, match="would not load"):
+            set_config_value(category, filename, key_path, value)
+
+        assert not (roots.local / category / filename).exists()
+
+    def test_rejected_write_leaves_an_existing_local_file_untouched(
+        self, roots: Roots
+    ) -> None:
+        local_file = set_config_value("liquids", "water.json", "density_g_ml", 1.2)
+        before = local_file.read_bytes()
+
+        with pytest.raises(ValueError, match="would not load"):
+            set_config_value("liquids", "water.json", "density_g_ml", "dense")
+
+        assert local_file.read_bytes() == before
+
+
+class TestSystemWrites:
+    @pytest.fixture
+    def system_dir(self, roots: Roots) -> Path:
+        system_dir = roots.local / "system"
+        system_dir.mkdir()
+        shutil.copy(roots.shared / "system" / "default_system.json", system_dir)
+        return system_dir
+
+    def test_extends_is_preserved_not_flattened(self, system_dir: Path) -> None:
+        child = {"extends": "default_system.json", "network": {"hostname": "a"}}
+        (system_dir / "child.json").write_text(json.dumps(child))
+
+        set_config_value("system", "child.json", "network.hostname", "rig7")
+
+        assert _read(system_dir / "child.json") == {
+            "extends": "default_system.json",
+            "network": {"hostname": "rig7"},
+        }
+
+    def test_unloadable_system_write_is_rejected(self, system_dir: Path) -> None:
+        before = (system_dir / "default_system.json").read_bytes()
+
+        with pytest.raises(ValueError, match="would not load"):
+            set_config_value("system", "default_system.json", "pipette", "no_such")
+
+        assert (system_dir / "default_system.json").read_bytes() == before
+
+    def test_writes_through_the_active_symlink(self, system_dir: Path) -> None:
+        (system_dir / "active.json").symlink_to("default_system.json")
+
+        set_config_value("system", "active.json", "system_name", "Rig 7")
+
+        assert (system_dir / "active.json").is_symlink()
+        assert _read(system_dir / "default_system.json")["system_name"] == "Rig 7"
+
+    def test_never_reads_the_shared_system_template(self, roots: Roots) -> None:
+        with pytest.raises(FileNotFoundError):
+            set_config_value("system", "default_system.json", "system_name", "x")
+
+
+class TestRejectedArguments:
+    def test_path_like_filename_is_rejected(self, roots: Roots) -> None:
+        with pytest.raises(ValueError, match="bare filename"):
+            set_config_value("liquids", "../liquids/water.json", "name", "x")
+
+    def test_missing_intermediate_key_is_rejected(self, roots: Roots) -> None:
+        with pytest.raises(ValueError, match="no_such"):
+            set_config_value("pipettes", "default_pipette.json", "no_such.x", 1)
+
+    def test_protocols_are_not_a_config_category(self, roots: Roots) -> None:
+        with pytest.raises(ValueError, match="category"):
+            set_config_value("protocols", "a.pipette", "x", 1)
+
+
+_ALL_FILES = [
+    (category, filename)
+    for category in ("system", "gantry", "pipettes", "liquids", "locations", "plates")
+    for filename in _repo_files(category)
+]
+
+
+class TestRoundTripFidelity:
+    """Load every file under config/, save it through the writer, reload."""
+
+    @pytest.mark.parametrize(("category", "filename"), _ALL_FILES)
+    def test_no_op_write_reproduces_every_file(
+        self, roots: Roots, category: str, filename: str
+    ) -> None:
+        shared_file = roots.shared / category / filename
+        original = _read(shared_file)
+        if category == "system":  # system/ is local-only; start from a copy
+            (roots.local / "system").mkdir()
+            shutil.copy(shared_file, roots.local / "system")
+        if not original:  # e.g. an empty locations file: nothing to set
+            pytest.skip(f"{filename} has no keys")
+        key = next(iter(original))
+
+        written = set_config_value(category, filename, key, original[key])
+
+        assert _read(written) == original
