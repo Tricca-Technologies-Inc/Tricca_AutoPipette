@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from tricca_autopipette.core.autopipette import AutoPipette
+from tricca_autopipette.core.gcode_commands import GCode
 from tricca_autopipette.core.gcode_manager import GCodeManager
 
 
@@ -52,15 +53,15 @@ class TestBatchMode:
         assert gcode_manager.is_batch_mode is False
 
         with pytest.raises(RuntimeError, match="batch mode"):
-            gcode_manager.add_gcode(["G28\n"])
+            gcode_manager.add_gcode([GCode("G28\n")])
 
     def test_batch_mode_accumulates_across_multiple_calls(
         self, gcode_manager: GCodeManager
     ) -> None:
         with gcode_manager.batch_mode():
             assert gcode_manager.is_batch_mode is True
-            gcode_manager.add_gcode(["G28\n"])
-            gcode_manager.add_gcode(["G1 X10 Y10\n"])
+            gcode_manager.add_gcode([GCode("G28\n")])
+            gcode_manager.add_gcode([GCode("G1 X10 Y10\n")])
 
         # batch_mode()'s context manager turns batch mode back off on exit
         # (so a command issued right after the `with` block goes back to
@@ -77,15 +78,15 @@ class TestBatchMode:
         # anywhere in the process -- every later command would silently
         # accumulate into the buffer instead of actually uploading.
         with gcode_manager.batch_mode():
-            gcode_manager.add_gcode(["G28\n"])
+            gcode_manager.add_gcode([GCode("G28\n")])
         gcode_manager.clear_buffer()
 
         with pytest.raises(RuntimeError, match="batch mode"):
-            gcode_manager.add_gcode(["G1 X10 Y10\n"])
+            gcode_manager.add_gcode([GCode("G1 X10 Y10\n")])
 
     def test_get_buffer_does_not_clear(self, gcode_manager: GCodeManager) -> None:
         with gcode_manager.batch_mode():
-            gcode_manager.add_gcode(["G28\n"])
+            gcode_manager.add_gcode([GCode("G28\n")])
 
         first = gcode_manager.get_buffer()
         second = gcode_manager.get_buffer()
@@ -93,7 +94,7 @@ class TestBatchMode:
 
     def test_clear_buffer_empties_it(self, gcode_manager: GCodeManager) -> None:
         with gcode_manager.batch_mode():
-            gcode_manager.add_gcode(["G28\n"])
+            gcode_manager.add_gcode([GCode("G28\n")])
 
         gcode_manager.clear_buffer()
 
@@ -103,7 +104,7 @@ class TestBatchMode:
         self, gcode_manager: GCodeManager
     ) -> None:
         with gcode_manager.batch_mode():
-            gcode_manager.add_gcode(["G28\n"])
+            gcode_manager.add_gcode([GCode("G28\n")])
 
         gcode_manager.start_batch()
 

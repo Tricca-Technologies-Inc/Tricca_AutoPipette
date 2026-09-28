@@ -5,13 +5,14 @@ This module provides G-code generation, buffering, and file operations.
 
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from tricca_autopipette.core.gcode_buffer import GCodeBuffer
+from tricca_autopipette.core.gcode_commands import GCode
 
 if TYPE_CHECKING:
     from tricca_autopipette.core.autopipette import AutoPipette
@@ -63,7 +64,7 @@ class GCodeManager:
         self._batch_mode = True
         self._buffer.clear_commands()
 
-    def end_batch(self) -> list[str]:
+    def end_batch(self) -> list[GCode]:
         """Exit batch mode and return accumulated G-code.
 
         Returns:
@@ -94,8 +95,8 @@ class GCodeManager:
 
         Example:
             >>> with gcode_mgr.batch_mode():  # doctest: +SKIP
-            ...     gcode_mgr.add_gcode(["G0 X10 Y10"])
-            ...     gcode_mgr.add_gcode(["G0 Z5"])
+            ...     gcode_mgr.add_gcode([gc.linear_move(x=10, y=10)])
+            ...     gcode_mgr.add_gcode([gc.linear_move(z=5)])
             >>> buffer = gcode_mgr.get_buffer()  # doctest: +SKIP
         """
         self.start_batch()
@@ -104,13 +105,13 @@ class GCodeManager:
         finally:
             self._batch_mode = False
 
-    def add_gcode(self, gcode: list[str]) -> None:
+    def add_gcode(self, gcode: list[GCode]) -> None:
         """Add G-code commands to the buffer.
 
         Only works in batch mode. In immediate mode, use write_gcode_file.
 
         Args:
-            gcode: List of G-code command strings.
+            gcode: G-code lines, as built by ``GCodeCommands``.
 
         Raises:
             RuntimeError: If called when not in batch mode.
@@ -122,9 +123,9 @@ class GCodeManager:
             )
         for cmd in gcode:
             self._buffer.add(cmd)
-        self._buffer.add("\n")
+        self._buffer.add(GCode("\n"))
 
-    def get_buffer(self) -> list[str]:
+    def get_buffer(self) -> list[GCode]:
         """Get the current G-code buffer without clearing it.
 
         Returns:
@@ -138,7 +139,7 @@ class GCodeManager:
 
     def write_gcode_file(
         self,
-        gcode: list[str],
+        gcode: Sequence[str],
         filename: str | None = None,
         append_header: bool = False,
     ) -> Path:
