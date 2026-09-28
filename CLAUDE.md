@@ -8,45 +8,52 @@ Tricca AutoPipette controls an automated liquid handling system (ALHS) built on 
 
 The root `README.md` is a thin front door (quickstart + links) — this file is the architecture deep-dive it links out to, and is where current structure should be confirmed.
 
-This file describes the system as it **is**. Planned-but-unimplemented work lives in **GitHub Issues** — start from the backlog map (issue #34), which carries the dependency order, the standing findings, and an index of every entry. Check it before starting anything non-trivial, since several issues record decisions already taken and open questions that must be settled first. The backlog also flags problems that are true of the code *today*: the "steps" vocabulary in `VolumeConverter`/`vol_to_steps` actually denotes **millimetres** (Klipper's `MANUAL_STEPPER` takes `MOVE` in mm, `SPEED` in mm/s, `ACCEL` in mm/s²) — a naming bug rather than a correctness one, but the names lie; and the non-atomic/lossy config writer. Note that neither `tapd`'s control plane nor the kiosk has **any** authentication — both are protected solely by binding loopback, so treat any change to a bind address as a security decision (see `systemd/README.md`).
+This file describes the system as it **is**. Planned-but-unimplemented work lives in **GitHub Issues** — start from the backlog map (issue #34), which carries the dependency order, the standing findings, and an index of every entry. Check it before starting anything non-trivial, since several issues record decisions already taken and open questions that must be settled first. The backlog also flags problems that are true of the code *today*: the "steps" vocabulary in `VolumeConverter`/`vol_to_steps` actually denotes **millimetres** (Klipper's `MANUAL_STEPPER` takes `MOVE` in mm, `SPEED` in mm/s, `ACCEL` in mm/s²) — a naming bug rather than a correctness one, but the names lie; and the non-atomic/lossy config writer. Note that neither `tapd`'s control plane nor the kiosk has **any** authentication — both are protected solely by binding loopback, so treat any change to a bind address as a security decision (see `systemd/README.md` and `docs/adr/0002-loopback-only-trust-boundary.md`). `tapd` enforces this fail-closed: `daemon/main.py`'s `check_bind_host` refuses a non-loopback `--host` unless `--allow-insecure-bind` is passed. The kiosk has no such guard (its bind is uvicorn's own `--host`), so its systemd unit's `127.0.0.1` is the only thing keeping it local.
 
 ## Commands
 
 ```bash
-# Install (editable, with dev tools)
-pip install -e ".[dev]"
+# Install: uv (https://docs.astral.sh/uv/) syncs .venv from the committed
+# uv.lock -- runtime deps have loose bounds in pyproject.toml, the exact
+# versions live in uv.lock (issue #24). Every command below goes through
+# `uv run`, which uses that .venv.
+uv sync --extra dev                        # dev: editable install + dev tools
+uv sync --extra dev --extra browser-test   # + pytest-playwright (then: uv run playwright install chromium)
+uv sync --frozen                           # production: exactly what uv.lock says, no dev tools
+uv lock                                    # after editing dependencies in pyproject.toml; commit uv.lock
 
 # Run the control daemon first -- tap and the kiosk are both clients of it
 # and do nothing useful until it's running.
-tapd                          # connects to hostname/IP from the active local system config (see "Multi-machine config split" below)
-tapd --no-connect             # start without a Moonraker connection (local testing)
-tapd --local-connect          # connect to ws://localhost/websocket (e.g. local Moonraker/mock)
-tapd --config <name>          # load a named local system config profile by name (resolved under the local root's system/, never config/)
-tapd --init-local-config [name] # bootstrap a local system config profile from the shared template, then exit
-tapd --host / --port          # control-plane bind address (default 127.0.0.1:8765)
-tapd --log-level DEBUG
+uv run tapd                          # connects to hostname/IP from the active local system config (see "Multi-machine config split" below)
+uv run tapd --no-connect             # start without a Moonraker connection (local testing)
+uv run tapd --local-connect          # connect to ws://localhost/websocket (e.g. local Moonraker/mock)
+uv run tapd --config <name>          # load a named local system config profile by name (resolved under the local root's system/, never config/)
+uv run tapd --init-local-config [name] # bootstrap a local system config profile from the shared template, then exit
+uv run tapd --host / --port          # control-plane bind address (default 127.0.0.1:8765); non-loopback host refuses to start...
+uv run tapd --allow-insecure-bind    # ...unless this is passed too (bare acknowledgment, logs a loud warning -- see ADR-0002)
+uv run tapd --log-level DEBUG
 
 # Run the interactive shell (a thin tapd client -- start tapd first)
-tap                           # connects to ws://127.0.0.1:8765/control by default
-tap --control-uri <uri>       # point at a different tapd instance
-tap --log-level DEBUG
+uv run tap                           # connects to ws://127.0.0.1:8765/control by default
+uv run tap --control-uri <uri>       # point at a different tapd instance
+uv run tap --log-level DEBUG
 
 # Run the kiosk web backend (also a tapd client).
 # Loopback only -- the kiosk has no authentication; see systemd/README.md.
-uvicorn autopipette_kiosk.main:app --host 127.0.0.1 --port 8000
+uv run uvicorn autopipette_kiosk.main:app --host 127.0.0.1 --port 8000
 
 # Lint / format / type-check
-ruff check .
-ruff format .
-pyright
+uv run ruff check .
+uv run ruff format .
+uv run pyright
 
 # Tests
-pytest                         # unit/integration tests under tests/ (pythonpath=src, testpaths=tests+src in pyproject.toml)
-pytest --doctest-modules       # same, plus executing every >>> doctest example under src/ as a test
+uv run pytest                         # unit/integration tests under tests/ (pythonpath=src, testpaths=tests+src in pyproject.toml)
+uv run pytest --doctest-modules       # same, plus executing every >>> doctest example under src/ as a test
 
 # Docs (Sphinx; requires the `dev` extra)
-sphinx-build docs docs/_build/html          # regular build
-sphinx-build -W docs docs/_build/html       # warnings-as-errors -- run this before a docs-affecting PR
+uv run sphinx-build docs docs/_build/html          # regular build
+uv run sphinx-build -W docs docs/_build/html       # warnings-as-errors -- run this before a docs-affecting PR
 ```
 
 Inside the `tap` shell, protocol files (`.pipette`, plain text — one shell command per line, blank lines allowed) are run with `run <path>`; the command grammar is exactly the shell's own, so `commands/tap_cmd_parsers.py` is the authoritative reference for what a line may contain. The `protocols/` directory was cleared out and its remaining contents are not a reliable syntax reference — check a file against the parsers before assuming it runs. `run` executes each line in batch mode, buffering G-code, then uploads and executes it as a single file on the pipette — all of this happens inside `tapd`, which every `tap` command (not just `run`/`cancel`/`pause`/`resume`) dispatches to over the control-plane connection via a structured RPC.
