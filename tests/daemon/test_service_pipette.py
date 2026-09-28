@@ -5,6 +5,7 @@ ports-and-adapters migration, PipetteCommands group -- see CLAUDE.md).
 
 from __future__ import annotations
 
+import logging
 from unittest.mock import patch
 
 import pytest
@@ -12,6 +13,7 @@ from fakes.fake_moonraker_state import FakeMoonrakerState
 
 from tricca_autopipette.commands.tap_cmd_parsers import (
     AspirateArgs,
+    ChangeTipArgs,
     DispenseArgs,
     PipetteArgs,
 )
@@ -21,7 +23,7 @@ from tricca_autopipette.core.pipette_exceptions import (
     NoWasteContainerError,
     TipAlreadyOnError,
 )
-from tricca_autopipette.core.pipette_models import TipState
+from tricca_autopipette.core.pipette_models import TipSlotState, TipState
 from tricca_autopipette.core.splits import Split
 from tricca_autopipette.daemon.service import AutoPipetteService
 
@@ -72,6 +74,7 @@ def _pipette_args(**overrides: object) -> PipetteArgs:
         "keep_tip": True,
         "splits": None,
         "leftover": None,
+        "tip_end": None,
     }
     defaults.update(overrides)
     return PipetteArgs(**defaults)  # type: ignore[arg-type]
@@ -366,12 +369,28 @@ class TestTipManagement:
 
         assert result.ok is True
 
-    def test_dispose_tip_without_waste_container_raises(
+    def test_dispose_tip_without_waste_container_returns_it_to_its_slot(
         self, service_with_plates: AutoPipetteService
     ) -> None:
         _set_homed(service_with_plates, True)
         service_with_plates.next_tip()
-        service_with_plates._autopipette.location_manager.remove_location("waste")
+        autopipette = service_with_plates._autopipette
+        autopipette.location_manager.remove_location("waste")
+
+        result = service_with_plates.dispose_tip()
+
+        assert result.ok is True
+        box = autopipette.location_manager.tipbox_manager.boxes["tipbox"]
+        assert box.slots[0] is TipSlotState.USED
+
+    def test_dispose_tip_with_no_waste_and_unknown_origin_raises(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        """A tip already on at startup has no origin: nowhere safe to put it."""
+        _set_homed(service_with_plates, True)
+        autopipette = service_with_plates._autopipette
+        autopipette.state.tip_state = TipState.ATTACHED
+        autopipette.location_manager.remove_location("waste")
 
         with pytest.raises(NoWasteContainerError):
             service_with_plates.dispose_tip()
@@ -400,3 +419,93 @@ class TestTipManagement:
         result = service_with_plates.change_tip()
 
         assert result.ok is True
+
+
+class TestTipEnd:
+    """``--tip_end keep|waste|return`` decides where a used tip goes (#15)."""
+
+    def _slots(self, service: AutoPipetteService) -> list[TipSlotState]:
+        return service._autopipette.location_manager.tipbox_manager.boxes[
+            "tipbox"
+        ].slots
+
+    @pytest.fixture(autouse=True)
+    def _homed_without_tip(self, service_with_plates: AutoPipetteService) -> None:
+        # DETACHED (not the default UNKNOWN) so transfer picks up a real tip
+        # and so records its origin.
+        _set_homed(service_with_plates, True)
+        service_with_plates._autopipette.state.tip_state = TipState.DETACHED
+
+    def test_return_puts_the_tip_back_in_its_origin_slot_as_used(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+
+        result = service_with_plates.transfer(
+            _pipette_args(keep_tip=False, tip_end="return")
+        )
+
+        assert result.ok is True
+        state = service_with_plates._autopipette.state
+        assert state.tip_state is TipState.DETACHED
+        assert state.tip_origin is None
+        assert self._slots(service_with_plates) == [
+            TipSlotState.USED,
+            TipSlotState.AVAILABLE,
+        ]
+
+    def test_waste_is_the_default_and_leaves_the_slot_empty(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        service_with_plates.transfer(_pipette_args(keep_tip=False))
+
+        assert self._slots(service_with_plates)[0] is TipSlotState.EMPTY
+        assert service_with_plates._autopipette.state.tip_origin is None
+
+    @pytest.mark.parametrize("tip_end", [None, "waste"])
+    def test_waste_without_a_container_returns_the_tip_with_a_warning(
+        self,
+        service_with_plates: AutoPipetteService,
+        caplog: pytest.LogCaptureFixture,
+        tip_end: str | None,
+    ) -> None:
+        service_with_plates._autopipette.location_manager.remove_location("waste")
+
+        with caplog.at_level(logging.WARNING):
+            result = service_with_plates.transfer(
+                _pipette_args(keep_tip=False, tip_end=tip_end)
+            )
+
+        assert result.ok is True
+        assert self._slots(service_with_plates)[0] is TipSlotState.USED
+        assert "No waste container" in caplog.text
+
+    def test_keep_tip_is_a_deprecated_alias_for_keep(
+        self,
+        service_with_plates: AutoPipetteService,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        with caplog.at_level(logging.WARNING):
+            service_with_plates.transfer(_pipette_args(keep_tip=True))
+
+        assert service_with_plates._autopipette.state.tip_state is TipState.ATTACHED
+        assert "--keep_tip is deprecated" in caplog.text
+
+    def test_keep_tip_conflicting_with_tip_end_raises(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        with pytest.raises(ValueError, match="conflicts"):
+            service_with_plates.transfer(_pipette_args(keep_tip=True, tip_end="return"))
+
+    def test_change_tip_can_return_the_old_tip(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        service_with_plates.next_tip()
+
+        result = service_with_plates.change_tip(ChangeTipArgs(tip_end="return"))
+
+        assert result.ok is True
+        assert self._slots(service_with_plates) == [
+            TipSlotState.USED,
+            TipSlotState.EMPTY,
+        ]
+        assert service_with_plates._autopipette.state.tip_origin == ("tipbox", 1)

@@ -28,6 +28,27 @@ class TipState(StrEnum):
     UNKNOWN = "unknown"
 
 
+class TipSlotState(StrEnum):
+    """What one tipbox position holds (see "Tip state" in ``CONTEXT.md``).
+
+    Attributes:
+        AVAILABLE: An unused tip, safe for ``next_tip`` to hand out.
+        USED: A used tip returned to its origin position. Never handed out
+            again automatically -- only an operator's ``set_tips``/
+            ``reset_tips`` makes it available.
+        EMPTY: No tip; the one that was here went to waste.
+    """
+
+    AVAILABLE = "available"
+    USED = "used"
+    EMPTY = "empty"
+
+
+#: Where a tip goes once a transfer is done with it: stay on the pipette,
+#: into the waste container, or back into the tipbox slot it came from.
+TipEnd = Literal["keep", "waste", "return"]
+
+
 @dataclass
 class PipetteState:
     """Runtime state of the pipette system.
@@ -39,6 +60,10 @@ class PipetteState:
         tip_state: Current tip attachment state.
         has_liquid: Whether liquid is currently in the tip.
         homed: Whether the pipette has been homed.
+        tip_origin: ``(tipbox name, flat well index)`` the attached tip was
+            picked up from, or None when no tip is attached or its origin
+            is unknown (e.g. a tip still on after a daemon restart). What
+            lets a used tip go back to its own slot.
 
     Example:
         >>> state = PipetteState()
@@ -52,6 +77,7 @@ class PipetteState:
     tip_state: TipState = TipState.UNKNOWN
     has_liquid: bool = False
     homed: bool = False
+    tip_origin: tuple[str, int] | None = None
 
     # Helper properties for backwards compatibility
     @property

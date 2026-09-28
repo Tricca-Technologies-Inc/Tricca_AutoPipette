@@ -22,9 +22,11 @@ import pytest
 pytest.importorskip("playwright")
 
 from playwright.sync_api import Page, expect
+from support.live_control_plane import LiveControlPlane
 from support.live_kiosk_server import LiveKioskServer
 
 PRESENT = re.compile(r"\bpresent\b")
+USED = re.compile(r"\bused\b")
 
 
 def _get_json(url: str) -> Any:
@@ -104,3 +106,27 @@ def test_a_rejected_set_reverts_the_optimistic_toggle(
     cell_a1.click()
 
     expect(card.locator('.tip-cell[data-index="0"]')).to_have_class(PRESENT)
+
+
+def test_a_returned_tip_shows_as_used_and_tapping_makes_it_available(
+    page: Page,
+    live_kiosk_server_with_plates: LiveKioskServer,
+    live_control_plane_with_plates: LiveControlPlane,
+) -> None:
+    # Seed a returned tip (#15) straight into the daemon's manager -- the
+    # runtime return path is covered at the service seam; this checks the
+    # kiosk renders the third state and that a tap clears it.
+    manager = live_control_plane_with_plates.service._autopipette.location_manager
+    manager.tipbox_manager.return_tip("tipbox", 0)
+
+    page.goto(live_kiosk_server_with_plates.url)
+    page.click('.tab-btn[data-page="tips"]')
+    card = page.locator('.tipbox-card[data-box="tipbox"]')
+    expect(card.locator('.tip-cell[data-index="0"]')).to_have_class(USED)
+
+    card.locator('.tip-cell[data-index="0"]').click()
+
+    expect(card.locator('.tip-cell[data-index="0"]')).to_have_class(PRESENT)
+    expect(card.locator('.tip-cell[data-index="0"]')).not_to_have_class(USED)
+    listing = _get_json(f"{live_kiosk_server_with_plates.url}/tips")
+    assert listing["data"]["boxes"][0]["slots"] == ["available", "available"]

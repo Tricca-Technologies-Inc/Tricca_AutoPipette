@@ -23,6 +23,7 @@ from aiohttp import WSMsgType, web
 
 from tricca_autopipette.commands.tap_cmd_parsers import (
     AspirateArgs,
+    ChangeTipArgs,
     CoorArgs,
     DelLocArgs,
     DispenseArgs,
@@ -103,7 +104,7 @@ _RPC_DISPATCH: dict[str, _RpcCommand] = {
     "pipette.next_tip": _RpcCommand(None, AutoPipetteService.next_tip),
     "pipette.eject_tip": _RpcCommand(None, AutoPipetteService.eject_tip),
     "pipette.dispose_tip": _RpcCommand(None, AutoPipetteService.dispose_tip),
-    "pipette.change_tip": _RpcCommand(None, AutoPipetteService.change_tip),
+    "pipette.change_tip": _RpcCommand(ChangeTipArgs, AutoPipetteService.change_tip),
     "config.set": _RpcCommand(SetArgs, AutoPipetteService.set),
     "config.coor": _RpcCommand(CoorArgs, AutoPipetteService.coor),
     "config.plate": _RpcCommand(PlateArgs, AutoPipetteService.plate),

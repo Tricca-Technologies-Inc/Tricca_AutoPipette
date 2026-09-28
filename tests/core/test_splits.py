@@ -172,7 +172,7 @@ class TestPipetteSplits:
                 vol_ul=20.0,
                 source="plate_a",
                 splits=parse_splits_spec("plate_a:12@A1;plate_a:8@A3"),
-                keep_tip=True,
+                tip_end="keep",
             )
 
         assert spy_aspirate.call_count == 1
@@ -203,7 +203,7 @@ class TestPipetteSplits:
                 source="plate_a",
                 splits=parse_splits_spec("plate_a:12@A1;plate_a:8@A3"),
                 post_air_gap_ul=3.0,
-                keep_tip=True,
+                tip_end="keep",
             )
 
         purges = [
@@ -220,7 +220,7 @@ class TestPipetteSplits:
                 vol_ul=20.0,
                 source="plate_a",
                 splits=parse_splits_spec("plate_a:12@A1;plate_a:15@A2"),
-                keep_tip=True,
+                tip_end="keep",
             )
 
         assert pipette_with_plates.get_gcode() == []
@@ -246,11 +246,11 @@ class TestPipetteSplits:
         assert pipette_with_plates.state.has_liquid is False
         assert pipette_with_plates.state.tip_state == TipState.DETACHED
 
-    def test_leftover_keep_retains_the_tip_even_without_keep_tip(
+    def test_leftover_keep_retains_the_tip_even_with_tip_end_waste(
         self, pipette_with_plates: AutoPipette
     ) -> None:
         # A tip still holding liquid must never go in the bin, so an explicit
-        # `leftover="keep"` outranks keep_tip=False.
+        # `leftover="keep"` outranks tip_end="waste".
         pipette_with_plates.state.tip_state = TipState.ATTACHED
 
         pipette_with_plates.pipette_splits(
@@ -258,7 +258,7 @@ class TestPipetteSplits:
             source="plate_a",
             splits=parse_splits_spec("plate_a:12@A1"),
             leftover="keep",
-            keep_tip=False,
+            tip_end="waste",
         )
 
         assert pipette_with_plates.state.has_liquid is True
@@ -273,7 +273,7 @@ class TestPipetteSplits:
             vol_ul=20.0,
             source="plate_a",
             splits=parse_splits_spec("plate_a:12@A1;plate_a:8@A3"),
-            keep_tip=False,
+            tip_end="waste",
         )
 
         assert pipette_with_plates.state.has_liquid is False
@@ -288,7 +288,7 @@ class TestPipetteSplits:
             vol_ul=20.0,
             source="plate_a",
             splits=parse_splits_spec("plate_a:20@A1"),
-            keep_tip=True,
+            tip_end="keep",
         )
 
         assert pipette_with_plates.state.tip_state == TipState.ATTACHED

@@ -31,14 +31,16 @@ _Avoid_: end user, layperson.
 
 **Tip state**:
 The occupancy/history of one tipbox position, tracked by `TipBoxManager`/`TipBox`.
-Three distinct states, not two:
+Three distinct states, not two (`TipSlotState` in code):
 - **available** — never used, safe for `next_tip` to hand out.
-- **contaminated** — a used tip returned to its origin position (rather than
-  wasted) after a transfer. Excluded from `next_tip` permanently; reusable only
-  via an explicit operator action (`set_tips`) or an explicit function call,
-  never automatically, even for the same liquid. See #15.
-- **disposed** — ejected to waste; the position is empty until the box is
+- **used** — a used tip returned to its origin position (rather than
+  wasted) after a transfer (`--tip_end return`, or `waste` with no waste
+  container). Excluded from `next_tip` permanently; reusable only
+  via an explicit operator action (`set_tips --available`, a kiosk tap,
+  `reset_tips`), never automatically, even for the same liquid. See #15.
+- **empty** — the tip went to waste; the position is empty until the box is
   physically reloaded and reset (`reset_tips`/`reset_tips_all`).
-_Avoid_: describing this as a boolean "present/absent" — that conflates
+_Avoid_: "contaminated"/"disposed" (earlier names for used/empty), and
+describing this as a boolean "present/absent" — that conflates
 "never used" with "used but returned," which is the exact gap #15 exists to
 close.

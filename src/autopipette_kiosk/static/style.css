@@ -607,10 +607,14 @@ header {
 
 .tip-cell:hover:not(.masked) { filter: brightness(1.25); }
 
+.tip-cell.used { background: var(--running); border-color: var(--running); }
 .tip-cell.present { background: var(--success); border-color: var(--success); }
 .tip-cell.next { outline: 2px solid var(--accent); outline-offset: 1px; }
 .tip-cell.masked { background: transparent; border-style: dashed; cursor: default; opacity: 0.35; }
 .tip-cell.pending { opacity: 0.5; }
+
+.tips-legend { display: flex; gap: 16px; margin-bottom: 12px; font-size: 12px; color: var(--muted); }
+.tips-legend .tip-cell { display: inline-block; width: 12px; min-width: 12px; min-height: 12px; margin-right: 6px; vertical-align: middle; cursor: default; }
 
 .tips-empty {
   color: var(--muted);
@@ -743,6 +747,7 @@ header {
 .deck-mini-cell { border-radius: 1px; background: var(--surface2); }
 .deck-mini-cell.present { background: var(--success); }
 .deck-mini-cell.empty { background: var(--error); }
+.deck-mini-cell.used { background: var(--running); }
 .deck-mini-cell.masked { background: transparent; }
 
 /* ── tap-to-select info panel (doubles as the tile "tooltip") ── */

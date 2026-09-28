@@ -46,7 +46,7 @@ class TestPersistOnConsumption:
 
         saved = _fake_state(service_with_plates).saved_tip_presence
         assert saved, "consuming a tip must persist the new presence map"
-        assert saved[-1]["tipbox"]["present"][0] is False
+        assert saved[-1]["tipbox"]["slots"][0] == "empty"
 
     def test_snapshot_carries_dimensions(
         self, service_with_plates: AutoPipetteService

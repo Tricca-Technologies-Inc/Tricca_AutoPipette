@@ -613,7 +613,9 @@ async def list_tips() -> CommandResultResponse:
     Routing only, per issue #17's constraint -- `TipBoxManager.describe`
     (via `AutoPipetteService.tips`) is the data source; this adds no tip
     logic of its own. `data["boxes"]` carries each box's `num_row`/
-    `num_col`, `present` (one flag per flat well index), `eligible` (flat
+    `num_col`, `present` (one flag per flat well index), `slots` (one
+    `TipSlotState` value per flat well index -- `available`/`used`/`empty`,
+    `used` being a tip returned to its slot), `eligible` (flat
     indices actually usable -- a box may have masked-out positions), and
     `next_well`.
 
