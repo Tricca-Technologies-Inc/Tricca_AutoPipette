@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import importlib.metadata
+import ipaddress
 import logging
 import shutil
 import signal
@@ -188,7 +189,68 @@ def parse_arguments() -> argparse.Namespace:
         default=DEFAULT_PORT,
         help=f"Control-plane bind port (default: {DEFAULT_PORT})",
     )
+    parser.add_argument(
+        "--allow-insecure-bind",
+        default=False,
+        action="store_true",
+        help=(
+            "Allow --host to be a non-loopback address. The control plane has "
+            "no authentication; see docs/adr/0002-loopback-only-trust-boundary.md."
+        ),
+    )
     return parser.parse_args()
+
+
+def _is_loopback_host(host: str) -> bool:
+    """Report whether a bind host is loopback-only.
+
+    ``localhost`` (any case) and literal IPs in 127.0.0.0/8 or ``::1`` count.
+    Any other hostname counts as non-loopback, since it may resolve anywhere.
+
+    Args:
+        host: The ``--host`` value.
+
+    Returns:
+        True if binding ``host`` exposes the socket to this machine only.
+    """
+    if host.lower() == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
+
+
+def check_bind_host(host: str, *, allow_insecure_bind: bool) -> None:
+    """Refuse a non-loopback control-plane bind unless explicitly allowed.
+
+    Enforces ADR-0002 fail-closed (issue #32): the control plane has no
+    authentication, and an unauthorized request moves a gantry and drives a
+    syringe.
+
+    Args:
+        host: The ``--host`` value.
+        allow_insecure_bind: The ``--allow-insecure-bind`` escape hatch.
+
+    Raises:
+        ValueError: If ``host`` is non-loopback and the escape hatch isn't set.
+    """
+    if _is_loopback_host(host):
+        return
+    if not allow_insecure_bind:
+        raise ValueError(
+            f"Refusing to bind the control plane to non-loopback host {host!r}: "
+            f"it has no authentication (see "
+            f"docs/adr/0002-loopback-only-trust-boundary.md). For remote "
+            f"access, put a reverse proxy in front of the loopback bind. "
+            f"Pass --allow-insecure-bind to override."
+        )
+    logging.warning(
+        "INSECURE BIND: control plane listening on non-loopback host %r with "
+        "NO authentication -- anyone who can reach it can move the gantry and "
+        "drive the syringe (--allow-insecure-bind; see ADR-0002).",
+        host,
+    )
 
 
 def _copy_shared_default_system() -> Path:
@@ -442,6 +504,8 @@ def main() -> int:
             path = init_local_config(args.init_local_config)
             print(f"Copied shared default system config to {path}")
             return 0
+
+        check_bind_host(args.host, allow_insecure_bind=args.allow_insecure_bind)
 
         system_filename = resolve_system_config(args.config)
 

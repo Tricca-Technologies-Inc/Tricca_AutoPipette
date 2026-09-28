@@ -107,19 +107,29 @@ Both services bind **loopback only**, and that is deliberate.
 check. Their only protection is that nothing off-host can reach them. The
 touchscreen runs a browser on the same host, so it needs nothing more.
 
-This matters more here than for a typical web service: an unauthenticated
-`POST /run` moves a gantry and drives a syringe. Klipper-world convention
-often runs Moonraker and Mainsail unauthenticated on a trusted LAN; do not
-carry that assumption over to a machine handling liquids in a lab.
+This matters more here than for a typical web service. The threat model is
+physical, not data: an unauthorized `POST /run` (or any control-plane RPC)
+moves a gantry and drives a syringe in a lab, possibly with someone's hands
+on the deck or a live sample under the tip. Klipper-world convention
+(Klipper/Moonraker/Mainsail on a 3D printer) often runs unauthenticated on a
+"trusted" LAN; do not inherit that default here — a stray or malicious request
+from any device on the network is a physical-safety event, not a nuisance.
+
+`tapd` enforces this fail-closed ([ADR-0002](../docs/adr/0002-loopback-only-trust-boundary.md)):
+a `--host` that isn't `localhost`, `127.0.0.0/8` or `::1` makes it refuse to
+start unless `--allow-insecure-bind` is also passed, and even then it logs a
+loud warning. That flag is a bare acknowledgment, not authentication. The
+kiosk has no equivalent guard — its bind is uvicorn's `--host`, pinned to
+`127.0.0.1` in the unit — but it can only act through `tapd`'s control plane
+anyway.
 
 If you need access from another machine, **do not** simply change the bind to
 `0.0.0.0` — that publishes full unauthenticated hardware control to every
-device on the network. Put it behind something that authenticates: an SSH
-tunnel or a reverse proxy requiring credentials for a one-off, or a tailnet
-interface with ACLs restricting which devices may connect. Real
-authentication in the application, and a fleet-facing browser tool, are
-tracked as issues [#31](https://github.com/Tricca-Technologies-Inc/Tricca_AutoPipette/issues/31)
-and [#32](https://github.com/Tricca-Technologies-Inc/Tricca_AutoPipette/issues/32).
+device on the network. Keep the loopback bind and put something that
+authenticates in front of it: an SSH tunnel for a one-off, or a same-box
+reverse proxy such as `tailscale serve` with tailnet ACLs restricting which
+devices may connect. A fleet-facing browser tool with real authentication is
+tracked as issue [#31](https://github.com/Tricca-Technologies-Inc/Tricca_AutoPipette/issues/31).
 
 Earlier revisions of `autopipette-kiosk.service` shipped `--host 0.0.0.0`. If
 you installed from one of those, re-copy the unit and reload — the exposure
