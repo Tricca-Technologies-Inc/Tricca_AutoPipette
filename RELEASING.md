@@ -25,7 +25,9 @@ workflow was live and green on `main` and the branch ruleset below existed
 **Branch protection:** `main` is protected by a repo ruleset (added
 alongside `v0.2.0` — see issue #19): direct pushes are blocked, a PR is
 required, and it must show all four CI jobs (`lint`/`typecheck`/`test`/
-`test-browser`) green before merging. No required approvals (solo
+`test-browser`) green before merging (the `lint`/`typecheck`/`test`
+`(arm64)` variants run too, but aren't in the required list unless the
+ruleset is updated to add them). No required approvals (solo
 maintainer), and repo admins can bypass in a genuine emergency — but the
 version-bump/changelog commit below should go through a normal PR like any
 other change, not the bypass.

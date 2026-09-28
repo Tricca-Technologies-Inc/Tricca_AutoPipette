@@ -6,74 +6,101 @@ on:
   push:
     branches: [main]
 
-env:
-  # Stopgap tool pins (issue #19) -- ahead of issue #24's real
-  # dependency-pinning work, so a ruff/pyright upstream release can't
-  # silently redden CI (the cmd2 4.0 API break already happened once).
-  # Pinned here, not in pyproject.toml -- that's #24's job.
-  RUFF_VERSION: "0.16.4"
-  PYRIGHT_VERSION: "1.1.411"
-  # Pin for the browser-test job too, so the actions/cache key below is
-  # stable rather than tracking whatever pytest-playwright resolves to.
-  PYTEST_PLAYWRIGHT_VERSION: "0.9.0"
+# Every tool version (ruff, pyright, pytest-playwright, ...) comes from
+# pyproject.toml's exact-pinned extras via the committed uv.lock (issue #24);
+# `--frozen` fails rather than silently re-resolving if the lock is stale.
+#
+# lint/typecheck/test run on both x86_64 and native aarch64 (the Pi-class
+# deploy target). The x86_64 job keeps the bare job name (`lint`, not
+# `lint (ubuntu-latest)`) because that's what the `main` branch ruleset's
+# required checks match on; the arm64 jobs report as `<job> (arm64)`.
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    name: lint${{ matrix.suffix }}
+    strategy:
+      matrix:
+        include:
+          - { os: ubuntu-latest, suffix: "" }
+          - { os: ubuntu-24.04-arm, suffix: " (arm64)" }
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v10.2.0  # no floating major tags upstream
         with:
           python-version: "3.12"
-      - run: pip install "ruff==${{ env.RUFF_VERSION }}"
-      - run: ruff check .
-      - run: ruff format --check .
+          enable-cache: true
+      - run: uv sync --frozen --extra dev
+      - run: uv run --frozen ruff check .
+      - run: uv run --frozen ruff format --check .
 
   typecheck:
-    runs-on: ubuntu-latest
+    name: typecheck${{ matrix.suffix }}
+    strategy:
+      matrix:
+        include:
+          - { os: ubuntu-latest, suffix: "" }
+          - { os: ubuntu-24.04-arm, suffix: " (arm64)" }
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v10.2.0  # no floating major tags upstream
         with:
           python-version: "3.12"
+          enable-cache: true
       # browser-test is installed too (not just dev) -- pyright type-checks
       # tests/kiosk/browser/*.py by default (testpaths covers all of
       # tests/), and without the playwright package on the path every
       # import there is unresolved, cascading into hundreds of spurious
       # Unknown-type errors unrelated to the actual code.
-      - run: pip install -e ".[dev,browser-test]" "pyright==${{ env.PYRIGHT_VERSION }}"
-      - run: pyright
+      - run: uv sync --frozen --extra dev --extra browser-test
+      - run: uv run --frozen pyright
 
   test:
-    runs-on: ubuntu-latest
+    name: test${{ matrix.suffix }}
+    strategy:
+      matrix:
+        include:
+          - { os: ubuntu-latest, suffix: "" }
+          - { os: ubuntu-24.04-arm, suffix: " (arm64)" }
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v10.2.0  # no floating major tags upstream
         with:
           python-version: "3.12"
-      - run: pip install -e ".[dev]"
-      - run: pytest -q
+          enable-cache: true
+      - run: uv sync --frozen --extra dev
+      - run: uv run --frozen pytest -q
 
+  # x86_64 only: this exercises the kiosk frontend in a real browser, which
+  # isn't architecture-sensitive -- the arm64 `test` job already covers the
+  # Python side on the deploy architecture.
   test-browser:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v10.2.0  # no floating major tags upstream
         with:
           python-version: "3.12"
-      - run: |
-          pip install -e ".[dev,browser-test]" \
-            "pytest-playwright==${{ env.PYTEST_PLAYWRIGHT_VERSION }}"
+          enable-cache: true
+      - run: uv sync --frozen --extra dev --extra browser-test
+      # Key the browser cache on the locked playwright version (the browser
+      # build is tied to it), not on uv.lock as a whole -- lockfile
+      # maintenance touches that far more often than playwright moves.
+      - name: Resolve playwright version
+        id: playwright
+        run: echo "version=$(uv run --frozen python -c 'import importlib.metadata as m; print(m.version("playwright"))')" >> "$GITHUB_OUTPUT"
       - name: Cache chromium
         id: cache-chromium
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: chromium-${{ runner.os }}-pytest-playwright-${{ env.PYTEST_PLAYWRIGHT_VERSION }}
+          key: chromium-${{ runner.os }}-playwright-${{ steps.playwright.outputs.version }}
       - name: Install chromium
         if: steps.cache-chromium.outputs.cache-hit != 'true'
-        run: playwright install --with-deps chromium
+        run: uv run --frozen playwright install --with-deps chromium
       - name: Install chromium OS deps only (cache hit)
         if: steps.cache-chromium.outputs.cache-hit == 'true'
-        run: playwright install-deps chromium
-      - run: pytest -q
+        run: uv run --frozen playwright install-deps chromium
+      - run: uv run --frozen pytest -q
