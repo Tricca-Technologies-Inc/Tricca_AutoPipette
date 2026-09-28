@@ -65,6 +65,7 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
 )
 from tricca_autopipette.core.autopipette import AutoPipette
 from tricca_autopipette.core.coordinate import Coordinate
+from tricca_autopipette.core.gcode_commands import GCode
 from tricca_autopipette.core.gcode_manager import GCodeManager
 from tricca_autopipette.core.json_config_manager import JsonConfigManager
 from tricca_autopipette.core.location_manager import LocationManager
@@ -1040,7 +1041,9 @@ class AutoPipetteService:
             comment += f" [{', '.join(features)}]"
         comment += "\n"
 
-        self.output_gcode([comment, *autopipette.get_gcode(), "\n"])
+        # A comment block, not a Klipper command -- the explicit GCode casts
+        # are GCodeBuffer's documented escape hatch.
+        self.output_gcode([GCode(comment), *autopipette.get_gcode(), GCode("\n")])
         return CommandResult(
             ok=True,
             message=(
@@ -1783,7 +1786,7 @@ class AutoPipetteService:
 
     def output_gcode(
         self,
-        gcode: list[str],
+        gcode: list[GCode],
         filename: str | None = None,
         append_header: bool = False,
     ) -> None:
