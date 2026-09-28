@@ -189,9 +189,11 @@ def build_calibration_table(volumes_ul: list[float], travel_mm: list[float]) -> 
 #: Glyphs for the tip map. Chosen to stay legible in a terminal without
 #: relying on color, since the map is also read over SSH and in logs.
 TIP_PRESENT = "O"
+TIP_USED = "u"
 TIP_CONSUMED = "."
 TIP_MASKED = "x"
 TIP_DRIFT = "!"
+_SLOT_GLYPHS = {"available": TIP_PRESENT, "used": TIP_USED, "empty": TIP_CONSUMED}
 
 
 def build_tipbox_map(
@@ -221,7 +223,7 @@ def build_tipbox_map(
         ...     "name": "tipbox_a",
         ...     "num_row": 1,
         ...     "num_col": 2,
-        ...     "present": [True, False],
+        ...     "slots": ["available", "empty"],
         ...     "eligible": [0, 1],
         ...     "order": "column_from_bottom_right",
         ...     "remaining": 1,
@@ -232,23 +234,29 @@ def build_tipbox_map(
         tipbox_a   1/2 remaining   order=column_from_bottom_right
              1  2
           A  O  .
-          O present   . consumed   x masked out
+          O available   u used (returned)   . empty   x masked out
           next -> A1
     """
     num_row: int = box["num_row"]
     num_col: int = box["num_col"]
-    present: list[bool] = box["present"]
+    slots: list[str] = box["slots"]
     eligible = set(box["eligible"])
 
-    stored: list[bool] | None = None
+    stored: list[str] | None = None
     if persisted is not None:
-        candidate: object = persisted.get("present")
+        candidate: object = persisted.get("slots")
+        legacy: object = persisted.get("present")
+        if candidate is None and isinstance(legacy, list):
+            # Pre-#15 record: a bool presence map (see TipBoxManager.restore).
+            candidate = [
+                "available" if flag else "empty" for flag in cast("list[Any]", legacy)
+            ]
         # Only compare maps of the same shape; a reshaped box is reported by
         # the daemon at restore time rather than diffed cell by cell here.
         if isinstance(candidate, list):
-            flags = cast("list[Any]", candidate)
-            if len(flags) == len(present):
-                stored = [bool(flag) for flag in flags]
+            entries = cast("list[Any]", candidate)
+            if len(entries) == len(slots):
+                stored = [str(entry) for entry in entries]
 
     order = box["order"]
     lines = [
@@ -267,16 +275,17 @@ def build_tipbox_map(
             index = row * num_col + col
             if index not in eligible:
                 glyph = TIP_MASKED
-            elif stored is not None and stored[index] != present[index]:
+            elif stored is not None and stored[index] != slots[index]:
                 glyph = TIP_DRIFT
                 drifted = True
             else:
-                glyph = TIP_PRESENT if present[index] else TIP_CONSUMED
+                glyph = _SLOT_GLYPHS.get(slots[index], TIP_CONSUMED)
             cells.append(f"{glyph:>{width}}")
         lines.append(f" {string.ascii_uppercase[row]:>2} " + " ".join(cells))
 
     legend = (
-        f"  {TIP_PRESENT} present   {TIP_CONSUMED} consumed   {TIP_MASKED} masked out"
+        f"  {TIP_PRESENT} available   {TIP_USED} used (returned)   "
+        f"{TIP_CONSUMED} empty   {TIP_MASKED} masked out"
     )
     # Only advertise the drift glyph when one is actually on the map --
     # otherwise the legend implies a discrepancy that isn't there.

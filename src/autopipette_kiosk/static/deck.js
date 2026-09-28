@@ -110,7 +110,7 @@
   // Non-interactive mini occupancy grid -- same present/eligible payload
   // tips.js's renderBox reads, rendered smaller and with no click handlers
   // (the Tips page, not this one, owns editing). Color convention matches
-  // tips.js's `.tip-cell.present` (green = present).
+  // tips.js's `.tip-cell.present`/`.used` (green = present, amber = used).
   function renderMiniGrid(box) {
     const grid = document.createElement('div');
     grid.className = 'deck-mini-grid';
@@ -126,7 +126,8 @@
         if (!eligible.has(index)) {
           cell.classList.add('masked');
         } else {
-          cell.classList.add(box.present[index] ? 'present' : 'empty');
+          const used = box.slots && box.slots[index] === 'used';
+          cell.classList.add(box.present[index] ? 'present' : used ? 'used' : 'empty');
         }
         grid.appendChild(cell);
       }

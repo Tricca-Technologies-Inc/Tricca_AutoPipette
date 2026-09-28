@@ -192,6 +192,17 @@ class TestTipMapRendering:
         assert "." in rendered
         assert "O" in rendered
 
+    def test_returned_tip_gets_its_own_glyph(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        manager = _manager(service_with_plates)
+        name, _box, _coor, index = manager.next_tip()
+        manager.return_tip(name, index)
+
+        grid_row = build_tipbox_map(manager.describe("tipbox")).splitlines()[2]
+
+        assert grid_row.split() == ["A", "u", "O"]
+
     def test_shows_the_next_position(self, box: dict[str, Any]) -> None:
         assert "next ->" in build_tipbox_map(box)
 

@@ -21,6 +21,7 @@ import pytest
 
 from tricca_autopipette.commands.tap_cmd_parsers import (
     AspirateArgs,
+    ChangeTipArgs,
     CoorArgs,
     DelLocArgs,
     DispenseArgs,
@@ -117,7 +118,7 @@ _BUILDER_CALLS: list[tuple[str, tuple[Any, ...]]] = [
     ("next_tip", ()),
     ("eject_tip", ()),
     ("dispose_tip", ()),
-    ("change_tip", ()),
+    ("change_tip", (ChangeTipArgs(tip_end="return"),)),
     ("switch_liquid", ("methanol",)),
     ("load_liquid", ("water.json",)),
     ("set", (SetArgs(var="SPEED_FACTOR", value=100.0),)),

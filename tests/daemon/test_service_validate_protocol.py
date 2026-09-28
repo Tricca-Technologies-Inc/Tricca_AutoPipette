@@ -157,6 +157,23 @@ class TestWarningLogCapture:
         # an error.
         assert result.ok is True
 
+    def test_deprecated_keep_tip_and_waste_fallback_become_warnings(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        result = service_with_plates.validate_protocol("validate_tip_end.pipette")
+
+        warnings = [
+            (f["line_number"], f["message"])
+            for f in _findings(result)
+            if f["severity"] == "warning"
+        ]
+        assert len(warnings) == 2
+        assert warnings[0][0] == 6
+        assert "--keep_tip is deprecated" in warnings[0][1]
+        assert warnings[1][0] == 7
+        assert "returning the tip to its origin slot" in warnings[1][1]
+        assert result.ok is True
+
     def test_warning_finding_survives_a_high_root_log_level(
         self, service_with_plates: AutoPipetteService
     ) -> None:
