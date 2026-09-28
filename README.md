@@ -9,27 +9,29 @@ touchscreen kiosk web UI are both thin clients of that daemon.
 
 ## Quickstart
 
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then:
+
 ```bash
-pip install -e ".[dev]"
+uv sync --extra dev
 ```
 
 Run the daemon first — `tap` and the kiosk are both clients of it and do
 nothing useful until it's running:
 
 ```bash
-tapd                          # connects to Moonraker per the active local system config
+uv run tapd                   # connects to Moonraker per the active local system config
 ```
 
 Then, in another terminal, drive it with the interactive shell:
 
 ```bash
-tap
+uv run tap
 ```
 
 ...or run the touchscreen kiosk web backend:
 
 ```bash
-uvicorn autopipette_kiosk.main:app --host 127.0.0.1 --port 8000
+uv run uvicorn autopipette_kiosk.main:app --host 127.0.0.1 --port 8000
 ```
 
 Both the daemon's control plane and the kiosk are loopback-only by default,
