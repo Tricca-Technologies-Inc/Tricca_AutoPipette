@@ -7,6 +7,8 @@ and retrieving G-code commands with optional header support.
 
 from __future__ import annotations
 
+from tricca_autopipette.core.gcode_commands import GCode
+
 
 class GCodeBuffer:
     r"""Manages G-code command generation and buffering.
@@ -20,27 +22,30 @@ class GCodeBuffer:
 
     Example:
         >>> buffer = GCodeBuffer()
-        >>> buffer.add("G28\n")
-        >>> buffer.add("G1 X10 Y10 F5000\n")
+        >>> buffer.add(GCode("G28\n"))
+        >>> buffer.add(GCode("G1 X10 Y10 F5000\n"))
         >>> commands = buffer.get_commands()
         >>> # commands = ['G28\n', 'G1 X10 Y10 F5000\n']
     """
 
     def __init__(self) -> None:
         """Initialize empty command and header buffers."""
-        self._commands: list[str] = []
+        self._commands: list[GCode] = []
         self._header: list[str] = []
 
-    def add(self, command: str) -> None:
+    def add(self, command: GCode) -> None:
         r"""Add a command to the main buffer.
+
+        Only accepts ``GCode`` -- build it with ``GCodeCommands``; an
+        explicit ``GCode(...)`` cast is the visible escape hatch.
 
         Args:
             command: G-code command string to buffer.
 
         Example:
             >>> buffer = GCodeBuffer()
-            >>> buffer.add("G28\n")
-            >>> buffer.add("G1 X100 Y50 F5000\n")
+            >>> buffer.add(GCode("G28\n"))
+            >>> buffer.add(GCode("G1 X100 Y50 F5000\n"))
         """
         self._commands.append(command)
 
@@ -62,12 +67,12 @@ class GCodeBuffer:
         Example:
             >>> buffer = GCodeBuffer()
             >>> buffer.add_comment("Aspirating 50.0μL from 'plate_a'")
-            >>> buffer.add("G1 X10 Y10 F5000\n")
+            >>> buffer.add(GCode("G1 X10 Y10 F5000\n"))
             >>> commands = buffer.get_commands()
             >>> # commands = ["; Aspirating 50.0μL from 'plate_a'\n",
             >>> #             "G1 X10 Y10 F5000\n"]
         """
-        self.add(f"; {message}\n")
+        self.add(GCode(f"; {message}\n"))
 
     def add_header(self, line: str) -> None:
         r"""Add a line to the configuration header.
@@ -82,7 +87,7 @@ class GCodeBuffer:
         """
         self._header.append(line)
 
-    def get_commands(self) -> list[str]:
+    def get_commands(self) -> list[GCode]:
         r"""Retrieve buffered commands and clear the command buffer.
 
         Returns:
@@ -94,7 +99,7 @@ class GCodeBuffer:
 
         Example:
             >>> buffer = GCodeBuffer()
-            >>> buffer.add("G28\n")
+            >>> buffer.add(GCode("G28\n"))
             >>> commands = buffer.get_commands()
             >>> # commands = ['G28\n']
             >>> commands2 = buffer.get_commands()
@@ -127,7 +132,7 @@ class GCodeBuffer:
 
         Example:
             >>> buffer = GCodeBuffer()
-            >>> buffer.add("G28\n")
+            >>> buffer.add(GCode("G28\n"))
             >>> buffer.clear_commands()
             >>> # Commands discarded
         """
@@ -165,7 +170,7 @@ class GCodeBuffer:
             >>> buffer = GCodeBuffer()
             >>> buffer.has_commands()
             False
-            >>> buffer.add("G28\n")
+            >>> buffer.add(GCode("G28\n"))
             >>> buffer.has_commands()
             True
         """
@@ -179,14 +184,14 @@ class GCodeBuffer:
 
         Example:
             >>> buffer = GCodeBuffer()
-            >>> buffer.add("G28\n")
-            >>> buffer.add("G1 X10\n")
+            >>> buffer.add(GCode("G28\n"))
+            >>> buffer.add(GCode("G1 X10\n"))
             >>> buffer.command_count()
             2
         """
         return len(self._commands)
 
-    def peek_commands(self) -> list[str]:
+    def peek_commands(self) -> list[GCode]:
         r"""View buffered commands without clearing them.
 
         Returns:
@@ -197,7 +202,7 @@ class GCodeBuffer:
 
         Example:
             >>> buffer = GCodeBuffer()
-            >>> buffer.add("G28\n")
+            >>> buffer.add(GCode("G28\n"))
             >>> peek = buffer.peek_commands()
             >>> # peek = ['G28\n']
             >>> commands = buffer.get_commands()
@@ -243,7 +248,7 @@ class GCodeBuffer:
 
         Example:
             >>> buffer = GCodeBuffer()
-            >>> buffer.add("G28\n")
+            >>> buffer.add(GCode("G28\n"))
             >>> len(buffer)
             1
         """
@@ -258,7 +263,7 @@ class GCodeBuffer:
             >>> buffer = GCodeBuffer()
             >>> bool(buffer)
             False
-            >>> buffer.add("G28\n")
+            >>> buffer.add(GCode("G28\n"))
             >>> bool(buffer)
             True
         """
@@ -269,7 +274,7 @@ class GCodeBuffer:
 
         Example:
             >>> buffer = GCodeBuffer()
-            >>> buffer.add("G28\n")
+            >>> buffer.add(GCode("G28\n"))
             >>> repr(buffer)
             'GCodeBuffer(commands=1, header=0)'
         """

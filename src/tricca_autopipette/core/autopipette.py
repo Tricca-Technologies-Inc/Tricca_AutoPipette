@@ -34,11 +34,11 @@ from collections.abc import Sequence
 
 from tricca_autopipette.core.coordinate import Coordinate
 from tricca_autopipette.core.gcode_buffer import GCodeBuffer
+from tricca_autopipette.core.gcode_commands import GCode, GCodeCommands
 from tricca_autopipette.core.json_config_manager import JsonConfigManager
 from tricca_autopipette.core.location_manager import LocationManager
 from tricca_autopipette.core.pipette_constants import (
     CoordinateSystem,
-    GCodeCommand,
     PhysicalConstants,
 )
 from tricca_autopipette.core.pipette_exceptions import (
@@ -155,6 +155,7 @@ class AutoPipette:
 
         # G-code management
         self.gcode_buffers = GCodeBuffer()
+        self.gcode_commands = GCodeCommands()
 
         # Initialize from loaded config
         self._initialize_from_config()
@@ -405,10 +406,10 @@ class AutoPipette:
 
         if mode_str == CoordinateSystem.ABSOLUTE.value:
             self.logger.debug("Coordinate system: absolute")
-            self.gcode_buffers.add(f"{GCodeCommand.ABSOLUTE_MODE}\n")
+            self.gcode_buffers.add(self.gcode_commands.absolute_mode())
         elif mode_str == CoordinateSystem.RELATIVE.value:
             self.logger.debug("Coordinate system: relative")
-            self.gcode_buffers.add(f"{GCodeCommand.RELATIVE_MODE}\n")
+            self.gcode_buffers.add(self.gcode_commands.relative_mode())
         else:
             raise ValueError(
                 f"Invalid coordinate system mode: '{mode}'. "
@@ -428,7 +429,7 @@ class AutoPipette:
             >>> pipette.set_speed_factor(150)  # doctest: +SKIP
         """
         self.logger.debug("Speed factor: %s%%", factor)
-        self.gcode_buffers.add(f"{GCodeCommand.SPEED_FACTOR} S{factor}\n")
+        self.gcode_buffers.add(self.gcode_commands.speed_factor(factor))
 
     def set_max_velocity(self, velocity: float) -> None:
         """Set the maximum velocity limit.
@@ -440,7 +441,9 @@ class AutoPipette:
             >>> pipette.set_max_velocity(5000)  # doctest: +SKIP
         """
         self.logger.debug("Max velocity: %s mm/s", velocity)
-        self.gcode_buffers.add(f"SET_VELOCITY_LIMIT VELOCITY={velocity}\n")
+        self.gcode_buffers.add(
+            self.gcode_commands.set_velocity_limit(velocity=velocity)
+        )
 
     def set_max_accel(self, accel: float) -> None:
         """Set the maximum acceleration limit.
@@ -452,7 +455,7 @@ class AutoPipette:
             >>> pipette.set_max_accel(3000)  # doctest: +SKIP
         """
         self.logger.debug("Max acceleration: %s mm/s²", accel)
-        self.gcode_buffers.add(f"SET_VELOCITY_LIMIT ACCEL={accel}\n")
+        self.gcode_buffers.add(self.gcode_commands.set_velocity_limit(accel=accel))
 
     def home_axis(self) -> None:
         """Home all axes (X, Y, and Z).
@@ -461,22 +464,22 @@ class AutoPipette:
             >>> pipette.home_axis()  # doctest: +SKIP
         """
         self.note_action("Homing all axes (X, Y, Z)")
-        self.gcode_buffers.add(f"{GCodeCommand.HOME_ALL}\n")
+        self.gcode_buffers.add(self.gcode_commands.home())
 
     def home_x(self) -> None:
         """Home X axis only."""
         self.note_action("Homing X axis")
-        self.gcode_buffers.add(f"{GCodeCommand.HOME_X}\n")
+        self.gcode_buffers.add(self.gcode_commands.home("X"))
 
     def home_y(self) -> None:
         """Home Y axis only."""
         self.note_action("Homing Y axis")
-        self.gcode_buffers.add(f"{GCodeCommand.HOME_Y}\n")
+        self.gcode_buffers.add(self.gcode_commands.home("Y"))
 
     def home_z(self) -> None:
         """Home Z axis only."""
         self.note_action("Homing Z axis")
-        self.gcode_buffers.add(f"{GCodeCommand.HOME_Z}\n")
+        self.gcode_buffers.add(self.gcode_commands.home("Z"))
 
     def home_pipette_motors(self) -> None:
         """Home all pipette-specific motors."""
@@ -523,15 +526,27 @@ class AutoPipette:
             speed,
             accel,
         )
+        gc = self.gcode_commands
         self.gcode_buffers.add(
-            f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0 "
-            f"MOVE={distance} SPEED={speed} ACCEL={accel} "
-            f"STOP_ON_ENDSTOP=1\n"
-            f"MANUAL_STEPPER STEPPER={stepper} "
-            f"MOVE={opposite_distance} SPEED={speed} ACCEL={accel} "
-            f"STOP_ON_ENDSTOP=-1\n"
-            f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0\n"
+            gc.manual_stepper(
+                stepper,
+                set_position=0,
+                move=distance,
+                speed=speed,
+                accel=accel,
+                stop_on_endstop=1,
+            )
         )
+        self.gcode_buffers.add(
+            gc.manual_stepper(
+                stepper,
+                move=opposite_distance,
+                speed=speed,
+                accel=accel,
+                stop_on_endstop=-1,
+            )
+        )
+        self.gcode_buffers.add(gc.manual_stepper(stepper, set_position=0))
 
     def move_to(self, coordinate: Coordinate) -> None:
         """Move the pipette to the specified coordinate.
@@ -550,17 +565,21 @@ class AutoPipette:
             speed_z,
         )
         self.gcode_buffers.add(
-            f"{GCodeCommand.LINEAR_MOVE} X{coordinate.x} Y{coordinate.y} F{speed_xy}\n"
+            self.gcode_commands.linear_move(
+                x=coordinate.x, y=coordinate.y, feedrate=speed_xy
+            )
         )
         self.gcode_buffers.add(
-            f"{GCodeCommand.LINEAR_MOVE} Z{coordinate.z} F{speed_z}\n"
+            self.gcode_commands.linear_move(z=coordinate.z, feedrate=speed_z)
         )
 
     def move_to_z(self, coordinate: Coordinate) -> None:
         """Move only in Z direction."""
         speed = self.gantry.speed_z
         self.logger.debug("G-code move: Z=%s (speed=%s)", coordinate.z, speed)
-        self.gcode_buffers.add(f"{GCodeCommand.LINEAR_MOVE} Z{coordinate.z} F{speed}\n")
+        self.gcode_buffers.add(
+            self.gcode_commands.linear_move(z=coordinate.z, feedrate=speed)
+        )
 
     def set_servo_angle(self, angle: float) -> None:
         """Set the tip ejection servo to a specific angle.
@@ -570,7 +589,7 @@ class AutoPipette:
         """
         servo = self.pipette_model.servo.name
         self.logger.debug("SET_SERVO %s: angle=%s", servo, angle)
-        self.gcode_buffers.add(f"SET_SERVO SERVO={servo} ANGLE={angle}\n")
+        self.gcode_buffers.add(self.gcode_commands.set_servo(servo, angle))
 
     def move_pipette_stepper(
         self,
@@ -601,12 +620,18 @@ class AutoPipette:
             speed,
             accel,
         )
+        gc = self.gcode_commands
         self.gcode_buffers.add(
-            f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0 "
-            f"SPEED={speed} MOVE={distance} ACCEL={accel} "
-            f"STOP_ON_ENDSTOP=2\n"
-            f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0\n"
+            gc.manual_stepper(
+                stepper,
+                set_position=0,
+                move=distance,
+                speed=speed,
+                accel=accel,
+                stop_on_endstop=2,
+            )
         )
+        self.gcode_buffers.add(gc.manual_stepper(stepper, set_position=0))
 
     def gcode_wait(self, milliseconds: float) -> None:
         """Insert a dwell/pause command in the G-code.
@@ -615,7 +640,7 @@ class AutoPipette:
             milliseconds: Duration to wait in milliseconds.
         """
         self.logger.debug("Dwell: %s ms", milliseconds)
-        self.gcode_buffers.add(f"{GCodeCommand.DWELL} P{milliseconds}\n")
+        self.gcode_buffers.add(self.gcode_commands.dwell(milliseconds))
 
     def gcode_print(self, msg: str) -> None:
         """Send a message to be displayed on the controller screen.
@@ -624,9 +649,9 @@ class AutoPipette:
             msg: Message string to display.
         """
         self.note_action(f"Displaying message: {msg}")
-        self.gcode_buffers.add(f"{GCodeCommand.DISPLAY_MESSAGE} {msg}\n")
+        self.gcode_buffers.add(self.gcode_commands.display_message(msg))
 
-    def get_gcode(self) -> list[str]:
+    def get_gcode(self) -> list[GCode]:
         """Retrieve buffered G-code commands and clear the buffer.
 
         Returns:
@@ -887,12 +912,18 @@ class AutoPipette:
             speed,
             accel,
         )
+        gc = self.gcode_commands
         self.gcode_buffers.add(
-            f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0 "
-            f"MOVE={distance} SPEED={speed} ACCEL={accel} "
-            f"STOP_ON_ENDSTOP=1\n"
-            f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION=0\n"
+            gc.manual_stepper(
+                stepper,
+                set_position=0,
+                move=distance,
+                speed=speed,
+                accel=accel,
+                stop_on_endstop=1,
+            )
         )
+        self.gcode_buffers.add(gc.manual_stepper(stepper, set_position=0))
 
     def wiggle(self, curr_coor: Coordinate, dip_distance: float) -> None:
         """Shake the pipette tip to dislodge residual liquid droplets.
