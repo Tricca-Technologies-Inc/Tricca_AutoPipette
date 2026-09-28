@@ -79,6 +79,10 @@ def test_a_failed_run_shows_the_error_label_and_icon_on_both_widgets(
 
     page.click("#runBtn")
 
-    expect(page.locator("#statusPillLabel")).to_have_text("Error")
-    expect(page.locator("#statusState")).to_have_text("Error")
-    expect(page.locator("#statusIcon")).to_have_text("✕")
+    # Cold-start latency (module imports, background WebSocketClient/server
+    # threads, browser launch) can push the first test in a fresh process
+    # past Playwright's default 5000ms timeout even though the daemon
+    # transitions promptly once warm -- see issue #102.
+    expect(page.locator("#statusPillLabel")).to_have_text("Error", timeout=15000)
+    expect(page.locator("#statusState")).to_have_text("Error", timeout=15000)
+    expect(page.locator("#statusIcon")).to_have_text("✕", timeout=15000)
