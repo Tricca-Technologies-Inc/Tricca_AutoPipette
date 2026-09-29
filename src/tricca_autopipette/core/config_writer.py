@@ -247,6 +247,11 @@ HIGH_RISK_BOUNDS: dict[tuple[type[BaseModel], str], tuple[float, float]] = {
     (ServoConfig, "angle_retract"): (0, 180),  # degrees
     (ServoConfig, "angle_eject"): (0, 180),  # degrees
     (ServoConfig, "wait_ms"): (0, 5000),
+    # An active liquid's speed override replaces the pipette's own on the
+    # syringe, so it gets the same range (issue #120). `None` (defer to the
+    # pipette) isn't a number and passes untouched.
+    (LiquidProfile, "speed_aspirate"): (0.25, 50),  # mm/s
+    (LiquidProfile, "speed_dispense"): (0.25, 50),  # mm/s
 }
 
 
