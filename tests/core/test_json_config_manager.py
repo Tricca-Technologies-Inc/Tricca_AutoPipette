@@ -31,6 +31,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from pydantic import ValidationError
 
 from tricca_autopipette.core.json_config_manager import (
     MAX_EXTENDS_DEPTH,
@@ -382,7 +383,8 @@ class TestLoadConfigs:
         self, write_pipette_config: Any
     ) -> None:
         pipette_name = write_pipette_config(
-            "pipette.json", {"name": "Custom", "syringe": {}, "servo": {}}
+            "pipette.json",
+            {"name": "Custom", "syringe": {"max_travel_mm": 60.0}, "servo": {}},
         )
         manager = JsonConfigManager()
 
@@ -418,12 +420,32 @@ class TestPipetteResolution:
         with pytest.raises(ValueError, match="Unknown pipette"):
             JsonConfigManager().load_system_config(child)
 
+    def test_unmigrated_pipette_without_max_travel_fails_naming_the_field(
+        self, write_system_config: Any, write_pipette_config: Any
+    ) -> None:
+        """Issue #29: a pre-``max_travel_mm`` pipette file must not load.
+
+        Homing drives the plunger ``2 * max_travel_mm`` toward its endstop,
+        so there is no safe default -- the operator has to be told exactly
+        which field to add, not just that the pipette is "unknown".
+        """
+        pipette_file = write_pipette_config(
+            "unmigrated.json",
+            {"name": "Old", "syringe": {"max_volume_ul": 100.0}, "servo": {}},
+        )
+        child = write_system_config(
+            "unmigrated_system.json", {"pipette": Path(pipette_file).stem}
+        )
+
+        with pytest.raises(ValidationError, match="max_travel_mm"):
+            JsonConfigManager().load_system_config(child)
+
     def test_inline_full_pipette_config_is_used_directly(
         self, write_system_config: Any
     ) -> None:
         inline_pipette: dict[str, Any] = {
             "name": "InlinePipette",
-            "syringe": {},
+            "syringe": {"max_travel_mm": 60.0},
             "servo": {},
         }
         child = write_system_config("inline_pipette.json", {"pipette": inline_pipette})
@@ -577,7 +599,9 @@ class TestLoadPipette:
     ) -> None:
         manager = JsonConfigManager()
         manager.load_system_config()
-        name = write_pipette_config("bad.json", {"syringe": {}, "servo": {}})  # no name
+        name = write_pipette_config(
+            "bad.json", {"syringe": {"max_travel_mm": 60.0}, "servo": {}}
+        )  # no name
 
         with pytest.raises(ValueError, match="Pipette config validation failed"):
             manager.load_pipette(name)
@@ -588,7 +612,8 @@ class TestLoadPipette:
         manager = JsonConfigManager()
         manager.load_system_config()
         name = write_pipette_config(
-            "custom.json", {"name": "Custom", "syringe": {}, "servo": {}}
+            "custom.json",
+            {"name": "Custom", "syringe": {"max_travel_mm": 60.0}, "servo": {}},
         )
 
         pipette = manager.load_pipette(name)
@@ -779,7 +804,11 @@ class TestLoadDefaultPipettes:
         caplog: pytest.LogCaptureFixture,
     ) -> None:
         (tmp_path / "good.json").write_text(
-            json.dumps({"name": "Good", "syringe": {}, "servo": {}})
+            json.dumps({
+                "name": "Good",
+                "syringe": {"max_travel_mm": 60.0},
+                "servo": {},
+            })
         )
         (tmp_path / "bad.json").write_text("{not valid json")
         monkeypatch.setattr(DefaultPaths, "DIR_CONFIG_PIPETTE", tmp_path)

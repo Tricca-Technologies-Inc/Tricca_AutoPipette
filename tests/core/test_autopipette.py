@@ -20,8 +20,9 @@ from tricca_autopipette.core.pipette_exceptions import (
     TipAlreadyOnError,
     VolumeCapacityError,
 )
-from tricca_autopipette.core.pipette_models import TipState
+from tricca_autopipette.core.pipette_models import FluidDisplacement, TipState
 from tricca_autopipette.core.plates import PlateParams
+from tricca_autopipette.core.volume_converter import VolumeConverter
 from tricca_autopipette.core.well import StrategyType, Well
 
 
@@ -35,9 +36,9 @@ class TestSwitchLiquid:
 
         assert autopipette.active_liquid == "methanol"
         # methanol.json overrides speed_aspirate/speed_dispense from the
-        # pipette defaults (100.0/200.0 in p100_vertical.json).
-        assert autopipette.syringe.speed_aspirate == pytest.approx(80.0)
-        assert autopipette.syringe.speed_dispense == pytest.approx(150.0)
+        # pipette defaults (25.0/50.0 in p100_vertical.json).
+        assert autopipette.syringe.speed_aspirate == pytest.approx(20.0)
+        assert autopipette.syringe.speed_dispense == pytest.approx(37.5)
 
     def test_unknown_liquid_raises_value_error(self, autopipette: AutoPipette) -> None:
         with pytest.raises(ValueError, match="not found"):
@@ -74,6 +75,67 @@ class TestInitPipette:
         assert any("G28" in line for line in gcode)  # home_axis
         assert any("SET_SERVO" in line for line in gcode)  # home_servo
         assert any("MANUAL_STEPPER" in line for line in gcode)  # home_pipette_stepper
+
+
+class TestSyringeHomingTravel:
+    """Issue #29: endstop moves use the configured travel, not a volume.
+
+    The distance is ``2 * max_travel_mm`` (deliberate overshoot -- Klipper
+    stops a ``home`` move at the endstop trigger), with no calibration
+    curve involved, and uses Klipper's documented string
+    ``STOP_ON_ENDSTOP`` forms rather than the deprecated numeric ones.
+    """
+
+    def test_home_pipette_stepper_overshoots_twice_the_travel(
+        self, autopipette: AutoPipette
+    ) -> None:
+        autopipette.syringe.max_travel_mm = 37.5
+        autopipette.get_gcode()
+
+        autopipette.home_pipette_stepper()
+
+        assert autopipette.get_gcode() == [
+            "MANUAL_STEPPER STEPPER=pipette_stepper SET_POSITION=0 MOVE=75.0 "
+            "SPEED=50.0 ACCEL=200.0 STOP_ON_ENDSTOP=home\n",
+            "MANUAL_STEPPER STEPPER=pipette_stepper MOVE=-75.0 "
+            "SPEED=50.0 ACCEL=200.0 STOP_ON_ENDSTOP=inverted_home\n",
+            "MANUAL_STEPPER STEPPER=pipette_stepper SET_POSITION=0\n",
+        ]
+
+    def test_clear_syringe_overshoots_twice_the_travel(
+        self, autopipette: AutoPipette
+    ) -> None:
+        autopipette.syringe.max_travel_mm = 37.5
+        autopipette.get_gcode()
+
+        autopipette.clear_syringe()
+
+        assert autopipette.get_gcode() == [
+            "MANUAL_STEPPER STEPPER=pipette_stepper SET_POSITION=0 MOVE=75.0 "
+            "SPEED=50.0 ACCEL=200.0 STOP_ON_ENDSTOP=home\n",
+            "MANUAL_STEPPER STEPPER=pipette_stepper SET_POSITION=0\n",
+        ]
+
+
+class TestSyringeMoveSign:
+    """Deferred from #30: a syringe MOVE's sign must match its direction.
+
+    A calibration fit with a negative intercept maps a small volume to
+    negative travel, which would silently flip an aspirate into a dispense
+    (and vice versa). That must be refused before any G-code is emitted.
+    """
+
+    def test_negative_travel_for_a_positive_volume_is_refused(
+        self, autopipette: AutoPipette
+    ) -> None:
+        # 10 uL -> -5 mm, 100 uL -> 85 mm: anything under ~15.6 uL is negative.
+        autopipette.volume_converter = VolumeConverter([10.0, 100.0], [-5.0, 85.0])
+        autopipette.get_gcode()
+
+        with pytest.raises(ValueError, match="negative plunger travel"):
+            autopipette.operate_syringe(FluidDisplacement.aspiration, 1.0)
+
+        assert autopipette.get_gcode() == []
 
 
 class TestGCodeBuffer:

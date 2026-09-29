@@ -25,24 +25,22 @@ from typing import Literal, NewType
 #: cast, visible at the call site.
 GCode = NewType("GCode", str)
 
-#: ``MANUAL_STEPPER``'s ``STOP_ON_ENDSTOP`` values. The documented string
-#: forms, plus Klipper's deprecated numeric aliases (``1`` = ``home``,
-#: ``-1`` = ``inverted_home``, ``2`` = ``try_home``, ``-2`` =
-#: ``try_inverted_home``) that existing call sites still emit until issue #29
-#: switches them over.
-StopOnEndstop = (
-    Literal[
-        "probe",
-        "home",
-        "inverted_probe",
-        "inverted_home",
-        "try_probe",
-        "try_inverted_probe",
-        "try_home",
-        "try_inverted_home",
-    ]
-    | Literal[1, -1, 2, -2]
-)
+#: ``MANUAL_STEPPER``'s documented ``STOP_ON_ENDSTOP`` values. Klipper's
+#: numeric aliases (``1`` = ``home``, ``-1`` = ``inverted_home``, ``2`` =
+#: ``try_home``, ``-2`` = ``try_inverted_home``) are deliberately not
+#: accepted: Klipper logs a deprecation warning on every numeric call
+#: (``klippy/extras/manual_stepper.py``), and issue #29 moved every caller off
+#: them.
+StopOnEndstop = Literal[
+    "probe",
+    "home",
+    "inverted_probe",
+    "inverted_home",
+    "try_probe",
+    "try_inverted_probe",
+    "try_home",
+    "try_inverted_home",
+]
 
 ParamValue = str | float | bool | None
 
@@ -714,8 +712,8 @@ class GCodeCommands:
             move: Target position, in mm.
             speed: Move speed, in mm/s.
             accel: Move acceleration, in mm/s².
-            stop_on_endstop: Stop early on endstop trigger; string form or
-                Klipper's deprecated numeric alias (see ``StopOnEndstop``).
+            stop_on_endstop: Stop early on endstop trigger (see
+                ``StopOnEndstop``).
             sync: ``False`` to not wait for the move before the next one.
 
         Returns:

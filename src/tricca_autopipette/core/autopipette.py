@@ -80,7 +80,7 @@ class AutoPipette:
         syringe: Active syringe kinematics (merged with liquid overrides).
         active_liquid: Name of currently active liquid profile.
         volume_converter: Converts between volumes and plunger-travel
-            millimetres (the field is still named "steps" -- see issue #29).
+            millimetres.
         location_manager: Manages named locations and plates.
         state: Current pipette state (tip, liquid, homed).
         gcode_buffers: G-code command buffer.
@@ -176,8 +176,9 @@ class AutoPipette:
             max_volume_ul=merged["max_volume_ul"],
             min_volume_ul=merged["min_volume_ul"],
             capacity_margin_ul=merged["capacity_margin_ul"],
+            max_travel_mm=merged["max_travel_mm"],
             calibration_volumes=merged["calibration_volumes"],
-            calibration_steps=merged["calibration_steps"],
+            calibration_mm=merged["calibration_mm"],
             speed_aspirate=merged["speed_aspirate"],
             speed_dispense=merged["speed_dispense"],
             wait_aspirate_ms=merged["wait_aspirate_ms"],
@@ -339,28 +340,28 @@ class AutoPipette:
             self.gcode_buffers.add_header(line)
 
     def _init_volume_converter(self) -> None:
-        """Initialize volume-to-steps converter from active liquid calibration.
+        """Initialize volume-to-mm converter from active liquid calibration.
 
         Uses liquid-specific calibration if available, otherwise falls back
         to pipette default calibration.
 
         Raises:
-            RuntimeError: If calibration_volumes or calibration_steps are not provided.
+            RuntimeError: If calibration_volumes or calibration_mm are not provided.
 
         Note:
             Volume converter is required for all pipetting operations.
         """
         volumes = self.syringe.calibration_volumes
-        steps = self.syringe.calibration_steps
+        travel_mm = self.syringe.calibration_mm
 
-        if volumes is None or steps is None:
+        if volumes is None or travel_mm is None:
             raise RuntimeError(
                 "No calibration data available for volume converter. "
                 f"Check pipette '{self.pipette_model.name}'"
                 f" and liquid '{self.active_liquid}' configs."
             )
 
-        self.volume_converter = VolumeConverter(volumes, steps)
+        self.volume_converter = VolumeConverter(volumes, travel_mm)
 
         self.logger.debug(
             f"Initialized volume converter for liquid '{self.active_liquid}': "
@@ -538,8 +539,8 @@ class AutoPipette:
         if accel is None:
             accel = self.syringe.accel_home
 
-        # Twice the max distance ensures homing
-        distance = self.volume_converter.vol_to_steps(2 * self.syringe.max_volume_ul)
+        # Deliberate 2x overshoot: a `home` move stops at the endstop trigger
+        distance = 2 * self.syringe.max_travel_mm
         distance *= FluidDisplacement.dispense
         distance *= self.syringe.motor_orientation
         opposite_distance = distance * -1
@@ -559,7 +560,7 @@ class AutoPipette:
                 move=distance,
                 speed=speed,
                 accel=accel,
-                stop_on_endstop=1,
+                stop_on_endstop="home",
             )
         )
         self.gcode_buffers.add(
@@ -568,7 +569,7 @@ class AutoPipette:
                 move=opposite_distance,
                 speed=speed,
                 accel=accel,
-                stop_on_endstop=-1,
+                stop_on_endstop="inverted_home",
             )
         )
         self.gcode_buffers.add(gc.manual_stepper(stepper, set_position=0))
@@ -672,7 +673,7 @@ class AutoPipette:
                 move=distance,
                 speed=speed,
                 accel=accel,
-                stop_on_endstop=2,
+                stop_on_endstop="try_home",
             )
         )
         self.gcode_buffers.add(gc.manual_stepper(stepper, set_position=0))
@@ -903,7 +904,18 @@ class AutoPipette:
             stepper: Name of stepper, or None for configured stepper.
             speed: Plunger movement speed in mm/s, or None for default.
             accel: Plunger movement acceleration, or None for default.
+
+        Raises:
+            ValueError: If the calibration maps ``vol_ul`` to negative plunger
+                travel, which would emit a MOVE in the opposite direction.
         """
+        travel_mm = self.volume_converter.vol_to_mm(vol_ul)
+        if travel_mm < 0:
+            raise ValueError(
+                f"{vol_ul} μL maps to negative plunger travel ({travel_mm} mm) "
+                "on the active calibration curve; refusing to move the "
+                "syringe the wrong way."
+            )
         if stepper is None:
             stepper = self.syringe.stepper_name
         if speed is None:
@@ -914,16 +926,15 @@ class AutoPipette:
         if accel is None:
             accel = self.syringe.accel_move
 
-        steps = self.volume_converter.vol_to_steps(vol_ul)
-        steps *= direction
-        steps *= self.syringe.motor_orientation
+        travel_mm *= direction
+        travel_mm *= self.syringe.motor_orientation
         self.logger.debug(
             "Syringe %s: %s μL (%s mm plunger travel)",
             "aspiration" if direction == FluidDisplacement.aspiration else "dispense",
             vol_ul,
-            steps,
+            travel_mm,
         )
-        self.move_pipette_stepper(steps, stepper, speed, accel)
+        self.move_pipette_stepper(travel_mm, stepper, speed, accel)
 
     def clear_syringe(
         self,
@@ -945,7 +956,7 @@ class AutoPipette:
         if accel is None:
             accel = self.syringe.accel_home
 
-        distance = self.volume_converter.vol_to_steps(2 * self.syringe.max_volume_ul)
+        distance = 2 * self.syringe.max_travel_mm
         distance *= FluidDisplacement.dispense
         distance *= self.syringe.motor_orientation
 
@@ -964,7 +975,7 @@ class AutoPipette:
                 move=distance,
                 speed=speed,
                 accel=accel,
-                stop_on_endstop=1,
+                stop_on_endstop="home",
             )
         )
         self.gcode_buffers.add(gc.manual_stepper(stepper, set_position=0))

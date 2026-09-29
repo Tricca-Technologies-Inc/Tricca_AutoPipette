@@ -41,7 +41,7 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     TipsArgs,
     TriggerArgs,
     UnloadLocationsArgs,
-    VolToStepsArgs,
+    VolToMmArgs,
     WaitArgs,
 )
 from tricca_autopipette.core.pipette_exceptions import AutoPipetteError
@@ -168,8 +168,8 @@ _BUILDER_CALLS: list[tuple[str, tuple[Any, ...]]] = [
     ("trigger", (TriggerArgs(channel="air", state="on"),)),
     ("gcode_print", (GcodePrintArgs(msg="hi"),)),
     ("webcam_url", ()),
-    ("vol_to_steps", (VolToStepsArgs(vol=10.0),)),
-    ("steps_to_vol", (100,)),
+    ("vol_to_mm", (VolToMmArgs(vol=10.0),)),
+    ("mm_to_vol", (100,)),
     ("see_calibration", (SeeCalibrationArgs(liquid=None),)),
     ("run_start", ("does_not_exist.pipette",)),
     ("run_validate", ("does_not_exist.pipette",)),

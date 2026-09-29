@@ -3,8 +3,8 @@
   "description": "Methanol - organic solvent, volatile",
   "viscosity_cP": 0.59,
   "density_g_ml": 0.79,
-  "speed_aspirate": 80.0,
-  "speed_dispense": 150.0,
+  "speed_aspirate": 20.0,
+  "speed_dispense": 37.5,
   "wait_aspirate_ms": 300,
   "wait_dispense_ms": 200,
   "prewet_cycles": 2,
@@ -12,5 +12,5 @@
   "pre_air_gap_ul": 5.0,
   "post_air_gap_ul": 2.0,
   "calibration_volumes": null,
-  "calibration_steps": null
+  "calibration_mm": null
 }

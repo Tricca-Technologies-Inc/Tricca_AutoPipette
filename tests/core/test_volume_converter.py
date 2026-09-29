@@ -8,16 +8,16 @@ from tricca_autopipette.core.volume_converter import VolumeConverter
 
 
 class TestDefaultCalibration:
-    def test_vol_to_steps_is_monotonically_increasing(self) -> None:
+    def test_vol_to_mm_is_monotonically_increasing(self) -> None:
         converter = VolumeConverter()
-        assert converter.vol_to_steps(0.0) < converter.vol_to_steps(100.0)
-        assert converter.vol_to_steps(100.0) < converter.vol_to_steps(300.0)
+        assert converter.vol_to_mm(0.0) < converter.vol_to_mm(100.0)
+        assert converter.vol_to_mm(100.0) < converter.vol_to_mm(300.0)
 
-    def test_steps_to_vol_is_approximate_inverse_of_vol_to_steps(self) -> None:
+    def test_mm_to_vol_is_approximate_inverse_of_vol_to_mm(self) -> None:
         converter = VolumeConverter()
 
-        steps = converter.vol_to_steps(100.0)
-        recovered_volume = converter.steps_to_vol(steps)
+        steps = converter.vol_to_mm(100.0)
+        recovered_volume = converter.mm_to_vol(steps)
 
         assert recovered_volume == pytest.approx(100.0, rel=0.05)
 
@@ -28,11 +28,11 @@ class TestDefaultCalibration:
         assert 100.0 in volumes
         assert len(volumes) == len(steps)
 
-    def test_get_fit_coefficients_matches_vol_to_steps(self) -> None:
+    def test_get_fit_coefficients_matches_vol_to_mm(self) -> None:
         converter = VolumeConverter()
         slope, intercept = converter.get_fit_coefficients()
 
-        assert slope * 100.0 + intercept == pytest.approx(converter.vol_to_steps(100.0))
+        assert slope * 100.0 + intercept == pytest.approx(converter.vol_to_mm(100.0))
 
 
 class TestCustomCalibration:
@@ -43,13 +43,13 @@ class TestCustomCalibration:
 
         # Roughly 2 steps per uL on this custom curve, vs. the shallower
         # default curve (100uL ~= 39.25 steps).
-        assert converter.vol_to_steps(100.0) == pytest.approx(50.0, rel=0.1)
+        assert converter.vol_to_mm(100.0) == pytest.approx(50.0, rel=0.1)
 
-    def test_steps_to_vol_raises_when_no_positive_root_exists(self) -> None:
+    def test_mm_to_vol_raises_when_no_positive_root_exists(self) -> None:
         converter = VolumeConverter()
 
         with pytest.raises(ValueError, match="No valid volume found"):
-            converter.steps_to_vol(-1_000_000.0)
+            converter.mm_to_vol(-1_000_000.0)
 
     def test_get_calibration_points_returns_custom_data_not_defaults(self) -> None:
         """Regression test: this used to always return the class defaults.

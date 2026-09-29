@@ -68,7 +68,7 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     TriggerArgs,
     UnloadLocationsArgs,
     UploadArgs,
-    VolToStepsArgs,
+    VolToMmArgs,
     WaitArgs,
     args_from_namespace,
 )
@@ -527,35 +527,28 @@ class RemoteTapShell(Cmd):
         """Print the webcam stream URL for this pipette."""
         self._call_and_print(self.requests.webcam_url())
 
-    @with_argparser(TAPCmdParsers.parser_vol_to_steps)  # type: ignore[arg-type]
-    def do_vol_to_steps(self, args: VolToStepsArgs) -> None:
-        """Convert a volume in μL to motor steps.
-
-        The value is actually millimetres of plunger travel, not motor
-        steps -- see issue #29.
-        """
+    @with_argparser(TAPCmdParsers.parser_vol_to_mm)  # type: ignore[arg-type]
+    def do_vol_to_mm(self, args: VolToMmArgs) -> None:
+        """Convert a volume in μL to plunger travel in mm."""
         self._call_and_print(
-            self.requests.vol_to_steps(args_from_namespace(VolToStepsArgs, args))
+            self.requests.vol_to_mm(args_from_namespace(VolToMmArgs, args))
         )
 
-    def do_steps_to_vol(self, statement: Statement) -> None:
-        """Convert a `vol_to_steps` value back to volume in μL.
+    def do_mm_to_vol(self, statement: Statement) -> None:
+        """Convert plunger travel in mm back to volume in μL.
 
-        Usage: steps_to_vol <steps>
-
-        The value is actually millimetres of plunger travel, not motor
-        steps -- see issue #29.
+        Usage: mm_to_vol <travel_mm>
         """
         arg = statement.arg_list[0] if statement.arg_list else ""
         if not arg.strip():
-            self.perror("Usage: steps_to_vol <steps>")
+            self.perror("Usage: mm_to_vol <travel_mm>")
             return
         try:
-            steps = int(float(arg.strip()))
+            travel_mm = float(arg.strip())
         except ValueError:
-            self.perror(f"Invalid steps value: '{arg.strip()}'. Must be a number.")
+            self.perror(f"Invalid travel value: '{arg.strip()}'. Must be a number.")
             return
-        self._call_and_print(self.requests.steps_to_vol(steps))
+        self._call_and_print(self.requests.mm_to_vol(travel_mm))
 
     # ==================== WebSocket / daemon diagnostics ====================
 

@@ -4,7 +4,7 @@
   "viscosity_cP": null,
   "density_g_ml": null,
   "speed_aspirate": null,
-  "speed_dispense": 30.0,
+  "speed_dispense": 7.5,
   "wait_aspirate_ms": null,
   "wait_dispense_ms": null,
   "prewet_cycles": null,
@@ -12,5 +12,5 @@
   "pre_air_gap_ul": null,
   "post_air_gap_ul": null,
   "calibration_volumes": null,
-  "calibration_steps": null
+  "calibration_mm": null
 }

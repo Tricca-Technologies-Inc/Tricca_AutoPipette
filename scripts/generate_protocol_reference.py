@@ -201,7 +201,7 @@ _COMMANDS: list[_CommandDoc] = [
     _CommandDoc("wait", parser=TAPCmdParsers.parser_wait),
     _CommandDoc("trigger", parser=TAPCmdParsers.parser_trigger),
     _CommandDoc("gcode_print", parser=TAPCmdParsers.parser_gcode_print),
-    _CommandDoc("vol_to_steps", parser=TAPCmdParsers.parser_vol_to_steps),
+    _CommandDoc("vol_to_mm", parser=TAPCmdParsers.parser_vol_to_mm),
     # -- Control flow -----------------------------------------------------------
     _CommandDoc(
         "break",
