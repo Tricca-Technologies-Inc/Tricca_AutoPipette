@@ -71,9 +71,50 @@ exists only in this shared repo, it is first copied into the local root and
 the copy is edited -- the shared file is never touched. The edit is made on
 the file's raw JSON, so every other field, `extends`, and `plate_file`
 reference is kept; a value that would leave the file unloadable is refused
-and nothing is written. `save_locations` likewise writes to the local
-`locations/`, saving file-loaded entries back as they were loaded. Both
-writes are atomic. The running daemon does not reload what it wrote yet.
+and nothing is written. So is a *new* key the file's model doesn't define
+(e.g. a misspelt `speed_aspirat`), for `system`/`gantry`/`pipettes`/`liquids`;
+keys already in a file stay editable. `save_locations` likewise writes to the
+local `locations/`, saving file-loaded entries back as they were loaded. Both
+writes are atomic.
+
+### Changes apply live, but not during a run
+
+A `set_config` write takes effect in the running `tapd` at once, no restart:
+
+- `system`/`gantry`/`pipettes`/`liquids`: the live config is rebuilt from the
+  files (active system profile and its `extends` chain, plus whatever was
+  loaded/unloaded at runtime). If the system profile's `locations` changed,
+  the deck is rebuilt from it.
+- `locations`: a file the deck holds entries from is re-read (entries it no
+  longer lists are unloaded); a file that isn't loaded changes nothing live.
+- `plates`: every loaded locations file is re-read.
+
+Tip consumption and plate positions carry over a reload (a box whose shape
+changed starts full). Network settings are the exception: the Moonraker
+connection is not re-opened, so a `network` edit needs a `tapd` restart.
+
+**Re-homing.** If the effective pipette or gantry changed, or the system
+profile was switched, the machine counts as unhomed until the next `init`
+or `home all`, whatever Moonraker says: the mechanical limits may have
+changed.
+
+**Runtime load/unload.** A file existing doesn't make it active:
+
+- `unload_liquid <name>` / `load_liquid <file>`: every liquid file is loaded
+  at startup; unload takes one out (not the active one) until loaded again.
+- `load_pipette <file>`: makes a pipette profile the active pipette.
+  There is always exactly one, so there is no unload.
+- `switch_system <file>`: switches the active local system profile (e.g.
+  `murphy_100.json` ↔ `murphy_1000.json`) and re-points `system/active.json`,
+  as a fresh start with `--config` would. Runtime loads/unloads are dropped.
+- `load_locations`/`unload_locations` work as before.
+
+**Run-lock.** While a protocol run is active, `set_config`, `load_pipette`,
+`unload_liquid` and `switch_system` are refused with `ok=False` and
+`data={"reason": "run_active"}`, and `run.status`/`notify_run_status` carry
+`config_locked: true`. None of these is a protocol-file command.
+`load_liquid`/`load_locations`/`unload_locations` stay protocol commands and
+are not locked.
 
 ## Configuration Files
 

@@ -268,6 +268,30 @@ class AutoPipette:
 
         self.note_action(f"Switched to liquid: {liquid_name}")
 
+    def apply_config(self) -> None:
+        """Re-derive everything cached from the config manager's current config.
+
+        Called after `JsonConfigManager.reload` (or a runtime load) so a config
+        change takes effect live (issue #33): gantry, pipette model, merged
+        syringe parameters, volume converter and G-code header. If the active
+        liquid is no longer loaded, falls back to ``water`` (else the first
+        loaded liquid) with a WARNING.
+        """
+        self.system_config = self.config_manager.get_system_config()
+        self.gantry = self.system_config.gantry
+        self.pipette_model = self.system_config.pipette
+        liquids = self.system_config.liquids
+        if self.active_liquid not in liquids:
+            fallback = "water" if "water" in liquids else sorted(liquids)[0]
+            self.logger.warning(
+                "Active liquid %r is no longer loaded; switched to %r",
+                self.active_liquid,
+                fallback,
+            )
+            self.active_liquid = fallback
+        self._update_syringe_params()
+        self._initialize_from_config()
+
     def _initialize_from_config(self) -> None:
         """Initialize pipette from loaded configuration.
 

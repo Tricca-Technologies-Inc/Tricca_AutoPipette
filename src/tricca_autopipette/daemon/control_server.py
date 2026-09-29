@@ -148,13 +148,16 @@ def _run_status_to_dict(status: RunStatus) -> dict[str, Any]:
         status: The ``RunStatus`` instance to convert.
 
     Returns:
-        Dict with ``status``, ``message``, ``run_id``, ``filename`` keys.
+        Dict with ``status``, ``message``, ``run_id``, ``filename`` and
+        ``config_locked`` (config changes refused while a run is active)
+        keys.
     """
     return {
         "status": status.status,
         "message": status.message,
         "run_id": status.run_id,
         "filename": status.filename,
+        "config_locked": status.config_locked,
     }
 
 
@@ -368,15 +371,35 @@ class ControlServer:
                     lambda: self.service.save_locations(params["filename"])
                 )
             )
+        # Config changes use dispatch_config so a refusal during a run comes
+        # back at once rather than after the run releases the dispatch lock.
         if method == "config.set_value":
             return dataclasses.asdict(
-                await self.service.dispatch(
+                await self.service.dispatch_config(
                     lambda: self.service.set_config_value(
                         params["category"],
                         params["filename"],
                         params["key_path"],
                         params["value"],
                     )
+                )
+            )
+        if method == "config.unload_liquid":
+            return dataclasses.asdict(
+                await self.service.dispatch_config(
+                    lambda: self.service.unload_liquid(params["liquid_name"])
+                )
+            )
+        if method == "config.load_pipette":
+            return dataclasses.asdict(
+                await self.service.dispatch_config(
+                    lambda: self.service.load_pipette(params["filename"])
+                )
+            )
+        if method == "config.switch_system":
+            return dataclasses.asdict(
+                await self.service.dispatch_config(
+                    lambda: self.service.switch_system(params["filename"])
                 )
             )
         if method == "util.mm_to_vol":

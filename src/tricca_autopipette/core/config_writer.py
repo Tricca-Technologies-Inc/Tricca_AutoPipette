@@ -18,14 +18,18 @@ import json
 import os
 import tempfile
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, cast, get_args, get_origin
+
+from pydantic import BaseModel
 
 from tricca_autopipette.core.json_config_manager import JsonConfigManager
 from tricca_autopipette.core.pipette_constants import DefaultPaths, LocalConfigRoots
 from tricca_autopipette.core.pipette_models import (
     GantryKinematics,
     LiquidProfile,
+    LocationsConfig,
     PipetteModel,
+    SystemConfig,
 )
 
 #: Categories `set_config_value` accepts. ``protocols`` is a union category
@@ -89,7 +93,8 @@ def set_config_value(
         raise ValueError(f"{source} does not contain a JSON object")
     data = cast("dict[str, Any]", raw)
 
-    _set_at_path(data, key_path, value)
+    if _set_at_path(data, key_path, value):
+        _check_known_key(category, key_path)
 
     try:
         _validate(category, source.resolve().name, data)
@@ -101,13 +106,16 @@ def set_config_value(
     return target
 
 
-def _set_at_path(data: dict[str, Any], key_path: str, value: object) -> None:
+def _set_at_path(data: dict[str, Any], key_path: str, value: object) -> bool:
     """Set `value` at dotted `key_path` inside `data`, in place.
 
     Args:
         data: Parsed JSON object.
         key_path: Dotted path; list indices are integer segments.
         value: The value to set.
+
+    Returns:
+        True if the leaf key was newly added to an object.
 
     Raises:
         ValueError: If an intermediate segment doesn't exist, or a segment
@@ -125,12 +133,81 @@ def _set_at_path(data: dict[str, Any], key_path: str, value: object) -> None:
                 raise KeyError(part)
         if isinstance(node, list):
             cast("list[object]", node)[int(leaf)] = value
-        elif isinstance(node, dict):
-            cast("dict[str, object]", node)[leaf] = value
-        else:
-            raise KeyError(leaf)
+            return False
+        if isinstance(node, dict):
+            obj = cast("dict[str, object]", node)
+            added = leaf not in obj
+            obj[leaf] = value
+            return added
+        raise KeyError(leaf)
     except (KeyError, IndexError, ValueError) as e:
         raise ValueError(f"Key path {key_path!r} not found: {e}") from e
+
+
+#: The model each category's file is parsed as, for `_check_known_key`.
+#: ``locations``/``plates`` have none: `LocationManager` parses raw dicts and
+#: keeps unknown keys on save, so any key is allowed there.
+_CATEGORY_MODELS: dict[str, type[BaseModel]] = {
+    "system": SystemConfig,
+    "gantry": GantryKinematics,
+    "pipettes": PipetteModel,
+    "liquids": LiquidProfile,
+}
+
+
+def _check_known_key(category: str, key_path: str) -> None:
+    """Reject adding a key the category's model doesn't define.
+
+    The models ignore unknown fields, so without this a mistyped field name
+    would be written and then silently do nothing. Only *new* keys are
+    checked; editing a key already in the file is always allowed.
+
+    Args:
+        category: The config category.
+        key_path: Dotted path of the newly added key.
+
+    Raises:
+        ValueError: If the model has no such field.
+    """
+    model = _CATEGORY_MODELS.get(category)
+    if model is None or (category == "system" and key_path == "extends"):
+        return
+    if not _model_defines(model, key_path.split(".")):
+        raise ValueError(
+            f"Unknown key {key_path!r} for {category}: {model.__name__} has no "
+            f"such field (known: {sorted(model.model_fields)})"
+        )
+
+
+def _model_defines(model: type[BaseModel], parts: list[str]) -> bool:
+    """Report whether `parts` names a field path through `model`.
+
+    Args:
+        model: The model to walk.
+        parts: Key path segments.
+
+    Returns:
+        True if the path is a known field, or passes into a free-form value
+        (a ``dict[str, str]``, a list, `LocationsConfig`'s raw sources) where
+        there is nothing to check against.
+    """
+    field = model.model_fields.get(parts[0])
+    if field is None:
+        return False
+    rest = parts[1:]
+    annotation: Any = field.annotation
+    while rest and get_origin(annotation) is dict:
+        # A keyed collection (e.g. liquids by name): the segment is a key.
+        annotation, rest = get_args(annotation)[1], rest[1:]
+    if not rest:
+        return True
+    candidates = get_args(annotation) or (annotation,)
+    models = [
+        c
+        for c in candidates
+        if isinstance(c, type) and issubclass(c, BaseModel) and c is not LocationsConfig
+    ]
+    return not models or any(_model_defines(m, rest) for m in models)
 
 
 def _validate(category: str, filename: str, data: dict[str, Any]) -> None:

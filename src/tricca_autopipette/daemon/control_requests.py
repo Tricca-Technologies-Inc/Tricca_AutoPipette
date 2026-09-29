@@ -195,6 +195,39 @@ class ControlRequests(JsonRpcRequestBuilder):
         """
         return self.gen_request("config.load_liquid", {"filename": filename})
 
+    def unload_liquid(self, liquid_name: str) -> dict[str, Any]:
+        """Build a request to unload a liquid profile (its file is untouched).
+
+        Args:
+            liquid_name: Name of the loaded liquid profile.
+
+        Returns:
+            Request to unload the liquid profile.
+        """
+        return self.gen_request("config.unload_liquid", {"liquid_name": liquid_name})
+
+    def load_pipette(self, filename: str) -> dict[str, Any]:
+        """Build a request to make a pipette profile the active pipette.
+
+        Args:
+            filename: Pipette config filename.
+
+        Returns:
+            Request to load the pipette.
+        """
+        return self.gen_request("config.load_pipette", {"filename": filename})
+
+    def switch_system(self, filename: str) -> dict[str, Any]:
+        """Build a request to switch the active local system profile.
+
+        Args:
+            filename: A profile in the local root's ``system/`` directory.
+
+        Returns:
+            Request to switch the system profile.
+        """
+        return self.gen_request("config.switch_system", {"filename": filename})
+
     def set(self, args: SetArgs) -> dict[str, Any]:
         """Build a request to set a gantry configuration variable.
 
