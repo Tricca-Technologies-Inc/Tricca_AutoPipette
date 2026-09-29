@@ -104,7 +104,11 @@ A loaded system config references:
 
 ### `pipettes/*.json`
 Pipette model definitions including:
-- Syringe kinematics (speeds, accelerations, calibration)
+- Syringe kinematics (speeds, accelerations, calibration as
+  `calibration_volumes` µL / `calibration_mm` plunger travel)
+- `syringe.max_travel_mm` (**required**): the syringe's manufacturer-stated
+  plunger travel in mm. Homing drives up to twice this toward the endstop.
+  A pipette file without it fails to load, naming the field.
 - Servo configuration (angles, timing)
 - Volume capacity and motor orientation
 
