@@ -475,11 +475,11 @@ Options:
 ```
 Usage: trigger [-h] channel state
 
-Control auxiliary triggers (air, shake, aux). Stub: validates the
-channel/state and always reports 'not yet implemented' -- see issue #16.
+Switch an auxiliary trigger's output pin on or off. Channels are the keys of
+this machine's system config 'trigger_pins'.
 
 Positional Arguments:
-  channel     Trigger channel: air, shake, aux
+  channel     Trigger channel: a key of the system config's trigger_pins
   state       Desired state: on, off
 
 Options:

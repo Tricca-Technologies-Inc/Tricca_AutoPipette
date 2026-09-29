@@ -78,7 +78,6 @@ from tricca_autopipette.core.pipette_constants import (
     DefaultPaths,
     HomingTargets,
     LocalConfigRoots,
-    TriggerChannels,
 )
 from tricca_autopipette.core.pipette_exceptions import (
     NotALocationError,
@@ -1880,40 +1879,37 @@ class AutoPipetteService:
         return CommandResult(ok=True, message=f"Wait: {args.ms:.0f} ms")
 
     def trigger(self, args: TriggerArgs) -> CommandResult:
-        """Control an auxiliary trigger channel (air, shake, aux).
+        """Switch an auxiliary trigger channel (air, shake, ...) on or off.
 
-        Not yet implemented in ``AutoPipette`` -- this only validates the
-        channel/state and reports that, matching the original stub's
-        behavior.
+        A channel is valid only if it's a key in this machine's
+        ``system_config.trigger_pins``. Not homed-gated: it drives aux
+        hardware, not the gantry. Fire-and-forget -- no state is tracked.
 
         Args:
             args: Channel name and desired state (on/off).
 
         Returns:
-            An ``ok=False`` result: either an invalid channel/state
-            message, or the "not yet implemented" stub message.
+            ``ok=True`` once the ``M400`` + ``SET_PIN`` G-code is queued, or
+            ``ok=False`` naming the valid channels/states.
         """
         channel = args.channel.lower()
         state = args.state.lower()
+        pins = self._autopipette.system_config.trigger_pins
 
-        if channel not in TriggerChannels.VALID_CHANNELS:
-            valid = ", ".join(sorted(TriggerChannels.VALID_CHANNELS))
+        if channel not in pins:
+            valid = ", ".join(sorted(pins)) or "(none configured)"
             return CommandResult(
                 ok=False, message=f"Invalid channel '{channel}'. Valid: {valid}"
             )
-        if state not in TriggerChannels.VALID_STATES:
-            valid = ", ".join(sorted(TriggerChannels.VALID_STATES))
+        if state not in ("on", "off"):
             return CommandResult(
-                ok=False, message=f"Invalid state '{state}'. Valid: {valid}"
+                ok=False, message=f"Invalid state '{state}'. Valid: off, on"
             )
 
-        return CommandResult(
-            ok=False,
-            message=(
-                f"Trigger functionality not yet implemented. "
-                f"Would turn '{channel}' {state}."
-            ),
-        )
+        autopipette = self._autopipette
+        autopipette.set_trigger(channel, state)
+        self.output_gcode(autopipette.get_gcode())
+        return CommandResult(ok=True, message=f"Trigger '{channel}' {state}")
 
     def gcode_print(self, args: GcodePrintArgs) -> CommandResult:
         """Send a message to be displayed on the pipette screen.

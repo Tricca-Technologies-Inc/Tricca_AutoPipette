@@ -84,3 +84,20 @@ def test_every_emission_site_emits_unchanged_gcode(
         zip(actual_numbers, golden_numbers, strict=True)
     ):
         assert math.isclose(actual, golden, rel_tol=1e-9), (index, actual, golden)
+
+
+def test_set_trigger_drains_motion_then_drives_the_configured_pin(
+    autopipette: AutoPipette,
+) -> None:
+    ap = autopipette
+    ap.system_config.trigger_pins = {"air": "air_valve", "shake": "shaker"}
+    ap.get_gcode()  # drain anything buffered by setup
+
+    ap.set_trigger("air", "on")
+    ap.set_trigger("shake", "off")
+
+    # M400 first: SET_PIN isn't a motion command, so without it the pin
+    # flips while an already-queued move is still physically running.
+    assert _as_written(ap.get_gcode()) == (
+        "M400\nSET_PIN PIN=air_valve VALUE=1\nM400\nSET_PIN PIN=shaker VALUE=0\n"
+    )
