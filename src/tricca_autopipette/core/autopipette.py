@@ -512,8 +512,8 @@ class AutoPipette:
         if accel is None:
             accel = self.syringe.accel_home
 
-        # Twice the max distance ensures homing
-        distance = self.volume_converter.vol_to_steps(2 * self.syringe.max_volume_ul)
+        # Deliberate 2x overshoot: a `home` move stops at the endstop trigger
+        distance = 2 * self.syringe.max_travel_mm
         distance *= FluidDisplacement.dispense
         distance *= self.syringe.motor_orientation
         opposite_distance = distance * -1
@@ -533,7 +533,7 @@ class AutoPipette:
                 move=distance,
                 speed=speed,
                 accel=accel,
-                stop_on_endstop=1,
+                stop_on_endstop="home",
             )
         )
         self.gcode_buffers.add(
@@ -542,7 +542,7 @@ class AutoPipette:
                 move=opposite_distance,
                 speed=speed,
                 accel=accel,
-                stop_on_endstop=-1,
+                stop_on_endstop="inverted_home",
             )
         )
         self.gcode_buffers.add(gc.manual_stepper(stepper, set_position=0))
@@ -627,7 +627,7 @@ class AutoPipette:
                 move=distance,
                 speed=speed,
                 accel=accel,
-                stop_on_endstop=2,
+                stop_on_endstop="try_home",
             )
         )
         self.gcode_buffers.add(gc.manual_stepper(stepper, set_position=0))
@@ -814,7 +814,7 @@ class AutoPipette:
         if accel is None:
             accel = self.syringe.accel_home
 
-        distance = self.volume_converter.vol_to_steps(2 * self.syringe.max_volume_ul)
+        distance = 2 * self.syringe.max_travel_mm
         distance *= FluidDisplacement.dispense
         distance *= self.syringe.motor_orientation
 
@@ -833,7 +833,7 @@ class AutoPipette:
                 move=distance,
                 speed=speed,
                 accel=accel,
-                stop_on_endstop=1,
+                stop_on_endstop="home",
             )
         )
         self.gcode_buffers.add(gc.manual_stepper(stepper, set_position=0))

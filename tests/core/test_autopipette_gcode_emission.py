@@ -14,6 +14,14 @@ other ``MANUAL_STEPPER`` site emitted ``MOVE=`` first; the builder has one
 fixed parameter order, so those two lines now read ``MOVE= SPEED=``.
 Klipper parses extended parameters by name, so the machine sees no change.
 
+A second deliberate edit, issue #29, *does* change what the machine sees:
+``STOP_ON_ENDSTOP`` moved from Klipper's deprecated numeric aliases to the
+documented strings (``1`` -> ``home``, ``-1`` -> ``inverted_home``, ``2`` ->
+``try_home``, per ``klippy/extras/manual_stepper.py``'s own alias map), and
+the homing/``clear_syringe`` distance moved from the volume-derived
+``vol_to_steps(2 * max_volume_ul)`` (``499.034...``) to
+``2 * max_travel_mm`` (``120.0`` for the shared 60 mm configs).
+
 The comparison is exact on everything except the *value* of each number,
 which is checked with ``math.isclose(rel_tol=1e-9)``. Stepper distances come
 from the volume converter's numpy polyfit, whose last few float digits vary

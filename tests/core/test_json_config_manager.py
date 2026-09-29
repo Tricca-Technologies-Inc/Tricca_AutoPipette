@@ -362,7 +362,8 @@ class TestLoadConfigs:
         self, write_pipette_config: Any
     ) -> None:
         pipette_name = write_pipette_config(
-            "pipette.json", {"name": "Custom", "syringe": {"max_travel_mm": 60.0}, "servo": {}}
+            "pipette.json",
+            {"name": "Custom", "syringe": {"max_travel_mm": 60.0}, "servo": {}},
         )
         manager = JsonConfigManager()
 
@@ -577,7 +578,9 @@ class TestLoadPipette:
     ) -> None:
         manager = JsonConfigManager()
         manager.load_system_config()
-        name = write_pipette_config("bad.json", {"syringe": {"max_travel_mm": 60.0}, "servo": {}})  # no name
+        name = write_pipette_config(
+            "bad.json", {"syringe": {"max_travel_mm": 60.0}, "servo": {}}
+        )  # no name
 
         with pytest.raises(ValueError, match="Pipette config validation failed"):
             manager.load_pipette(name)
@@ -588,7 +591,8 @@ class TestLoadPipette:
         manager = JsonConfigManager()
         manager.load_system_config()
         name = write_pipette_config(
-            "custom.json", {"name": "Custom", "syringe": {"max_travel_mm": 60.0}, "servo": {}}
+            "custom.json",
+            {"name": "Custom", "syringe": {"max_travel_mm": 60.0}, "servo": {}},
         )
 
         pipette = manager.load_pipette(name)
@@ -779,7 +783,11 @@ class TestLoadDefaultPipettes:
         caplog: pytest.LogCaptureFixture,
     ) -> None:
         (tmp_path / "good.json").write_text(
-            json.dumps({"name": "Good", "syringe": {"max_travel_mm": 60.0}, "servo": {}})
+            json.dumps({
+                "name": "Good",
+                "syringe": {"max_travel_mm": 60.0},
+                "servo": {},
+            })
         )
         (tmp_path / "bad.json").write_text("{not valid json")
         monkeypatch.setattr(DefaultPaths, "DIR_CONFIG_PIPETTE", tmp_path)

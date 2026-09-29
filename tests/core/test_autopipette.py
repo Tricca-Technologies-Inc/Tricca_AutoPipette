@@ -76,6 +76,46 @@ class TestInitPipette:
         assert any("MANUAL_STEPPER" in line for line in gcode)  # home_pipette_stepper
 
 
+class TestSyringeHomingTravel:
+    """Issue #29: endstop moves use the configured travel, not a volume.
+
+    The distance is ``2 * max_travel_mm`` (deliberate overshoot -- Klipper
+    stops a ``home`` move at the endstop trigger), with no calibration
+    curve involved, and uses Klipper's documented string
+    ``STOP_ON_ENDSTOP`` forms rather than the deprecated numeric ones.
+    """
+
+    def test_home_pipette_stepper_overshoots_twice_the_travel(
+        self, autopipette: AutoPipette
+    ) -> None:
+        autopipette.syringe.max_travel_mm = 37.5
+        autopipette.get_gcode()
+
+        autopipette.home_pipette_stepper()
+
+        assert autopipette.get_gcode() == [
+            "MANUAL_STEPPER STEPPER=pipette_stepper SET_POSITION=0 MOVE=75.0 "
+            "SPEED=200.0 ACCEL=800.0 STOP_ON_ENDSTOP=home\n",
+            "MANUAL_STEPPER STEPPER=pipette_stepper MOVE=-75.0 "
+            "SPEED=200.0 ACCEL=800.0 STOP_ON_ENDSTOP=inverted_home\n",
+            "MANUAL_STEPPER STEPPER=pipette_stepper SET_POSITION=0\n",
+        ]
+
+    def test_clear_syringe_overshoots_twice_the_travel(
+        self, autopipette: AutoPipette
+    ) -> None:
+        autopipette.syringe.max_travel_mm = 37.5
+        autopipette.get_gcode()
+
+        autopipette.clear_syringe()
+
+        assert autopipette.get_gcode() == [
+            "MANUAL_STEPPER STEPPER=pipette_stepper SET_POSITION=0 MOVE=75.0 "
+            "SPEED=200.0 ACCEL=800.0 STOP_ON_ENDSTOP=home\n",
+            "MANUAL_STEPPER STEPPER=pipette_stepper SET_POSITION=0\n",
+        ]
+
+
 class TestGCodeBuffer:
     def test_get_gcode_drains_the_buffer(self, autopipette: AutoPipette) -> None:
         autopipette.gcode_wait(500)

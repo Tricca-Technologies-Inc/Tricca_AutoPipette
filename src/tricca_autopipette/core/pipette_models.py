@@ -397,7 +397,9 @@ class PipetteModel(BaseModel):
         >>> pipette = PipetteModel(
         ...     name="P1000_Vertical",
         ...     design_type="vertical",
-        ...     syringe=PipetteSyringeKinematics(max_volume_ul=1000.0, max_travel_mm=60.0),
+        ...     syringe=PipetteSyringeKinematics(
+        ...         max_volume_ul=1000.0, max_travel_mm=60.0
+        ...     ),
         ...     servo=ServoConfig(),
         ... )
         >>> print(pipette.name)
@@ -684,7 +686,9 @@ class SystemConfig(BaseModel):
         ...     gantry=GantryKinematics(),
         ...     pipette=PipetteModel(
         ...         name="P1000_Vertical",
-        ...         syringe=PipetteSyringeKinematics(max_volume_ul=1000.0, max_travel_mm=60.0),
+        ...         syringe=PipetteSyringeKinematics(
+        ...             max_volume_ul=1000.0, max_travel_mm=60.0
+        ...         ),
         ...         servo=ServoConfig(),
         ...     ),
         ... )
