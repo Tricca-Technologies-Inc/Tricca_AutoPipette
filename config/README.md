@@ -73,7 +73,12 @@ the file's raw JSON, so every other field, `extends`, and `plate_file`
 reference is kept; a value that would leave the file unloadable is refused
 and nothing is written. So is a *new* key the file's model doesn't define
 (e.g. a misspelt `speed_aspirat`), for `system`/`gantry`/`pipettes`/`liquids`;
-keys already in a file stay editable. `save_locations` likewise writes to the
+keys already in a file stay editable. High-risk pipette and gantry values
+(speeds, accelerations, syringe volumes and travel, servo angles) are also
+refused outside a fixed range (`HIGH_RISK_BOUNDS` in `core/config_writer.py`;
+e.g. `max_travel_mm` 1-60). `tap`'s `settings`, and the kiosk's Settings
+page, list every editable value with its range and the file an edit goes to.
+`save_locations` likewise writes to the
 local `locations/`, saving file-loaded entries back as they were loaded. Both
 writes are atomic.
 

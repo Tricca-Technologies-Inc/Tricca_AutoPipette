@@ -80,7 +80,12 @@ class CalibrationSession:
     """A calibration in progress, advanced strictly in order.
 
     Attributes:
-        pipette_file: The pipette config file the result is written to.
+        config_category: Category of the file the curve is written to:
+            ``pipettes``, or ``system`` if the system file defines the
+            pipette block (`JsonConfigManager.setting_source`).
+        config_file: That file's name.
+        key_prefix: Key path of the pipette block inside it (``""`` or
+            ``"pipette."``).
         source: Location water is aspirated from.
         dest: Location dispensed into (the vessel on the balance).
         density_g_ml: Water's density, from its liquid profile.
@@ -89,7 +94,9 @@ class CalibrationSession:
         previewed: Whether the fit has been shown since the last record.
     """
 
-    pipette_file: str
+    config_category: str
+    config_file: str
+    key_prefix: str
     source: str
     dest: str
     density_g_ml: float

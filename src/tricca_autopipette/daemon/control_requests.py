@@ -828,3 +828,11 @@ class ControlRequests(JsonRpcRequestBuilder):
             Request for the system summary.
         """
         return self.gen_request("config.system_summary")
+
+    def settings(self) -> dict[str, Any]:
+        """Build a request for every editable setting and where it is written.
+
+        Returns:
+            Request for the settings (see `AutoPipetteService.settings`).
+        """
+        return self.gen_request("config.settings")

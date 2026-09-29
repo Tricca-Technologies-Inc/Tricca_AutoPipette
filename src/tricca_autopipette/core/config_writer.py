@@ -29,6 +29,8 @@ from tricca_autopipette.core.pipette_models import (
     LiquidProfile,
     LocationsConfig,
     PipetteModel,
+    PipetteSyringeKinematics,
+    ServoConfig,
     SystemConfig,
 )
 
@@ -137,6 +139,8 @@ def set_config_values(category: str, filename: str, updates: dict[str, object]) 
         raise ValueError(
             f"Refusing to write {category}/{filename}: it would not load ({e})"
         ) from e
+    for key_path, value in updates.items():
+        _check_bounds(category, key_path, value)
     write_json_atomic(target, data)
     return target
 
@@ -243,6 +247,103 @@ def _model_defines(model: type[BaseModel], parts: list[str]) -> bool:
         if isinstance(c, type) and issubclass(c, BaseModel) and c is not LocationsConfig
     ]
     return not models or any(_model_defines(m, rest) for m in models)
+
+
+#: Allowed range of every high-risk numeric field (issue #33 slice c), keyed
+#: by the model that owns it -- so the same bound applies however the field is
+#: reached (``gantry/x.json`` ``speed_xy`` or a system file's
+#: ``gantry.speed_xy``). Enforced on every write, not on load, so an existing
+#: rig file outside a range still loads. The kiosk Settings page shows exactly
+#: these fields for its pipette and gantry sections, with these bounds.
+#:
+#: Ceilings are the highest value any shared ``config/`` file ships with (the
+#: known-good envelope). The one exception is ``max_volume_ul``, whose ceiling
+#: is 1000 uL, the largest syringe in use (Murphy's 1000 uL profile). Speed and
+#: acceleration floors sit well below anything shipped, slow enough for
+#: bring-up, but rule out a near-zero value that makes one move take minutes.
+HIGH_RISK_BOUNDS: dict[tuple[type[BaseModel], str], tuple[float, float]] = {
+    (GantryKinematics, "speed_xy"): (100, 38000),  # mm/min
+    (GantryKinematics, "speed_z"): (100, 12000),  # mm/min
+    (GantryKinematics, "speed_max"): (100, 99999),  # mm/min
+    (GantryKinematics, "accel_xy"): (100, 40000),  # mm/s²
+    (GantryKinematics, "accel_z"): (100, 40000),  # mm/s²
+    (GantryKinematics, "accel_max"): (100, 40000),  # mm/s²
+    (PipetteSyringeKinematics, "max_volume_ul"): (1, 1000),
+    (PipetteSyringeKinematics, "min_volume_ul"): (0.1, 100),
+    (PipetteSyringeKinematics, "capacity_margin_ul"): (0, 50),
+    # The hard mechanical limit (#29): the syringe's physical stroke is 60 mm,
+    # and homing drives up to twice this toward the endstop.
+    (PipetteSyringeKinematics, "max_travel_mm"): (1, 60),
+    (PipetteSyringeKinematics, "speed_aspirate"): (0.25, 50),  # mm/s
+    (PipetteSyringeKinematics, "speed_dispense"): (0.25, 50),  # mm/s
+    (PipetteSyringeKinematics, "accel_home"): (2.5, 200),  # mm/s²
+    (PipetteSyringeKinematics, "accel_move"): (2.5, 200),  # mm/s²
+    (PipetteSyringeKinematics, "wait_aspirate_ms"): (0, 10000),
+    (PipetteSyringeKinematics, "wait_dispense_ms"): (0, 10000),
+    (ServoConfig, "angle_retract"): (0, 180),  # degrees
+    (ServoConfig, "angle_eject"): (0, 180),  # degrees
+    (ServoConfig, "wait_ms"): (0, 5000),
+}
+
+
+def _check_bounds(category: str, key_path: str, value: object) -> None:
+    """Reject a write that puts a high-risk field outside `HIGH_RISK_BOUNDS`.
+
+    A dict `value` (a whole block, e.g. ``gantry``) is checked leaf by leaf.
+
+    Args:
+        category: The config category.
+        key_path: Dotted path the value is written at.
+        value: The value being written.
+
+    Raises:
+        ValueError: If a bounded field's new value is out of range.
+    """
+    model = _CATEGORY_MODELS.get(category)
+    if model is None:
+        return
+    if isinstance(value, dict):
+        for key, sub in cast("dict[str, object]", value).items():
+            _check_bounds(category, f"{key_path}.{key}", sub)
+        return
+    owner = _owning_field(model, key_path.split("."))
+    bounds = HIGH_RISK_BOUNDS.get(owner) if owner else None
+    if bounds is None or isinstance(value, bool) or not isinstance(value, int | float):
+        return  # unbounded, or not a number (the model rejects that itself)
+    low, high = bounds
+    if not low <= value <= high:
+        raise ValueError(
+            f"{key_path} = {value} is outside the allowed range {low:g}-{high:g}"
+        )
+
+
+def _owning_field(
+    model: type[BaseModel], parts: list[str]
+) -> tuple[type[BaseModel], str] | None:
+    """Find the model and field a key path ends on (see `_model_defines`).
+
+    Args:
+        model: The model to walk.
+        parts: Key path segments.
+
+    Returns:
+        ``(owning model, field name)``, or None if the path isn't a model field.
+    """
+    field = model.model_fields.get(parts[0])
+    if field is None:
+        return None
+    rest = parts[1:]
+    annotation: Any = field.annotation
+    while rest and get_origin(annotation) is dict:
+        annotation, rest = get_args(annotation)[1], rest[1:]
+    if not rest:
+        return model, parts[0]
+    for candidate in get_args(annotation) or (annotation,):
+        if isinstance(candidate, type) and issubclass(candidate, BaseModel):
+            found = _owning_field(candidate, rest)
+            if found is not None:
+                return found
+    return None
 
 
 def _validate(category: str, filename: str, data: dict[str, Any]) -> None:

@@ -42,6 +42,7 @@ def _start_live_kiosk(
     monkeypatch.setattr(kiosk_main, "TAPD_CONTROL_URI", live_control_plane.url)
     monkeypatch.setattr(kiosk_main, "_current_run", kiosk_main.RunStatus(status="idle"))
     monkeypatch.setattr(kiosk_main, "_current_breakpoint", None)
+    monkeypatch.setattr(kiosk_main, "_config_locked", False)
     monkeypatch.setattr(
         kiosk_main, "_current_toolhead", {"position": None, "homed_axes": None}
     )

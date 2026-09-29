@@ -209,6 +209,7 @@ _BUILDER_CALLS: list[tuple[str, tuple[Any, ...]]] = [
     ("list_plates", ()),
     ("list_liquids", ()),
     ("system_summary", ()),
+    ("settings", ()),
 ]
 
 

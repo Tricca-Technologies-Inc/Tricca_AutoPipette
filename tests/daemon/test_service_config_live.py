@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import shutil
 from pathlib import Path
+from typing import Any
 
 import pytest
 from fakes.fake_moonraker_state import FakeMoonrakerState
@@ -413,3 +414,135 @@ class TestLocationsHotReload:
 
         assert result.ok, result.message
         assert svc._autopipette.location_manager.get_all_names() == names
+
+
+def _field(
+    data: dict[str, Any], section: str, key: str, liquid: str | None = None
+) -> dict[str, Any]:
+    if section == "liquids":
+        fields = next(
+            row["fields"] for row in data["liquids"]["loaded"] if row["name"] == liquid
+        )
+    else:
+        fields = data[section]["fields"]
+    return next(f for f in fields if f["key"] == key)
+
+
+def _settings(svc: AutoPipetteService) -> dict[str, Any]:
+    result = svc.settings()
+    assert result.ok, result.message
+    return result.data or {}
+
+
+class TestSettings:
+    """`settings` reports every editable field with the file it lives in."""
+
+    def test_gantry_fields_point_at_the_system_files_inline_block(
+        self, svc: AutoPipetteService
+    ) -> None:
+        field = _field(_settings(svc), "gantry", "speed_xy")
+
+        assert field == {
+            "key": "speed_xy",
+            "value": 38000.0,
+            "min": 100,
+            "max": 38000,
+            "category": "system",
+            "filename": DefaultFilenames.CONFIG_SYSTEM,
+            "key_path": "gantry.speed_xy",
+        }
+
+    def test_a_gantry_block_inherited_through_extends_points_at_the_parent(
+        self, svc: AutoPipetteService, local: Path
+    ) -> None:
+        _write_json(
+            local / "system" / "child.json",
+            {"extends": DefaultFilenames.CONFIG_SYSTEM},
+        )
+        assert svc.switch_system("child.json").ok
+
+        field = _field(_settings(svc), "gantry", "accel_z")
+
+        assert (field["category"], field["filename"]) == (
+            "system",
+            DefaultFilenames.CONFIG_SYSTEM,
+        )
+
+    def test_pipette_fields_point_at_the_referenced_pipette_file(
+        self, svc: AutoPipetteService
+    ) -> None:
+        data = _settings(svc)
+        field = _field(data, "pipette", "syringe.max_volume_ul")
+
+        assert data["pipette"]["file"] == "p100_vertical.json"
+        assert "default_p100.json" in data["pipette"]["files"]
+        assert (field["category"], field["filename"], field["key_path"]) == (
+            "pipettes",
+            "p100_vertical.json",
+            "syringe.max_volume_ul",
+        )
+        assert (field["min"], field["max"]) == (1, 1000)
+
+    def test_a_swapped_pipette_points_at_its_own_file(
+        self, svc: AutoPipetteService, local: Path
+    ) -> None:
+        _p1000(local)
+        svc.load_pipette("p1000.json")
+
+        data = _settings(svc)
+
+        assert data["pipette"]["file"] == "p1000.json"
+        assert _field(data, "pipette", "syringe.max_volume_ul")["value"] == 1000.0  # ruff:ignore[float-equality-comparison]
+
+    def test_liquid_fields_point_at_the_liquid_file_and_are_unbounded(
+        self, svc: AutoPipetteService
+    ) -> None:
+        data = _settings(svc)
+        field = _field(data, "liquids", "speed_aspirate", liquid="water")
+
+        assert (field["category"], field["filename"], field["min"]) == (
+            "liquids",
+            "water.json",
+            None,
+        )
+        assert "methanol.json" in data["liquids"]["files"]
+
+    def test_a_system_liquid_override_is_where_the_liquid_is_edited(
+        self, svc: AutoPipetteService
+    ) -> None:
+        assert svc.set_config_value(
+            "system", DefaultFilenames.CONFIG_SYSTEM, "liquids", {"water": {}}
+        ).ok
+
+        field = _field(_settings(svc), "liquids", "speed_aspirate", "water")
+
+        assert (field["category"], field["key_path"]) == (
+            "system",
+            "liquids.water.speed_aspirate",
+        )
+
+    @pytest.mark.parametrize(
+        ("section", "key", "liquid", "value"),
+        [
+            ("gantry", "speed_z", None, 9000.0),
+            ("pipette", "syringe.speed_aspirate", None, 30.0),
+            ("pipette", "servo.angle_eject", None, 120),
+            ("liquids", "pre_air_gap_ul", "water", 3.0),
+        ],
+    )
+    def test_writing_to_the_reported_target_changes_the_reported_value(
+        self,
+        svc: AutoPipetteService,
+        section: str,
+        key: str,
+        liquid: str | None,
+        value: float,
+    ) -> None:
+        target = _field(_settings(svc), section, key, liquid)
+
+        result = svc.set_config_value(
+            target["category"], target["filename"], target["key_path"], value
+        )
+
+        assert result.ok, result.message
+        assert _field(_settings(svc), section, key, liquid)["value"] == value

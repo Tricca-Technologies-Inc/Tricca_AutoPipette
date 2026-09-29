@@ -158,21 +158,6 @@ class TestStart:
         assert not result.ok
         assert "density" in result.message
 
-    def test_refuses_an_inline_pipette_it_could_not_save_to(
-        self, svc: AutoPipetteService, shared: Path
-    ) -> None:
-        inline = json.loads((shared / "pipettes" / "p100_vertical.json").read_text())
-        inline["name"] = "Inline"
-        assert svc.set_config_value(
-            "system", DefaultFilenames.CONFIG_SYSTEM, "pipette", inline
-        ).ok
-        svc._homing_invalidated = False
-
-        result = _start(svc)
-
-        assert not result.ok
-        assert "inline" in result.message
-
     def test_refuses_when_unhomed(self, svc: AutoPipetteService) -> None:
         svc.moonraker_state.set_homed(False)  # type: ignore[union-attr]
 
@@ -401,6 +386,29 @@ class TestCommit:
         # ...without forcing a re-home, since no mechanical limit changed.
         assert not svc._homing_invalidated
         assert svc.calibrate_status().data == {"active": False}
+
+    def test_a_pipette_defined_in_the_system_file_is_calibrated_there(
+        self, svc: AutoPipetteService, shared: Path
+    ) -> None:
+        inline = json.loads((shared / "pipettes" / "p100_vertical.json").read_text())
+        inline["name"] = "Inline"
+        assert svc.set_config_value(
+            "system", DefaultFilenames.CONFIG_SYSTEM, "pipette", inline
+        ).ok
+        svc._homing_invalidated = False
+        _run_points(svc, [0.019, 0.041])
+        svc.calibrate_preview()
+
+        result = svc.calibrate_commit()
+
+        assert result.ok, result.message
+        system = json.loads(
+            (DefaultPaths.DIR_LOCAL_SYSTEM / DefaultFilenames.CONFIG_SYSTEM).read_text()
+        )
+        syringe = system["pipette"]["syringe"]
+        assert syringe["calibration_volumes"] == pytest.approx([19.0, 41.0])
+        assert syringe["calibration_mm"] == pytest.approx([10.0, 20.0])
+        assert not (DefaultPaths.DIR_LOCAL_PIPETTE / "p100_vertical.json").exists()
 
     def test_refuses_if_the_pipette_was_swapped_mid_session(
         self, svc: AutoPipetteService

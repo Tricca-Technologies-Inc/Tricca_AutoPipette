@@ -106,6 +106,7 @@ _BUILDER_TO_COMMAND: dict[str, str] = {
     "list_plates": "ls",
     "list_liquids": "list_liquids",
     "system_summary": "ls",
+    "settings": "settings",
 }
 
 
