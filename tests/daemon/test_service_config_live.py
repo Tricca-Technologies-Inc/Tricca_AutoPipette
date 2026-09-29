@@ -494,11 +494,11 @@ class TestSettings:
         assert data["pipette"]["file"] == "p1000.json"
         assert _field(data, "pipette", "syringe.max_volume_ul")["value"] == 1000.0  # ruff:ignore[float-equality-comparison]
 
-    def test_liquid_fields_point_at_the_liquid_file_and_are_unbounded(
+    def test_liquid_fields_point_at_the_liquid_file(
         self, svc: AutoPipetteService
     ) -> None:
         data = _settings(svc)
-        field = _field(data, "liquids", "speed_aspirate", liquid="water")
+        field = _field(data, "liquids", "viscosity_cP", liquid="water")
 
         assert (field["category"], field["filename"], field["min"]) == (
             "liquids",
@@ -506,6 +506,14 @@ class TestSettings:
             None,
         )
         assert "methanol.json" in data["liquids"]["files"]
+
+    def test_liquid_syringe_speed_overrides_report_the_pipettes_bounds(
+        self, svc: AutoPipetteService
+    ) -> None:
+        """Issue #120: they drive the syringe, so they carry its speed range."""
+        field = _field(_settings(svc), "liquids", "speed_aspirate", liquid="water")
+
+        assert (field["min"], field["max"]) == (0.25, 50)
 
     def test_a_system_liquid_override_is_where_the_liquid_is_edited(
         self, svc: AutoPipetteService

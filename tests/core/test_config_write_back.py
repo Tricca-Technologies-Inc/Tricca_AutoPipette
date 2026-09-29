@@ -342,7 +342,40 @@ class TestHighRiskBounds:
                 {**system["gantry"], "speed_z": 1e9},
             )
 
-    def test_low_risk_liquid_fields_have_no_bounds(self, roots: Roots) -> None:
-        path = set_config_value("liquids", "water.json", "speed_aspirate", 5000.0)
+    @pytest.mark.parametrize("field", ["speed_aspirate", "speed_dispense"])
+    def test_a_liquid_syringe_speed_override_is_bounded_like_the_pipettes(
+        self, roots: Roots, field: str
+    ) -> None:
+        """Issue #120: an active liquid's override drives the syringe, so it
+        gets the pipette's own speed range, not a free pass.
+        """
+        with pytest.raises(ValueError, match=rf"{field}.*allowed range"):
+            set_config_value("liquids", "water.json", field, 5000.0)
 
-        assert _read(path)["speed_aspirate"] == 5000.0  # ruff:ignore[float-equality-comparison]
+        assert not (roots.local / "liquids" / "water.json").exists()
+
+    @pytest.mark.usefixtures("system")
+    def test_liquid_speed_bounds_apply_through_a_system_file_override_too(
+        self,
+    ) -> None:
+        with pytest.raises(ValueError, match=r"speed_dispense.*allowed range"):
+            set_config_value(
+                "system",
+                "default_system.json",
+                "liquids.water",
+                {"name": "water", "speed_dispense": 5e3},
+            )
+
+    def test_an_in_bounds_liquid_speed_and_a_null_override_are_written(
+        self, roots: Roots
+    ) -> None:
+        set_config_value("liquids", "water.json", "speed_aspirate", 20.0)
+        path = set_config_value("liquids", "water.json", "speed_dispense", None)
+
+        assert _read(path)["speed_aspirate"] == 20.0  # ruff:ignore[float-equality-comparison]
+        assert _read(path)["speed_dispense"] is None
+
+    def test_other_liquid_fields_stay_unbounded(self, roots: Roots) -> None:
+        path = set_config_value("liquids", "water.json", "viscosity_cP", 5000.0)
+
+        assert _read(path)["viscosity_cP"] == 5000.0  # ruff:ignore[float-equality-comparison]
