@@ -653,9 +653,10 @@ class JsonConfigManager:
                 data = json.loads(path.read_text(encoding="utf-8"))
             except (OSError, ValueError):
                 continue
-            if isinstance(data, dict) and cast("dict[str, Any]", data).get(
-                "name"
-            ) == liquid:
+            if (
+                isinstance(data, dict)
+                and cast("dict[str, Any]", data).get("name") == liquid
+            ):
                 source = path.name
         return ("liquids", source, "") if source is not None else None
 

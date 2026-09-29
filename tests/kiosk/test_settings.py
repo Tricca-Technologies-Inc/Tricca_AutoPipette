@@ -60,11 +60,15 @@ class TestSettingsRoutes:
 
     @pytest.mark.usefixtures("local")
     def test_a_low_risk_edit_round_trips(self, kiosk_client: TestClient) -> None:
-        field = _liquid_field(kiosk_client.get("/settings").json(), "water", "viscosity_cP")
+        field = _liquid_field(
+            kiosk_client.get("/settings").json(), "water", "viscosity_cP"
+        )
 
         assert _set(kiosk_client, field, 1.7)["ok"] is True
 
-        after = _liquid_field(kiosk_client.get("/settings").json(), "water", "viscosity_cP")
+        after = _liquid_field(
+            kiosk_client.get("/settings").json(), "water", "viscosity_cP"
+        )
         assert after["value"] == 1.7  # ruff:ignore[float-equality-comparison]
 
     def test_an_out_of_bounds_edit_is_refused_with_the_reason(
@@ -104,7 +108,9 @@ class TestSettingsRoutes:
         assert result["data"] == {"reason": "run_active"}
 
     def test_unload_then_load_a_liquid(self, kiosk_client: TestClient) -> None:
-        unloaded = kiosk_client.post("/settings/unload_liquid", json={"name": "methanol"})
+        unloaded = kiosk_client.post(
+            "/settings/unload_liquid", json={"name": "methanol"}
+        )
         assert unloaded.json()["ok"] is True
 
         loaded = kiosk_client.post(

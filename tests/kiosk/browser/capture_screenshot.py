@@ -30,6 +30,7 @@ PAGES: dict[str, Callable[[Page], None]] = {
     "move": lambda page: page.click('.tab-btn[data-page="move"]'),
     "tips": lambda page: page.click('.tab-btn[data-page="tips"]'),
     "deck": lambda page: page.click('.tab-btn[data-page="deck"]'),
+    "settings": lambda page: page.click('.tab-btn[data-page="settings"]'),
 }
 
 

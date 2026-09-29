@@ -736,9 +736,7 @@ async def load_pipette(req: FilenameRequest) -> CommandResultResponse:
     Returns:
         `CommandResultResponse` naming the new pipette, or ``ok=False``.
     """
-    return await _dispatch_control_request(
-        _control_requests.load_pipette(req.filename)
-    )
+    return await _dispatch_control_request(_control_requests.load_pipette(req.filename))
 
 
 @app.post("/settings/switch_system", response_model=CommandResultResponse)
@@ -803,7 +801,8 @@ def _on_run_status_notification(params: Any) -> None:  # ruff:ignore[any-type]
 
     Args:
         params: Notification params, `{"status", "message", "run_id",
-            "filename", "config_locked"}` as sent by `AutoPipetteService._broadcast_status`.
+            "filename", "config_locked"}` as sent by
+            `AutoPipetteService._broadcast_status`.
 
     Note:
         Invoked from the control-plane WebSocketClient's background thread;

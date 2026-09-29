@@ -383,7 +383,9 @@ class RemoteTapShell(Cmd):
         for title, fields in sections:
             self.poutput(f"\n{title}:")
             for f in fields:
-                bounds = f"  [{f['min']:g}..{f['max']:g}]" if f["min"] is not None else ""
+                bounds = (
+                    f"  [{f['min']:g}..{f['max']:g}]" if f["min"] is not None else ""
+                )
                 self.poutput(
                     f"  {f['key']} = {f['value']}{bounds}    "
                     f"set_config {f['category']} {f['filename']} {f['key_path']}"

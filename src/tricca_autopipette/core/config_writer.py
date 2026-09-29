@@ -222,7 +222,7 @@ def _model_defines(model: type[BaseModel], parts: list[str]) -> bool:
 #:
 #: Ceilings are the highest value any shared ``config/`` file ships with (the
 #: known-good envelope). The one exception is ``max_volume_ul``, whose ceiling
-#: is 1000 µL, the largest syringe in use (Murphy's 1000 µL profile). Speed and
+#: is 1000 uL, the largest syringe in use (Murphy's 1000 uL profile). Speed and
 #: acceleration floors sit well below anything shipped, slow enough for
 #: bring-up, but rule out a near-zero value that makes one move take minutes.
 HIGH_RISK_BOUNDS: dict[tuple[type[BaseModel], str], tuple[float, float]] = {

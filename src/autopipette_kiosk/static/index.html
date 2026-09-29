@@ -42,6 +42,7 @@
     <button class="tab-btn" data-page="move">Move</button>
     <button class="tab-btn" data-page="tips">Tips</button>
     <button class="tab-btn" data-page="deck">Deck</button>
+    <button class="tab-btn" data-page="settings">Settings</button>
   </nav>
 
   <!-- Global breakpoint banner: reachable from any tab, not scoped to the
@@ -218,6 +219,25 @@
         </div>
       </div>
     </div>
+
+    <!-- Settings page (issue #33 slice c) -->
+    <div class="page" id="page-settings">
+      <div class="settings-banner lock" id="settingsLockBanner">
+        <span>🔒</span> Locked while a protocol is running.
+      </div>
+      <div class="settings-banner home" id="settingsHomeBanner">
+        <span>⚠</span> Home required: the pipette, gantry or system profile changed, so
+        homing was invalidated. Press Home before moving.
+      </div>
+      <div class="tips-hint">
+        Pipette and gantry values are high-risk: each has a fixed allowed range and needs
+        confirming. Liquid values save as soon as you change them; leave one empty to use
+        the pipette's default.
+      </div>
+      <div id="settingsContent">
+        <div class="tips-empty">Loading settings…</div>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -226,5 +246,6 @@
 <script src="/static/move.js"></script>
 <script src="/static/tips.js"></script>
 <script src="/static/deck.js"></script>
+<script src="/static/settings.js"></script>
 </body>
 </html>
