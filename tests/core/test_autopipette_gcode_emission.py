@@ -22,6 +22,15 @@ the homing/``clear_syringe`` distance moved from the volume-derived
 ``vol_to_steps(2 * max_volume_ul)`` (``499.034...``) to
 ``2 * max_travel_mm`` (``120.0`` for the shared 60 mm configs).
 
+Also in #29, every syringe-stepper quantity moved from ``rotation_distance:
+8`` units (each Klipper "mm" was 1/4 of a real mm) to real millimetres, for
+use with ``rotation_distance: 2``. The golden was derived from the pre-#29
+golden by pure arithmetic -- every ``MANUAL_STEPPER`` ``MOVE``/``SPEED``/
+``ACCEL`` multiplied by exactly 0.25, except the homing/clear distance (now
+``2 * max_travel_mm`` by design) -- so this test passing is the check that
+physical motion is unchanged once both changes deploy together. The one
+direct ``move_pipette_stepper`` input below was rescaled the same way.
+
 The comparison is exact on everything except the *value* of each number,
 which is checked with ``math.isclose(rel_tol=1e-9)``. Stepper distances come
 from the volume converter's numpy polyfit, whose last few float digits vary
@@ -79,7 +88,7 @@ def test_every_emission_site_emits_unchanged_gcode(
     ap.home_z()
     ap.move_to_z(Coordinate(x=1, y=2, z=3))
     ap.gcode_print("hello world")
-    ap.move_pipette_stepper(-4.5)
+    ap.move_pipette_stepper(-1.125)  # was -4.5 in rotation_distance-8 units
     ap.clear_syringe()
     ap.pipette(20.0, "plate_a", "plate_a")
 

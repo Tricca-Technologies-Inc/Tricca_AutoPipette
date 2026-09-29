@@ -323,20 +323,20 @@ class PipetteSyringeKinematics(BaseModel):
 
     # Speed parameters (mm/s -- these reach Klipper's MANUAL_STEPPER SPEED=)
     speed_aspirate: float = Field(
-        default=200.0, gt=0, description="Aspiration speed in mm/s"
+        default=50.0, gt=0, description="Aspiration speed in mm/s"
     )
 
     speed_dispense: float = Field(
-        default=200.0, gt=0, description="Dispense speed in mm/s"
+        default=50.0, gt=0, description="Dispense speed in mm/s"
     )
 
     # Acceleration (mm/s²)
     accel_home: float = Field(
-        default=800.0, gt=0, description="Homing acceleration in mm/s²"
+        default=200.0, gt=0, description="Homing acceleration in mm/s²"
     )
 
     accel_move: float = Field(
-        default=800.0, gt=0, description="Movement acceleration in mm/s²"
+        default=200.0, gt=0, description="Movement acceleration in mm/s²"
     )
 
     # Timing parameters (milliseconds)

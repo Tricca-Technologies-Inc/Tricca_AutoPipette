@@ -718,12 +718,12 @@ class JsonConfigManager:
             >>> # Get water parameters (falls back to the pipette default)
             >>> water_params = manager.get_merged_syringe_params("water")
             >>> print(water_params["speed_aspirate"])
-            100.0
+            25.0
 
             >>> # Get methanol parameters (liquid profile overrides, slower)
             >>> methanol_params = manager.get_merged_syringe_params("methanol")
             >>> print(methanol_params["speed_aspirate"])
-            80.0
+            20.0
         """
         if self.system_config is None:
             raise RuntimeError(

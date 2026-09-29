@@ -36,9 +36,9 @@ class TestSwitchLiquid:
 
         assert autopipette.active_liquid == "methanol"
         # methanol.json overrides speed_aspirate/speed_dispense from the
-        # pipette defaults (100.0/200.0 in p100_vertical.json).
-        assert autopipette.syringe.speed_aspirate == pytest.approx(80.0)
-        assert autopipette.syringe.speed_dispense == pytest.approx(150.0)
+        # pipette defaults (25.0/50.0 in p100_vertical.json).
+        assert autopipette.syringe.speed_aspirate == pytest.approx(20.0)
+        assert autopipette.syringe.speed_dispense == pytest.approx(37.5)
 
     def test_unknown_liquid_raises_value_error(self, autopipette: AutoPipette) -> None:
         with pytest.raises(ValueError, match="not found"):
@@ -96,9 +96,9 @@ class TestSyringeHomingTravel:
 
         assert autopipette.get_gcode() == [
             "MANUAL_STEPPER STEPPER=pipette_stepper SET_POSITION=0 MOVE=75.0 "
-            "SPEED=200.0 ACCEL=800.0 STOP_ON_ENDSTOP=home\n",
+            "SPEED=50.0 ACCEL=200.0 STOP_ON_ENDSTOP=home\n",
             "MANUAL_STEPPER STEPPER=pipette_stepper MOVE=-75.0 "
-            "SPEED=200.0 ACCEL=800.0 STOP_ON_ENDSTOP=inverted_home\n",
+            "SPEED=50.0 ACCEL=200.0 STOP_ON_ENDSTOP=inverted_home\n",
             "MANUAL_STEPPER STEPPER=pipette_stepper SET_POSITION=0\n",
         ]
 
@@ -112,7 +112,7 @@ class TestSyringeHomingTravel:
 
         assert autopipette.get_gcode() == [
             "MANUAL_STEPPER STEPPER=pipette_stepper SET_POSITION=0 MOVE=75.0 "
-            "SPEED=200.0 ACCEL=800.0 STOP_ON_ENDSTOP=home\n",
+            "SPEED=50.0 ACCEL=200.0 STOP_ON_ENDSTOP=home\n",
             "MANUAL_STEPPER STEPPER=pipette_stepper SET_POSITION=0\n",
         ]
 
