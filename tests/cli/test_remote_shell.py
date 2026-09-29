@@ -33,6 +33,7 @@ from support.polling import poll_until
 from tricca_autopipette.cli import remote_shell as remote_shell_module
 from tricca_autopipette.cli.remote_shell import RemoteTapShell
 from tricca_autopipette.core.pipette_constants import DefaultPaths
+from tricca_autopipette.core.pipette_models import TipState
 from tricca_autopipette.daemon.service import RunStatus
 
 
@@ -619,3 +620,60 @@ class TestLiveConfigCommands:
         out = _output(shell)
         assert "set_config liquids water.json speed_aspirate" in out
         assert "syringe.max_volume_ul = 100.0  [1..1000]" in out
+
+
+class TestCalibrate:
+    """``calibrate`` end to end: tap -> control plane -> session -> writer."""
+
+    @pytest.fixture
+    def cal_shell(
+        self,
+        live_control_plane_with_plates: LiveControlPlane,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> Iterator[RemoteTapShell]:
+        monkeypatch.setattr(DefaultPaths, "DIR_LOCAL_PIPETTE", tmp_path / "pipettes")
+        service = live_control_plane_with_plates.service
+        service.moonraker_state.set_homed(True)  # type: ignore[union-attr]
+        service._autopipette.state.tip_state = TipState.ATTACHED
+        tap = RemoteTapShell(live_control_plane_with_plates.url)
+        tap.stdout = io.StringIO()
+        tap.preloop()
+        tap.stdout = io.StringIO()
+        yield tap
+        tap.postloop()
+
+    def test_a_whole_session_saves_the_curve_locally(
+        self, cal_shell: RemoteTapShell, tmp_path: Path
+    ) -> None:
+        for line in (
+            "calibrate start plate_a plate_a --volumes 20 40",
+            "calibrate dispense",
+            "calibrate record 0.0195",
+            "calibrate dispense",
+            "calibrate record 0.0402",
+            "calibrate preview",
+            "calibrate commit",
+        ):
+            cal_shell.onecmd_plus_hooks(line)
+
+        saved = json.loads((tmp_path / "pipettes" / "p100_vertical.json").read_text())
+        assert saved["syringe"]["calibration_volumes"] == pytest.approx([19.5, 40.2])
+        out = _output(cal_shell)
+        assert "Fit: travel_mm" in out
+        assert "Saved 2-point calibration" in out
+
+    def test_an_out_of_order_step_is_refused_with_the_next_step(
+        self, cal_shell: RemoteTapShell
+    ) -> None:
+        cal_shell.onecmd_plus_hooks("calibrate start plate_a plate_a --volumes 20 40")
+        cal_shell.onecmd_plus_hooks("calibrate record 0.02")
+
+        assert "next calibration step is 'dispense'" in _output(cal_shell)
+
+    def test_help_warns_the_curve_is_keyed_by_filename(
+        self, cal_shell: RemoteTapShell
+    ) -> None:
+        cal_shell.onecmd_plus_hooks("help calibrate")
+
+        assert "recalibrate after swapping a syringe" in _output(cal_shell)

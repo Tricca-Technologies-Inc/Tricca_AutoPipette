@@ -43,6 +43,7 @@
     <button class="tab-btn" data-page="tips">Tips</button>
     <button class="tab-btn" data-page="deck">Deck</button>
     <button class="tab-btn" data-page="settings">Settings</button>
+    <button class="tab-btn" data-page="calibrate">Calibrate</button>
   </nav>
 
   <!-- Global breakpoint banner: reachable from any tab, not scoped to the
@@ -238,6 +239,57 @@
         <div class="tips-empty">Loading settings…</div>
       </div>
     </div>
+
+    <!-- Calibrate page (issue #26) -->
+    <div class="page" id="page-calibrate">
+      <div class="settings-banner lock" id="calLockBanner">
+        <span>🔒</span> Locked while a protocol is running.
+      </div>
+      <div class="tips-hint">
+        Gravimetric calibration of the active pipette, with water. Each point dispenses
+        into a vessel on your balance; tare it, dispense, then enter the mass it gained.
+        The curve is saved for this machine against the pipette's config file, not the
+        physical syringe: <strong>recalibrate after swapping a syringe.</strong>
+      </div>
+
+      <div class="move-panel cal-panel" id="calSetup">
+        <div class="panel-header">Start a calibration</div>
+        <div class="settings-field">
+          <label for="calSourceSelect">Water source</label>
+          <select class="move-loc-select" id="calSourceSelect"></select>
+        </div>
+        <div class="settings-field">
+          <label for="calDestSelect">Destination (vessel on the balance)</label>
+          <select class="move-loc-select" id="calDestSelect"></select>
+        </div>
+        <div class="settings-field">
+          <label for="calVolumesInput">Target volumes, µL (blank: 10/30/50/70/90% of capacity)</label>
+          <input class="coord-input" id="calVolumesInput" placeholder="e.g. 10, 30, 50, 70, 90">
+        </div>
+        <button class="move-go-btn" id="calStartBtn">Start</button>
+      </div>
+
+      <div class="move-panel cal-panel" id="calSession" hidden>
+        <div class="panel-header" id="calStepTitle"></div>
+        <div class="coord-live" id="calTarget"></div>
+        <table class="cal-points">
+          <thead><tr><th>#</th><th>Target µL</th><th>Travel mm</th><th>Mass g</th><th>Measured µL</th></tr></thead>
+          <tbody id="calPoints"></tbody>
+        </table>
+        <div class="cal-fit" id="calFit"></div>
+        <div class="cal-actions">
+          <button class="move-go-btn" id="calDispenseBtn">Dispense</button>
+          <div class="settings-field-line" id="calRecordRow">
+            <input type="number" step="any" min="0" class="coord-input" id="calMassInput" placeholder="mass in grams">
+            <button class="move-go-btn" id="calRecordBtn">Record</button>
+          </div>
+          <button class="move-go-btn" id="calPreviewBtn">Preview fit</button>
+          <button class="move-go-btn" id="calCommitBtn">Save calibration</button>
+          <button class="settings-btn subtle" id="calAbortBtn">Abort</button>
+        </div>
+      </div>
+      <div class="move-feedback" id="calFeedback"></div>
+    </div>
   </main>
 </div>
 
@@ -247,5 +299,6 @@
 <script src="/static/tips.js"></script>
 <script src="/static/deck.js"></script>
 <script src="/static/settings.js"></script>
+<script src="/static/calibrate.js"></script>
 </body>
 </html>

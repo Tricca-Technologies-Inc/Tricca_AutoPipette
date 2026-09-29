@@ -26,6 +26,7 @@ command" handling.
 
 from __future__ import annotations
 
+import argparse
 import json
 import logging
 from typing import Any, Literal, cast
@@ -43,6 +44,7 @@ from tricca_autopipette.cli.report_tables import (
 )
 from tricca_autopipette.commands.tap_cmd_parsers import (
     AspirateArgs,
+    CalibrateStartArgs,
     ChangeTipArgs,
     CoorArgs,
     DelLocArgs,
@@ -782,6 +784,34 @@ class RemoteTapShell(Cmd):
             f"travel_mm = {data.get('slope'):.6f} * volume_ul "
             f"+ {data.get('intercept'):.6f}"
         )
+
+    @with_argparser(TAPCmdParsers.parser_calibrate)  # type: ignore[arg-type]
+    def do_calibrate(self, args: argparse.Namespace) -> None:
+        """Calibrate the active pipette against water, by weight.
+
+        Usage: calibrate start <source> <dest> [--volumes V ...] |
+        dispense | record <mass_g> | status | preview | commit | abort
+
+        Saved per pipette filename, not per physical syringe: recalibrate
+        after swapping a syringe.
+        """
+        action: str = args.action
+        if action == "start":
+            request = self.requests.calibrate_start(
+                args_from_namespace(CalibrateStartArgs, args)
+            )
+        elif action == "record":
+            request = self.requests.calibrate_record(args.mass_g)
+        else:
+            request = getattr(self.requests, f"calibrate_{action}")()
+        response = self._send(request)
+        if response is None:
+            return
+        result = as_dict(response.get("result"))
+        self.poutput(str(result.get("message", "")))
+        fit = as_dict(as_dict(result.get("data")).get("fit"))
+        if fit:
+            self.poutput(build_calibration_table(fit["volumes_ul"], fit["travel_mm"]))
 
     def _print_liquids(self) -> None:
         """Fetch and render the liquid-profile table (shared by `ls liquids`)."""

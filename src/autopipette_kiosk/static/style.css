@@ -1125,3 +1125,27 @@ header {
   color: var(--success);
   font-family: var(--mono);
 }
+
+/* ── Calibrate page (issue #26) ── */
+#page-calibrate.active {
+  grid-template-columns: 1fr;
+  grid-auto-rows: min-content;
+  align-content: start;
+  padding: 28px 36px;
+  gap: 20px;
+  overflow-y: auto;
+}
+
+#page-calibrate [hidden] { display: none !important; }
+.cal-panel { max-width: 720px; }
+.cal-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.cal-actions .move-go-btn { padding: 0 20px; }
+.cal-actions .settings-field-line { flex: 1; min-width: 240px; }
+
+.cal-points { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 13px; }
+.cal-points th,
+.cal-points td { text-align: right; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.cal-points th { font-size: 11px; color: var(--muted); font-weight: 600; }
+
+.cal-fit { font-family: var(--mono); font-size: 13px; display: flex; flex-direction: column; gap: 4px; }
+.cal-fit-label { display: inline-block; width: 64px; color: var(--muted); }

@@ -16,7 +16,7 @@ from typing import Any
 
 import pytest
 
-from tricca_autopipette.core.config_writer import set_config_value
+from tricca_autopipette.core.config_writer import set_config_value, set_config_values
 from tricca_autopipette.core.location_manager import LocationManager
 from tricca_autopipette.core.pipette_constants import DefaultPaths
 
@@ -379,3 +379,37 @@ class TestHighRiskBounds:
         path = set_config_value("liquids", "water.json", "viscosity_cP", 5000.0)
 
         assert _read(path)["viscosity_cP"] == 5000.0  # ruff:ignore[float-equality-comparison]
+
+    def test_a_multi_key_write_bounds_every_key_not_just_the_last(
+        self, roots: Roots
+    ) -> None:
+        with pytest.raises(ValueError, match="max_volume_ul"):
+            set_config_values(
+                "pipettes",
+                "p100_vertical.json",
+                {"syringe.max_volume_ul": 5000.0, "syringe.speed_aspirate": 10.0},
+            )
+
+        assert not (roots.local / "pipettes" / "p100_vertical.json").exists()
+
+
+class TestSetConfigValues:
+    """Several keys in one validated write (issue #26's calibration commit)."""
+
+    def test_paired_lists_of_a_new_length_are_written_together(
+        self, roots: Roots
+    ) -> None:
+        # One at a time, the first write would fail validation: 20 != 2.
+        path = set_config_values(
+            "pipettes",
+            "p100_vertical.json",
+            {
+                "syringe.calibration_volumes": [10.0, 90.0],
+                "syringe.calibration_mm": [6.4, 57.6],
+            },
+        )
+
+        syringe = _read(path)["syringe"]
+        assert syringe["calibration_volumes"] == [10.0, 90.0]
+        assert syringe["calibration_mm"] == [6.4, 57.6]
+        assert path.parent == roots.local / "pipettes"

@@ -487,6 +487,22 @@ class SeeCalibrationArgs:
     liquid: str | None
 
 
+@dataclass
+class CalibrateStartArgs:
+    """Arguments for ``calibrate start`` (issue #26).
+
+    Attributes:
+        source: Location water is aspirated from.
+        dest: Location dispensed into -- the vessel on the balance.
+        volumes_ul: Target volumes in μL, or None for 10/30/50/70/90% of
+            usable capacity.
+    """
+
+    source: str
+    dest: str
+    volumes_ul: list[float] | None = None
+
+
 # ===========================================================================
 # WebSocket / networking
 # ===========================================================================
@@ -1013,6 +1029,44 @@ class TAPCmdParsers:
         type=str,
         help="Liquid profile to inspect (default: the active liquid)",
     )
+
+    parser_calibrate: Cmd2ArgumentParser = Cmd2ArgumentParser(
+        description=(
+            "Gravimetric calibration of the active pipette's base curve, "
+            "against water. Run in order: start, then dispense + record for "
+            "each target, then preview, then commit (or abort at any point). "
+            "The curve is saved to this machine's local copy of the active "
+            "pipette's config file, keyed by filename, not by physical unit: "
+            "recalibrate after swapping a syringe."
+        )
+    )
+    _calibrate_actions = parser_calibrate.add_subparsers(dest="action", required=True)
+    _calibrate_start = _calibrate_actions.add_parser(
+        "start", help="Begin a session (needs homing, a tip on, and water loaded)"
+    )
+    _calibrate_start.add_argument("source", help="Location to aspirate water from")
+    _calibrate_start.add_argument(
+        "dest", help="Location to dispense into (the vessel on the balance)"
+    )
+    _calibrate_start.add_argument(
+        "--volumes",
+        dest="volumes_ul",
+        type=float,
+        nargs="+",
+        default=None,
+        help="Target volumes in uL (default: 10/30/50/70/90%% of usable capacity)",
+    )
+    _calibrate_actions.add_parser("dispense", help="Dispense the next target volume")
+    _calibrate_record = _calibrate_actions.add_parser(
+        "record", help="Record the weighed mass of the last dispense"
+    )
+    _calibrate_record.add_argument("mass_g", type=float, help="Measured mass in grams")
+    _calibrate_actions.add_parser("status", help="Show the session's progress")
+    _calibrate_actions.add_parser(
+        "preview", help="Show the fitted line against the current curve"
+    )
+    _calibrate_actions.add_parser("commit", help="Save the fitted curve and end")
+    _calibrate_actions.add_parser("abort", help="Discard the session")
 
     # -----------------------------------------------------------------------
     # WebSocket / networking

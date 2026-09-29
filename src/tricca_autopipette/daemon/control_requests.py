@@ -18,6 +18,7 @@ from typing import Any
 
 from tricca_autopipette.commands.tap_cmd_parsers import (
     AspirateArgs,
+    CalibrateStartArgs,
     ChangeTipArgs,
     CoorArgs,
     DelLocArgs,
@@ -464,6 +465,70 @@ class ControlRequests(JsonRpcRequestBuilder):
             Request for the calibration report.
         """
         return self.gen_request("util.see_calibration", dataclasses.asdict(args))
+
+    # Calibration session (issue #26): one builder per step.
+
+    def calibrate_start(self, args: CalibrateStartArgs) -> dict[str, Any]:
+        """Build a request to begin a gravimetric calibration session.
+
+        Args:
+            args: Source/destination locations and optional target volumes.
+
+        Returns:
+            Request to start the session.
+        """
+        return self.gen_request("calibrate.start", dataclasses.asdict(args))
+
+    def calibrate_dispense(self) -> dict[str, Any]:
+        """Build a request to dispense the session's next target volume.
+
+        Returns:
+            Request to dispense.
+        """
+        return self.gen_request("calibrate.dispense")
+
+    def calibrate_record(self, mass_g: float) -> dict[str, Any]:
+        """Build a request to record the last dispense's weighed mass.
+
+        Args:
+            mass_g: Measured mass in grams.
+
+        Returns:
+            Request to record the mass.
+        """
+        return self.gen_request("calibrate.record", {"mass_g": mass_g})
+
+    def calibrate_status(self) -> dict[str, Any]:
+        """Build a request for the calibration session's progress.
+
+        Returns:
+            Request for the session state.
+        """
+        return self.gen_request("calibrate.status")
+
+    def calibrate_preview(self) -> dict[str, Any]:
+        """Build a request to fit the measured points and show the result.
+
+        Returns:
+            Request for the fit and the current curve.
+        """
+        return self.gen_request("calibrate.preview")
+
+    def calibrate_commit(self) -> dict[str, Any]:
+        """Build a request to save the fitted curve and end the session.
+
+        Returns:
+            Request to commit.
+        """
+        return self.gen_request("calibrate.commit")
+
+    def calibrate_abort(self) -> dict[str, Any]:
+        """Build a request to discard the calibration session.
+
+        Returns:
+            Request to abort.
+        """
+        return self.gen_request("calibrate.abort")
 
     def mm_to_vol(self, travel_mm: float) -> dict[str, Any]:
         """Build a request to convert plunger travel (mm) back to a volume.

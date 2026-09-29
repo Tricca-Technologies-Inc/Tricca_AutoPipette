@@ -72,6 +72,40 @@ def set_config_value(
         ...     "liquids", "water.json", "density_g_ml", 1.0
         ... )  # doctest: +SKIP
         PosixPath('/home/me/.config/tricca-autopipette/liquids/water.json')
+    """  # ruff: ignore[docstring-extraneous-exception]
+    return set_config_values(category, filename, {key_path: value})
+
+
+def set_config_values(category: str, filename: str, updates: dict[str, object]) -> Path:
+    """Set several values in one config file as one validated, atomic write.
+
+    For fields that are only valid together, such as a calibration curve's
+    paired ``calibration_volumes``/``calibration_mm`` lists (issue #26):
+    setting them one at a time fails validation on the first write whenever
+    the lengths change.
+
+    Args:
+        category: As for `set_config_value`.
+        filename: As for `set_config_value`.
+        updates: Dotted key path to new value, applied in order.
+
+    Returns:
+        The local file that was written.
+
+    Raises:
+        ValueError: As for `set_config_value`.
+        FileNotFoundError: As for `set_config_value`.
+
+    Example:
+        >>> set_config_values(
+        ...     "pipettes",
+        ...     "p100_vertical.json",
+        ...     {
+        ...         "syringe.calibration_volumes": [10.0, 90.0],
+        ...         "syringe.calibration_mm": [6.4, 57.6],
+        ...     },
+        ... )  # doctest: +SKIP
+        PosixPath('/home/me/.config/tricca-autopipette/pipettes/p100_vertical.json')
     """
     if category not in WRITABLE_CATEGORIES:
         raise ValueError(
@@ -95,8 +129,9 @@ def set_config_value(
         raise ValueError(f"{source} does not contain a JSON object")
     data = cast("dict[str, Any]", raw)
 
-    if _set_at_path(data, key_path, value):
-        _check_known_key(category, key_path)
+    for key_path, value in updates.items():
+        if _set_at_path(data, key_path, value):
+            _check_known_key(category, key_path)
 
     try:
         _validate(category, source.resolve().name, data)
@@ -104,7 +139,8 @@ def set_config_value(
         raise ValueError(
             f"Refusing to write {category}/{filename}: it would not load ({e})"
         ) from e
-    _check_bounds(category, key_path, value)
+    for key_path, value in updates.items():
+        _check_bounds(category, key_path, value)
     write_json_atomic(target, data)
     return target
 
