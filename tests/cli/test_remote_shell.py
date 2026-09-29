@@ -21,6 +21,7 @@ covers `RemoteTapShell`, the actual `tap` CLI.
 from __future__ import annotations
 
 import io
+import json
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -518,3 +519,38 @@ class TestLsReporting:
         err = capsys.readouterr().err
         assert "Unknown category" in err
         assert "locs, plates, liquids, system" in err
+
+
+class TestSetConfig:
+    """``set_config`` end to end: tap -> control plane -> config writer."""
+
+    @pytest.fixture
+    def local_liquids(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+        local = tmp_path / "local_liquids"
+        monkeypatch.setattr(DefaultPaths, "DIR_LOCAL_LIQUIDS", local)
+        return local
+
+    def test_writes_the_value_to_the_local_copy(
+        self, shell: RemoteTapShell, local_liquids: Path
+    ) -> None:
+        shell.onecmd_plus_hooks("set_config liquids water.json density_g_ml 1.2")
+
+        saved = json.loads((local_liquids / "water.json").read_text())
+        assert saved["density_g_ml"] == 1.2  # ruff:ignore[float-equality-comparison]
+        assert "water.json" in _output(shell)
+
+    def test_unquoted_text_is_a_string_value(
+        self, shell: RemoteTapShell, local_liquids: Path
+    ) -> None:
+        shell.onecmd_plus_hooks("set_config liquids water.json description tap water")
+
+        saved = json.loads((local_liquids / "water.json").read_text())
+        assert saved["description"] == "tap water"
+
+    def test_rejected_write_is_reported_and_nothing_is_written(
+        self, shell: RemoteTapShell, local_liquids: Path
+    ) -> None:
+        shell.onecmd_plus_hooks("set_config liquids water.json density_g_ml dense")
+
+        assert "would not load" in _output(shell)
+        assert not (local_liquids / "water.json").exists()
