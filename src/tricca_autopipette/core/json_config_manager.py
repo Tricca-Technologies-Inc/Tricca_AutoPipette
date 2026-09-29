@@ -262,6 +262,7 @@ class JsonConfigManager:
             liquids=merged_liquids,
             locations=LocationsConfig.model_validate(user_data.get("locations")),
             network=user_data.get("network", {"hostname": "localhost", "port": "7125"}),
+            trigger_pins=user_data.get("trigger_pins", {}),
         )
 
     def _load_system_data(self, filename: str) -> dict[str, Any]:

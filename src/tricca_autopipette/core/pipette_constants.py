@@ -21,7 +21,6 @@ __all__ = [
     "LocalConfigRoots",
     "PhysicalConstants",
     "PlateType",
-    "TriggerChannels",
 ]
 
 
@@ -111,18 +110,6 @@ class HomingTargets:
         "servo",
         "all",
     })
-
-
-class TriggerChannels:
-    """Valid channel/state names for the (not-yet-implemented) ``trigger`` command.
-
-    Shared between ``commands/utility_commands.py`` (the cmd2 adapter) and
-    ``daemon/service.py`` (``AutoPipetteService.trigger``) for the same
-    reason as :class:`HomingTargets`.
-    """
-
-    VALID_CHANNELS: frozenset[str] = frozenset({"air", "shake", "aux"})
-    VALID_STATES: frozenset[str] = frozenset({"on", "off"})
 
 
 class DefaultFilenames:

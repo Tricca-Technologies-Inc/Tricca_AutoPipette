@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Sequence
+from typing import Literal
 
 from tricca_autopipette.core.coordinate import Coordinate
 from tricca_autopipette.core.gcode_buffer import GCodeBuffer
@@ -590,6 +591,25 @@ class AutoPipette:
         servo = self.pipette_model.servo.name
         self.logger.debug("SET_SERVO %s: angle=%s", servo, angle)
         self.gcode_buffers.add(self.gcode_commands.set_servo(servo, angle))
+
+    def set_trigger(self, channel: str, state: Literal["on", "off"]) -> None:
+        """Switch an auxiliary trigger channel's output pin on or off.
+
+        Emits ``M400`` first: ``SET_PIN`` isn't a motion command, so without
+        draining the motion queue the pin could flip while an already-queued
+        move is still physically running. Fire-and-forget -- the last
+        commanded state isn't tracked anywhere.
+
+        Args:
+            channel: Channel alias, a key of ``system_config.trigger_pins``.
+            state: ``"on"`` drives the pin to 1, ``"off"`` to 0.
+        """
+        pin = self.system_config.trigger_pins[channel]
+        self.logger.debug("SET_PIN %s (%s): %s", pin, channel, state)
+        self.gcode_buffers.add(self.gcode_commands.wait_for_moves())
+        self.gcode_buffers.add(
+            self.gcode_commands.set_pin(pin, 1 if state == "on" else 0)
+        )
 
     def move_pipette_stepper(
         self,
