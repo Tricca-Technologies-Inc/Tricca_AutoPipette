@@ -70,6 +70,17 @@ class JsonConfigManager:
             >>> manager = JsonConfigManager()
         """
         self.system_config: SystemConfig | None = None
+        # What `reload` rebuilds `system_config` from (issue #33): the active
+        # system file plus every runtime membership change made since.
+        self._system_file: str = CONFIG_SYSTEM
+        self._gantry_file: str | None = None
+        self._pipette_file: str | None = None
+        self._unloaded_liquids: set[str] = set()
+
+    @property
+    def system_file(self) -> str:
+        """The active system profile's filename, as last loaded."""
+        return self._system_file
 
     def get_system_config(self) -> SystemConfig:
         """Get the currently loaded system configuration.
@@ -161,6 +172,11 @@ class JsonConfigManager:
             )
 
         self.system_config = self._build_system_config(self._load_system_data(filename))
+        # A fresh profile starts from its own file alone, as at startup.
+        self._system_file = filename
+        self._gantry_file = None
+        self._pipette_file = None
+        self._unloaded_liquids = set()
 
         logger.info("Loaded system config from %s", path_system)
         logger.info("  System: %s", self.system_config.system_name)
@@ -435,6 +451,7 @@ class JsonConfigManager:
         try:
             gantry = GantryKinematics(**data)
             self.system_config.gantry = gantry
+            self._gantry_file = filename
             logger.info("Switched to gantry config: %s", filename)
             return gantry
         except Exception as e:
@@ -486,6 +503,7 @@ class JsonConfigManager:
         try:
             pipette = PipetteModel(**data)
             self.system_config.pipette = pipette
+            self._pipette_file = filename
             logger.info("Switched to pipette: %s", pipette.name)
             return pipette
         except Exception as e:
@@ -537,11 +555,80 @@ class JsonConfigManager:
         try:
             liquid = LiquidProfile(**data)
             self.system_config.liquids[liquid.name] = liquid
+            self._unloaded_liquids.discard(liquid.name)
             logger.info("Loaded liquid profile: %s", liquid.name)
             return liquid
         except Exception as e:
             logger.error("Failed to validate liquid config: %s", e)
             raise ValueError(f"Liquid config validation failed: {e}") from e
+
+    def unload_liquid(self, liquid_name: str) -> None:
+        """Remove a liquid profile from the loaded set until `load_liquid`.
+
+        The profile's file is untouched; the unload survives `reload`.
+
+        Args:
+            liquid_name: Name of the loaded liquid profile.
+
+        Raises:
+            RuntimeError: If no system config loaded.
+            ValueError: If no liquid by that name is loaded.
+
+        Example:
+            >>> manager = JsonConfigManager()
+            >>> _ = manager.load_system_config()
+            >>> manager.unload_liquid("methanol")
+            >>> manager.has_liquid("methanol")
+            False
+        """
+        if self.system_config is None:
+            raise RuntimeError(
+                "No system config loaded. Call load_system_config() first."
+            )
+        if liquid_name not in self.system_config.liquids:
+            raise ValueError(f"Liquid '{liquid_name}' is not loaded")
+        del self.system_config.liquids[liquid_name]
+        self._unloaded_liquids.add(liquid_name)
+        logger.info("Unloaded liquid profile: %s", liquid_name)
+
+    def reload(self) -> SystemConfig:
+        """Rebuild the system config from the files, keeping runtime membership.
+
+        Re-reads the active system file (and its ``extends`` chain) and the
+        category files it merges in, then reapplies whatever was loaded or
+        unloaded at runtime since (`load_gantry`, `load_pipette`,
+        `unload_liquid`). This is how a config write takes effect live
+        (issue #33). All or nothing: if any file fails to load, the current
+        config is left exactly as it was.
+
+        Returns:
+            The rebuilt SystemConfig.
+
+        Raises:
+            FileNotFoundError: If a file the config needs is missing.
+            ValueError: If a file is invalid.
+
+        Example:
+            >>> manager = JsonConfigManager()
+            >>> _ = manager.load_system_config()
+            >>> manager.reload().system_name
+            'AutoPipette'
+        """  # ruff: ignore[docstring-extraneous-exception]
+        previous = self.system_config
+        try:
+            self.system_config = self._build_system_config(
+                self._load_system_data(self._system_file)
+            )
+            if self._gantry_file is not None:
+                self.load_gantry(self._gantry_file)
+            if self._pipette_file is not None:
+                self.load_pipette(self._pipette_file)
+        except Exception:
+            self.system_config = previous
+            raise
+        for name in self._unloaded_liquids:
+            self.system_config.liquids.pop(name, None)
+        return self.system_config
 
     # ========================================================================
     # LIQUID SWITCHING - For multi-liquid protocols

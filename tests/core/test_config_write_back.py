@@ -141,6 +141,33 @@ class TestSetConfigValue:
 
         assert not (roots.local / category / filename).exists()
 
+    @pytest.mark.parametrize(
+        ("category", "filename", "key_path"),
+        [
+            ("liquids", "water.json", "speed_aspirat"),
+            ("gantry", "default_gantry.json", "sped_xy"),
+            ("pipettes", "default_pipette.json", "syringe.max_volum_ul"),
+        ],
+    )
+    def test_new_key_the_model_does_not_define_is_rejected(
+        self, roots: Roots, category: str, filename: str, key_path: str
+    ) -> None:
+        with pytest.raises(ValueError, match="Unknown key"):
+            set_config_value(category, filename, key_path, 1.0)
+
+        assert not (roots.local / category / filename).exists()
+
+    def test_existing_key_the_model_does_not_define_stays_editable(
+        self, roots: Roots
+    ) -> None:
+        water = {**_read(roots.shared / "liquids" / "water.json"), "note": "old"}
+        (roots.local / "liquids").mkdir()
+        (roots.local / "liquids" / "water.json").write_text(json.dumps(water))
+
+        written = set_config_value("liquids", "water.json", "note", "new")
+
+        assert _read(written)["note"] == "new"
+
     def test_rejected_write_leaves_an_existing_local_file_untouched(
         self, roots: Roots
     ) -> None:
@@ -187,6 +214,32 @@ class TestSystemWrites:
 
         assert (system_dir / "active.json").is_symlink()
         assert _read(system_dir / "default_system.json")["system_name"] == "Rig 7"
+
+    def test_new_top_level_key_the_model_lacks_is_rejected(
+        self, system_dir: Path
+    ) -> None:
+        with pytest.raises(ValueError, match="systm_name"):
+            set_config_value("system", "default_system.json", "systm_name", "x")
+
+    def test_new_known_keys_are_accepted(self, system_dir: Path) -> None:
+        set_config_value("system", "default_system.json", "locations", "a.json")
+        set_config_value("system", "default_system.json", "liquids.water", {})
+        set_config_value(
+            "system", "default_system.json", "liquids.water.speed_aspirate", 5.0
+        )
+
+        saved = _read(system_dir / "default_system.json")
+        assert saved["liquids"] == {"water": {"speed_aspirate": 5.0}}
+
+    def test_new_key_in_a_system_liquid_override_is_checked(
+        self, system_dir: Path
+    ) -> None:
+        set_config_value("system", "default_system.json", "liquids.water", {})
+
+        with pytest.raises(ValueError, match="speed_aspirat"):
+            set_config_value(
+                "system", "default_system.json", "liquids.water.speed_aspirat", 5.0
+            )
 
     def test_never_reads_the_shared_system_template(self, roots: Roots) -> None:
         with pytest.raises(FileNotFoundError):

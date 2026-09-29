@@ -303,6 +303,37 @@ class RemoteTapShell(Cmd):
             return
         self._call_and_print(self.requests.load_liquid(filename))
 
+    def do_unload_liquid(self, statement: Statement) -> None:
+        """Unload a liquid profile (its file is kept): unload_liquid <name>."""
+        liquid_name = statement.arg_list[0] if statement.arg_list else None
+        if not liquid_name:
+            self.perror("Usage: unload_liquid <liquid_name>")
+            return
+        self._call_and_print(self.requests.unload_liquid(liquid_name))
+
+    def do_load_pipette(self, statement: Statement) -> None:
+        """Make a pipette profile active, live: load_pipette <filename>.
+
+        Invalidates homing: run ``init`` before moving again.
+        """
+        filename = statement.arg_list[0] if statement.arg_list else None
+        if not filename:
+            self.perror("Usage: load_pipette <filename.json>")
+            return
+        self._call_and_print(self.requests.load_pipette(filename))
+
+    def do_switch_system(self, statement: Statement) -> None:
+        """Switch the active system profile, live: switch_system <filename>.
+
+        Re-points ``system/active.json`` and invalidates homing: run ``init``
+        before moving again.
+        """
+        filename = statement.arg_list[0] if statement.arg_list else None
+        if not filename:
+            self.perror("Usage: switch_system <filename.json>")
+            return
+        self._call_and_print(self.requests.switch_system(filename))
+
     def do_save_locations(self, statement: Statement) -> None:
         """Save current locations to a JSON file: save_locations [filename]."""
         filename = (

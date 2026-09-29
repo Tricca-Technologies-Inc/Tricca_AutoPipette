@@ -121,6 +121,10 @@ _BUILDER_CALLS: list[tuple[str, tuple[Any, ...]]] = [
     ("change_tip", (ChangeTipArgs(tip_end="return"),)),
     ("switch_liquid", ("methanol",)),
     ("load_liquid", ("water.json",)),
+    # Unknown names are refused (ok=False) before anything changes.
+    ("unload_liquid", ("no_such_liquid",)),
+    ("load_pipette", ("no_such_pipette.json",)),
+    ("switch_system", ("no_such_profile.json",)),
     ("set", (SetArgs(var="SPEED_FACTOR", value=100.0),)),
     ("coor", (CoorArgs(name="bench", x=1.0, y=1.0, z=1.0),)),
     (

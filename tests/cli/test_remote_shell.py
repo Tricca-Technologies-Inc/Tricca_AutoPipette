@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import io
 import json
+import shutil
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -32,6 +33,7 @@ from support.polling import poll_until
 from tricca_autopipette.cli import remote_shell as remote_shell_module
 from tricca_autopipette.cli.remote_shell import RemoteTapShell
 from tricca_autopipette.core.pipette_constants import DefaultPaths
+from tricca_autopipette.daemon.service import RunStatus
 
 
 @pytest.fixture
@@ -554,3 +556,57 @@ class TestSetConfig:
 
         assert "would not load" in _output(shell)
         assert not (local_liquids / "water.json").exists()
+
+    def test_write_while_a_run_is_active_is_refused_with_the_reason(
+        self,
+        shell: RemoteTapShell,
+        live_control_plane: LiveControlPlane,
+        local_liquids: Path,
+    ) -> None:
+        live_control_plane.service._current = RunStatus(
+            status="running", filename="a.pipette"
+        )
+
+        shell.onecmd_plus_hooks("set_config liquids water.json density_g_ml 1.2")
+
+        assert "locked while a protocol is running" in _output(shell)
+        assert not (local_liquids / "water.json").exists()
+
+
+class TestLiveConfigCommands:
+    """Load/unload/switch commands end to end (issue #33 slice b)."""
+
+    def test_unload_liquid(
+        self, shell: RemoteTapShell, live_control_plane: LiveControlPlane
+    ) -> None:
+        shell.onecmd_plus_hooks("unload_liquid methanol")
+
+        assert "Unloaded liquid: methanol" in _output(shell)
+        liquids = live_control_plane.service._autopipette.system_config.liquids
+        assert "methanol" not in liquids
+
+    def test_load_pipette(
+        self, shell: RemoteTapShell, live_control_plane: LiveControlPlane
+    ) -> None:
+        shell.onecmd_plus_hooks("load_pipette default_pipette.json")
+
+        assert "Run 'init' before moving" in _output(shell)
+
+    def test_switch_system(
+        self,
+        shell: RemoteTapShell,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        system = tmp_path / "system"
+        system.mkdir()
+        shutil.copy(DefaultPaths.DIR_LOCAL_SYSTEM / "default_system.json", system)
+        (system / "other.json").write_text(
+            json.dumps({"extends": "default_system.json", "system_name": "Other"})
+        )
+        monkeypatch.setattr(DefaultPaths, "DIR_LOCAL_SYSTEM", system)
+
+        shell.onecmd_plus_hooks("switch_system other.json")
+
+        assert "Switched to system profile other.json" in _output(shell)
+        assert (system / "active.json").resolve().name == "other.json"
