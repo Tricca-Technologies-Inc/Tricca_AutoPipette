@@ -14,5 +14,6 @@
   "network": {
     "hostname": "CHANGE-ME.local",
     "port": "7125"
-  }
+  },
+  "trigger_pins": {}
 }

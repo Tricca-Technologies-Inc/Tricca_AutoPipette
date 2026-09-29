@@ -101,6 +101,23 @@ A loaded system config references:
 - Liquid profiles (inline definitions)
 - Locations, i.e. the deck layout (see "Per-protocol configs" below)
 - Network settings
+- Trigger pins (`trigger_pins`, see below)
+
+#### `trigger_pins` -- auxiliary hardware wiring
+
+Maps each `trigger` channel alias to the Klipper `[output_pin <name>]` it
+drives on *this* machine:
+
+```json
+"trigger_pins": { "air": "air_valve", "shake": "shaker" }
+```
+
+A channel is valid only if it's a key here, so `trigger lid on` fails on a
+machine with no `lid` entry, and an empty map (the default) rejects every
+channel. `trigger <channel> on|off` emits `M400` (wait for queued moves)
+then `SET_PIN PIN=<pin> VALUE=1|0`. The pin itself must be declared in the
+machine's Klipper `printer.cfg`. Nothing tracks the last commanded state or
+turns a trigger off at the end of a protocol.
 
 ### `pipettes/*.json`
 Pipette model definitions including:

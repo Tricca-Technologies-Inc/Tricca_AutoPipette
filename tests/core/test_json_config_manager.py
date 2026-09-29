@@ -227,6 +227,27 @@ class TestExtends:
         assert config.system_name == "AutoPipette"
 
 
+class TestTriggerPins:
+    def test_trigger_pins_load_from_the_system_config(
+        self, write_system_config: Any
+    ) -> None:
+        child = write_system_config(
+            "trig.json",
+            {"pipette": "p100_vertical", "trigger_pins": {"air": "air_valve"}},
+        )
+
+        config = JsonConfigManager().load_system_config(child)
+
+        assert config.trigger_pins == {"air": "air_valve"}
+
+    def test_absent_trigger_pins_is_empty(self, write_system_config: Any) -> None:
+        child = write_system_config("notrig.json", {"pipette": "p100_vertical"})
+
+        config = JsonConfigManager().load_system_config(child)
+
+        assert config.trigger_pins == {}
+
+
 class TestLocationsSection:
     def test_absent_locations_is_empty(self) -> None:
         """Preserves today's boot: fall back to default_locations.json."""

@@ -8,7 +8,11 @@ domain computation/lookup rather than rendering a `rich.table.Table`.
 
 from __future__ import annotations
 
+from pathlib import Path
+from typing import Any
+
 import pytest
+from fakes.fake_websocket_client import FakeWebSocketClient
 
 from tricca_autopipette.commands.tap_cmd_parsers import (
     GcodePrintArgs,
@@ -16,6 +20,7 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     VolToStepsArgs,
     WaitArgs,
 )
+from tricca_autopipette.core.gcode_commands import GCode
 from tricca_autopipette.core.volume_converter import VolumeConverter
 from tricca_autopipette.daemon.service import AutoPipetteService
 
@@ -34,28 +39,78 @@ class TestWait:
         assert "500" in result.message
 
 
+def _wire_trigger_pins(service: AutoPipetteService) -> list[list[str]]:
+    """Configure two trigger channels and capture every G-code file written.
+
+    Returns:
+        A list that each ``write_gcode_file`` call's G-code is appended to.
+    """
+    service._autopipette.system_config.trigger_pins = {
+        "air": "air_valve",
+        "shake": "shaker",
+    }
+    service.client = FakeWebSocketClient()  # type: ignore[assignment]
+    written: list[list[str]] = []
+    real_write = service.gcode_manager.write_gcode_file
+
+    def spy(gcode: list[GCode], *args: Any, **kwargs: Any) -> Path:
+        written.append(list(gcode))
+        return real_write(gcode, *args, **kwargs)
+
+    service.gcode_manager.write_gcode_file = spy  # type: ignore[method-assign]
+    return written
+
+
 class TestTrigger:
-    def test_invalid_channel_is_a_noop(self, service: AutoPipetteService) -> None:
-        result = service.trigger(TriggerArgs(channel="nope", state="on"))
-
-        assert result.ok is False
-        assert "Invalid channel" in result.message
-
-    def test_invalid_state_is_a_noop(self, service: AutoPipetteService) -> None:
-        result = service.trigger(TriggerArgs(channel="air", state="nope"))
-
-        assert result.ok is False
-        assert "Invalid state" in result.message
-
-    def test_valid_channel_reports_not_yet_implemented(
+    def test_unconfigured_channel_names_the_configured_ones(
         self, service: AutoPipetteService
     ) -> None:
+        written = _wire_trigger_pins(service)
+
+        result = service.trigger(TriggerArgs(channel="lid", state="on"))
+
+        assert result.ok is False
+        assert result.message == "Invalid channel 'lid'. Valid: air, shake"
+        assert written == []
+
+    def test_no_configured_channels_rejects_everything(
+        self, service: AutoPipetteService
+    ) -> None:
+        service._autopipette.system_config.trigger_pins = {}
+
         result = service.trigger(TriggerArgs(channel="air", state="on"))
 
         assert result.ok is False
-        assert "not yet implemented" in result.message
-        assert "air" in result.message
-        assert "on" in result.message
+        assert result.message == "Invalid channel 'air'. Valid: (none configured)"
+
+    def test_invalid_state_is_a_noop(self, service: AutoPipetteService) -> None:
+        written = _wire_trigger_pins(service)
+
+        result = service.trigger(TriggerArgs(channel="air", state="high"))
+
+        assert result.ok is False
+        assert result.message == "Invalid state 'high'. Valid: off, on"
+        assert written == []
+
+    def test_valid_call_sets_the_pin_even_when_unhomed(
+        self, service: AutoPipetteService
+    ) -> None:
+        # The `service` fixture starts unhomed: trigger drives aux hardware,
+        # not the gantry, so it's deliberately not homed-gated.
+        written = _wire_trigger_pins(service)
+
+        result = service.trigger(TriggerArgs(channel="AIR", state="On"))
+
+        assert result.ok is True
+        assert written == [["M400\n", "SET_PIN PIN=air_valve VALUE=1\n"]]
+
+    def test_protocol_line_reaches_the_pin(self, service: AutoPipetteService) -> None:
+        written = _wire_trigger_pins(service)
+
+        result = service._dispatch_protocol_line("trigger shake off")
+
+        assert result.ok is True
+        assert written == [["M400\n", "SET_PIN PIN=shaker VALUE=0\n"]]
 
 
 class TestGcodePrint:

@@ -452,10 +452,9 @@ class RemoteTapShell(Cmd):
 
     @with_argparser(TAPCmdParsers.parser_trigger)  # type: ignore[arg-type]
     def do_trigger(self, args: TriggerArgs) -> None:
-        """Control auxiliary triggers (air, shake, aux).
+        """Switch an auxiliary trigger (air, shake, ...) on or off.
 
-        Stub: validates the channel/state and always reports "not yet
-        implemented" -- see issue #16.
+        Channels are the keys of the system config's ``trigger_pins``.
         """
         self._call_and_print(
             self.requests.trigger(args_from_namespace(TriggerArgs, args))

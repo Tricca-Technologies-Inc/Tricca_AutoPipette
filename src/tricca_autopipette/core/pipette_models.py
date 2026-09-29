@@ -663,6 +663,8 @@ class SystemConfig(BaseModel):
         liquids: Available liquid profiles keyed by name.
         locations: Deck layout for this system/protocol.
         network: Network connection settings (hostname and port).
+        trigger_pins: Trigger channel alias (``air``, ``shake``, ...) to the
+            Klipper ``[output_pin]`` it drives, for the ``trigger`` command.
 
     Example:
         >>> config = SystemConfig(
@@ -702,6 +704,15 @@ class SystemConfig(BaseModel):
     network: dict[str, str] = Field(
         default_factory=lambda: {"hostname": "localhost", "port": "7125"},
         description="Network connection settings",
+    )
+
+    # Machine wiring for the ``trigger`` command (aux hardware)
+    trigger_pins: dict[str, str] = Field(
+        default_factory=dict,
+        description=(
+            "Trigger channel alias -> Klipper [output_pin] name; a channel "
+            "is valid only if it's a key here"
+        ),
     )
 
 

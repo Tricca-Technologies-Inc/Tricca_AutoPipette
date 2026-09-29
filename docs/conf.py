@@ -64,7 +64,7 @@ autodoc_default_options = {
 
 # -- napoleon (Google-style docstring parsing) ----------------------------
 # This codebase leans on Note/Warning sections for safety-critical caveats
-# (tip disposal, the homed interlock, the `trigger` stub); rendering them
+# (tip disposal, the homed interlock); rendering them
 # as admonitions makes them visually distinct from surrounding prose
 # instead of blending in as plain rubric text.
 napoleon_use_admonition_for_notes = True
