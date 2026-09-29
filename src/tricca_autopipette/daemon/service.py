@@ -1965,7 +1965,7 @@ class AutoPipetteService:
 
         merged = autopipette.config_manager.get_merged_syringe_params(name)
         volumes = merged["calibration_volumes"]
-        travel_mm = merged["calibration_steps"]
+        travel_mm = merged["calibration_mm"]
         if volumes is None or travel_mm is None:
             raise RuntimeError(
                 "No calibration data available. "

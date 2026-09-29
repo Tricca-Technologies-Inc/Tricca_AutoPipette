@@ -90,12 +90,12 @@ class FluidDisplacement(IntEnum):
         >>> direction = FluidDisplacement.aspiration
         >>> print(direction.value)
         1
-        >>> steps = 100 * direction  # steps = 100
+        >>> travel_mm = 100 * direction  # travel_mm = 100
 
         >>> direction = FluidDisplacement.dispense
         >>> print(direction.value)
         -1
-        >>> steps = 100 * direction  # steps = -100
+        >>> travel_mm = 100 * direction  # travel_mm = -100
     """
 
     aspiration = 1
@@ -217,10 +217,8 @@ class PipetteSyringeKinematics(BaseModel):
             mm. Required -- homing and ``clear_syringe`` drive the plunger
             up to twice this toward its endstop.
         calibration_volumes: Calibration volume points in μL.
-        calibration_steps: Corresponding plunger travel. Despite the name these
-            are millimetres, not motor steps -- they are fed to Klipper's
-            ``MANUAL_STEPPER ... MOVE=``, which takes mm. See issue #29 for the
-            pending rename.
+        calibration_mm: Corresponding plunger travel in mm, as fed to
+            Klipper's ``MANUAL_STEPPER ... MOVE=``.
         speed_aspirate: Aspiration speed in mm/s.
         speed_dispense: Dispense speed in mm/s.
         accel_home: Homing acceleration in mm/s².
@@ -237,7 +235,7 @@ class PipetteSyringeKinematics(BaseModel):
         ...     max_volume_ul=1000.0,
         ...     max_travel_mm=60.0,
         ...     calibration_volumes=[0, 100, 500, 1000],
-        ...     calibration_steps=[0, 4800, 24000, 48000],
+        ...     calibration_mm=[0, 4800, 24000, 48000],
         ... )
         >>> print(syringe.max_volume_ul)
         1000.0
@@ -292,7 +290,7 @@ class PipetteSyringeKinematics(BaseModel):
         description="Calibration volume points in μL (overrides pipette default)",
     )
 
-    calibration_steps: list[float] | None = Field(
+    calibration_mm: list[float] | None = Field(
         default=None,
         description="Corresponding plunger travel in mm (overrides pipette default)",
     )
@@ -349,27 +347,27 @@ class PipetteSyringeKinematics(BaseModel):
         """Validate calibration data after initialization.
 
         Raises:
-            ValueError: If calibration_volumes and calibration_steps are not
+            ValueError: If calibration_volumes and calibration_mm are not
                 both provided or both omitted, if they have different lengths,
                 or if fewer than 2 calibration points are provided.
         """
         _ = __context
         # If one is provided, both must be provided
         has_volumes = self.calibration_volumes is not None
-        has_steps = self.calibration_steps is not None
+        has_mm = self.calibration_mm is not None
 
-        if has_volumes != has_steps:
+        if has_volumes != has_mm:
             raise ValueError(
-                "Both calibration_volumes and calibration_steps must be "
+                "Both calibration_volumes and calibration_mm must be "
                 "provided together, or both omitted to use pipette defaults"
             )
 
         # If provided, they must have the same length
-        if has_volumes and has_steps:
-            if len(self.calibration_volumes) != len(self.calibration_steps):  # type: ignore
+        if has_volumes and has_mm:
+            if len(self.calibration_volumes) != len(self.calibration_mm):  # type: ignore
                 raise ValueError(
                     f"calibration_volumes ({len(self.calibration_volumes)}) and "  # type: ignore
-                    f"calibration_steps ({len(self.calibration_steps)}) "  # type: ignore
+                    f"calibration_mm ({len(self.calibration_mm)}) "  # type: ignore
                     f"must have the same length"
                 )
 
@@ -455,8 +453,8 @@ class LiquidProfile(BaseModel):
         pre_air_gap_ul: Air drawn before the liquid in μL, or None.
         post_air_gap_ul: Air drawn after the liquid in μL, or None.
         calibration_volumes: Calibration volume points in μL (overrides pipette).
-        calibration_steps: Corresponding plunger travel in millimetres, not
-            motor steps despite the name (overrides pipette default).
+        calibration_mm: Corresponding plunger travel in millimetres
+            (overrides pipette default).
 
     Example:
         >>> water = LiquidProfile(name="water", viscosity_cP=1.0)
@@ -532,7 +530,7 @@ class LiquidProfile(BaseModel):
         description="Calibration volume points in μL (overrides pipette default)",
     )
 
-    calibration_steps: list[float] | None = Field(
+    calibration_mm: list[float] | None = Field(
         default=None,
         description="Corresponding plunger travel in mm (overrides pipette default)",
     )
@@ -541,27 +539,27 @@ class LiquidProfile(BaseModel):
         """Validate calibration data after initialization.
 
         Raises:
-            ValueError: If calibration_volumes and calibration_steps are not
+            ValueError: If calibration_volumes and calibration_mm are not
                 both provided or both omitted, if they have different lengths,
                 or if fewer than 2 calibration points are provided.
         """
         _ = __context
         # If one is provided, both must be provided
         has_volumes = self.calibration_volumes is not None
-        has_steps = self.calibration_steps is not None
+        has_mm = self.calibration_mm is not None
 
-        if has_volumes != has_steps:
+        if has_volumes != has_mm:
             raise ValueError(
-                "Both calibration_volumes and calibration_steps must be "
+                "Both calibration_volumes and calibration_mm must be "
                 "provided together, or both omitted to use pipette defaults"
             )
 
         # If provided, they must have the same length
-        if has_volumes and has_steps:
-            if len(self.calibration_volumes) != len(self.calibration_steps):  # type: ignore
+        if has_volumes and has_mm:
+            if len(self.calibration_volumes) != len(self.calibration_mm):  # type: ignore
                 raise ValueError(
                     f"calibration_volumes ({len(self.calibration_volumes)}) and "  # type: ignore
-                    f"calibration_steps ({len(self.calibration_steps)}) "  # type: ignore
+                    f"calibration_mm ({len(self.calibration_mm)}) "  # type: ignore
                     f"must have the same length"
                 )
 

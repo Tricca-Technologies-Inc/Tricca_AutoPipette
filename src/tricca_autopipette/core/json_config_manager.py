@@ -696,10 +696,10 @@ class JsonConfigManager:
                 if liquid.calibration_volumes is not None
                 else syringe.calibration_volumes
             ),
-            "calibration_steps": (
-                liquid.calibration_steps
-                if liquid.calibration_steps is not None
-                else syringe.calibration_steps
+            "calibration_mm": (
+                liquid.calibration_mm
+                if liquid.calibration_mm is not None
+                else syringe.calibration_mm
             ),
             # Technique parameters (liquid overrides syringe). Tested with
             # `is not None` rather than `or`, so a liquid that deliberately

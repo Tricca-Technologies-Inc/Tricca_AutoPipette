@@ -53,25 +53,25 @@ class TestSyringeCalibrationValidation:
         PipetteSyringeKinematics(
             max_travel_mm=60.0,
             calibration_volumes=[0.0, 100.0],
-            calibration_steps=[0.0, 48.0],
+            calibration_mm=[0.0, 48.0],
         )  # must not raise
 
-    def test_volumes_without_steps_rejected(self) -> None:
+    def test_volumes_without_mm_rejected(self) -> None:
         with pytest.raises(ValidationError, match="must be provided together"):
             PipetteSyringeKinematics(
                 max_travel_mm=60.0, calibration_volumes=[0.0, 100.0]
             )
 
-    def test_steps_without_volumes_rejected(self) -> None:
+    def test_mm_without_volumes_rejected(self) -> None:
         with pytest.raises(ValidationError, match="must be provided together"):
-            PipetteSyringeKinematics(max_travel_mm=60.0, calibration_steps=[0.0, 48.0])
+            PipetteSyringeKinematics(max_travel_mm=60.0, calibration_mm=[0.0, 48.0])
 
     def test_mismatched_lengths_rejected(self) -> None:
         with pytest.raises(ValidationError, match="must have the same length"):
             PipetteSyringeKinematics(
                 max_travel_mm=60.0,
                 calibration_volumes=[0.0, 100.0, 200.0],
-                calibration_steps=[0.0, 48.0],
+                calibration_mm=[0.0, 48.0],
             )
 
     def test_fewer_than_two_points_rejected(self) -> None:
@@ -79,7 +79,7 @@ class TestSyringeCalibrationValidation:
             PipetteSyringeKinematics(
                 max_travel_mm=60.0,
                 calibration_volumes=[100.0],
-                calibration_steps=[48.0],
+                calibration_mm=[48.0],
             )
 
 
@@ -91,27 +91,27 @@ class TestLiquidCalibrationValidation:
         LiquidProfile(
             name="water",
             calibration_volumes=[0.0, 100.0],
-            calibration_steps=[0.0, 48.0],
+            calibration_mm=[0.0, 48.0],
         )  # must not raise
 
-    def test_volumes_without_steps_rejected(self) -> None:
+    def test_volumes_without_mm_rejected(self) -> None:
         with pytest.raises(ValidationError, match="must be provided together"):
             LiquidProfile(name="water", calibration_volumes=[0.0, 100.0])
 
-    def test_steps_without_volumes_rejected(self) -> None:
+    def test_mm_without_volumes_rejected(self) -> None:
         with pytest.raises(ValidationError, match="must be provided together"):
-            LiquidProfile(name="water", calibration_steps=[0.0, 48.0])
+            LiquidProfile(name="water", calibration_mm=[0.0, 48.0])
 
     def test_mismatched_lengths_rejected(self) -> None:
         with pytest.raises(ValidationError, match="must have the same length"):
             LiquidProfile(
                 name="water",
                 calibration_volumes=[0.0, 100.0, 200.0],
-                calibration_steps=[0.0, 48.0],
+                calibration_mm=[0.0, 48.0],
             )
 
     def test_fewer_than_two_points_rejected(self) -> None:
         with pytest.raises(ValidationError, match="at least 2 points"):
             LiquidProfile(
-                name="water", calibration_volumes=[100.0], calibration_steps=[48.0]
+                name="water", calibration_volumes=[100.0], calibration_mm=[48.0]
             )

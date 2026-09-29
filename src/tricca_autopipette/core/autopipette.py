@@ -175,7 +175,7 @@ class AutoPipette:
             capacity_margin_ul=merged["capacity_margin_ul"],
             max_travel_mm=merged["max_travel_mm"],
             calibration_volumes=merged["calibration_volumes"],
-            calibration_steps=merged["calibration_steps"],
+            calibration_mm=merged["calibration_mm"],
             speed_aspirate=merged["speed_aspirate"],
             speed_dispense=merged["speed_dispense"],
             wait_aspirate_ms=merged["wait_aspirate_ms"],
@@ -319,22 +319,22 @@ class AutoPipette:
         to pipette default calibration.
 
         Raises:
-            RuntimeError: If calibration_volumes or calibration_steps are not provided.
+            RuntimeError: If calibration_volumes or calibration_mm are not provided.
 
         Note:
             Volume converter is required for all pipetting operations.
         """
         volumes = self.syringe.calibration_volumes
-        steps = self.syringe.calibration_steps
+        travel_mm = self.syringe.calibration_mm
 
-        if volumes is None or steps is None:
+        if volumes is None or travel_mm is None:
             raise RuntimeError(
                 "No calibration data available for volume converter. "
                 f"Check pipette '{self.pipette_model.name}'"
                 f" and liquid '{self.active_liquid}' configs."
             )
 
-        self.volume_converter = VolumeConverter(volumes, steps)
+        self.volume_converter = VolumeConverter(volumes, travel_mm)
 
         self.logger.debug(
             f"Initialized volume converter for liquid '{self.active_liquid}': "

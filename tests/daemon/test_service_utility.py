@@ -146,7 +146,7 @@ class TestSeeCalibration:
         assert result.data["source"] == "pipette default"
         syringe = service._autopipette.syringe
         assert result.data["volumes_ul"] == syringe.calibration_volumes
-        assert result.data["travel_mm"] == syringe.calibration_steps
+        assert result.data["travel_mm"] == syringe.calibration_mm
 
     def test_uses_the_liquid_override_when_present(
         self, service: AutoPipetteService
@@ -154,7 +154,7 @@ class TestSeeCalibration:
         autopipette = service._autopipette
         liquid = autopipette.system_config.liquids["methanol"]
         liquid.calibration_volumes = [0.0, 100.0]
-        liquid.calibration_steps = [0.0, 50.0]
+        liquid.calibration_mm = [0.0, 50.0]
 
         result = service.see_calibration("methanol")
 
@@ -193,7 +193,7 @@ class TestSeeCalibration:
         original_converter = autopipette.volume_converter
         liquid = autopipette.system_config.liquids["methanol"]
         liquid.calibration_volumes = [0.0, 100.0]
-        liquid.calibration_steps = [0.0, 999.0]
+        liquid.calibration_mm = [0.0, 999.0]
 
         service.see_calibration("methanol")
 
