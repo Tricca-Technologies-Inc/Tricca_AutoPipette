@@ -213,6 +213,9 @@ class PipetteSyringeKinematics(BaseModel):
         max_volume_ul: Maximum pipette volume in microliters.
         min_volume_ul: Minimum reliable volume in microliters.
         capacity_margin_ul: Headroom kept below ``max_volume_ul`` in μL.
+        max_travel_mm: Manufacturer-stated plunger travel (scale length) in
+            mm. Required -- homing and ``clear_syringe`` drive the plunger
+            up to twice this toward its endstop.
         calibration_volumes: Calibration volume points in μL.
         calibration_steps: Corresponding plunger travel. Despite the name these
             are millimetres, not motor steps -- they are fed to Klipper's
@@ -232,6 +235,7 @@ class PipetteSyringeKinematics(BaseModel):
     Example:
         >>> syringe = PipetteSyringeKinematics(
         ...     max_volume_ul=1000.0,
+        ...     max_travel_mm=60.0,
         ...     calibration_volumes=[0, 100, 500, 1000],
         ...     calibration_steps=[0, 4800, 24000, 48000],
         ... )
@@ -269,6 +273,16 @@ class PipetteSyringeKinematics(BaseModel):
         description=(
             "Headroom kept below max_volume_ul so a full aspirate never "
             "drives the plunger to its hard stop"
+        ),
+    )
+
+    # Required, no default: homing drives the plunger 2x this toward its
+    # endstop, so a guessed value is unsafe (issue #29).
+    max_travel_mm: float = Field(
+        gt=0,
+        description=(
+            "Manufacturer-stated plunger travel (scale length) in mm; "
+            "homing moves up to twice this toward the endstop"
         ),
     )
 
@@ -383,7 +397,7 @@ class PipetteModel(BaseModel):
         >>> pipette = PipetteModel(
         ...     name="P1000_Vertical",
         ...     design_type="vertical",
-        ...     syringe=PipetteSyringeKinematics(max_volume_ul=1000.0),
+        ...     syringe=PipetteSyringeKinematics(max_volume_ul=1000.0, max_travel_mm=60.0),
         ...     servo=ServoConfig(),
         ... )
         >>> print(pipette.name)
@@ -670,7 +684,7 @@ class SystemConfig(BaseModel):
         ...     gantry=GantryKinematics(),
         ...     pipette=PipetteModel(
         ...         name="P1000_Vertical",
-        ...         syringe=PipetteSyringeKinematics(max_volume_ul=1000.0),
+        ...         syringe=PipetteSyringeKinematics(max_volume_ul=1000.0, max_travel_mm=60.0),
         ...         servo=ServoConfig(),
         ...     ),
         ... )

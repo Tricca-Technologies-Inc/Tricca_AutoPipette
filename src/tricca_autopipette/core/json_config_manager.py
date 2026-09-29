@@ -9,6 +9,7 @@ Supports both batch loading (for initialization) and dynamic loading
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 from typing import Any, cast
@@ -177,6 +178,13 @@ class JsonConfigManager:
         if isinstance(pipette_ref, str):
             # Reference to default pipette
             if pipette_ref not in default_pipettes:
+                # The file may exist but have failed validation (logged and
+                # skipped by _load_default_pipettes); re-validate it so the
+                # real error -- e.g. a missing max_travel_mm -- is raised.
+                with contextlib.suppress(FileNotFoundError):
+                    path = LocalConfigRoots.resolve("pipettes", f"{pipette_ref}.json")
+                    with path.open("r", encoding="utf-8") as f:
+                        PipetteModel(**json.load(f))
                 available = list(default_pipettes.keys())
                 raise ValueError(
                     f"Unknown pipette '{pipette_ref}'. Available: {available}"
@@ -723,6 +731,7 @@ class JsonConfigManager:
             "max_volume_ul": syringe.max_volume_ul,
             "min_volume_ul": syringe.min_volume_ul,
             "capacity_margin_ul": syringe.capacity_margin_ul,
+            "max_travel_mm": syringe.max_travel_mm,
         }
 
     # ========================================================================

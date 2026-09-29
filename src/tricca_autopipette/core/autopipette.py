@@ -173,6 +173,7 @@ class AutoPipette:
             max_volume_ul=merged["max_volume_ul"],
             min_volume_ul=merged["min_volume_ul"],
             capacity_margin_ul=merged["capacity_margin_ul"],
+            max_travel_mm=merged["max_travel_mm"],
             calibration_volumes=merged["calibration_volumes"],
             calibration_steps=merged["calibration_steps"],
             speed_aspirate=merged["speed_aspirate"],
