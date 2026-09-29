@@ -286,3 +286,57 @@ class TestRoundTripFidelity:
         written = set_config_value(category, filename, key, original[key])
 
         assert _read(written) == original
+
+
+class TestHighRiskBounds:
+    """Pipette and gantry fields refuse an out-of-bounds edit (#33 slice c)."""
+
+    @pytest.fixture
+    def system(self, roots: Roots) -> dict[str, Any]:
+        (roots.local / "system").mkdir()
+        shutil.copy2(
+            roots.shared / "system" / "default_system.json", roots.local / "system"
+        )
+        return _read(roots.shared / "system" / "default_system.json")
+
+    def test_an_out_of_bounds_pipette_value_is_refused_and_nothing_written(
+        self, roots: Roots
+    ) -> None:
+        with pytest.raises(ValueError, match="max_volume_ul"):
+            set_config_value(
+                "pipettes", "p100_vertical.json", "syringe.max_volume_ul", 5000.0
+            )
+
+        assert not (roots.local / "pipettes" / "p100_vertical.json").exists()
+
+    def test_an_in_bounds_pipette_value_is_written(self, roots: Roots) -> None:
+        path = set_config_value(
+            "pipettes", "p100_vertical.json", "syringe.max_volume_ul", 90.0
+        )
+
+        assert _read(path)["syringe"]["max_volume_ul"] == 90.0  # ruff:ignore[float-equality-comparison]
+
+    def test_a_gantry_file_value_is_bounded(self, roots: Roots) -> None:
+        with pytest.raises(ValueError, match="accel_z"):
+            set_config_value("gantry", "default_gantry.json", "accel_z", 1e9)
+
+    @pytest.mark.usefixtures("system")
+    def test_gantry_bounds_apply_through_a_system_file_too(self) -> None:
+        with pytest.raises(ValueError, match="speed_xy"):
+            set_config_value("system", "default_system.json", "gantry.speed_xy", 5e5)
+
+    def test_a_whole_block_write_is_checked_field_by_field(
+        self, system: dict[str, Any]
+    ) -> None:
+        with pytest.raises(ValueError, match="speed_z"):
+            set_config_value(
+                "system",
+                "default_system.json",
+                "gantry",
+                {**system["gantry"], "speed_z": 1e9},
+            )
+
+    def test_low_risk_liquid_fields_have_no_bounds(self, roots: Roots) -> None:
+        path = set_config_value("liquids", "water.json", "speed_aspirate", 5000.0)
+
+        assert _read(path)["speed_aspirate"] == 5000.0  # ruff:ignore[float-equality-comparison]
