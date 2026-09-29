@@ -12,7 +12,7 @@ from __future__ import annotations
 import contextlib
 import json
 import logging
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 from tricca_autopipette.core.pipette_constants import (
     DefaultFilenames,
@@ -39,6 +39,9 @@ KEY_EXTENDS = "extends"
 #: Guard against a pathological inheritance chain. Nothing legitimate needs
 #: more than a machine config, a lab config, and a protocol config.
 MAX_EXTENDS_DEPTH = 10
+
+#: The pipette a system file with no ``pipette`` key uses.
+DEFAULT_PIPETTE_REF = "p100_vertical"
 
 
 logger = logging.getLogger(__name__)
@@ -240,7 +243,7 @@ class JsonConfigManager:
         merged_gantry = GantryKinematics(**gantry_data)
 
         # 4. Resolve pipette (reference or full config)
-        pipette_ref = user_data.get("pipette", "p100_vertical")
+        pipette_ref = user_data.get("pipette", DEFAULT_PIPETTE_REF)
         if isinstance(pipette_ref, str):
             # Reference to default pipette
             if pipette_ref not in default_pipettes:
@@ -599,6 +602,85 @@ class JsonConfigManager:
         del self.system_config.liquids[liquid_name]
         self._unloaded_liquids.add(liquid_name)
         logger.info("Unloaded liquid profile: %s", liquid_name)
+
+    def setting_source(
+        self, section: Literal["gantry", "pipette", "liquid"], liquid: str = ""
+    ) -> tuple[str, str, str] | None:
+        """Report which file the live value of a config section comes from.
+
+        That is where an edit has to be written to take effect: a gantry
+        block or liquid override in the system file (or the ``extends``
+        parent that supplies it) wins over the category file.
+
+        Args:
+            section: ``gantry``, ``pipette`` or ``liquid``.
+            liquid: The liquid's name, for ``liquid``.
+
+        Returns:
+            ``(category, filename, key prefix)`` for `config_writer.
+            set_config_value` -- a field's key path is the prefix plus its
+            own path, e.g. ``("system", "default_system.json", "gantry.")``
+            -- or None if no file defines the liquid.
+
+        Example:
+            >>> manager = JsonConfigManager()
+            >>> _ = manager.load_system_config()  # doctest: +SKIP
+            >>> manager.setting_source("pipette")  # doctest: +SKIP
+            ('pipettes', 'p100_vertical.json', '')
+        """
+        if section == "gantry":
+            if self._gantry_file is not None:
+                return "gantry", self._gantry_file, ""
+            found = self._system_chain_source("gantry")
+            if found is not None:
+                return "system", found[0], "gantry."
+            return "gantry", CONFIG_GANTRY, ""
+        if section == "pipette":
+            if self._pipette_file is not None:
+                return "pipettes", self._pipette_file, ""
+            found = self._system_chain_source("pipette")
+            if found is not None and not isinstance(found[1], str):
+                return "system", found[0], "pipette."
+            ref = found[1] if found is not None else DEFAULT_PIPETTE_REF
+            return "pipettes", f"{ref}.json", ""
+        found = self._system_chain_source("liquids")
+        if found is not None and isinstance(found[1], dict) and liquid in found[1]:
+            return "system", found[0], f"liquids.{liquid}."
+        source = None
+        # Same order as `_load_default_liquids`, so the last file wins here too.
+        for path in LocalConfigRoots.list_files("liquids").values():
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            if (
+                isinstance(data, dict)
+                and cast("dict[str, Any]", data).get("name") == liquid
+            ):
+                source = path.name
+        return ("liquids", source, "") if source is not None else None
+
+    def _system_chain_source(self, key: str) -> tuple[str, Any] | None:
+        """Find the file in the active ``extends`` chain that supplies `key`.
+
+        The merge is shallow per top-level key, child first, so that file's
+        value is the one in effect.
+
+        Args:
+            key: A top-level system-file key.
+
+        Returns:
+            ``(filename, raw value)``, or None if no file in the chain has it.
+        """
+        filename: object = self._system_file
+        for _ in range(MAX_EXTENDS_DEPTH + 1):
+            if not isinstance(filename, str):
+                return None
+            data = self._read_system_file(filename)
+            if key in data:
+                return filename, data[key]
+            filename = data.get(KEY_EXTENDS)
+        return None
 
     def reload(self) -> SystemConfig:
         """Rebuild the system config from the files, keeping runtime membership.

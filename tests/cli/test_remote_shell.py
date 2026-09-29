@@ -610,3 +610,12 @@ class TestLiveConfigCommands:
 
         assert "Switched to system profile other.json" in _output(shell)
         assert (system / "active.json").resolve().name == "other.json"
+
+    def test_settings_lists_each_field_with_its_set_config_arguments(
+        self, shell: RemoteTapShell
+    ) -> None:
+        shell.onecmd_plus_hooks("settings")
+
+        out = _output(shell)
+        assert "set_config liquids water.json speed_aspirate" in out
+        assert "syringe.max_volume_ul = 100.0  [1..1000]" in out
