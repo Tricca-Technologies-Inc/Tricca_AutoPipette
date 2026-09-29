@@ -83,6 +83,9 @@ class AutoPipette:
             millimetres.
         location_manager: Manages named locations and plates.
         state: Current pipette state (tip, liquid, homed).
+        last_syringe_travel_mm: Unsigned plunger travel of the most recent
+            `operate_syringe` call, in mm -- what a calibration dispense
+            actually commanded.
         gcode_buffers: G-code command buffer.
 
     Example:
@@ -153,6 +156,7 @@ class AutoPipette:
 
         # State tracking
         self.state = PipetteState()
+        self.last_syringe_travel_mm = 0.0
 
         # G-code management
         self.gcode_buffers = GCodeBuffer()
@@ -926,6 +930,8 @@ class AutoPipette:
         if accel is None:
             accel = self.syringe.accel_move
 
+        # What calibration pairs a weighed volume with (issue #26).
+        self.last_syringe_travel_mm = travel_mm
         travel_mm *= direction
         travel_mm *= self.syringe.motor_orientation
         self.logger.debug(

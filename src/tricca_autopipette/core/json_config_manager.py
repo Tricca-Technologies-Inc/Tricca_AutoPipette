@@ -40,6 +40,9 @@ KEY_EXTENDS = "extends"
 #: more than a machine config, a lab config, and a protocol config.
 MAX_EXTENDS_DEPTH = 10
 
+#: The pipette a system file gets when it names none.
+DEFAULT_PIPETTE_REF = "p100_vertical"
+
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +85,27 @@ class JsonConfigManager:
     def system_file(self) -> str:
         """The active system profile's filename, as last loaded."""
         return self._system_file
+
+    def active_pipette_file(self) -> str | None:
+        """Name the file the active pipette model was loaded from.
+
+        Returns:
+            The filename given to the last `load_pipette`, else the active
+            system file's ``pipette`` reference plus ``.json``; None if the
+            system file defines its pipette inline (there is no pipette file).
+
+        Example:
+            >>> manager = JsonConfigManager()
+            >>> _ = manager.load_system_config()
+            >>> manager.active_pipette_file()
+            'p100_vertical.json'
+        """
+        if self._pipette_file is not None:
+            return self._pipette_file
+        ref = self._load_system_data(self._system_file).get(
+            "pipette", DEFAULT_PIPETTE_REF
+        )
+        return f"{ref}.json" if isinstance(ref, str) else None
 
     def get_system_config(self) -> SystemConfig:
         """Get the currently loaded system configuration.
@@ -240,7 +264,7 @@ class JsonConfigManager:
         merged_gantry = GantryKinematics(**gantry_data)
 
         # 4. Resolve pipette (reference or full config)
-        pipette_ref = user_data.get("pipette", "p100_vertical")
+        pipette_ref = user_data.get("pipette", DEFAULT_PIPETTE_REF)
         if isinstance(pipette_ref, str):
             # Reference to default pipette
             if pipette_ref not in default_pipettes:

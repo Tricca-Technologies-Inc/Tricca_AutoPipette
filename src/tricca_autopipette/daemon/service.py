@@ -25,6 +25,7 @@ from __future__ import annotations
 import asyncio
 import functools
 import logging
+import math
 import shlex
 import threading
 import time
@@ -40,6 +41,7 @@ from cmd2 import Cmd2ArgumentParser
 
 from tricca_autopipette.commands.tap_cmd_parsers import (
     AspirateArgs,
+    CalibrateStartArgs,
     ChangeTipArgs,
     CoorArgs,
     DelLocArgs,
@@ -65,7 +67,15 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     args_from_namespace,
 )
 from tricca_autopipette.core.autopipette import AutoPipette
-from tricca_autopipette.core.config_writer import set_config_value
+from tricca_autopipette.core.calibration import (
+    CALIBRATION_LIQUID,
+    CalibrationPoint,
+    CalibrationSession,
+    CalibrationStep,
+    default_targets,
+    mass_to_volume_ul,
+)
+from tricca_autopipette.core.config_writer import set_config_value, set_config_values
 from tricca_autopipette.core.coordinate import Coordinate
 from tricca_autopipette.core.gcode_commands import GCode
 from tricca_autopipette.core.gcode_manager import GCodeManager
@@ -465,6 +475,8 @@ class AutoPipetteService:
         # `self.client` before subscribe_raw chained onto it -- restored by
         # unsubscribe_raw. See subscribe_raw's docstring.
         self._raw_subscription_priors: dict[str, Callable[[Any], None] | None] = {}
+        # The one calibration session in progress, if any (issue #26).
+        self._calibration: CalibrationSession | None = None
 
     @staticmethod
     def _load_locations(
@@ -2505,6 +2517,294 @@ class AutoPipetteService:
             )
         return CommandResult(ok=False, message="Failed to reconnect.")
 
+    # ==================== Calibration (issue #26) ====================
+    #
+    # A gravimetric calibration session: dispense water at each target
+    # volume, weigh it, fit, and save the curve as the active pipette's base
+    # curve. One session at a time, advanced strictly in order; every step
+    # is its own method + control-plane RPC + `calibrate <action>` in tap.
+    # Not protocol-file commands, and refused while a run is active.
+
+    @refuse_while_running
+    @require_homed("calibrate start")
+    def calibrate_start(self, args: CalibrateStartArgs) -> CommandResult:
+        """Begin a calibration session.
+
+        Args:
+            args: Source and destination locations, and optional targets.
+
+        Returns:
+            Result with the session in ``data``, or ``ok=False`` naming why
+            it can't start.
+        Raises:
+            NotHomedError: If the pipette is not homed.
+        """  # ruff: ignore[docstring-extraneous-exception]
+        ap = self._autopipette
+
+        def refuse(message: str) -> CommandResult:
+            return self._calibration_result(message, ok=False)
+
+        if self._calibration is not None:
+            return refuse(
+                "A calibration is already in progress; finish or abort it first."
+            )
+        if ap.state.tip_state != TipState.ATTACHED or ap.state.has_liquid:
+            return refuse("Need a clean, empty tip on first ('next_tip').")
+        missing = [
+            n for n in (args.source, args.dest) if not ap.location_manager.has_location(n)
+        ]
+        if missing:
+            return refuse(f"Unknown location(s): {', '.join(missing)}.")
+        usable = ap.usable_capacity_ul()
+        targets = args.volumes_ul or default_targets(usable)
+        if len(targets) < 2 or not all(0 < v <= usable for v in targets):
+            return refuse(f"Need at least 2 target volumes, each in (0, {usable:g}] uL.")
+        water = ap.system_config.liquids.get(CALIBRATION_LIQUID)
+        density = water.density_g_ml if water is not None else None
+        if density is None or density <= 0:
+            return refuse(
+                f"The '{CALIBRATION_LIQUID}' liquid profile needs a positive "
+                "density_g_ml."
+            )
+        pipette_file = ap.config_manager.active_pipette_file()
+        if pipette_file is None:
+            return refuse(
+                "The system config defines its pipette inline; calibration needs "
+                "a pipette file to save to."
+            )
+        if ap.active_liquid != CALIBRATION_LIQUID:
+            self.switch_liquid(CALIBRATION_LIQUID)
+        self._calibration = CalibrationSession(
+            pipette_file=pipette_file,
+            source=args.source,
+            dest=args.dest,
+            density_g_ml=density,
+            targets_ul=targets,
+        )
+        return self._calibration_result("Calibration started.")
+
+    @refuse_while_running
+    @require_homed("calibrate dispense")
+    @persist_tip_liquid_state
+    def calibrate_dispense(self) -> CommandResult:
+        """Aspirate the next target volume of water and dispense it all.
+
+        Uses the ordinary `AutoPipette.aspirate_volume`/`dispense_volume`
+        motion with no air gaps, so the metered dispense's plunger travel is
+        the whole story; that travel (`AutoPipette.last_syringe_travel_mm`)
+        is what gets recorded, not the target volume.
+
+        Returns:
+            Result with the session in ``data``, or ``ok=False`` if it's not
+            this step's turn.
+
+        Raises:
+            NotHomedError: If the pipette is not homed.
+        """  # ruff: ignore[docstring-extraneous-exception]
+        session, refusal = self._calibration_turn("dispense")
+        if session is None:
+            return refusal
+        ap = self._autopipette
+        if ap.state.tip_state != TipState.ATTACHED or ap.state.has_liquid:
+            return self._calibration_result(
+                "Need a clean, empty tip on to dispense ('next_tip').", ok=False
+            )
+        target = session.targets_ul[session.index]
+        ap.aspirate_volume(
+            target, session.source, pre_air_gap_ul=0.0, post_air_gap_ul=0.0
+        )
+        ap.dispense_volume(session.dest, volume=target)
+        self.output_gcode(ap.get_gcode())
+        session.points.append(
+            CalibrationPoint(target_ul=target, travel_mm=ap.last_syringe_travel_mm)
+        )
+        return self._calibration_result(
+            f"Dispensed point {session.index + 1}/{len(session.targets_ul)} "
+            f"({target:g} uL target, {ap.last_syringe_travel_mm:.4f} mm travel). "
+            "Weigh it and record the mass."
+        )
+
+    @refuse_while_running
+    def calibrate_record(self, mass_g: float) -> CommandResult:
+        """Record the weighed mass of the last dispense.
+
+        The measured volume is ``mass_g / density_g_ml * 1000``, with water's
+        density from its liquid profile.
+
+        Args:
+            mass_g: Measured mass in grams.
+
+        Returns:
+            Result with the session in ``data``, or ``ok=False`` if it's not
+            this step's turn or the mass isn't a positive number.
+        """
+        session, refusal = self._calibration_turn("record")
+        if session is None:
+            return refusal
+        if not (math.isfinite(mass_g) and mass_g > 0):
+            return self._calibration_result(
+                f"Mass must be a positive number of grams, got {mass_g}.", ok=False
+            )
+        point = session.points[-1]
+        point.mass_g = mass_g
+        point.volume_ul = mass_to_volume_ul(mass_g, session.density_g_ml)
+        session.previewed = False
+        return self._calibration_result(
+            f"Recorded {mass_g:g} g = {point.volume_ul:.3f} uL for point "
+            f"{len(session.points)}/{len(session.targets_ul)}."
+        )
+
+    def calibrate_preview(self) -> CommandResult:
+        """Fit the measured points and show them against the current curve.
+
+        Returns:
+            Result whose ``data`` adds ``fit`` and ``current``, each shaped
+            like `see_calibration`'s data (``volumes_ul``/``travel_mm``
+            parallel lists plus ``slope``/``intercept``), or ``ok=False`` if
+            not every point is recorded yet.
+        """
+        session, refusal = self._calibration_turn("preview", "commit")
+        if session is None:
+            return refusal
+        syringe = self._autopipette.pipette_model.syringe
+        fit = _curve(*session.measured())
+        current = (
+            _curve(syringe.calibration_volumes, syringe.calibration_mm)
+            if syringe.calibration_volumes is not None
+            and syringe.calibration_mm is not None
+            else None
+        )
+        session.previewed = True
+        result = self._calibration_result(
+            f"Fit: travel_mm = {fit['slope']:.6f} * volume_ul + "
+            f"{fit['intercept']:.6f}"
+            + (
+                f" (current: {current['slope']:.6f} * volume_ul + "
+                f"{current['intercept']:.6f})"
+                if current is not None
+                else ""
+            )
+            + ". Commit to save, or abort."
+        )
+        assert result.data is not None
+        result.data.update(fit=fit, current=current)
+        return result
+
+    @refuse_while_running
+    def calibrate_commit(self) -> CommandResult:
+        """Save the measured curve as the active pipette's base curve.
+
+        Writes ``syringe.calibration_volumes``/``calibration_mm`` together
+        (`config_writer.set_config_values`: copy-on-write into the local
+        root, validated, atomic), applies it live, and ends the session.
+
+        Returns:
+            Result naming the written file, or ``ok=False`` if not previewed
+            yet or the write was refused (the session is kept then).
+        """
+        session, refusal = self._calibration_turn("commit")
+        if session is None:
+            return refusal
+        active = self._autopipette.config_manager.active_pipette_file()
+        if active != session.pipette_file:
+            return self._calibration_result(
+                f"The active pipette changed from {session.pipette_file} to "
+                f"{active} during calibration; abort and start again.",
+                ok=False,
+            )
+        volumes, travel = session.measured()
+        try:
+            path = set_config_values(
+                "pipettes",
+                session.pipette_file,
+                {
+                    "syringe.calibration_volumes": volumes,
+                    "syringe.calibration_mm": travel,
+                },
+            )
+        except (ValueError, FileNotFoundError) as e:
+            return self._calibration_result(str(e), ok=False)
+        self._calibration = None
+        homing_invalidated = self._homing_invalidated
+        try:
+            self._apply_config_change(self._autopipette.config_manager.reload)
+        except (ValueError, FileNotFoundError, RuntimeError) as e:
+            return self._calibration_result(
+                f"Saved to {path}, but it could not be applied live: {e}", ok=False
+            )
+        finally:
+            # A new curve moves no mechanical limit, so it forces no re-home.
+            self._homing_invalidated = homing_invalidated
+        return self._calibration_result(
+            f"Saved {len(volumes)}-point calibration to {path}."
+        )
+
+    def calibrate_status(self) -> CommandResult:
+        """Report the calibration session in progress, if any.
+
+        Returns:
+            Result with the session (or ``{"active": False}``) in ``data``.
+        """
+        if self._calibration is None:
+            return self._calibration_result("No calibration in progress.")
+        return self._calibration_result(
+            f"Calibration in progress: next step '{self._calibration.step}'."
+        )
+
+    def calibrate_abort(self) -> CommandResult:
+        """Discard the calibration session; nothing is saved.
+
+        Returns:
+            Result confirming the abort, or ``ok=False`` if none was active.
+        """
+        if self._calibration is None:
+            return self._calibration_result("No calibration in progress.", ok=False)
+        self._calibration = None
+        return self._calibration_result("Calibration aborted; nothing was saved.")
+
+    def _calibration_turn(
+        self, step: CalibrationStep, *also: CalibrationStep
+    ) -> tuple[CalibrationSession, None] | tuple[None, CommandResult]:
+        """Check that `step` is what the calibration session accepts next.
+
+        Args:
+            step: The step being attempted.
+            *also: Other session steps during which it is accepted too.
+
+        Returns:
+            ``(session, None)`` if it is, else ``(None, refusal)`` with an
+            ``ok=False`` result naming the step that is due.
+        """
+        session = self._calibration
+        if session is None:
+            return None, self._calibration_result(
+                "No calibration in progress; start one with 'calibrate start'.",
+                ok=False,
+            )
+        if session.step not in (step, *also):
+            return None, self._calibration_result(
+                f"Can't {step} now: the next calibration step is "
+                f"'{session.step}'.",
+                ok=False,
+            )
+        return session, None
+
+    def _calibration_result(self, message: str, ok: bool = True) -> CommandResult:
+        """Build a result carrying the current session state.
+
+        Args:
+            message: Human-readable summary.
+            ok: Whether the step succeeded.
+
+        Returns:
+            Result with the session (or ``{"active": False}``) in ``data``.
+        """
+        session = self._calibration
+        data: dict[str, Any] = {"active": session is not None}
+        if session is not None:
+            data.update(session.to_dict())
+        return CommandResult(ok=ok, message=message, data=data)
+
     # ==================== Reporting (read-only) ====================
     #
     # Migrated off `ConfigurationCommands`' `ls`/`list_liquids` in Phase 4
@@ -3506,6 +3806,26 @@ class AutoPipetteService:
                 "config_locked": self._current.config_locked,
             },
         )
+
+
+def _curve(volumes_ul: list[float], travel_mm: list[float]) -> dict[str, Any]:
+    """Describe a calibration curve the way `see_calibration` reports one.
+
+    Args:
+        volumes_ul: Calibration volumes in μL.
+        travel_mm: Paired plunger travel in mm.
+
+    Returns:
+        ``volumes_ul``, ``travel_mm``, and the fitted line's ``slope`` and
+        ``intercept`` (``travel_mm == slope * volume_ul + intercept``).
+    """
+    slope, intercept = VolumeConverter(volumes_ul, travel_mm).get_fit_coefficients()
+    return {
+        "volumes_ul": volumes_ul,
+        "travel_mm": travel_mm,
+        "slope": slope,
+        "intercept": intercept,
+    }
 
 
 class _LineWarningCapture(logging.Handler):
