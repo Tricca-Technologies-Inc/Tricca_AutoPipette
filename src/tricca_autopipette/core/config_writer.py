@@ -222,8 +222,9 @@ def _model_defines(model: type[BaseModel], parts: list[str]) -> bool:
 #:
 #: Ceilings are the highest value any shared ``config/`` file ships with (the
 #: known-good envelope). The one exception is ``max_volume_ul``, whose ceiling
-#: is 1000 µL, the largest syringe in use (Murphy's 1000 µL profile). Floors
-#: are low enough for slow bring-up without allowing a value near zero.
+#: is 1000 µL, the largest syringe in use (Murphy's 1000 µL profile). Speed and
+#: acceleration floors sit well below anything shipped, slow enough for
+#: bring-up, but rule out a near-zero value that makes one move take minutes.
 HIGH_RISK_BOUNDS: dict[tuple[type[BaseModel], str], tuple[float, float]] = {
     (GantryKinematics, "speed_xy"): (100, 38000),  # mm/min
     (GantryKinematics, "speed_z"): (100, 12000),  # mm/min
@@ -234,12 +235,13 @@ HIGH_RISK_BOUNDS: dict[tuple[type[BaseModel], str], tuple[float, float]] = {
     (PipetteSyringeKinematics, "max_volume_ul"): (1, 1000),
     (PipetteSyringeKinematics, "min_volume_ul"): (0.1, 100),
     (PipetteSyringeKinematics, "capacity_margin_ul"): (0, 50),
-    # TODO(#29): add (PipetteSyringeKinematics, "max_travel_mm") once #29 lands;
-    # it is the hard mechanical limit, so its bounds come from #29, not here.
-    (PipetteSyringeKinematics, "speed_aspirate"): (1, 200),  # mm/s
-    (PipetteSyringeKinematics, "speed_dispense"): (1, 200),  # mm/s
-    (PipetteSyringeKinematics, "accel_home"): (10, 800),  # mm/s²
-    (PipetteSyringeKinematics, "accel_move"): (10, 800),  # mm/s²
+    # The hard mechanical limit (#29): the syringe's physical stroke is 60 mm,
+    # and homing drives up to twice this toward the endstop.
+    (PipetteSyringeKinematics, "max_travel_mm"): (1, 60),
+    (PipetteSyringeKinematics, "speed_aspirate"): (0.25, 50),  # mm/s
+    (PipetteSyringeKinematics, "speed_dispense"): (0.25, 50),  # mm/s
+    (PipetteSyringeKinematics, "accel_home"): (2.5, 200),  # mm/s²
+    (PipetteSyringeKinematics, "accel_move"): (2.5, 200),  # mm/s²
     (PipetteSyringeKinematics, "wait_aspirate_ms"): (0, 10000),
     (PipetteSyringeKinematics, "wait_dispense_ms"): (0, 10000),
     (ServoConfig, "angle_retract"): (0, 180),  # degrees

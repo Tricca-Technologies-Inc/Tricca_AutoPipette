@@ -316,6 +316,12 @@ class TestHighRiskBounds:
 
         assert _read(path)["syringe"]["max_volume_ul"] == 90.0  # ruff:ignore[float-equality-comparison]
 
+    def test_max_travel_is_capped_at_the_physical_stroke(self, roots: Roots) -> None:
+        with pytest.raises(ValueError, match="max_travel_mm"):
+            set_config_value(
+                "pipettes", "p100_vertical.json", "syringe.max_travel_mm", 61.0
+            )
+
     def test_a_gantry_file_value_is_bounded(self, roots: Roots) -> None:
         with pytest.raises(ValueError, match="accel_z"):
             set_config_value("gantry", "default_gantry.json", "accel_z", 1e9)

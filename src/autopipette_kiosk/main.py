@@ -134,6 +134,27 @@ class CommandResultResponse(BaseModel):
     data: dict[str, Any] | None = None
 
 
+class SettingSetRequest(BaseModel):
+    """Request body for `POST /settings/set` (mirrors `config.set_value`)."""
+
+    category: str
+    filename: str
+    key_path: str
+    value: Any
+
+
+class FilenameRequest(BaseModel):
+    """Request body naming one config file, e.g. ``p100_vertical.json``."""
+
+    filename: str
+
+
+class LiquidNameRequest(BaseModel):
+    """Request body for `POST /settings/unload_liquid`."""
+
+    name: str
+
+
 class MoveRequest(BaseModel):
     """Request body for `POST /move` (absolute XYZ, mirrors `MoveArgs`)."""
 
@@ -182,6 +203,9 @@ _current_run: RunStatus = RunStatus(status="idle")
 # Pending breakpoint, mirrored from notify_breakpoint pushes: {"run_id",
 # "filename", "pending"} while one is awaiting a response, None otherwise.
 _current_breakpoint: dict[str, Any] | None = None
+# Whether config writes are run-locked (issue #33), mirrored from each
+# notify_run_status push, so the Settings page can disable its fields.
+_config_locked: bool = False
 # Live toolhead state (Move page, issue #86), mirrored from notify_raw_event
 # pushes carrying a raw Moonraker "notify_status_update" for the "toolhead"
 # object -- see `_on_raw_event_notification`. Klipper only sends the fields
@@ -676,6 +700,79 @@ async def list_locations() -> CommandResultResponse:
     return await _dispatch_control_request(_control_requests.list_locations())
 
 
+@app.get("/settings", response_model=CommandResultResponse)
+async def get_settings() -> CommandResultResponse:
+    """Report every editable setting, for the Settings page (issue #33).
+
+    Routing only -- `AutoPipetteService.settings` (via `config.settings`) is
+    the data source, including each field's bounds and the
+    ``category``/``filename``/``key_path`` that `POST /settings/set` takes.
+
+    Returns:
+        `CommandResultResponse` with the settings in `data`.
+    """
+    return await _dispatch_control_request(_control_requests.settings())
+
+
+@app.post("/settings/set", response_model=CommandResultResponse)
+async def set_setting(req: SettingSetRequest) -> CommandResultResponse:
+    """Write one config value via `config.set_value`.
+
+    Returns:
+        `CommandResultResponse`; ``ok=False`` with the reason if refused
+        (out of bounds, would not load, or ``data.reason == "run_active"``).
+    """
+    return await _dispatch_control_request(
+        _control_requests.set_config_value(
+            req.category, req.filename, req.key_path, req.value
+        )
+    )
+
+
+@app.post("/settings/load_pipette", response_model=CommandResultResponse)
+async def load_pipette(req: FilenameRequest) -> CommandResultResponse:
+    """Swap the active pipette via `config.load_pipette` (invalidates homing).
+
+    Returns:
+        `CommandResultResponse` naming the new pipette, or ``ok=False``.
+    """
+    return await _dispatch_control_request(
+        _control_requests.load_pipette(req.filename)
+    )
+
+
+@app.post("/settings/switch_system", response_model=CommandResultResponse)
+async def switch_system(req: FilenameRequest) -> CommandResultResponse:
+    """Switch the system profile via `config.switch_system` (invalidates homing).
+
+    Returns:
+        `CommandResultResponse` naming the profile, or ``ok=False``.
+    """
+    return await _dispatch_control_request(
+        _control_requests.switch_system(req.filename)
+    )
+
+
+@app.post("/settings/load_liquid", response_model=CommandResultResponse)
+async def load_liquid(req: FilenameRequest) -> CommandResultResponse:
+    """Load a liquid profile file via `config.load_liquid`.
+
+    Returns:
+        `CommandResultResponse` naming the loaded profile.
+    """
+    return await _dispatch_control_request(_control_requests.load_liquid(req.filename))
+
+
+@app.post("/settings/unload_liquid", response_model=CommandResultResponse)
+async def unload_liquid(req: LiquidNameRequest) -> CommandResultResponse:
+    """Unload a liquid profile via `config.unload_liquid`.
+
+    Returns:
+        `CommandResultResponse`, or ``ok=False`` for the active liquid.
+    """
+    return await _dispatch_control_request(_control_requests.unload_liquid(req.name))
+
+
 @app.get("/status", response_model=RunStatus)
 def get_status() -> RunStatus:
     """Return the current (or most recent) protocol run status."""
@@ -706,16 +803,17 @@ def _on_run_status_notification(params: Any) -> None:  # ruff:ignore[any-type]
 
     Args:
         params: Notification params, `{"status", "message", "run_id",
-            "filename"}` as sent by `AutoPipetteService._broadcast_status`.
+            "filename", "config_locked"}` as sent by `AutoPipetteService._broadcast_status`.
 
     Note:
         Invoked from the control-plane WebSocketClient's background thread;
         marshals the browser-facing broadcast back onto the main event loop.
     """
-    global _current_run, _current_breakpoint
+    global _current_run, _current_breakpoint, _config_locked
     if not isinstance(params, dict):
         return
     notification = as_dict(params)
+    _config_locked = bool(notification.get("config_locked"))
     _current_run = RunStatus(
         status=notification.get("status", "idle"),
         message=notification.get("message", ""),
@@ -849,12 +947,13 @@ def _status_payload() -> dict[str, Any]:
         breakpoint's `{"run_id", "filename", "pending"}` dict, or None) and
         `toolhead` (`{"position", "homed_axes"}`, either possibly still
         None if no live update has arrived yet -- see
-        `_on_raw_event_notification`).
+        `_on_raw_event_notification`), and `config_locked`.
     """
     return {
         **_current_run.model_dump(),
         "breakpoint": _current_breakpoint,
         "toolhead": dict(_current_toolhead),
+        "config_locked": _config_locked,
     }
 
 

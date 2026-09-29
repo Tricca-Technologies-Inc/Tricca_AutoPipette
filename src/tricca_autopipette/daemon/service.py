@@ -29,7 +29,7 @@ import shlex
 import threading
 import time
 import uuid
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, Iterable
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
@@ -37,6 +37,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from cmd2 import Cmd2ArgumentParser
+from pydantic import BaseModel
 
 from tricca_autopipette.commands.tap_cmd_parsers import (
     AspirateArgs,
@@ -65,7 +66,7 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     args_from_namespace,
 )
 from tricca_autopipette.core.autopipette import AutoPipette
-from tricca_autopipette.core.config_writer import set_config_value
+from tricca_autopipette.core.config_writer import HIGH_RISK_BOUNDS, set_config_value
 from tricca_autopipette.core.coordinate import Coordinate
 from tricca_autopipette.core.gcode_commands import GCode
 from tricca_autopipette.core.gcode_manager import GCodeManager
@@ -84,7 +85,13 @@ from tricca_autopipette.core.pipette_exceptions import (
     NotHomedError,
     ProtocolAbortedError,
 )
-from tricca_autopipette.core.pipette_models import SystemConfig, TipState
+from tricca_autopipette.core.pipette_models import (
+    GantryKinematics,
+    PipetteSyringeKinematics,
+    ServoConfig,
+    SystemConfig,
+    TipState,
+)
 from tricca_autopipette.core.plates import Plate, PlateParams
 from tricca_autopipette.core.splits import parse_splits_spec
 from tricca_autopipette.core.traversal import parse_well_ranges
@@ -248,6 +255,58 @@ def refuse_while_running(
         return self.config_lock_refusal() or func(self, *args, **kwargs)
 
     return wrapper
+
+
+#: The liquid fields the Settings page edits: every numeric `LiquidProfile`
+#: override (low-risk, so no bounds beyond the model's own).
+_LIQUID_SETTING_KEYS = (
+    "viscosity_cP",
+    "density_g_ml",
+    "speed_aspirate",
+    "speed_dispense",
+    "wait_aspirate_ms",
+    "wait_dispense_ms",
+    "prewet_cycles",
+    "prewet_vol_ul",
+    "pre_air_gap_ul",
+    "post_air_gap_ul",
+)
+
+
+def _setting_fields(
+    model: BaseModel, keys: Iterable[str], source: tuple[str, str, str] | None
+) -> list[dict[str, Any]]:
+    """Describe `model`'s fields for `AutoPipetteService.settings`.
+
+    Args:
+        model: The live model the values are read from.
+        keys: Dotted field paths within `model`.
+        source: `JsonConfigManager.setting_source`'s answer; None yields no
+            fields, since there is nowhere to write them.
+
+    Returns:
+        One field dict per key (see `AutoPipetteService.settings`).
+    """
+    if source is None:
+        return []
+    category, filename, prefix = source
+    rows: list[dict[str, Any]] = []
+    for key in keys:
+        owner: object = model
+        *parents, leaf = key.split(".")
+        for part in parents:
+            owner = getattr(owner, part)
+        low, high = HIGH_RISK_BOUNDS.get((type(owner), leaf), (None, None))  # type: ignore[arg-type]
+        rows.append({
+            "key": key,
+            "value": getattr(owner, leaf),
+            "min": low,
+            "max": high,
+            "category": category,
+            "filename": filename,
+            "key_path": prefix + key,
+        })
+    return rows
 
 
 def _pipette_state_triple(autopipette: AutoPipette) -> tuple[str, bool, str]:
@@ -2634,6 +2693,73 @@ class AutoPipetteService:
             "system_profiles": [p.name for p in LocalConfigRoots.list_system_configs()],
         }
         return CommandResult(ok=True, message="System configuration.", data=data)
+
+    def settings(self) -> CommandResult:
+        """Report every editable setting and the file an edit to it must go to.
+
+        What the kiosk Settings page renders (issue #33 slice c). Each field
+        is ``{"key", "value", "min", "max", "category", "filename",
+        "key_path"}``: ``value`` is the live value, ``min``/``max`` its
+        `HIGH_RISK_BOUNDS` (None for low-risk fields), and ``category``/
+        ``filename``/``key_path`` the ``config.set_value`` arguments that
+        change it -- resolved by `JsonConfigManager.setting_source`, so an
+        edit lands where it takes effect. Pipette and gantry fields are the
+        high-risk ones in `HIGH_RISK_BOUNDS`; liquid fields are the numeric
+        `LiquidProfile` overrides.
+
+        Returns:
+            Result with ``data`` keys ``system_profile``/``system_profiles``,
+            ``pipette`` (``name``, ``file``, ``files``, ``fields``),
+            ``gantry`` (``fields``) and ``liquids`` (``active``, ``files``,
+            ``loaded``: one ``{"name", "active", "fields"}`` per loaded
+            liquid).
+        """
+        ap = self._autopipette
+        manager = ap.config_manager
+        pipette_source = manager.setting_source("pipette")
+        pipette_keys = [
+            f"{'servo' if owner is ServoConfig else 'syringe'}.{name}"
+            for owner, name in HIGH_RISK_BOUNDS
+            if owner in {PipetteSyringeKinematics, ServoConfig}
+        ]
+        gantry_keys = [n for o, n in HIGH_RISK_BOUNDS if o is GantryKinematics]
+        liquids = ap.system_config.liquids
+        data = {
+            "system_profile": manager.system_file,
+            "system_profiles": [p.name for p in LocalConfigRoots.list_system_configs()],
+            "pipette": {
+                "name": ap.pipette_model.name,
+                "file": pipette_source[1]
+                if pipette_source and pipette_source[0] == "pipettes"
+                else None,
+                "files": sorted(LocalConfigRoots.list_files("pipettes")),
+                "fields": _setting_fields(
+                    ap.pipette_model, pipette_keys, pipette_source
+                ),
+            },
+            "gantry": {
+                "fields": _setting_fields(
+                    ap.gantry, gantry_keys, manager.setting_source("gantry")
+                )
+            },
+            "liquids": {
+                "active": ap.active_liquid,
+                "files": sorted(LocalConfigRoots.list_files("liquids")),
+                "loaded": [
+                    {
+                        "name": name,
+                        "active": name == ap.active_liquid,
+                        "fields": _setting_fields(
+                            liquids[name],
+                            _LIQUID_SETTING_KEYS,
+                            manager.setting_source("liquid", name),
+                        ),
+                    }
+                    for name in sorted(liquids)
+                ],
+            },
+        }
+        return CommandResult(ok=True, message="Editable settings.", data=data)
 
     # ==================== Run lifecycle ====================
 

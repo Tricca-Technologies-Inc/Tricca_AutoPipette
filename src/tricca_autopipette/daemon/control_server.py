@@ -138,6 +138,7 @@ _RPC_DISPATCH: dict[str, _RpcCommand] = {
     "config.list_plates": _RpcCommand(None, AutoPipetteService.list_plates),
     "config.list_liquids": _RpcCommand(None, AutoPipetteService.list_liquids),
     "config.system_summary": _RpcCommand(None, AutoPipetteService.system_summary),
+    "config.settings": _RpcCommand(None, AutoPipetteService.settings),
 }
 
 

@@ -362,6 +362,33 @@ class RemoteTapShell(Cmd):
             self.requests.set_config_value(category, filename, key_path, value)
         )
 
+    def do_settings(self, _: Statement) -> None:
+        """List editable settings, each with the set_config command that changes it.
+
+        High-risk (pipette, gantry) fields show their allowed range; a
+        ``set_config`` outside it is refused.
+        """
+        data = self._result_data(self._send(self.requests.settings()))
+        if data is None:
+            return
+        self.poutput(f"System profile: {data.get('system_profile')}")
+        sections: list[tuple[str, list[dict[str, Any]]]] = [
+            (f"Pipette {data['pipette']['name']}", data["pipette"]["fields"]),
+            ("Gantry", data["gantry"]["fields"]),
+        ]
+        sections += [
+            (f"Liquid {row['name']}", row["fields"])
+            for row in data["liquids"]["loaded"]
+        ]
+        for title, fields in sections:
+            self.poutput(f"\n{title}:")
+            for f in fields:
+                bounds = f"  [{f['min']:g}..{f['max']:g}]" if f["min"] is not None else ""
+                self.poutput(
+                    f"  {f['key']} = {f['value']}{bounds}    "
+                    f"set_config {f['category']} {f['filename']} {f['key_path']}"
+                )
+
     @with_argparser(TAPCmdParsers.parser_load_locations)  # type: ignore[arg-type]
     def do_load_locations(self, args: LoadLocationsArgs) -> None:
         """Load locations from a file, adding to the deck by default."""
