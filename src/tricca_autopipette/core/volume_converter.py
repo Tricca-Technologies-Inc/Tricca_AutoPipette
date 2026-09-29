@@ -4,18 +4,9 @@
 This module provides conversion between liquid volumes (microliters) and
 syringe plunger positions for precise pipetting control.
 
-.. warning::
-   Everything here named "steps" is actually **millimetres**. The values
-   returned by :meth:`VolumeConverter.vol_to_steps` are passed straight to
-   Klipper's ``MANUAL_STEPPER ... MOVE=``, which takes millimetres (the
-   ``[manual_stepper]`` ``rotation_distance`` setting is what converts mm to
-   step pulses). The calibration table below is therefore a μL -> mm fit: 100 μL
-   maps to 39.25 mm of travel, implying a bore of roughly 1.8 mm.
-
-   The names are wrong, not the numbers -- the emitted G-code is correct.
-   Renaming ``vol_to_steps``/``steps_to_vol`` is tracked as issue #29; it is
-   deferred because both are public control-plane RPC and ``tap`` command
-   surface and so need a deprecation alias.
+Travel is in millimetres, the unit Klipper's ``MANUAL_STEPPER ... MOVE=``
+takes (the ``[manual_stepper]`` ``rotation_distance`` setting is what converts
+mm to step pulses). The default calibration table below is a μL -> mm fit.
 """
 
 from __future__ import annotations
@@ -30,8 +21,6 @@ class VolumeConverter:
 
     Uses polynomial fitting to translate between microliters (μL) and
     millimetres of plunger travel for accurate pipette volume control.
-    Despite the "steps" naming throughout this class (see the module-level
-    warning above), the values are millimetres, not motor microsteps.
     The converter can be initialized with default calibration data or
     custom calibration points.
 
@@ -106,13 +95,11 @@ class VolumeConverter:
         self._y: list[float] = y
         self._poly = Polynomial.fit(x, y, deg=1).convert()
 
-    def vol_to_steps(self, vol_ul: float) -> float:
+    def vol_to_mm(self, vol_ul: float) -> float:
         """Convert volume in microliters to plunger travel (mm).
 
         Uses the fitted polynomial to calculate the plunger travel, in
-        millimetres, needed to dispense the specified volume. Named
-        "steps" for historical reasons (see the module-level warning) —
-        the return value is millimetres, not a motor step count.
+        millimetres, needed to dispense the specified volume.
 
         Args:
             vol_ul: Volume to dispense in microliters (μL).
@@ -122,22 +109,20 @@ class VolumeConverter:
 
         Example:
             >>> converter = VolumeConverter()
-            >>> travel_mm = converter.vol_to_steps(100.0)
+            >>> travel_mm = converter.vol_to_mm(100.0)
             >>> travel_mm
             40.64175291073736
         """
         return float(self._poly(vol_ul))
 
-    def steps_to_vol(self, steps: float) -> float:
+    def mm_to_vol(self, travel_mm: float) -> float:
         """Convert plunger travel (mm) to volume in microliters.
 
         Performs inverse calculation to determine the volume corresponding
         to a given plunger travel. Uses root-finding on the polynomial.
-        Named "steps" for historical reasons (see the module-level warning)
-        — the input is millimetres, not a motor step count.
 
         Args:
-            steps: Plunger travel, in millimetres (despite the name).
+            travel_mm: Plunger travel, in millimetres.
 
         Returns:
             Corresponding volume in microliters (μL).
@@ -153,19 +138,19 @@ class VolumeConverter:
 
         Example:
             >>> converter = VolumeConverter()
-            >>> volume = converter.steps_to_vol(39.25)
+            >>> volume = converter.mm_to_vol(39.25)
             >>> volume
             96.39585992489044
         """
-        # Create polynomial: steps - poly(vol) = 0
-        roots_poly = self._poly - steps
+        # Create polynomial: poly(vol) - travel_mm = 0
+        roots_poly = self._poly - travel_mm
         roots = roots_poly.roots()
 
         # Filter for positive real roots
         valid_roots = [r.real for r in roots if r.imag == 0 and r.real >= 0]
 
         if not valid_roots:
-            raise ValueError(f"No valid volume found for {steps} mm of travel")
+            raise ValueError(f"No valid volume found for {travel_mm} mm of travel")
 
         # Return the smallest positive root (most likely solution)
         return float(min(valid_roots))
@@ -195,7 +180,7 @@ class VolumeConverter:
     def get_fit_coefficients(self) -> tuple[float, float]:
         """Get the fitted line's slope and intercept.
 
-        Returns the same linear relationship :meth:`vol_to_steps` evaluates
+        Returns the same linear relationship :meth:`vol_to_mm` evaluates
         via ``self._poly``, as plain numbers rather than a ``Polynomial``,
         for callers that want to display or report the fit (e.g. a
         calibration-check command) without reaching into the private

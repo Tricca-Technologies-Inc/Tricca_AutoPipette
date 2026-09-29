@@ -2,7 +2,7 @@
 
 ports-and-adapters migration, UtilityCommands group -- see CLAUDE.md).
 Unlike other groups, every command here is migrated, including the
-read-only ones (webcam, vol_to_steps, steps_to_vol), since each does a real
+read-only ones (webcam, vol_to_mm, mm_to_vol), since each does a real
 domain computation/lookup rather than rendering a `rich.table.Table`.
 """
 
@@ -13,7 +13,7 @@ import pytest
 from tricca_autopipette.commands.tap_cmd_parsers import (
     GcodePrintArgs,
     TriggerArgs,
-    VolToStepsArgs,
+    VolToMmArgs,
     WaitArgs,
 )
 from tricca_autopipette.core.volume_converter import VolumeConverter
@@ -83,39 +83,40 @@ class TestWebcamUrl:
         assert result.message == result.data["url"]
 
 
-class TestVolToSteps:
+class TestVolToMm:
     def test_non_positive_volume_is_a_noop(self, service: AutoPipetteService) -> None:
-        result = service.vol_to_steps(VolToStepsArgs(vol=0.0))
+        result = service.vol_to_mm(VolToMmArgs(vol=0.0))
 
         assert result.ok is False
         assert "greater than zero" in result.message
 
-    def test_converts_volume_to_steps(self, service: AutoPipetteService) -> None:
-        result = service.vol_to_steps(VolToStepsArgs(vol=100.0))
+    def test_converts_volume_to_mm(self, service: AutoPipetteService) -> None:
+        result = service.vol_to_mm(VolToMmArgs(vol=100.0))
 
         assert result.ok is True
         assert result.data is not None
-        assert result.data["steps"] > 0
+        assert result.data["travel_mm"] > 0
         assert result.data["round_trip_vol"] == pytest.approx(100.0, rel=0.05)
 
 
-class TestStepsToVol:
-    def test_negative_steps_is_a_noop(self, service: AutoPipetteService) -> None:
-        result = service.steps_to_vol(-5)
+class TestMmToVol:
+    def test_negative_travel_is_a_noop(self, service: AutoPipetteService) -> None:
+        result = service.mm_to_vol(-5)
 
         assert result.ok is False
         assert "negative" in result.message
 
-    def test_converts_steps_to_volume(self, service: AutoPipetteService) -> None:
-        forward = service.vol_to_steps(VolToStepsArgs(vol=100.0))
+    def test_converts_mm_to_volume(self, service: AutoPipetteService) -> None:
+        forward = service.vol_to_mm(VolToMmArgs(vol=100.0))
         assert forward.data is not None
-        steps = round(forward.data["steps"])
+        # Fractional mm, not rounded: the old steps_to_vol truncated to int.
+        travel_mm = forward.data["travel_mm"]
 
-        result = service.steps_to_vol(steps)
+        result = service.mm_to_vol(travel_mm)
 
         assert result.ok is True
         assert result.data is not None
-        assert result.data["vol"] == pytest.approx(100.0, rel=0.05)
+        assert result.data["vol"] == pytest.approx(100.0, rel=1e-6)
 
 
 class TestSeeCalibration:

@@ -417,21 +417,21 @@ class TestUtilityCommands:
 
         assert "/webcam/" in _output(shell)
 
-    def test_steps_to_vol_rejects_a_non_numeric_argument_locally(
+    def test_mm_to_vol_rejects_a_non_numeric_argument_locally(
         self, shell: RemoteTapShell, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        # do_steps_to_vol parses its argument itself before sending
+        # do_mm_to_vol parses its argument itself before sending
         # anything -- no round trip to the daemon for this one.
         capsys.readouterr()
 
-        shell.onecmd_plus_hooks("steps_to_vol not-a-number")
+        shell.onecmd_plus_hooks("mm_to_vol not-a-number")
 
-        assert "Invalid steps value" in capsys.readouterr().err
+        assert "Invalid travel value" in capsys.readouterr().err
 
-    def test_steps_to_vol_rejects_a_negative_value_server_side(
+    def test_mm_to_vol_rejects_a_negative_value_server_side(
         self, shell: RemoteTapShell
     ) -> None:
-        shell.onecmd_plus_hooks("steps_to_vol -5")
+        shell.onecmd_plus_hooks("mm_to_vol -5")
 
         assert "cannot be negative" in _output(shell).lower()
 

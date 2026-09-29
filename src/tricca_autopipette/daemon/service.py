@@ -59,7 +59,7 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     TipsArgs,
     TriggerArgs,
     UnloadLocationsArgs,
-    VolToStepsArgs,
+    VolToMmArgs,
     WaitArgs,
     args_from_namespace,
 )
@@ -1571,7 +1571,7 @@ class AutoPipetteService:
     # Fourth group migrated off shell.exec/cmd2-text dispatch. None of these
     # are in the homed-interlock's gated set. Unlike ConfigurationCommands'
     # excluded list_liquids/ls, every command here is migrated: even the
-    # read-only ones (webcam, vol_to_steps, steps_to_vol) do a real domain
+    # read-only ones (webcam, vol_to_mm, mm_to_vol) do a real domain
     # computation/lookup rather than rendering a `rich.table.Table`, so a
     # non-CLI client could plausibly want them too.
 
@@ -1658,53 +1658,53 @@ class AutoPipetteService:
         url = f"http://{self.hostname}/webcam/?action=stream"
         return CommandResult(ok=True, message=url, data={"url": url})
 
-    def vol_to_steps(self, args: VolToStepsArgs) -> CommandResult:
-        """Convert a volume in microliters to "steps".
+    def vol_to_mm(self, args: VolToMmArgs) -> CommandResult:
+        """Convert a volume in microliters to plunger travel in mm.
 
-        Uses the active liquid's calibration curve. The returned "steps"
-        value is actually millimetres of plunger travel, not motor steps —
-        see ``core/volume_converter.py``.
+        Uses the active liquid's calibration curve.
 
         Args:
             args: Volume in microliters.
 
         Returns:
-            Result with the step count in ``message``/``data``, or an
+            Result with the travel (``data["travel_mm"]``) and its round trip
+            back to μL, or an, or an
             ``ok=False`` result if the volume isn't positive.
         """
         if args.vol <= 0:
             return CommandResult(ok=False, message="Volume must be greater than zero.")
 
         converter = self._autopipette.volume_converter
-        steps = converter.vol_to_steps(args.vol)
+        travel_mm = converter.vol_to_mm(args.vol)
         return CommandResult(
             ok=True,
-            message=f"{args.vol} μL = {steps} steps",
-            data={"steps": steps, "round_trip_vol": converter.steps_to_vol(steps)},
+            message=f"{args.vol} μL = {travel_mm} mm",
+            data={
+                "travel_mm": travel_mm,
+                "round_trip_vol": converter.mm_to_vol(travel_mm),
+            },
         )
 
-    def steps_to_vol(self, steps: int) -> CommandResult:
-        """Convert "steps" to a volume in microliters.
+    def mm_to_vol(self, travel_mm: float) -> CommandResult:
+        """Convert plunger travel in mm to a volume in microliters.
 
-        Inverse of :meth:`vol_to_steps`, using the active liquid's
-        calibration curve. ``steps`` is actually millimetres of plunger
-        travel, not raw motor steps — see ``core/volume_converter.py``.
+        Inverse of :meth:`vol_to_mm`, using the active liquid's
+        calibration curve.
 
         Args:
-            steps: Number of "steps" (actually millimetres of plunger
-                travel, not motor steps — see ``core/volume_converter.py``).
+            travel_mm: Plunger travel in millimetres.
 
         Returns:
             Result with the volume in ``message``/``data``, or an
-            ``ok=False`` result if ``steps`` is negative.
+            ``ok=False`` result if ``travel_mm`` is negative.
         """
-        if steps < 0:
-            return CommandResult(ok=False, message="Steps cannot be negative.")
+        if travel_mm < 0:
+            return CommandResult(ok=False, message="Travel cannot be negative.")
 
         converter = self._autopipette.volume_converter
-        vol = converter.steps_to_vol(steps)
+        vol = converter.mm_to_vol(travel_mm)
         return CommandResult(
-            ok=True, message=f"{steps} steps = {vol:.2f} μL", data={"vol": vol}
+            ok=True, message=f"{travel_mm} mm = {vol:.2f} μL", data={"vol": vol}
         )
 
     # ==================== G-code file management ====================
@@ -3384,10 +3384,10 @@ _LINE_DISPATCH: dict[str, _LineCommand] = {
     "gcode_print": _LineCommand(
         TAPCmdParsers.parser_gcode_print, GcodePrintArgs, AutoPipetteService.gcode_print
     ),
-    "vol_to_steps": _LineCommand(
-        TAPCmdParsers.parser_vol_to_steps,
-        VolToStepsArgs,
-        AutoPipetteService.vol_to_steps,
+    "vol_to_mm": _LineCommand(
+        TAPCmdParsers.parser_vol_to_mm,
+        VolToMmArgs,
+        AutoPipetteService.vol_to_mm,
     ),
 }
 

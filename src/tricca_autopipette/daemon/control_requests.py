@@ -37,7 +37,7 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     TipsArgs,
     TriggerArgs,
     UnloadLocationsArgs,
-    VolToStepsArgs,
+    VolToMmArgs,
     WaitArgs,
 )
 from tricca_autopipette.moonraker.moonraker_requests import JsonRpcRequestBuilder
@@ -380,12 +380,10 @@ class ControlRequests(JsonRpcRequestBuilder):
         """
         return self.gen_request("util.webcam_url")
 
-    def vol_to_steps(self, args: VolToStepsArgs) -> dict[str, Any]:
+    def vol_to_mm(self, args: VolToMmArgs) -> dict[str, Any]:
         """Build a request to convert a volume to plunger travel (in mm).
 
-        Despite the ``vol_to_steps`` name, the value is millimetres passed
-        to Klipper's ``MANUAL_STEPPER MOVE=``, not motor steps — see
-        ``core/volume_converter.py``, issue #29.
+        Millimetres are what Klipper's ``MANUAL_STEPPER MOVE=`` takes.
 
         Args:
             args: Volume in microliters.
@@ -393,7 +391,7 @@ class ControlRequests(JsonRpcRequestBuilder):
         Returns:
             Request to perform the conversion.
         """
-        return self.gen_request("util.vol_to_steps", dataclasses.asdict(args))
+        return self.gen_request("util.vol_to_mm", dataclasses.asdict(args))
 
     def see_calibration(self, args: SeeCalibrationArgs) -> dict[str, Any]:
         """Build a request to show a liquid's calibration curve and fit.
@@ -406,20 +404,16 @@ class ControlRequests(JsonRpcRequestBuilder):
         """
         return self.gen_request("util.see_calibration", dataclasses.asdict(args))
 
-    def steps_to_vol(self, steps: int) -> dict[str, Any]:
+    def mm_to_vol(self, travel_mm: float) -> dict[str, Any]:
         """Build a request to convert plunger travel (mm) back to a volume.
 
-        Despite the name, ``steps`` is a millimetre value, not motor
-        steps — see ``core/volume_converter.py``.
-
         Args:
-            steps: Plunger travel value (actually millimetres — see
-                ``core/volume_converter.py``).
+            travel_mm: Plunger travel in millimetres.
 
         Returns:
             Request to perform the conversion.
         """
-        return self.gen_request("util.steps_to_vol", {"steps": steps})
+        return self.gen_request("util.mm_to_vol", {"travel_mm": travel_mm})
 
     def run_start(self, filename: str) -> dict[str, Any]:
         """Build a request to start a protocol run.

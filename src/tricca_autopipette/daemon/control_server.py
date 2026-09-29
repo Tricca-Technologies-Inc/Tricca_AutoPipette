@@ -41,7 +41,7 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     TipsArgs,
     TriggerArgs,
     UnloadLocationsArgs,
-    VolToStepsArgs,
+    VolToMmArgs,
     WaitArgs,
 )
 from tricca_autopipette.daemon.service import (
@@ -125,7 +125,7 @@ _RPC_DISPATCH: dict[str, _RpcCommand] = {
     "util.trigger": _RpcCommand(TriggerArgs, AutoPipetteService.trigger),
     "util.gcode_print": _RpcCommand(GcodePrintArgs, AutoPipetteService.gcode_print),
     "util.webcam_url": _RpcCommand(None, AutoPipetteService.webcam_url),
-    "util.vol_to_steps": _RpcCommand(VolToStepsArgs, AutoPipetteService.vol_to_steps),
+    "util.vol_to_mm": _RpcCommand(VolToMmArgs, AutoPipetteService.vol_to_mm),
     "ws.status": _RpcCommand(None, AutoPipetteService.ws_status),
     "ws.ping": _RpcCommand(None, AutoPipetteService.ping_moonraker),
     "ws.read": _RpcCommand(None, AutoPipetteService.read_message),
@@ -367,10 +367,10 @@ class ControlServer:
                     lambda: self.service.save_locations(params["filename"])
                 )
             )
-        if method == "util.steps_to_vol":
+        if method == "util.mm_to_vol":
             return dataclasses.asdict(
                 await self.service.dispatch(
-                    lambda: self.service.steps_to_vol(params["steps"])
+                    lambda: self.service.mm_to_vol(params["travel_mm"])
                 )
             )
         if method == "util.see_calibration":

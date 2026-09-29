@@ -433,11 +433,11 @@ class GcodePrintArgs:
 
 
 @dataclass
-class VolToStepsArgs:
-    """Arguments for the ``vol_to_steps`` command.
+class VolToMmArgs:
+    """Arguments for the ``vol_to_mm`` command.
 
     Attributes:
-        vol: Volume in microliters to convert to motor steps.
+        vol: Volume in microliters to convert to plunger travel (mm).
     """
 
     vol: float
@@ -939,10 +939,10 @@ class TAPCmdParsers:
     )
     parser_gcode_print.add_argument("msg", type=str, help="Message to display")
 
-    parser_vol_to_steps: Cmd2ArgumentParser = Cmd2ArgumentParser(
-        description="Convert a volume in μL to motor steps."
+    parser_vol_to_mm: Cmd2ArgumentParser = Cmd2ArgumentParser(
+        description="Convert a volume in μL to plunger travel in mm."
     )
-    parser_vol_to_steps.add_argument("vol", type=float, help="Volume in microliters")
+    parser_vol_to_mm.add_argument("vol", type=float, help="Volume in microliters")
 
     parser_trigger: Cmd2ArgumentParser = Cmd2ArgumentParser(
         description=(

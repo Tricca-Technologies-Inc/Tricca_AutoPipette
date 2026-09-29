@@ -77,7 +77,7 @@ class AutoPipette:
         syringe: Active syringe kinematics (merged with liquid overrides).
         active_liquid: Name of currently active liquid profile.
         volume_converter: Converts between volumes and plunger-travel
-            millimetres (the field is still named "steps" -- see issue #29).
+            millimetres.
         location_manager: Manages named locations and plates.
         state: Current pipette state (tip, liquid, homed).
         gcode_buffers: G-code command buffer.
@@ -313,7 +313,7 @@ class AutoPipette:
             self.gcode_buffers.add_header(line)
 
     def _init_volume_converter(self) -> None:
-        """Initialize volume-to-steps converter from active liquid calibration.
+        """Initialize volume-to-mm converter from active liquid calibration.
 
         Uses liquid-specific calibration if available, otherwise falls back
         to pipette default calibration.
@@ -783,16 +783,16 @@ class AutoPipette:
         if accel is None:
             accel = self.syringe.accel_move
 
-        steps = self.volume_converter.vol_to_steps(vol_ul)
-        steps *= direction
-        steps *= self.syringe.motor_orientation
+        travel_mm = self.volume_converter.vol_to_mm(vol_ul)
+        travel_mm *= direction
+        travel_mm *= self.syringe.motor_orientation
         self.logger.debug(
             "Syringe %s: %s μL (%s mm plunger travel)",
             "aspiration" if direction == FluidDisplacement.aspiration else "dispense",
             vol_ul,
-            steps,
+            travel_mm,
         )
-        self.move_pipette_stepper(steps, stepper, speed, accel)
+        self.move_pipette_stepper(travel_mm, stepper, speed, accel)
 
     def clear_syringe(
         self,
