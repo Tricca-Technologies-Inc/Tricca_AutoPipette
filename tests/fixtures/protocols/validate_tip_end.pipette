@@ -1,0 +1,7 @@
+# Validation fixture (#15): a deprecated --keep_tip, then a default
+# (waste) disposal on a deck with no waste container, which falls back to
+# returning the tip to its origin slot. Both log a WARNING -> two findings.
+del_loc waste
+next_tip
+pipette 10 plate_a plate_a --keep_tip
+pipette 10 plate_a plate_a

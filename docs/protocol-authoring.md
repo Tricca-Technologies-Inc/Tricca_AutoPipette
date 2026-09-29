@@ -187,9 +187,12 @@ lines already executed are not undone).
   deck has no `waste_container` configured, a transfer that tries to
   dispose its tip aborts mid-run with a tip still attached — see issue #15
   in the project backlog. Always configure a waste container.
-- **`trigger` is a stub.** It validates its channel/state and always
-  reports "not yet implemented" — auxiliary hardware (air, shake, lid)
-  can't be driven from a protocol yet (issue #16).
+- **`trigger` channels are per-machine.** `trigger air on` works only if
+  the active system config's `trigger_pins` maps `air` to a Klipper
+  `[output_pin]` (see `config/README.md`); an unconfigured channel fails
+  the line and aborts the run. It waits for queued moves (`M400`) before
+  flipping the pin, and nothing turns a trigger off for you at the end of
+  a protocol — write the `off` line yourself.
 - **There's no blowout or touch-off support.** Neither exists in this
   codebase; don't write a protocol assuming either is available.
 - **A recognized command that fails aborts the rest of the file** — an

@@ -42,7 +42,7 @@ Typical usage:
     >>> manager = TipBoxManager()
     >>> manager.register("tipbox_a", box_a)
     >>> manager.register("tipbox_b", box_b)
-    >>> name, box, coor = manager.next_tip()
+    >>> name, box, coor, index = manager.next_tip()
     >>> manager.remaining
     191
 """
@@ -58,6 +58,7 @@ from tricca_autopipette.core.pipette_exceptions import (
     NoTipboxError,
     OutOfTipsError,
 )
+from tricca_autopipette.core.pipette_models import TipSlotState
 from tricca_autopipette.core.plates import PlateExhaustedError, TipBox
 from tricca_autopipette.core.traversal import (
     TraversalRegistry,
@@ -70,7 +71,9 @@ logger = logging.getLogger(__name__)
 #: Snapshot keys, also the shape stored in Moonraker's database.
 KEY_NUM_ROW = "num_row"
 KEY_NUM_COL = "num_col"
-KEY_PRESENT = "present"
+KEY_SLOTS = "slots"
+#: Pre-#15 records stored a ``list[bool]`` here; `restore` still reads it.
+KEY_LEGACY_PRESENT = "present"
 
 
 class TipBoxManager:
@@ -187,7 +190,7 @@ class TipBoxManager:
         """
         return sum(box.capacity for box in self.boxes.values())
 
-    def next_tip(self, name: str | None = None) -> tuple[str, TipBox, Coordinate]:
+    def next_tip(self, name: str | None = None) -> tuple[str, TipBox, Coordinate, int]:
         """Consume the next tip from the first box that still has one.
 
         Boxes are tried in registration order, so a box is fully drained before
@@ -199,9 +202,11 @@ class TipBoxManager:
                 registered box in order.
 
         Returns:
-            Tuple of the supplying box's name, the box itself, and the
-            coordinate of the tip. The box is returned because the caller needs
-            *that* box's dip distance -- boxes may sit at different heights.
+            Tuple of the supplying box's name, the box itself, the
+            coordinate of the tip, and its flat well index. The box is
+            returned because the caller needs *that* box's dip distance --
+            boxes may sit at different heights -- and the name/index pair is
+            the tip's origin, where `return_tip` can later put it back.
 
         Raises:
             NoTipboxError: If no tipbox is registered at all.
@@ -210,9 +215,9 @@ class TipBoxManager:
             OutOfTipsError: If every tried box is exhausted.
 
         Example:
-            ``name, box, coor = manager.next_tip()`` returns the supplying
-            box's name, the box itself (for its dip distance), and the
-            tip's coordinate.
+            ``name, box, coor, index = manager.next_tip()`` returns the
+            supplying box's name, the box itself (for its dip distance),
+            the tip's coordinate, and its flat well index.
         """
         if not self.boxes:
             raise NoTipboxError()
@@ -222,19 +227,36 @@ class TipBoxManager:
             if box is None:
                 raise NotALocationError(name)
             try:
-                _index, coor = box.take_tip()
+                index, coor = box.take_tip()
             except PlateExhaustedError:
                 raise OutOfTipsError([name]) from None
-            return name, box, coor
+            return name, box, coor, index
 
         for box_name, box in self.boxes.items():
             try:
-                _index, coor = box.take_tip()
+                index, coor = box.take_tip()
             except PlateExhaustedError:
                 continue
-            return box_name, box, coor
+            return box_name, box, coor, index
 
         raise OutOfTipsError(list(self.boxes))
+
+    def return_tip(self, name: str, index: int) -> TipBox:
+        """Record that a used tip went back into its origin slot.
+
+        Args:
+            name: Location name of the box the tip came from.
+            index: Flat well index it came from.
+
+        Returns:
+            The box, so the caller can take its coordinate and dip distance.
+
+        Raises:
+            NotALocationError: If no tipbox is registered under that name.
+        """  # ruff: ignore[docstring-extraneous-exception]
+        box = self._require(name)
+        box.mark_used(index)
+        return box
 
     def peek_tip(self) -> tuple[str, int] | None:
         """Report which box and position would supply the next tip.
@@ -288,8 +310,10 @@ class TipBoxManager:
 
         Args:
             name: Location name of the box.
-            indices: Flat well indices that no longer hold a tip. Any position
-                not listed is treated as holding a tip.
+            indices: Flat well indices that no longer hold a usable tip. Any
+                position not listed is treated as holding one. A listed
+                position already `TipSlotState.USED` stays used; any other
+                listed position becomes empty.
 
         Raises:
             NotALocationError: If no tipbox is registered under that name.
@@ -309,7 +333,17 @@ class TipBoxManager:
                 f"{name!r} ({total} wells)"
             )
 
-        box.set_presence([index not in indices for index in range(total)])
+        # Binary on purpose: an operator asserts usable-or-not, and can't tell
+        # a returned tip from an empty slot any better than we can -- so a
+        # slot we already know is USED stays USED when listed again.
+        box.set_slots([
+            TipSlotState.AVAILABLE
+            if index not in indices
+            else (
+                TipSlotState.USED if slot is TipSlotState.USED else TipSlotState.EMPTY
+            )
+            for index, slot in enumerate(box.slots)
+        ])
 
     # ==================== Persistence ====================
 
@@ -318,8 +352,8 @@ class TipBoxManager:
 
         Returns:
             Mapping of box name to a record carrying the plate dimensions
-            alongside the presence map. The dimensions are what let `restore`
-            detect that a box has been reconfigured.
+            alongside the slot map (`TipSlotState` values). The dimensions
+            are what let `restore` detect that a box has been reconfigured.
 
         Example:
             ``manager.snapshot()["tipbox_a"]["num_row"]`` gives that box's
@@ -329,7 +363,7 @@ class TipBoxManager:
             name: {
                 KEY_NUM_ROW: box.num_row,
                 KEY_NUM_COL: box.num_col,
-                KEY_PRESENT: list(box.present),
+                KEY_SLOTS: [slot.value for slot in box.slots],
             }
             for name, box in self.boxes.items()
         }
@@ -364,19 +398,19 @@ class TipBoxManager:
             if record is None:
                 continue
 
-            present = self._validate_record(name, box, record)
-            if present is None:
+            slots = self._validate_record(name, box, record)
+            if slots is None:
                 skipped.append(name)
                 box.reset_tips()  # actually "left full", as documented/logged
                 continue
 
-            box.set_presence(present)
+            box.set_slots(slots)
 
         return skipped
 
     def _validate_record(
         self, name: str, box: TipBox, record: object
-    ) -> list[bool] | None:
+    ) -> list[TipSlotState] | None:
         """Check one persisted record against the live box.
 
         Args:
@@ -386,7 +420,10 @@ class TipBoxManager:
                 from an external database and may predate a config change.
 
         Returns:
-            The presence map to apply, or None if the record is unusable.
+            The slot map to apply, or None if the record is unusable. A
+            pre-#15 ``present`` bool list migrates True to available and
+            False to empty -- the old scheme never returned tips, so a
+            missing tip was always one that went to waste.
         """
         if not isinstance(record, dict):
             logger.warning("Persisted tip state for %r is malformed; ignoring", name)
@@ -407,26 +444,39 @@ class TipBoxManager:
             )
             return None
 
-        present: object = typed.get(KEY_PRESENT)
-        if not isinstance(present, list):
+        raw: object = typed.get(KEY_SLOTS, typed.get(KEY_LEGACY_PRESENT))
+        if not isinstance(raw, list):
             logger.warning(
                 "Persisted tip map for %r is not a list; treating the box as full",
                 name,
             )
             return None
 
-        flags = cast("list[Any]", present)
-        if len(flags) != len(box.wells):
+        entries = cast("list[Any]", raw)
+        if len(entries) != len(box.wells):
             logger.warning(
                 "Persisted tip map for %r has %d entries but the box has %d "
                 "wells; treating the box as full",
                 name,
-                len(flags),
+                len(entries),
                 len(box.wells),
             )
             return None
 
-        return [bool(flag) for flag in flags]
+        if KEY_SLOTS not in typed:
+            return [
+                TipSlotState.AVAILABLE if entry else TipSlotState.EMPTY
+                for entry in entries
+            ]
+        try:
+            return [TipSlotState(entry) for entry in entries]
+        except ValueError:
+            logger.warning(
+                "Persisted tip map for %r holds an unknown slot state; "
+                "treating the box as full",
+                name,
+            )
+            return None
 
     # ==================== Reporting ====================
 
@@ -461,6 +511,7 @@ class TipBoxManager:
             "order": TraversalRegistry.name_for(box.order)
             or box.order.model_dump(mode="json"),
             "present": list(box.present),
+            "slots": [slot.value for slot in box.slots],
             "eligible": sorted(box.sequence),
             "consumed_ranges": compress_to_ranges(box.consumed_indices(), box.num_col),
             "next_index": next_index,

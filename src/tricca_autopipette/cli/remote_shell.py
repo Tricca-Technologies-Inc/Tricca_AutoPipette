@@ -43,6 +43,7 @@ from tricca_autopipette.cli.report_tables import (
 )
 from tricca_autopipette.commands.tap_cmd_parsers import (
     AspirateArgs,
+    ChangeTipArgs,
     CoorArgs,
     DelLocArgs,
     DispenseArgs,
@@ -237,9 +238,12 @@ class RemoteTapShell(Cmd):
         """Move to the waste container and eject the current tip."""
         self._call_and_print(self.requests.dispose_tip())
 
-    def do_change_tip(self, _: Statement) -> None:
-        """Dispose the current tip and pick up a fresh one."""
-        self._call_and_print(self.requests.change_tip())
+    @with_argparser(TAPCmdParsers.parser_change_tip)  # type: ignore[arg-type]
+    def do_change_tip(self, args: ChangeTipArgs) -> None:
+        """Put away the current tip and pick up a fresh one."""
+        self._call_and_print(
+            self.requests.change_tip(args_from_namespace(ChangeTipArgs, args))
+        )
 
     # ==================== configuration & locations ====================
 
@@ -305,6 +309,27 @@ class RemoteTapShell(Cmd):
             statement.arg_list[0] if statement.arg_list else "custom_locations.json"
         )
         self._call_and_print(self.requests.save_locations(filename))
+
+    def do_set_config(self, statement: Statement) -> None:
+        """Set one config value, saved locally: set_config <cat> <file> <key> <value>.
+
+        ``<key>`` is a dotted path (``syringe.max_volume_ul``, ``plates.0.x``).
+        ``<value>`` is parsed as JSON (``1.2``, ``true``, ``null``,
+        ``[1, 2]``); anything that isn't JSON is taken as a plain string.
+        """
+        args = statement.arg_list
+        if len(args) < 4:
+            self.perror("Usage: set_config <category> <filename> <key_path> <value>")
+            return
+        category, filename, key_path = args[:3]
+        text = " ".join(args[3:])
+        try:
+            value: object = json.loads(text)
+        except json.JSONDecodeError:
+            value = text
+        self._call_and_print(
+            self.requests.set_config_value(category, filename, key_path, value)
+        )
 
     @with_argparser(TAPCmdParsers.parser_load_locations)  # type: ignore[arg-type]
     def do_load_locations(self, args: LoadLocationsArgs) -> None:
@@ -452,10 +477,9 @@ class RemoteTapShell(Cmd):
 
     @with_argparser(TAPCmdParsers.parser_trigger)  # type: ignore[arg-type]
     def do_trigger(self, args: TriggerArgs) -> None:
-        """Control auxiliary triggers (air, shake, aux).
+        """Switch an auxiliary trigger (air, shake, ...) on or off.
 
-        Stub: validates the channel/state and always reports "not yet
-        implemented" -- see issue #16.
+        Channels are the keys of the system config's ``trigger_pins``.
         """
         self._call_and_print(
             self.requests.trigger(args_from_namespace(TriggerArgs, args))

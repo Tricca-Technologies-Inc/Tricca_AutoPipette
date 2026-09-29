@@ -19,6 +19,7 @@ from tricca_autopipette.core.pipette_exceptions import (
     NoTipboxError,
     OutOfTipsError,
 )
+from tricca_autopipette.core.pipette_models import TipSlotState
 from tricca_autopipette.core.plates import PlateParams, TipBox
 from tricca_autopipette.core.tipbox_manager import TipBoxManager
 from tricca_autopipette.core.well import StrategyType, Well
@@ -113,7 +114,7 @@ class TestDrawing:
         assert manager.remaining == 6
 
     def test_draws_from_the_first_box_first(self, manager: TipBoxManager) -> None:
-        name, _box_out, _coor = manager.next_tip()
+        name, _box_out, _coor, _index = manager.next_tip()
         assert name == "tips_a"
 
     def test_exhausts_a_box_before_moving_on(self, manager: TipBoxManager) -> None:
@@ -124,7 +125,7 @@ class TestDrawing:
         """Boxes may sit at different heights, so dip depth is per-box."""
         for _ in range(3):
             manager.next_tip()
-        name, box, _coor = manager.next_tip()
+        name, box, _coor, _index = manager.next_tip()
         assert name == "tips_b"
         assert box is manager.boxes["tips_b"]
 
@@ -137,7 +138,7 @@ class TestDrawing:
         mgr.register("b", second)
 
         mgr.next_tip()
-        _name, _box_out, coor = mgr.next_tip()
+        _name, _box_out, coor, _index = mgr.next_tip()
         assert coor == Coordinate(x=50.0, y=60.0, z=70.0)
 
     def test_no_boxes_raises_no_tipbox(self) -> None:
@@ -187,7 +188,7 @@ class TestDrawing:
         self, manager: TipBoxManager
     ) -> None:
         """A caller can request a specific box instead of registration order."""
-        name, box, _coor = manager.next_tip(name="tips_b")
+        name, box, _coor, _index = manager.next_tip(name="tips_b")
         assert name == "tips_b"
         assert box is manager.boxes["tips_b"]
         assert manager.boxes["tips_a"].remaining == 3
@@ -381,3 +382,73 @@ class TestDescribe:
     def test_repr_summarizes_pool(self, manager: TipBoxManager) -> None:
         manager.next_tip()
         assert repr(manager) == "TipBoxManager(boxes=2, remaining=5/6)"
+
+
+# ==================== Returned tips (#15) ====================
+
+
+class TestReturnedTips:
+    def test_returned_tip_slot_is_used_and_never_reissued(
+        self, manager: TipBoxManager
+    ) -> None:
+        name, _box_obj, _coor, index = manager.next_tip()
+
+        manager.return_tip(name, index)
+
+        box = manager.boxes[name]
+        assert box.slots[index] is TipSlotState.USED
+        assert box.remaining == 2
+        # Draining the rest of both boxes never hands the returned slot back.
+        drawn = {manager.next_tip()[::3] for _ in range(manager.remaining)}
+        assert (name, index) not in drawn
+
+    def test_set_consumed_keeps_a_used_slot_used_until_declared_available(
+        self, manager: TipBoxManager
+    ) -> None:
+        """set_tips stays binary: listing a USED slot as consumed keeps it USED."""
+        name, _box_obj, _coor, index = manager.next_tip()
+        manager.return_tip(name, index)
+        box = manager.boxes[name]
+
+        manager.set_consumed(name, {index, 1})
+        assert box.slots[:2] == [TipSlotState.USED, TipSlotState.EMPTY]
+
+        manager.set_consumed(name, set())
+        assert box.slots[index] is TipSlotState.AVAILABLE
+
+    def test_snapshot_round_trips_a_used_slot(self, manager: TipBoxManager) -> None:
+        name, _box_obj, _coor, index = manager.next_tip()
+        manager.return_tip(name, index)
+        manager.next_tip()
+        saved = manager.snapshot()
+
+        rebuilt = TipBoxManager()
+        rebuilt.register(name, _box())
+        assert rebuilt.restore(saved) == []
+        assert rebuilt.boxes[name].slots == [
+            TipSlotState.USED,
+            TipSlotState.EMPTY,
+            TipSlotState.AVAILABLE,
+        ]
+
+    def test_restore_migrates_a_legacy_bool_presence_map(self) -> None:
+        """Records persisted before #15 stored ``present: list[bool]``."""
+        mgr = TipBoxManager()
+        mgr.register("tips_a", _box())
+
+        legacy = {"num_row": 1, "num_col": 3, "present": [False, True, True]}
+        assert mgr.restore({"tips_a": legacy}) == []
+        assert mgr.boxes["tips_a"].slots == [
+            TipSlotState.EMPTY,
+            TipSlotState.AVAILABLE,
+            TipSlotState.AVAILABLE,
+        ]
+
+    def test_restore_rejects_an_unknown_slot_state(self) -> None:
+        mgr = TipBoxManager()
+        mgr.register("tips_a", _box())
+        mgr.boxes["tips_a"].take_tip()
+
+        record = {"num_row": 1, "num_col": 3, "slots": ["available", "bogus", "used"]}
+        assert mgr.restore({"tips_a": record}) == ["tips_a"]
+        assert mgr.boxes["tips_a"].remaining == 3

@@ -7,12 +7,14 @@ and plates used in pipetting operations using JSON configuration.
 
 from __future__ import annotations
 
+import copy
 import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, cast
 
+from tricca_autopipette.core.config_writer import write_json_atomic
 from tricca_autopipette.core.coordinate import Coordinate
 from tricca_autopipette.core.pipette_constants import (
     DefaultFilenames,
@@ -120,6 +122,13 @@ class LocationManager:
         # name -> originating file, so a duplicate-name warning can name both
         # sides and `ls` can show where a location came from.
         self._sources: dict[str, str] = {}
+        # name -> (object it was loaded as, its raw file entry), so
+        # `save_to_json` writes a loaded location back exactly as it was
+        # written (template references, unknown keys and all) instead of
+        # reconstructing it from the parsed object. Keyed on object identity:
+        # once a name is re-set interactively the stored entry no longer
+        # matches and is ignored, so no other method has to maintain this.
+        self._raw_entries: dict[str, tuple[Coordinate | Plate, dict[str, Any]]] = {}
 
     def clear(self) -> None:
         """Clear all locations, tipboxes, and waste container.
@@ -719,6 +728,11 @@ class LocationManager:
             if consumed is not None:
                 self.tipbox_manager.set_consumed(name, consumed)
 
+        for key in ("coordinates", "plates"):
+            for entry in cast("list[dict[str, Any]]", locations_data.get(key, [])):
+                name = entry["name"]
+                self._raw_entries[name] = (self.locations[name], copy.deepcopy(entry))
+
         logger.info(
             f"Applied {len(coordinates)} coordinate(s) and {len(plates)} "
             f"plate(s) from {source}; deck now holds {len(self.locations)} "
@@ -990,18 +1004,25 @@ class LocationManager:
             raise ValueError(f"Invalid 'tips.consumed' for plate {name!r}: {e}") from e
 
     def save_to_json(self, filename: str = "custom_locations.json") -> None:
-        """Save all locations to a JSON configuration file.
+        """Save the whole deck to a locations JSON file, atomically.
 
         Saves to `self.locations_dir / filename` if an explicit directory was
         injected, else to `DefaultPaths.DIR_LOCAL_LOCATIONS` -- a save never
         writes into the shared repo at runtime.
 
+        A location loaded from a file is written back as its raw file entry
+        (``plate_file`` references, unknown keys and all), so loading a file
+        and saving it reproduces it. Only a location created or replaced
+        interactively (``coor``/``plate``) is serialized from its object.
+        Either way a tipbox's ``tips`` block reflects its *current* consumed
+        state. The write goes through `config_writer.write_json_atomic`.
+
         Args:
             filename: Name of output JSON file. Defaults to
                      'custom_locations.json'.
 
-        Note:
-            Creates the locations directory if it doesn't exist.
+        Raises:
+            ValueError: If `filename` is not a bare filename.
 
         Example:
             >>> import tempfile
@@ -1012,95 +1033,90 @@ class LocationManager:
             ...     (Path(tmp) / "backup_locations.json").exists()
             True
         """
+        if Path(filename).name != filename:
+            raise ValueError(f"Expected a bare filename, got {filename!r}")
         locations_dir = self.locations_dir or DefaultPaths.DIR_LOCAL_LOCATIONS
-        locations_dir.mkdir(parents=True, exist_ok=True)
 
-        locations_file = locations_dir / filename
+        data: dict[str, list[dict[str, Any]]] = {}
+        for name, location in self.locations.items():
+            raw = self._raw_entries.get(name)
+            entry: dict[str, Any]
+            if raw is not None and raw[0] is location:
+                entry = copy.deepcopy(raw[1])
+            elif isinstance(location, Coordinate):
+                entry = {"name": name, "x": location.x, "y": location.y}
+                entry["z"] = location.z
+            else:
+                entry = self._serialize_plate(name, location)
+            if isinstance(location, TipBox):
+                self._overlay_tip_state(location, entry)
+            key = "coordinates" if isinstance(location, Coordinate) else "plates"
+            data.setdefault(key, []).append(entry)
 
-        # Build JSON structure
-        data: dict[str, list[dict[str, Any]]] = {"coordinates": [], "plates": []}
-
-        # Save coordinates
-        for name in self.get_coordinate_names():
-            location = self.locations[name]
-            if isinstance(location, Coordinate):
-                data["coordinates"].append({
-                    "name": name,
-                    "x": location.x,
-                    "y": location.y,
-                    "z": location.z,
-                })
-
-        # Save plates
-        for name in self.get_plate_names():
-            location = self.locations[name]
-            if isinstance(location, Plate):
-                plate_data: dict[str, Any] = {
-                    "name": name,
-                    "type": PlateFactory.type_name_for(location),
-                    "x": location.wells[0].coor.x if location.wells else 0,
-                    "y": location.wells[0].coor.y if location.wells else 0,
-                    "z": location.wells[0].coor.z if location.wells else 0,
-                    "num_row": location.num_row,
-                    "num_col": location.num_col,
-                }
-
-                # Add plate-specific attributes if they exist
-                if hasattr(location, "spacing_row"):
-                    plate_data["spacing_row"] = location.spacing_row
-                if hasattr(location, "spacing_col"):
-                    plate_data["spacing_col"] = location.spacing_col
-
-                # Add well template info
-                if location.wells:
-                    first_well = location.wells[0]
-                    plate_data["dip_top"] = first_well.dip_top
-                    if first_well.dip_btm is not None:
-                        plate_data["dip_btm"] = first_well.dip_btm
-                    plate_data["dip_func"] = first_well.strategy_type.value
-                    if first_well.well_diameter is not None:
-                        plate_data["well_diameter"] = first_well.well_diameter
-
-                self._save_traversal_fields(location, plate_data)
-                data["plates"].append(plate_data)
-
-        # Write to file
-        with locations_file.open("w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
-
+        write_json_atomic(locations_dir / filename, data)
         logger.info(f"Saved {len(self.locations)} location(s) to {filename}")
 
     @staticmethod
-    def _save_traversal_fields(plate: Plate, plate_data: dict[str, Any]) -> None:
-        """Add traversal order, mask, exhaustion policy, and tip state.
+    def _serialize_plate(name: str, plate: Plate) -> dict[str, Any]:
+        """Serialize an interactively-created plate (no raw entry to reuse).
 
-        Omits anything left at its default, so a hand-written file that used no
-        traversal options round-trips unchanged rather than growing noise.
+        Omits traversal/mask/exhaust fields left at their defaults, so the
+        output stays minimal.
 
         Args:
-            plate: The plate being serialized.
-            plate_data: The entry being built, modified in place.
+            name: The plate's location name.
+            plate: The plate to serialize.
+
+        Returns:
+            A locations-file plate entry.
         """
+        first = plate.wells[0] if plate.wells else None
+        entry: dict[str, Any] = {
+            "name": name,
+            "type": PlateFactory.type_name_for(plate),
+            "x": first.coor.x if first else 0,
+            "y": first.coor.y if first else 0,
+            "z": first.coor.z if first else 0,
+            "num_row": plate.num_row,
+            "num_col": plate.num_col,
+            "spacing_row": plate.spacing_row,
+            "spacing_col": plate.spacing_col,
+        }
+        if first is not None:
+            entry["dip_top"] = first.dip_top
+            if first.dip_btm is not None:
+                entry["dip_btm"] = first.dip_btm
+            entry["dip_func"] = first.strategy_type.value
+            if first.well_diameter is not None:
+                entry["well_diameter"] = first.well_diameter
+
         # A plate written with a preset name saves back as that name; an
         # unnamed combination falls back to the explicit descriptor.
         preset = TraversalRegistry.name_for(plate.order)
-        if preset is not None:
-            if preset != "row_major":
-                plate_data["order"] = preset
-        else:
-            plate_data["order"] = plate.order.model_dump(mode="json")
-
+        if preset is None:
+            entry["order"] = plate.order.model_dump(mode="json")
+        elif preset != "row_major":
+            entry["order"] = preset
         if plate.mask is not None and not plate.mask.is_noop():
-            plate_data["mask"] = plate.mask.model_dump(mode="json", exclude_none=True)
+            entry["mask"] = plate.mask.model_dump(mode="json", exclude_none=True)
+        # TipBox forces "error" itself, so writing it back would only add noise.
+        if not isinstance(plate, TipBox) and plate.on_exhaust != "wrap":
+            entry["on_exhaust"] = plate.on_exhaust
+        return entry
 
-        if isinstance(plate, TipBox):
-            # Forced to "error" by TipBox itself, so writing it back would only
-            # add noise -- but the consumed map is real state worth preserving.
-            consumed = compress_to_ranges(plate.consumed_indices(), plate.num_col)
-            if consumed:
-                plate_data["tips"] = {"consumed": consumed}
-        elif plate.on_exhaust != "wrap":
-            plate_data["on_exhaust"] = plate.on_exhaust
+    @staticmethod
+    def _overlay_tip_state(box: TipBox, entry: dict[str, Any]) -> None:
+        """Write a tipbox's current consumed map into its entry's ``tips`` block.
+
+        Args:
+            box: The tipbox.
+            entry: Its locations-file entry, modified in place.
+        """
+        consumed = compress_to_ranges(box.consumed_indices(), box.num_col)
+        if consumed:
+            entry["tips"] = {"consumed": consumed}
+        else:
+            entry.pop("tips", None)
 
     def _load_plate_definition(self, plate_file: Path) -> dict[str, Any]:
         """Load plate definition from JSON file.
