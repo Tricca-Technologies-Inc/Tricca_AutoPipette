@@ -180,7 +180,16 @@ turns a trigger off at the end of a protocol.
 ### `pipettes/*.json`
 Pipette model definitions including:
 - Syringe kinematics (speeds, accelerations, calibration as
-  `calibration_volumes` µL / `calibration_mm` plunger travel)
+  `calibration_volumes` µL / `calibration_mm` plunger travel). Measure this
+  machine's own curve with `tap`'s `calibrate` or the kiosk's Calibrate tab
+  (gravimetric, against water, issue #26): it dispenses a series of target
+  volumes into a vessel on your balance, you enter each mass, and `commit`
+  writes the measured µL / commanded mm pairs into the **local** copy of the
+  active pipette file (or the system file's `pipette` block, if that is
+  where the pipette is defined). The shared repo file is never changed, so
+  other machines keep the uncalibrated default. The curve is keyed by the
+  pipette **filename**, not the physical syringe: recalibrate after
+  swapping a syringe.
 - `syringe.max_travel_mm` (**required**): the syringe's manufacturer-stated
   plunger travel in mm. Homing drives up to twice this toward the endstop.
   A pipette file without it fails to load, naming the field.

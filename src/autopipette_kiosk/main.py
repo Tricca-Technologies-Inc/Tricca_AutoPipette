@@ -30,6 +30,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from tricca_autopipette.commands.tap_cmd_parsers import (
+    CalibrateStartArgs,
     MoveArgs,
     MoveLocArgs,
     MoveRelArgs,
@@ -153,6 +154,20 @@ class LiquidNameRequest(BaseModel):
     """Request body for `POST /settings/unload_liquid`."""
 
     name: str
+
+
+class CalibrateStartRequest(BaseModel):
+    """Request body for `POST /calibrate/start` (mirrors `CalibrateStartArgs`)."""
+
+    source: str
+    dest: str
+    volumes_ul: list[float] | None = None
+
+
+class CalibrateRecordRequest(BaseModel):
+    """Request body for `POST /calibrate/record`."""
+
+    mass_g: float
 
 
 class MoveRequest(BaseModel):
@@ -611,14 +626,19 @@ async def _dispatch_control_request(request: dict[str, Any]) -> CommandResultRes
         The forwarded `CommandResult`, as a `CommandResultResponse`.
 
     Raises:
-        HTTPException: 503 if the control daemon isn't connected, or 500 if
-            dispatch itself fails.
-    """
+        HTTPException: 503 if the control daemon isn't connected; for a
+            raised daemon exception, `_translate_move_error`'s status (409
+            not homed, 404 unknown location, 400 bad value); 500 otherwise.
+    """  # ruff: ignore[docstring-missing-exception]
     if _control_client is None:
         raise HTTPException(status_code=503, detail="Control daemon not connected")
 
     try:
         response = await asyncio.to_thread(_control_client.send_jsonrpc, request)
+    except JsonRpcError as exc:
+        # A raised daemon exception, e.g. the calibration wizard's
+        # NotHomedError -> 409, the same mapping the Move routes use.
+        raise _translate_move_error(exc) from exc
     except RuntimeError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
@@ -769,6 +789,86 @@ async def unload_liquid(req: LiquidNameRequest) -> CommandResultResponse:
         `CommandResultResponse`, or ``ok=False`` for the active liquid.
     """
     return await _dispatch_control_request(_control_requests.unload_liquid(req.name))
+
+
+@app.get("/calibrate", response_model=CommandResultResponse)
+async def calibrate_status() -> CommandResultResponse:
+    """Report the calibration session in progress (issue #26).
+
+    Lets the wizard resume after a reload: the session lives in the daemon.
+
+    Returns:
+        `CommandResultResponse` with the session (or ``{"active": false}``).
+    """
+    return await _dispatch_control_request(_control_requests.calibrate_status())
+
+
+@app.post("/calibrate/start", response_model=CommandResultResponse)
+async def calibrate_start(req: CalibrateStartRequest) -> CommandResultResponse:
+    """Begin a calibration session via `calibrate.start`.
+
+    Returns:
+        `CommandResultResponse` with the session, or ``ok=False`` naming why.
+    """
+    return await _dispatch_control_request(
+        _control_requests.calibrate_start(
+            CalibrateStartArgs(
+                source=req.source, dest=req.dest, volumes_ul=req.volumes_ul
+            )
+        )
+    )
+
+
+@app.post("/calibrate/dispense", response_model=CommandResultResponse)
+async def calibrate_dispense() -> CommandResultResponse:
+    """Dispense the session's next target volume via `calibrate.dispense`.
+
+    Returns:
+        `CommandResultResponse` with the recorded commanded travel.
+    """
+    return await _dispatch_control_request(_control_requests.calibrate_dispense())
+
+
+@app.post("/calibrate/record", response_model=CommandResultResponse)
+async def calibrate_record(req: CalibrateRecordRequest) -> CommandResultResponse:
+    """Record the last dispense's weighed mass via `calibrate.record`.
+
+    Returns:
+        `CommandResultResponse` with the measured volume.
+    """
+    return await _dispatch_control_request(
+        _control_requests.calibrate_record(req.mass_g)
+    )
+
+
+@app.post("/calibrate/preview", response_model=CommandResultResponse)
+async def calibrate_preview() -> CommandResultResponse:
+    """Fit the measured points via `calibrate.preview`.
+
+    Returns:
+        `CommandResultResponse` with ``data.fit`` and ``data.current``.
+    """
+    return await _dispatch_control_request(_control_requests.calibrate_preview())
+
+
+@app.post("/calibrate/commit", response_model=CommandResultResponse)
+async def calibrate_commit() -> CommandResultResponse:
+    """Save the fitted curve via `calibrate.commit`.
+
+    Returns:
+        `CommandResultResponse` naming the written file, or ``ok=False``.
+    """
+    return await _dispatch_control_request(_control_requests.calibrate_commit())
+
+
+@app.post("/calibrate/abort", response_model=CommandResultResponse)
+async def calibrate_abort() -> CommandResultResponse:
+    """Discard the calibration session via `calibrate.abort`.
+
+    Returns:
+        `CommandResultResponse`.
+    """
+    return await _dispatch_control_request(_control_requests.calibrate_abort())
 
 
 @app.get("/status", response_model=RunStatus)

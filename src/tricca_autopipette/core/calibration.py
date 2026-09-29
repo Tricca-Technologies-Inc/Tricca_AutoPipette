@@ -52,8 +52,8 @@ def mass_to_volume_ul(mass_g: float, density_g_ml: float) -> float:
         Volume in μL (``mass_g / density_g_ml`` mL, times 1000).
 
     Example:
-        >>> mass_to_volume_ul(0.0493, 0.998)
-        49.398797595190384
+        >>> round(mass_to_volume_ul(0.0493, 0.998), 6)
+        49.398798
     """
     return mass_g / density_g_ml * 1000.0
 
