@@ -772,7 +772,18 @@ class AutoPipette:
             stepper: Name of stepper, or None for configured stepper.
             speed: Plunger movement speed in mm/s, or None for default.
             accel: Plunger movement acceleration, or None for default.
+
+        Raises:
+            ValueError: If the calibration maps ``vol_ul`` to negative plunger
+                travel, which would emit a MOVE in the opposite direction.
         """
+        travel_mm = self.volume_converter.vol_to_mm(vol_ul)
+        if travel_mm < 0:
+            raise ValueError(
+                f"{vol_ul} μL maps to negative plunger travel ({travel_mm} mm) "
+                "on the active calibration curve; refusing to move the "
+                "syringe the wrong way."
+            )
         if stepper is None:
             stepper = self.syringe.stepper_name
         if speed is None:
@@ -783,7 +794,6 @@ class AutoPipette:
         if accel is None:
             accel = self.syringe.accel_move
 
-        travel_mm = self.volume_converter.vol_to_mm(vol_ul)
         travel_mm *= direction
         travel_mm *= self.syringe.motor_orientation
         self.logger.debug(

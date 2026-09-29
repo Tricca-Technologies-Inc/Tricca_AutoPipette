@@ -20,8 +20,9 @@ from tricca_autopipette.core.pipette_exceptions import (
     TipAlreadyOnError,
     VolumeCapacityError,
 )
-from tricca_autopipette.core.pipette_models import TipState
+from tricca_autopipette.core.pipette_models import FluidDisplacement, TipState
 from tricca_autopipette.core.plates import PlateParams
+from tricca_autopipette.core.volume_converter import VolumeConverter
 from tricca_autopipette.core.well import StrategyType, Well
 
 
@@ -114,6 +115,27 @@ class TestSyringeHomingTravel:
             "SPEED=200.0 ACCEL=800.0 STOP_ON_ENDSTOP=home\n",
             "MANUAL_STEPPER STEPPER=pipette_stepper SET_POSITION=0\n",
         ]
+
+
+class TestSyringeMoveSign:
+    """Deferred from #30: a syringe MOVE's sign must match its direction.
+
+    A calibration fit with a negative intercept maps a small volume to
+    negative travel, which would silently flip an aspirate into a dispense
+    (and vice versa). That must be refused before any G-code is emitted.
+    """
+
+    def test_negative_travel_for_a_positive_volume_is_refused(
+        self, autopipette: AutoPipette
+    ) -> None:
+        # 10 uL -> -5 mm, 100 uL -> 85 mm: anything under ~15.6 uL is negative.
+        autopipette.volume_converter = VolumeConverter([10.0, 100.0], [-5.0, 85.0])
+        autopipette.get_gcode()
+
+        with pytest.raises(ValueError, match="negative plunger travel"):
+            autopipette.operate_syringe(FluidDisplacement.aspiration, 1.0)
+
+        assert autopipette.get_gcode() == []
 
 
 class TestGCodeBuffer:
