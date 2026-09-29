@@ -191,9 +191,13 @@
     line.className = 'settings-field-line';
     line.appendChild(input);
 
-    if (highRisk) {
+    // Any bounded field (high-risk, or a liquid's syringe-speed override,
+    // issue #120) gets the native range hint; the daemon enforces it anyway.
+    if (field.min !== null) {
       input.min = field.min;
       input.max = field.max;
+    }
+    if (highRisk) {
       const range = document.createElement('span');
       range.className = 'settings-range';
       range.textContent = `${field.min}–${field.max}`;
