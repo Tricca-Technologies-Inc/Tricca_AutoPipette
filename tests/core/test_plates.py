@@ -16,6 +16,7 @@ from __future__ import annotations
 import pytest
 
 from tricca_autopipette.core.coordinate import Coordinate
+from tricca_autopipette.core.pipette_models import TipSlotState
 from tricca_autopipette.core.plates import (
     InvalidPlateTypeError,
     Plate,
@@ -29,6 +30,8 @@ from tricca_autopipette.core.plates import (
 from tricca_autopipette.core.traversal import TraversalOrder, WellMask
 from tricca_autopipette.core.well import StrategyType, Well
 
+AVAILABLE = TipSlotState.AVAILABLE
+EMPTY = TipSlotState.EMPTY
 ROWS = 8
 COLS = 12
 
@@ -249,7 +252,7 @@ class TestTipBoxPresence:
 
     def test_take_tip_skips_absent_positions(self) -> None:
         box = TipBox(_params("tipbox"))
-        box.set_presence([False] * 12 + [True] * (ROWS * COLS - 12))
+        box.set_slots([EMPTY] * 12 + [AVAILABLE] * (ROWS * COLS - 12))
         assert box.take_tip()[0] == 12
 
     def test_peek_does_not_consume(self) -> None:
@@ -270,18 +273,18 @@ class TestTipBoxPresence:
         assert box.remaining == 3
         assert box.take_tip()[0] == 0
 
-    def test_set_presence_rewinds_cursor(self) -> None:
+    def test_set_slots_rewinds_cursor(self) -> None:
         """Restoring state must re-scan, not resume from a stale cursor."""
         box = TipBox(_params("tipbox"))
         box.take_tip()
-        box.set_presence([True] * (ROWS * COLS))
+        box.set_slots([AVAILABLE] * (ROWS * COLS))
         assert box.take_tip()[0] == 0
 
-    def test_set_presence_rejects_wrong_length(self) -> None:
+    def test_set_slots_rejects_wrong_length(self) -> None:
         """A mismatched map would misalign consumed positions onto real tips."""
         box = TipBox(_params("tipbox"))
         with pytest.raises(ValueError, match="has 5 entries"):
-            box.set_presence([True] * 5)
+            box.set_slots([AVAILABLE] * 5)
 
     def test_consumed_indices_reports_used_positions(self) -> None:
         box = TipBox(_params("tipbox", order="column_from_bottom_right"))

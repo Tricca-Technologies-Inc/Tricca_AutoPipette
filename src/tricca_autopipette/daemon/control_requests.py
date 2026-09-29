@@ -18,6 +18,7 @@ from typing import Any
 
 from tricca_autopipette.commands.tap_cmd_parsers import (
     AspirateArgs,
+    ChangeTipArgs,
     CoorArgs,
     DelLocArgs,
     DispenseArgs,
@@ -161,13 +162,16 @@ class ControlRequests(JsonRpcRequestBuilder):
         """
         return self.gen_request("pipette.dispose_tip")
 
-    def change_tip(self) -> dict[str, Any]:
-        """Build a request to dispose the current tip and pick up a fresh one.
+    def change_tip(self, args: ChangeTipArgs) -> dict[str, Any]:
+        """Build a request to put away the current tip and pick up a fresh one.
+
+        Args:
+            args: Where the old tip goes.
 
         Returns:
             Request to change the tip.
         """
-        return self.gen_request("pipette.change_tip")
+        return self.gen_request("pipette.change_tip", dataclasses.asdict(args))
 
     def switch_liquid(self, liquid_name: str) -> dict[str, Any]:
         """Build a request to switch to a different liquid profile.
@@ -266,12 +270,36 @@ class ControlRequests(JsonRpcRequestBuilder):
         """Build a request to save current locations to a JSON file.
 
         Args:
-            filename: Output filename under ``config/locations/``.
+            filename: Output filename (saved to the local root's ``locations/``).
 
         Returns:
             Request to save locations.
         """
         return self.gen_request("config.save_locations", {"filename": filename})
+
+    def set_config_value(
+        self, category: str, filename: str, key_path: str, value: object
+    ) -> dict[str, Any]:
+        """Build a request to set one value in one config file.
+
+        Args:
+            category: Config category, e.g. ``liquids``.
+            filename: Bare filename within that category.
+            key_path: Dotted key path, e.g. ``syringe.max_volume_ul``.
+            value: New JSON value.
+
+        Returns:
+            Request to set the value.
+        """
+        return self.gen_request(
+            "config.set_value",
+            {
+                "category": category,
+                "filename": filename,
+                "key_path": key_path,
+                "value": value,
+            },
+        )
 
     def load_locations(self, args: LoadLocationsArgs) -> dict[str, Any]:
         """Build a request to load locations from a JSON file.

@@ -44,6 +44,7 @@ from tricca_autopipette.core.pipette_constants import (
 )
 from tricca_autopipette.core.pipette_exceptions import (
     NotALocationError,
+    NoTipOriginError,
     NoWasteContainerError,
     TipAlreadyOnError,
     VolumeCapacityError,
@@ -55,6 +56,7 @@ from tricca_autopipette.core.pipette_models import (
     PipetteState,
     PipetteSyringeKinematics,
     SystemConfig,
+    TipEnd,
     TipState,
 )
 from tricca_autopipette.core.splits import LeftoverAction, Split
@@ -709,7 +711,7 @@ class AutoPipette:
 
         # The supplying box comes back with the coordinate: boxes may sit at
         # different heights, so the dip distance must come from *that* box.
-        name, box, loc_tip = self.location_manager.tipbox_manager.next_tip(
+        name, box, loc_tip, index = self.location_manager.tipbox_manager.next_tip(
             name=tipbox_name
         )
         self.note_action(
@@ -719,6 +721,7 @@ class AutoPipette:
         self.dip_z_down(loc_tip, box.get_dip_distance(vol=None))
         self.dip_z_return(loc_tip)
         self.state.tip_state = TipState.ATTACHED
+        self.state.tip_origin = (name, index)
 
     def eject_tip(self) -> None:
         """Eject the current pipette tip."""
@@ -734,15 +737,33 @@ class AutoPipette:
         self.gcode_wait(wait_eject)
 
         self.state.tip_state = TipState.DETACHED
+        self.state.tip_origin = None
 
     def dispose_tip(self) -> None:
         """Eject the current tip into the waste container.
 
+        With no waste container configured, the tip goes back to the tipbox
+        slot it came from instead (see `return_tip`), with a WARNING --
+        never ejected wherever the head happens to be, which after a
+        transfer is over a sample well.
+
         Raises:
-            NoWasteContainerError: If no waste container is configured.
+            NoWasteContainerError: If no waste container is configured and
+                the tip's origin is unknown, so there is nowhere safe to put
+                it.
         """
         if self.location_manager.waste_container is None:
-            raise NoWasteContainerError()
+            if self.state.tip_origin is None:
+                raise NoWasteContainerError()
+            name, index = self.state.tip_origin
+            self.logger.warning(
+                "No waste container configured; returning the tip to its "
+                "origin slot in '%s' (position %d) instead",
+                name,
+                index,
+            )
+            self.return_tip()
+            return
 
         self.note_action("Disposing tip to waste container")
         curr_coor = self.location_manager.waste_container.next()
@@ -752,6 +773,73 @@ class AutoPipette:
         )
         self.eject_tip()
         self.dip_z_return(curr_coor)
+
+    def return_tip(self) -> None:
+        """Put the current tip back in the tipbox slot it was picked up from.
+
+        The slot becomes `TipSlotState.USED`: never handed out again by
+        `next_tip`, since nothing can verify a used tip is clean.
+
+        Raises:
+            NoTipOriginError: If the tip's origin was never recorded.
+            NotALocationError: If its tipbox has since been unloaded.
+        """  # ruff: ignore[docstring-extraneous-exception]
+        if self.state.tip_origin is None:
+            raise NoTipOriginError()
+        name, index = self.state.tip_origin
+        box = self.location_manager.tipbox_manager.return_tip(name, index)
+        coor = box.wells[index].coor
+
+        self.note_action(
+            f"Returning tip to '{name}' at (X:{coor.x:.2f}, Y:{coor.y:.2f})"
+        )
+        self.move_to(coor)
+        # ponytail: returns at the pickup dip depth; add a separate return
+        # depth to the tipbox config if tips seat too hard on real hardware.
+        self.dip_z_down(coor, box.get_dip_distance(vol=None))
+        self.eject_tip()
+        self.dip_z_return(coor)
+
+    def finish_tip(self, tip_end: TipEnd) -> None:
+        """Send the current tip where `tip_end` says once a transfer is done.
+
+        Args:
+            tip_end: ``"keep"`` leaves it on, ``"waste"`` disposes of it
+                (falling back to its origin slot with no waste container --
+                see `dispose_tip`), ``"return"`` puts it back in its origin
+                slot.
+
+        Raises:
+            NoWasteContainerError: See `dispose_tip`.
+            NoTipOriginError: See `return_tip`.
+        """  # ruff: ignore[docstring-extraneous-exception]
+        if tip_end == "waste":
+            self.dispose_tip()
+        elif tip_end == "return":
+            self.return_tip()
+
+    def resolve_tip_end(self, tip_end: TipEnd | None, keep_tip: bool) -> TipEnd:
+        """Reconcile ``--tip_end`` with the deprecated ``--keep_tip`` alias.
+
+        Args:
+            tip_end: The explicit disposition, or None if not given.
+            keep_tip: The legacy flag. Kept permanently because committed
+                protocol files use it; each use logs a deprecation WARNING
+                (which ``validate_protocol`` reports as a finding).
+
+        Returns:
+            The disposition to apply: `tip_end` if given, else ``"keep"``
+            for `keep_tip`, else ``"waste"``.
+
+        Raises:
+            ValueError: If both are given and disagree.
+        """
+        if not keep_tip:
+            return tip_end or "waste"
+        self.logger.warning("--keep_tip is deprecated; use --tip_end keep instead")
+        if tip_end not in {None, "keep"}:
+            raise ValueError(f"--keep_tip conflicts with --tip_end {tip_end}")
+        return "keep"
 
     def dip_z_down(self, curr_coor: Coordinate, distance: float) -> None:
         """Lower the pipette tip down by a specified distance.
@@ -1218,7 +1306,7 @@ class AutoPipette:
         prewet_cycles: int | None = None,
         prewet_vol_ul: float | None = None,
         wiggle: bool = False,
-        keep_tip: bool = False,
+        tip_end: TipEnd = "waste",
     ) -> None:
         """Transfer liquid between locations.
 
@@ -1246,7 +1334,7 @@ class AutoPipette:
             prewet_vol_ul: Volume per prewet cycle in μL, or None for the
                 profile's value.
             wiggle: If True, shake tip during dispensing.
-            keep_tip: If True, retain tip after operation.
+            tip_end: Where the tip goes afterwards -- see `finish_tip`.
 
         Raises:
             ValueError: If requested volume is negative.
@@ -1257,8 +1345,10 @@ class AutoPipette:
                 configured.
             OutOfTipsError: If a tip pickup is needed and every configured
                 tipbox is exhausted.
-            NoWasteContainerError: If the transfer disposes of its tip
-                (``keep_tip`` is False) and no waste container is configured.
+            NoWasteContainerError: If `tip_end` is ``"waste"`` with no waste
+                container and no known tip origin to fall back to.
+            NoTipOriginError: If `tip_end` is ``"return"`` and the tip's
+                origin is unknown.
 
         Example:
             >>> # Simple transfer
@@ -1348,9 +1438,7 @@ class AutoPipette:
                 wiggle=wiggle,
             )
 
-        # Dispose of tip unless explicitly keeping it
-        if not keep_tip:
-            self.dispose_tip()
+        self.finish_tip(tip_end)
 
     def resolve_splits(
         self, vol_ul: float, splits: Sequence[Split], leftover: LeftoverAction | None
@@ -1445,7 +1533,7 @@ class AutoPipette:
         prewet_vol_ul: float | None = None,
         wiggle: bool = False,
         leftover: LeftoverAction | None = None,
-        keep_tip: bool = False,
+        tip_end: TipEnd = "waste",
     ) -> None:
         """Aspirate once, then dispense to several destinations in turn.
 
@@ -1473,15 +1561,17 @@ class AutoPipette:
             wiggle: If True, shake tip during each dispense.
             leftover: What to do with liquid remaining after the last split.
                 Required when the splits do not consume the whole aspirate.
-            keep_tip: If True, retain tip after the operation. A tip still
-                holding liquid (``leftover="keep"``) is always retained
-                regardless, rather than being discarded with liquid inside.
+            tip_end: Where the tip goes afterwards -- see `finish_tip`. A tip
+                still holding liquid (``leftover="keep"``) is always retained
+                regardless, rather than being put anywhere with liquid inside.
 
         Raises:
             ValueError: If `vol_ul` is not positive, or the spec fails
                 validation -- see ``resolve_splits``.
-            NoWasteContainerError: If the tip or its leftover must go to
-                waste and no waste container is configured.
+            NoWasteContainerError: If the leftover must go to waste and no
+                waste container is configured, or see `dispose_tip`.
+            NoTipOriginError: If `tip_end` is ``"return"`` and the tip's
+                origin is unknown.
             VolumeCapacityError: If `vol_ul` exceeds usable syringe capacity.
             NotALocationError: If a split's destination is not a defined
                 location (see ``resolve_splits``).
@@ -1555,10 +1645,10 @@ class AutoPipette:
 
         self.state.has_liquid = has_leftover
 
-        # Never send a tip holding liquid to the bin: `leftover="keep"` is an
-        # explicit instruction to hang on to it, so it outranks keep_tip.
-        if not keep_tip and not has_leftover:
-            self.dispose_tip()
+        # Never put down a tip holding liquid: `leftover="keep"` is an
+        # explicit instruction to hang on to it, so it outranks tip_end.
+        if not has_leftover:
+            self.finish_tip(tip_end)
 
     def empty_tip_to_waste(self) -> None:
         """Expel whatever is left in the tip into the waste container.

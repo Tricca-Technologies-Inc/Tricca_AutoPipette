@@ -188,6 +188,8 @@ class TestDomainStateSnapshotRollback:
         assert autopipette.state.tip_state == pre_run_tip_state
         assert autopipette.state.has_liquid == pre_run_has_liquid
         assert autopipette.active_liquid == pre_run_liquid
+        # The rolled-back pickup's origin must not outlive it (#15).
+        assert autopipette.state.tip_origin is None
 
     def test_compile_time_failure_makes_no_db_writes(
         self, service_with_plates: AutoPipetteService

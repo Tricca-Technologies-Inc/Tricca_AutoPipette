@@ -63,6 +63,18 @@ This split is deliberately provisional for all six union categories except
 `plates/` is not yet well understood, and a future pass may cull those back
 to shared-only. Don't read the current scope as a permanent shape.
 
+### Runtime writes always land in the local root
+
+`tap`'s `set_config <category> <file> <key.path> <value>` (RPC
+`config.set_value`) edits one value in one file. If that file currently
+exists only in this shared repo, it is first copied into the local root and
+the copy is edited -- the shared file is never touched. The edit is made on
+the file's raw JSON, so every other field, `extends`, and `plate_file`
+reference is kept; a value that would leave the file unloadable is refused
+and nothing is written. `save_locations` likewise writes to the local
+`locations/`, saving file-loaded entries back as they were loaded. Both
+writes are atomic. The running daemon does not reload what it wrote yet.
+
 ## Configuration Files
 
 ### `system/` -- local-only, one active profile

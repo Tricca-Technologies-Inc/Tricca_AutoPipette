@@ -12,7 +12,7 @@ import json
 import logging
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
@@ -21,6 +21,7 @@ from tricca_autopipette.core.location_manager import LocationManager
 from tricca_autopipette.core.pipette_constants import DefaultPaths
 from tricca_autopipette.core.pipette_exceptions import NotALocationError
 from tricca_autopipette.core.plates import Plate, PlateFactory, PlateParams, TipBox
+from tricca_autopipette.core.traversal import TraversalOrder
 from tricca_autopipette.core.well import StrategyType, Well
 
 
@@ -614,13 +615,18 @@ class TestSaveRoundTrip:
     def test_custom_non_preset_order_is_saved_as_a_full_descriptor(
         self, manager: LocationManager, locations_dir: Path
     ) -> None:
-        """A combination that matches no preset name round-trips explicitly."""
-        _write(
-            locations_dir,
-            "t.json",
-            {"plates": [_array_entry("plate", order={"row_dir": "bottom_up"})]},
+        """A combination that matches no preset name round-trips explicitly.
+
+        Built interactively: a file-loaded plate saves back as written.
+        """
+        manager.set_plate(
+            "plate",
+            PlateParams(
+                plate_type="array",
+                well_template=Well(coor=Coordinate(x=100, y=0, z=0), dip_top=0.0),
+                order=TraversalOrder(row_dir="bottom_up"),
+            ),
         )
-        manager.load_from_json("t.json")
 
         manager.save_to_json("out.json")
 
@@ -714,11 +720,15 @@ class TestPlateFileReference:
 
         manager.save_to_json("out.json")
 
+        # The template reference is saved as written (issue #33), not inlined,
+        # and still supplies dip_btm/well_diameter on reload.
         saved = json.loads((locations_dir / "out.json").read_text(encoding="utf-8"))
-        entry = saved["plates"][0]
-        # Exact JSON round-trip of a literal, not a computed value.
-        assert entry["dip_btm"] == 11.0  # ruff:ignore[float-equality-comparison]
-        assert entry["well_diameter"] == 6.86  # ruff:ignore[float-equality-comparison]
+        assert saved["plates"][0]["plate_file"] == "96_well_standard.json"
+        reloaded = LocationManager(locations_dir)
+        reloaded.load_from_json("out.json")
+        well = cast("Plate", reloaded.locations["assay"]).wells[0]
+        assert well.dip_btm == 11.0  # ruff:ignore[float-equality-comparison]
+        assert well.well_diameter == 6.86  # ruff:ignore[float-equality-comparison]
 
     def test_two_entries_sharing_a_plate_file_read_it_once(
         self,

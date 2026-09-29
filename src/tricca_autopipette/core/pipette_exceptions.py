@@ -169,6 +169,26 @@ class NoWasteContainerError(AutoPipetteError):
         super().__init__("No waste container configured.")
 
 
+class NoTipOriginError(AutoPipetteError):
+    """Raised when a tip must go back to its origin slot but that is unknown.
+
+    The origin is recorded at pickup and kept in memory only, so a tip that
+    was already on when the daemon started has none.
+
+    Example:
+        Raised when ``pipette.return_tip()`` is called for a tip that
+        survived a daemon restart.
+    """
+
+    def __init__(self) -> None:
+        """Initialize the error with a descriptive message."""
+        super().__init__(
+            "The attached tip's origin slot is unknown (was it picked up before "
+            "tapd started?). Dispose of it to a waste container or remove it "
+            "by hand."
+        )
+
+
 class VolumeCapacityError(AutoPipetteError):
     """Raised when a requested liquid volume exceeds the syringe's capacity.
 

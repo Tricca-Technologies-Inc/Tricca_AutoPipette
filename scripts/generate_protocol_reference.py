@@ -141,13 +141,7 @@ _COMMANDS: list[_CommandDoc] = [
             "tip into it."
         ),
     ),
-    _CommandDoc(
-        "change_tip",
-        manual_usage=(
-            "Usage: change_tip\n\n"
-            "Dispose the current tip (if any) and pick up a fresh one."
-        ),
-    ),
+    _CommandDoc("change_tip", parser=TAPCmdParsers.parser_change_tip),
     _CommandDoc(
         "switch_liquid",
         manual_usage=(
@@ -189,7 +183,9 @@ _COMMANDS: list[_CommandDoc] = [
         "save_locations",
         manual_usage=(
             "Usage: save_locations [filename]\n\n"
-            "Save the current deck to config/locations/. filename defaults "
+            "Save the current deck to the local config root's locations/, "
+            "atomically; file-loaded entries are written back as loaded. "
+            "filename defaults "
             "to 'custom_locations.json' when omitted on a protocol-file "
             "line."
         ),

@@ -15,10 +15,11 @@ from __future__ import annotations
 import dataclasses
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from cmd2 import Cmd2ArgumentParser
 
+from tricca_autopipette.core.pipette_models import TipEnd
 from tricca_autopipette.core.splits import LeftoverAction
 
 
@@ -181,13 +182,17 @@ class PipetteArgs:
         prewet_cycles: Prewet cycles, or None for the profile's value.
         prewet_vol_ul: Volume per prewet cycle (μL), or None for the profile's.
         wiggle: If True, wiggle tip during dispensing.
-        keep_tip: If True, retain tip after the full operation.
+        keep_tip: Deprecated alias for ``tip_end="keep"``, kept permanently
+            because committed protocol files use it.
         splits: Multi-dispense spec (``DEST:VOL[@WELL];...``), or None for a
             plain single-destination transfer. Takes over from ``dest`` and
             the ``dest_row``/``dest_col`` pair when given.
         leftover: What to do with liquid left after the splits dispense --
             ``keep`` or ``waste``. Required when the splits do not consume
             the whole aspirate.
+        tip_end: Where the tip goes afterwards -- ``keep``, ``waste``, or
+            ``return`` (to the slot it came from) -- or None for the
+            default (``waste``, or ``keep`` under ``--keep_tip``).
     """
 
     vol_ul: float
@@ -207,6 +212,19 @@ class PipetteArgs:
     keep_tip: bool
     splits: str | None
     leftover: LeftoverAction | None
+    tip_end: TipEnd | None = None
+
+
+@dataclass
+class ChangeTipArgs:
+    """Arguments for the ``change_tip`` command.
+
+    Attributes:
+        tip_end: Where the old tip goes -- ``waste`` (returned to its slot if
+            there is no waste container) or ``return`` to its slot.
+    """
+
+    tip_end: Literal["waste", "return"] = "waste"
 
 
 # ===========================================================================
@@ -736,7 +754,17 @@ class TAPCmdParsers:
     parser_pipette.add_argument(
         "--keep_tip",
         action="store_true",
-        help="Keep tip attached after the operation (default: eject tip)",
+        help="Deprecated: same as --tip_end keep",
+    )
+    parser_pipette.add_argument(
+        "--tip_end",
+        default=None,
+        choices=("keep", "waste", "return"),
+        help=(
+            "Where the tip goes afterwards: keep it on, waste it (default; "
+            "returned to its slot if no waste container), or return it to "
+            "the slot it came from"
+        ),
     )
     parser_pipette.add_argument(
         "--splits",
@@ -754,6 +782,19 @@ class TAPCmdParsers:
         help=(
             "What to do with liquid left after --splits dispense. Required "
             "when the splits do not consume the whole aspirated volume."
+        ),
+    )
+
+    parser_change_tip: Cmd2ArgumentParser = Cmd2ArgumentParser(
+        description="Put away the current tip (if any) and pick up a fresh one."
+    )
+    parser_change_tip.add_argument(
+        "--tip_end",
+        default="waste",
+        choices=("waste", "return"),
+        help=(
+            "Where the old tip goes: waste (default; returned to its slot if "
+            "no waste container) or return to the slot it came from"
         ),
     )
 

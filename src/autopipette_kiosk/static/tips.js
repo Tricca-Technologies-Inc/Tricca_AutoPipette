@@ -78,6 +78,9 @@
         } else {
           cell.title = wellId(row, col);
           if (box.present[index]) cell.classList.add('present');
+          // A used tip put back in its slot (#15): not handed out again
+          // until an operator taps it available (or hits "Reloaded").
+          if (box.slots && box.slots[index] === 'used') cell.classList.add('used');
           if (index === box.next_index) cell.classList.add('next');
           cell.addEventListener('click', () => toggleCell(box, index, cell));
         }

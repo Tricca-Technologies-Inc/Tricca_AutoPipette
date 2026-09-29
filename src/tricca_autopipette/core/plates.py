@@ -16,6 +16,7 @@ from pydantic import (
 )
 
 from tricca_autopipette.core.coordinate import Coordinate
+from tricca_autopipette.core.pipette_models import TipSlotState
 from tricca_autopipette.core.traversal import (
     TraversalOrder,
     WellMask,
@@ -845,7 +846,7 @@ class TipBox(PlateArray):
     record of which tip came from which box and made unloading one impossible.
 
     Attributes:
-        present: Per-position tip presence, indexed by flat well index.
+        slots: Per-position `TipSlotState`, indexed by flat well index.
     """
 
     def __init__(self, plate_params: PlateParams) -> None:
@@ -859,7 +860,7 @@ class TipBox(PlateArray):
             ValueError: If the mask excludes every well (see Plate.__init__).
         """  # ruff: ignore[docstring-extraneous-exception]
         super().__init__(plate_params.model_copy(update={"on_exhaust": "error"}))
-        self.present: list[bool] = [True] * len(self.wells)
+        self.slots: list[TipSlotState] = [TipSlotState.AVAILABLE] * len(self.wells)
 
     @property
     def capacity(self) -> int:
@@ -892,7 +893,19 @@ class TipBox(PlateArray):
             >>> box.remaining
             96
         """
-        return sum(1 for index in self.sequence if self.present[index])
+        return sum(1 for index in self.sequence if self._available(index))
+
+    @property
+    def present(self) -> list[bool]:
+        """Per-position availability, the binary view of `slots`.
+
+        Returns:
+            One flag per well: True where an unused tip is waiting.
+        """
+        return [slot is TipSlotState.AVAILABLE for slot in self.slots]
+
+    def _available(self, index: int) -> bool:
+        return self.slots[index] is TipSlotState.AVAILABLE
 
     def peek_tip(self) -> int | None:
         """Return the flat index of the next available tip without taking it.
@@ -903,7 +916,7 @@ class TipBox(PlateArray):
         """
         for cursor in range(self.curr, len(self.sequence)):
             index = self.sequence[cursor]
-            if self.present[index]:
+            if self._available(index):
                 return index
         return None
 
@@ -931,14 +944,14 @@ class TipBox(PlateArray):
             ... )
             >>> box = TipBox(params)
             >>> index, coor = box.take_tip()
-            >>> box.present[index]
-            False
+            >>> box.slots[index]
+            <TipSlotState.EMPTY: 'empty'>
         """
         while self.curr < len(self.sequence):
             index = self.sequence[self.curr]
             self.curr += 1
-            if self.present[index]:
-                self.present[index] = False
+            if self._available(index):
+                self.slots[index] = TipSlotState.EMPTY
                 return index, self.wells[index].coor
 
         raise PlateExhaustedError(self.capacity)
@@ -964,22 +977,22 @@ class TipBox(PlateArray):
             >>> box.remaining == box.capacity
             True
         """
-        self.present = [True] * len(self.wells)
+        self.slots = [TipSlotState.AVAILABLE] * len(self.wells)
         self.curr = 0
 
-    def set_presence(self, present: list[bool]) -> None:
-        """Replace the presence map wholesale.
+    def set_slots(self, slots: list[TipSlotState]) -> None:
+        """Replace the slot map wholesale.
 
         Used when restoring persisted state or when an operator declares a
         partially-used box. The cursor is rewound to the start so the next
         `take_tip` scans from the beginning and finds the first tip that is
-        actually present.
+        actually available.
 
         Args:
-            present: One flag per well, indexed by flat well index.
+            slots: One state per well, indexed by flat well index.
 
         Raises:
-            ValueError: If `present` is not exactly one flag per well. A
+            ValueError: If `slots` is not exactly one state per well. A
                 mismatched map would silently misalign consumed positions onto
                 different physical wells.
 
@@ -994,16 +1007,16 @@ class TipBox(PlateArray):
             ...     spacing_col=9.0,
             ... )
             >>> box = TipBox(params)
-            >>> box.set_presence([False] * 12 + [True] * 84)
+            >>> box.set_slots([TipSlotState.EMPTY] * 12 + [TipSlotState.AVAILABLE] * 84)
             >>> box.remaining
             84
         """
-        if len(present) != len(self.wells):
+        if len(slots) != len(self.wells):
             raise ValueError(
-                f"Presence map has {len(present)} entries but this tipbox has "
+                f"Slot map has {len(slots)} entries but this tipbox has "
                 f"{len(self.wells)} wells"
             )
-        self.present = list(present)
+        self.slots = list(slots)
         self.curr = 0
 
     def consumed_indices(self) -> set[int]:
@@ -1014,7 +1027,18 @@ class TipBox(PlateArray):
             longer hold a tip. Masked-out positions are excluded, since they
             were never available in the first place.
         """
-        return {index for index in self.sequence if not self.present[index]}
+        return {index for index in self.sequence if not self._available(index)}
+
+    def mark_used(self, index: int) -> None:
+        """Record that a used tip was put back at `index`.
+
+        The slot becomes `TipSlotState.USED`, which `take_tip` never hands
+        out again -- only an operator reset makes it available.
+
+        Args:
+            index: Flat well index the tip was returned to.
+        """
+        self.slots[index] = TipSlotState.USED
 
 
 @PlateFactory.register("waste_container")

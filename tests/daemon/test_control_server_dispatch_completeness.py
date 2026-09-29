@@ -21,6 +21,7 @@ import pytest
 
 from tricca_autopipette.commands.tap_cmd_parsers import (
     AspirateArgs,
+    ChangeTipArgs,
     CoorArgs,
     DelLocArgs,
     DispenseArgs,
@@ -117,7 +118,7 @@ _BUILDER_CALLS: list[tuple[str, tuple[Any, ...]]] = [
     ("next_tip", ()),
     ("eject_tip", ()),
     ("dispose_tip", ()),
-    ("change_tip", ()),
+    ("change_tip", (ChangeTipArgs(tip_end="return"),)),
     ("switch_liquid", ("methanol",)),
     ("load_liquid", ("water.json",)),
     ("set", (SetArgs(var="SPEED_FACTOR", value=100.0),)),
@@ -147,6 +148,9 @@ _BUILDER_CALLS: list[tuple[str, tuple[Any, ...]]] = [
     ("del_loc", (DelLocArgs(name="bench"),)),
     ("clear_locs", ()),
     ("save_locations", (_SCRATCH_LOCATIONS_FILENAME,)),
+    # An unknown category is refused (ok=False) before any file is touched,
+    # so this never writes into the real local config root.
+    ("set_config_value", ("not_a_category", "x.json", "k", 1)),
     ("load_locations", (LoadLocationsArgs(filename=_SCRATCH_LOCATIONS_FILENAME),)),
     ("unload_locations", (UnloadLocationsArgs(name="bench"),)),
     # The tip commands only need the method string to be routed; an unknown

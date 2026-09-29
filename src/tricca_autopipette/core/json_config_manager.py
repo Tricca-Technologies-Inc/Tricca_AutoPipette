@@ -150,7 +150,7 @@ class JsonConfigManager:
             >>> # config/liquids/ defaults from the shared repo
             >>> print(config.system_name)
             AutoPipette
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         user_path = DefaultPaths.DIR_LOCAL_SYSTEM / filename
 
         if user_path.exists():
@@ -160,13 +160,63 @@ class JsonConfigManager:
                 f"System config not found: {filename} (searched in {user_path.parent})"
             )
 
+        self.system_config = self._build_system_config(self._load_system_data(filename))
+
+        logger.info("Loaded system config from %s", path_system)
+        logger.info("  System: %s", self.system_config.system_name)
+        logger.info("  Pipette: %s", self.system_config.pipette.name)
+        logger.info("  Liquids:  %d profile(s)", len(self.system_config.liquids))
+        logger.info(
+            "  Locations: %d source(s)", len(self.system_config.locations.sources)
+        )
+
+        return self.system_config
+
+    def validate_system_data(self, filename: str, data: dict[str, Any]) -> SystemConfig:
+        """Build a SystemConfig from raw system-file data without loading it.
+
+        What `config_writer.set_config_value` uses to reject a write that would
+        leave a system file unloadable, before anything touches disk. Any
+        ``extends`` parent is read from the local ``system/`` directory as
+        usual. The manager's current config is left unchanged.
+
+        Args:
+            filename: The file `data` would be saved as (for cycle detection
+                in an ``extends`` chain).
+            data: The file's raw JSON; not mutated.
+
+        Returns:
+            The SystemConfig `data` would load as.
+
+        Raises:
+            FileNotFoundError: If an ``extends`` parent doesn't exist.
+            ValueError: If the data is invalid.
+
+        Example:
+            >>> manager = JsonConfigManager()
+            >>> manager.validate_system_data(
+            ...     "x.json", {"system_name": "Rig"}
+            ... ).system_name  # doctest: +SKIP
+            'Rig'
+        """  # ruff: ignore[docstring-extraneous-exception]
+        return self._build_system_config(self._resolve_extends(filename, dict(data)))
+
+    def _build_system_config(self, user_data: dict[str, Any]) -> SystemConfig:
+        """Merge resolved system-file data over the category defaults.
+
+        Args:
+            user_data: System-file data with ``extends`` already resolved.
+
+        Returns:
+            The complete SystemConfig.
+
+        Raises:
+            ValueError: If the pipette reference is unknown or data is invalid.
+        """
         # 1. Load defaults
         default_gantry = self._load_default_gantry()
         default_pipettes = self._load_default_pipettes()
         default_liquids = self._load_default_liquids()
-
-        # 2. Load user config, resolving any "extends" chain first
-        user_data = self._load_system_data(filename)
 
         # 3. Merge gantry config (user overrides defaults)
         gantry_data = {**default_gantry.model_dump(), **user_data.get("gantry", {})}
@@ -204,7 +254,7 @@ class JsonConfigManager:
                 merged_liquids[liquid_name] = LiquidProfile(**liquid_data)
 
         # 6. Build final SystemConfig
-        self.system_config = SystemConfig(
+        return SystemConfig(
             version=user_data.get("version", "1.0"),
             system_name=user_data.get("system_name", "AutoPipette"),
             gantry=merged_gantry,
@@ -214,16 +264,6 @@ class JsonConfigManager:
             network=user_data.get("network", {"hostname": "localhost", "port": "7125"}),
             trigger_pins=user_data.get("trigger_pins", {}),
         )
-
-        logger.info("Loaded system config from %s", path_system)
-        logger.info("  System: %s", self.system_config.system_name)
-        logger.info("  Pipette: %s", self.system_config.pipette.name)
-        logger.info("  Liquids:  %d profile(s)", len(self.system_config.liquids))
-        logger.info(
-            "  Locations: %d source(s)", len(self.system_config.locations.sources)
-        )
-
-        return self.system_config
 
     def _load_system_data(self, filename: str) -> dict[str, Any]:
         """Read a system config file, applying any ``extends`` chain.
@@ -251,8 +291,23 @@ class JsonConfigManager:
             ValueError: If any file is invalid JSON, ``extends`` is not a
                 string, or the chain is cyclic or too deep.
         """  # ruff: ignore[docstring-extraneous-exception]
-        data = self._read_system_file(filename)
+        return self._resolve_extends(filename, self._read_system_file(filename))
 
+    def _resolve_extends(self, filename: str, data: dict[str, Any]) -> dict[str, Any]:
+        """Apply `data`'s ``extends`` chain (see `_load_system_data`).
+
+        Args:
+            filename: The file `data` came from, the chain's first link.
+            data: That file's parsed JSON; its ``extends`` key is popped.
+
+        Returns:
+            The merged configuration data, with ``extends`` removed.
+
+        Raises:
+            FileNotFoundError: If any parent doesn't exist.
+            ValueError: If ``extends`` is not a string, or the chain is cyclic
+                or too deep.
+        """  # ruff: ignore[docstring-extraneous-exception]
         parent_ref = data.pop(KEY_EXTENDS, None)
         if parent_ref is None:
             return data
