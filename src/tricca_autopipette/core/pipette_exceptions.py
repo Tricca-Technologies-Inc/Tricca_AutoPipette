@@ -264,14 +264,15 @@ class NotHomedError(AutoPipetteError):
         pipette not homed. Run 'init' or 'home all' first."
     """
 
-    def __init__(self, command_name: str) -> None:
+    def __init__(self, command_name: str, reason: str = "pipette not homed") -> None:
         """Initialize the error with the blocked command's name.
 
         Args:
             command_name: Name of the command that was blocked.
+            reason: Why the pipette counts as unhomed.
         """
         self.command_name = command_name
         super().__init__(
-            f"Command '{command_name}' blocked — pipette not homed. "
+            f"Command '{command_name}' blocked — {reason}. "
             "Run 'init' or 'home all' first."
         )

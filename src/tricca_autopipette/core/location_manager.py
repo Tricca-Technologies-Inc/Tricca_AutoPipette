@@ -603,6 +603,60 @@ class LocationManager:
         locations_data = self._read_locations_file(filename)
         self.apply_locations_data(locations_data, source=filename, replace=replace)
 
+    def loaded_files(self) -> list[str]:
+        """List the locations files the deck currently holds entries from.
+
+        Returns:
+            Distinct source filenames, in first-seen order. Inline system-config
+            payloads (``<inline ...>`` sources) are not files and are excluded.
+        """
+        return list(
+            dict.fromkeys(s for s in self._sources.values() if not s.startswith("<"))
+        )
+
+    def reload_source(self, filename: str) -> bool:
+        """Re-read a loaded locations file so its edits take effect (issue #33).
+
+        Only the names the deck currently takes from `filename` are replaced,
+        plus names the file newly adds; a name another file overrode is left
+        alone. Names the file no longer lists are unloaded. Parse-then-apply:
+        a bad file leaves the deck untouched.
+
+        Args:
+            filename: A locations file name, as passed to `load_from_json`.
+
+        Returns:
+            True if the file was loaded (and so reloaded), False if the deck
+            holds nothing from it.
+
+        Raises:
+            FileNotFoundError: If the file no longer exists.
+            ValueError: If the file is invalid.
+
+        Example:
+            >>> LocationManager().reload_source("deck.json")
+            False
+        """  # ruff: ignore[docstring-extraneous-exception]
+        live = {name for name, src in self._sources.items() if src == filename}
+        if not live:
+            return False
+        data = self._read_locations_file(filename)
+        entries = {
+            key: [
+                entry
+                for entry in cast("list[dict[str, Any]]", data.get(key, []))
+                if entry.get("name") in live or entry.get("name") not in self.locations
+            ]
+            for key in ("coordinates", "plates")
+        }
+        self.apply_locations_data(entries, source=filename)
+        listed = {
+            entry.get("name") for entry_list in entries.values() for entry in entry_list
+        }
+        for name in live - listed:
+            self.unload(name)
+        return True
+
     def load_group(self, filenames: list[str], *, replace: bool = False) -> None:
         """Load several locations files in order, composing one deck.
 
@@ -751,7 +805,8 @@ class LocationManager:
             name: The location name being applied.
             source: Origin of the incoming definition.
         """
-        if name not in self.locations:
+        # Re-applying a file over itself (reload_source) replaces nothing.
+        if name not in self.locations or self._sources.get(name) == source:
             return
 
         previous = self._sources.get(name, "an earlier definition")

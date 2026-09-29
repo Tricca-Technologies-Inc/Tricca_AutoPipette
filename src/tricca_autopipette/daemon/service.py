@@ -135,6 +135,11 @@ class RunStatus:
     run_id: str | None = None
     filename: str | None = None
 
+    @property
+    def config_locked(self) -> bool:
+        """Whether config changes are refused because a run is active."""
+        return self.status == "running"
+
 
 @dataclass
 class CommandResult:
@@ -204,6 +209,12 @@ def require_homed(
             **kwargs: Any,  # ruff:ignore[any-type]
         ) -> CommandResult:
             if not _dry_run.get():
+                # Deliberate: the flag is the service's own state.
+                if self._homing_invalidated:  # pyright: ignore[reportPrivateUsage]
+                    raise NotHomedError(
+                        command_name,
+                        "homing invalidated by a pipette/gantry/system config change",
+                    )
                 homed = (
                     self.moonraker_state is not None and self.moonraker_state.is_homed()
                 )
@@ -214,6 +225,29 @@ def require_homed(
         return wrapper
 
     return decorator
+
+
+def refuse_while_running(
+    func: Callable[..., CommandResult],
+) -> Callable[..., CommandResult]:
+    """Decorator: refuse a config change while a protocol run is active.
+
+    Returns `AutoPipetteService.config_lock_refusal`'s ``ok=False`` result
+    (``data={"reason": "run_active"}``) instead of calling the method, so the
+    refusal is explicit and machine-readable rather than silent (issue #33).
+
+    Args:
+        func: The ``AutoPipetteService`` method to wrap.
+
+    Returns:
+        The wrapped method.
+    """
+
+    @functools.wraps(func)
+    def wrapper(self: AutoPipetteService, *args: Any, **kwargs: Any) -> CommandResult:  # ruff:ignore[any-type]
+        return self.config_lock_refusal() or func(self, *args, **kwargs)
+
+    return wrapper
 
 
 def _pipette_state_triple(autopipette: AutoPipette) -> tuple[str, bool, str]:
@@ -412,6 +446,9 @@ class AutoPipetteService:
 
         self.breakpoint_handler: Callable[[], bool] | None = None
         self._last_persisted_state: tuple[str, bool, str | None] | None = None
+        # Set when a live pipette/gantry/system change makes Moonraker's
+        # homed_axes untrustworthy (issue #33); cleared by a full init.
+        self._homing_invalidated = False
         # Last snapshot written to Moonraker's DB, so the decorator can skip
         # a round trip when nothing about tip occupancy changed.
         self._persisted_tip_presence: dict[str, Any] | None = None
@@ -434,6 +471,8 @@ class AutoPipetteService:
         location_manager: LocationManager,
         system_config: SystemConfig,
         config_locations: Path | None,
+        *,
+        replace: bool = False,
     ) -> None:
         """Populate the deck from the system config and the CLI override.
 
@@ -450,15 +489,18 @@ class AutoPipetteService:
             location_manager: The manager to populate.
             system_config: The loaded system configuration.
             config_locations: Path from ``--config-locations``, or None.
+            replace: Replace the current deck rather than adding to it.
 
         Raises:
             FileNotFoundError: If a referenced locations file doesn't exist.
             ValueError: If a locations source is invalid.
         """  # ruff: ignore[docstring-extraneous-exception]
         if system_config.locations.is_empty():
-            location_manager.load_from_json(DefaultFilenames.CONFIG_LOCATIONS)
+            location_manager.load_from_json(
+                DefaultFilenames.CONFIG_LOCATIONS, replace=replace
+            )
         else:
-            location_manager.load_spec(system_config.locations.sources)
+            location_manager.load_spec(system_config.locations.sources, replace=replace)
 
         if config_locations is not None:
             location_manager.load_from_json(config_locations.name)
@@ -645,6 +687,40 @@ class AutoPipetteService:
         for line in lines:
             self._dispatch_protocol_line(line)
 
+    def config_lock_refusal(self) -> CommandResult | None:
+        """Report whether config changes are locked by an active run.
+
+        Returns:
+            None if config may change, else the ``ok=False`` result to return
+            instead, with ``data={"reason": "run_active"}`` so a client can
+            tell "locked" from "invalid".
+        """
+        if not self._current.config_locked:
+            return None
+        return CommandResult(
+            ok=False,
+            message=(
+                f"Configuration is locked while a protocol is running "
+                f"({self._current.filename})."
+            ),
+            data={"reason": "run_active"},
+        )
+
+    async def dispatch_config(self, func: Callable[[], CommandResult]) -> CommandResult:
+        """`dispatch` a config change, refusing at once if a run is active.
+
+        Checks before waiting on the dispatch lock, which a run holds for its
+        whole replay (possibly paused at a breakpoint), so a refused change
+        comes back immediately instead of after the replay.
+
+        Args:
+            func: A zero-argument callable wrapping a config-change method.
+
+        Returns:
+            The refusal, or whatever ``func`` returns.
+        """
+        return self.config_lock_refusal() or await self.dispatch(func)
+
     async def dispatch(self, func: Callable[[], CommandResult]) -> CommandResult:
         """Run one synchronous typed command method under the dispatch lock.
 
@@ -682,6 +758,7 @@ class AutoPipetteService:
         autopipette = self._autopipette
         autopipette.init_pipette()
         self.output_gcode(autopipette.get_gcode(), "home_all.gcode")
+        self._homing_invalidated = False
         return CommandResult(
             ok=True, message="Pipette initialised and all motors homed."
         )
@@ -714,6 +791,7 @@ class AutoPipetteService:
             filename = HomingTargets.MOTOR_SPECIAL[motors]
             autopipette.init_pipette()
             self.output_gcode(autopipette.get_gcode(), filename)
+            self._homing_invalidated = False
             return CommandResult(
                 ok=True, message="All motors homed (full init complete)."
             )
@@ -1212,10 +1290,101 @@ class AutoPipetteService:
             ValueError: If the file's contents are an invalid liquid profile.
         """  # ruff: ignore[docstring-extraneous-exception]
         liquid = self._autopipette.config_manager.load_liquid(filename)
+        # Reloading the active liquid's profile must reach the syringe params.
+        self._autopipette.apply_config()
         return CommandResult(
             ok=True,
             message=f"Loaded liquid profile: {liquid.name}",
             data={"name": liquid.name, "viscosity_cP": liquid.viscosity_cP},
+        )
+
+    @refuse_while_running
+    def unload_liquid(self, liquid_name: str) -> CommandResult:
+        """Remove a liquid profile from the loaded set (its file is untouched).
+
+        Args:
+            liquid_name: Name of the loaded liquid profile.
+
+        Returns:
+            Result naming the unloaded profile, or ``ok=False`` if it isn't
+            loaded or is the active liquid.
+        """
+        if liquid_name == self._autopipette.active_liquid:
+            return CommandResult(
+                ok=False,
+                message=(
+                    f"'{liquid_name}' is the active liquid; switch_liquid to "
+                    "another one first."
+                ),
+            )
+        manager = self._autopipette.config_manager
+        try:
+            self._apply_config_change(lambda: manager.unload_liquid(liquid_name))
+        except ValueError as e:
+            return CommandResult(ok=False, message=str(e))
+        return CommandResult(ok=True, message=f"Unloaded liquid: {liquid_name}")
+
+    @refuse_while_running
+    def load_pipette(self, filename: str) -> CommandResult:
+        """Make a pipette profile the active pipette, live.
+
+        The swap invalidates homing until the next ``init``/``home all``,
+        since the syringe's mechanical limits may differ (issue #33).
+
+        Args:
+            filename: Pipette config filename (shared or local root).
+
+        Returns:
+            Result naming the new pipette, or ``ok=False`` if the file is
+            missing or invalid (nothing changes then).
+        """
+        manager = self._autopipette.config_manager
+        try:
+            self._apply_config_change(lambda: manager.load_pipette(filename))
+        except (FileNotFoundError, ValueError) as e:
+            return CommandResult(ok=False, message=str(e))
+        name = self._autopipette.pipette_model.name
+        return CommandResult(
+            ok=True,
+            message=f"Loaded pipette: {name}. Run 'init' before moving.",
+            data={"name": name},
+        )
+
+    @refuse_while_running
+    def switch_system(self, filename: str) -> CommandResult:
+        """Switch the active local system profile live, without restarting.
+
+        Loads the profile as a fresh start would (dropping runtime pipette/
+        gantry/liquid loads), re-points ``system/active.json`` at it, and
+        invalidates homing until the next ``init``/``home all`` (issue #33,
+        absorbing #67).
+
+        Args:
+            filename: A profile in the local root's ``system/`` directory.
+
+        Returns:
+            Result naming the profile, or ``ok=False`` if it doesn't exist or
+            won't load (nothing changes then).
+        """
+        profiles = {p.name: p for p in LocalConfigRoots.list_system_configs()}
+        if filename not in profiles:
+            return CommandResult(
+                ok=False,
+                message=(
+                    f"No system profile {filename!r}; available: {sorted(profiles)}"
+                ),
+            )
+        manager = self._autopipette.config_manager
+        try:
+            self._apply_config_change(lambda: manager.load_system_config(filename))
+        except (FileNotFoundError, ValueError) as e:
+            return CommandResult(ok=False, message=str(e))
+        LocalConfigRoots.set_active_system(profiles[filename])
+        self._homing_invalidated = True
+        return CommandResult(
+            ok=True,
+            message=f"Switched to system profile {filename}. Run 'init' before moving.",
+            data={"filename": filename},
         )
 
     def set(self, args: SetArgs) -> CommandResult:
@@ -1403,15 +1572,18 @@ class AutoPipetteService:
         self._autopipette.location_manager.save_to_json(filename)
         return CommandResult(ok=True, message=f"Saved locations to {filename}")
 
+    @refuse_while_running
     def set_config_value(
         self, category: str, filename: str, key_path: str, value: object
     ) -> CommandResult:
-        """Set one value in one config file, saved to the local config root.
+        """Set one value in one config file, and apply it live.
 
-        A thin adapter over `config_writer.set_config_value`: copy-on-write
+        A thin adapter over `config_writer.set_config_value` (copy-on-write
         from the shared repo, rejected if the result would not load, written
-        atomically. Only the file changes -- the running daemon does not
-        reload it (hot-reload is issue #33's next slice).
+        atomically), followed by a hot-reload (issue #33): a locations file
+        the deck holds entries from is re-read, a plate-template edit re-reads
+        every loaded locations file, and any other category rebuilds the
+        system config. Tip consumption and plate cursors survive the reload.
 
         Args:
             category: ``system``, ``gantry``, ``pipettes``, ``liquids``,
@@ -1422,17 +1594,86 @@ class AutoPipetteService:
 
         Returns:
             Result naming the written file, or ``ok=False`` with the reason a
-            write was refused (nothing is written in that case).
+            write was refused (nothing is written in that case) or could not
+            be applied live (the file was written; the live state is
+            unchanged).
         """
         try:
             path = set_config_value(category, filename, key_path, value)
         except (ValueError, FileNotFoundError) as e:
             return CommandResult(ok=False, message=str(e))
-        return CommandResult(
-            ok=True,
-            message=f"Set {key_path} = {value!r} in {path}",
-            data={"path": str(path)},
-        )
+        message = f"Set {key_path} = {value!r} in {path}"
+        location_manager = self._autopipette.location_manager
+        try:
+            if category == "locations":
+                self._reload_locations([filename])
+            elif category == "plates":
+                self._reload_locations(location_manager.loaded_files())
+            else:
+                self._apply_config_change(self._autopipette.config_manager.reload)
+        except (ValueError, FileNotFoundError, RuntimeError) as e:
+            return CommandResult(
+                ok=False,
+                message=f"{message}, but it could not be applied live: {e}",
+                data={"path": str(path)},
+            )
+        return CommandResult(ok=True, message=message, data={"path": str(path)})
+
+    def _apply_config_change(self, change: Callable[[], object]) -> None:
+        """Run a config-manager change, then re-derive the live domain state.
+
+        If the effective pipette model or gantry changed, homing is
+        invalidated until the next full ``init``/``home all``: the machine's
+        mechanical limits may have changed, so Moonraker's homed state can't
+        be trusted (issue #33). If the system config's ``locations`` changed,
+        the deck is rebuilt from it.
+
+        Args:
+            change: Mutates the config manager; all-or-nothing on failure.
+        """
+        ap = self._autopipette
+        before = (ap.pipette_model, ap.gantry)
+        before_locations = ap.system_config.locations
+        change()
+        ap.apply_config()
+        if (ap.pipette_model, ap.gantry) != before:
+            self._homing_invalidated = True
+        if ap.system_config.locations != before_locations:
+            with self._preserving_deck_state():
+                self._load_locations(
+                    ap.location_manager, ap.system_config, None, replace=True
+                )
+
+    def _reload_locations(self, filenames: list[str]) -> None:
+        """Re-read loaded locations files (see `LocationManager.reload_source`).
+
+        Args:
+            filenames: Locations files to re-read; ones the deck holds nothing
+                from are skipped.
+        """
+        with self._preserving_deck_state():
+            for filename in filenames:
+                self._autopipette.location_manager.reload_source(filename)
+
+    @contextmanager
+    def _preserving_deck_state(self) -> Generator[None]:
+        """Carry tip consumption and plate cursors across a deck rebuild.
+
+        A box or plate whose shape changed starts fresh (see
+        `TipBoxManager.restore`/`LocationManager.restore_cursors`).
+
+        Yields:
+            Control, while the deck is rebuilt.
+        """
+        location_manager = self._autopipette.location_manager
+        tips = location_manager.tipbox_manager.snapshot()
+        cursors = location_manager.snapshot_cursors()
+        try:
+            yield
+        finally:
+            # Also on failure: a multi-file reload may have applied some files.
+            location_manager.tipbox_manager.restore(tips)
+            location_manager.restore_cursors(cursors)
 
     @persist_tip_presence
     def load_locations(self, args: LoadLocationsArgs) -> CommandResult:
@@ -2389,6 +2630,8 @@ class AutoPipetteService:
             "gantry_accel_max": ap.gantry.accel_max,
             "hostname": config.network.get("hostname"),
             "port": config.network.get("port"),
+            "system_profile": ap.config_manager.system_file,
+            "system_profiles": [p.name for p in LocalConfigRoots.list_system_configs()],
         }
         return CommandResult(ok=True, message="System configuration.", data=data)
 
@@ -3260,6 +3503,7 @@ class AutoPipetteService:
                 "message": self._current.message,
                 "run_id": self._current.run_id,
                 "filename": self._current.filename,
+                "config_locked": self._current.config_locked,
             },
         )
 
