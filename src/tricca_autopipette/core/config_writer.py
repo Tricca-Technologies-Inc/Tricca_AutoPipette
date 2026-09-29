@@ -70,13 +70,11 @@ def set_config_value(
         ...     "liquids", "water.json", "density_g_ml", 1.0
         ... )  # doctest: +SKIP
         PosixPath('/home/me/.config/tricca-autopipette/liquids/water.json')
-    """
+    """  # ruff: ignore[docstring-extraneous-exception]
     return set_config_values(category, filename, {key_path: value})
 
 
-def set_config_values(
-    category: str, filename: str, updates: dict[str, object]
-) -> Path:
+def set_config_values(category: str, filename: str, updates: dict[str, object]) -> Path:
     """Set several values in one config file as one validated, atomic write.
 
     For fields that are only valid together, such as a calibration curve's
@@ -100,11 +98,13 @@ def set_config_values(
         >>> set_config_values(
         ...     "pipettes",
         ...     "p100_vertical.json",
-        ...     {"syringe.calibration_volumes": [10.0, 90.0],
-        ...      "syringe.calibration_mm": [6.4, 57.6]},
+        ...     {
+        ...         "syringe.calibration_volumes": [10.0, 90.0],
+        ...         "syringe.calibration_mm": [6.4, 57.6],
+        ...     },
         ... )  # doctest: +SKIP
         PosixPath('/home/me/.config/tricca-autopipette/pipettes/p100_vertical.json')
-    """  # ruff: ignore[docstring-extraneous-exception]
+    """
     if category not in WRITABLE_CATEGORIES:
         raise ValueError(
             f"Unknown config category {category!r}; expected one of "

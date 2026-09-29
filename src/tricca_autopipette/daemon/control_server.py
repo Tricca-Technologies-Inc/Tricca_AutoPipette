@@ -23,6 +23,7 @@ from aiohttp import WSMsgType, web
 
 from tricca_autopipette.commands.tap_cmd_parsers import (
     AspirateArgs,
+    CalibrateStartArgs,
     ChangeTipArgs,
     CoorArgs,
     DelLocArgs,
@@ -127,6 +128,9 @@ _RPC_DISPATCH: dict[str, _RpcCommand] = {
     "util.gcode_print": _RpcCommand(GcodePrintArgs, AutoPipetteService.gcode_print),
     "util.webcam_url": _RpcCommand(None, AutoPipetteService.webcam_url),
     "util.vol_to_mm": _RpcCommand(VolToMmArgs, AutoPipetteService.vol_to_mm),
+    "calibrate.status": _RpcCommand(None, AutoPipetteService.calibrate_status),
+    "calibrate.preview": _RpcCommand(None, AutoPipetteService.calibrate_preview),
+    "calibrate.abort": _RpcCommand(None, AutoPipetteService.calibrate_abort),
     "ws.status": _RpcCommand(None, AutoPipetteService.ws_status),
     "ws.ping": _RpcCommand(None, AutoPipetteService.ping_moonraker),
     "ws.read": _RpcCommand(None, AutoPipetteService.read_message),
@@ -401,6 +405,29 @@ class ControlServer:
                 await self.service.dispatch_config(
                     lambda: self.service.switch_system(params["filename"])
                 )
+            )
+        # Calibration steps that move or write are run-locked like config
+        # changes: refused at once while a run holds the dispatch lock.
+        if method == "calibrate.start":
+            args = CalibrateStartArgs(**params)
+            return dataclasses.asdict(
+                await self.service.dispatch_config(
+                    lambda: self.service.calibrate_start(args)
+                )
+            )
+        if method == "calibrate.dispense":
+            return dataclasses.asdict(
+                await self.service.dispatch_config(self.service.calibrate_dispense)
+            )
+        if method == "calibrate.record":
+            return dataclasses.asdict(
+                await self.service.dispatch_config(
+                    lambda: self.service.calibrate_record(float(params["mass_g"]))
+                )
+            )
+        if method == "calibrate.commit":
+            return dataclasses.asdict(
+                await self.service.dispatch_config(self.service.calibrate_commit)
             )
         if method == "util.mm_to_vol":
             return dataclasses.asdict(

@@ -21,6 +21,7 @@ import pytest
 
 from tricca_autopipette.commands.tap_cmd_parsers import (
     AspirateArgs,
+    CalibrateStartArgs,
     ChangeTipArgs,
     CoorArgs,
     DelLocArgs,
@@ -171,6 +172,15 @@ _BUILDER_CALLS: list[tuple[str, tuple[Any, ...]]] = [
     ("vol_to_mm", (VolToMmArgs(vol=10.0),)),
     ("mm_to_vol", (100,)),
     ("see_calibration", (SeeCalibrationArgs(liquid=None),)),
+    # The unhomed fixture refuses start/dispense (NotHomedError); the rest
+    # come back ok=False with no session, so nothing is written.
+    ("calibrate_start", (CalibrateStartArgs(source="a", dest="b"),)),
+    ("calibrate_dispense", ()),
+    ("calibrate_record", (0.05,)),
+    ("calibrate_status", ()),
+    ("calibrate_preview", ()),
+    ("calibrate_commit", ()),
+    ("calibrate_abort", ()),
     ("run_start", ("does_not_exist.pipette",)),
     ("run_validate", ("does_not_exist.pipette",)),
     ("run_status", ()),

@@ -2536,6 +2536,7 @@ class AutoPipetteService:
         Returns:
             Result with the session in ``data``, or ``ok=False`` naming why
             it can't start.
+
         Raises:
             NotHomedError: If the pipette is not homed.
         """  # ruff: ignore[docstring-extraneous-exception]
@@ -2551,14 +2552,18 @@ class AutoPipetteService:
         if ap.state.tip_state != TipState.ATTACHED or ap.state.has_liquid:
             return refuse("Need a clean, empty tip on first ('next_tip').")
         missing = [
-            n for n in (args.source, args.dest) if not ap.location_manager.has_location(n)
+            n
+            for n in (args.source, args.dest)
+            if not ap.location_manager.has_location(n)
         ]
         if missing:
             return refuse(f"Unknown location(s): {', '.join(missing)}.")
         usable = ap.usable_capacity_ul()
         targets = args.volumes_ul or default_targets(usable)
         if len(targets) < 2 or not all(0 < v <= usable for v in targets):
-            return refuse(f"Need at least 2 target volumes, each in (0, {usable:g}] uL.")
+            return refuse(
+                f"Need at least 2 target volumes, each in (0, {usable:g}] uL."
+            )
         water = ap.system_config.liquids.get(CALIBRATION_LIQUID)
         density = water.density_g_ml if water is not None else None
         if density is None or density <= 0:
@@ -2601,9 +2606,9 @@ class AutoPipetteService:
         Raises:
             NotHomedError: If the pipette is not homed.
         """  # ruff: ignore[docstring-extraneous-exception]
-        session, refusal = self._calibration_turn("dispense")
-        if session is None:
-            return refusal
+        session = self._calibration_turn("dispense")
+        if isinstance(session, CommandResult):
+            return session
         ap = self._autopipette
         if ap.state.tip_state != TipState.ATTACHED or ap.state.has_liquid:
             return self._calibration_result(
@@ -2638,9 +2643,9 @@ class AutoPipetteService:
             Result with the session in ``data``, or ``ok=False`` if it's not
             this step's turn or the mass isn't a positive number.
         """
-        session, refusal = self._calibration_turn("record")
-        if session is None:
-            return refusal
+        session = self._calibration_turn("record")
+        if isinstance(session, CommandResult):
+            return session
         if not (math.isfinite(mass_g) and mass_g > 0):
             return self._calibration_result(
                 f"Mass must be a positive number of grams, got {mass_g}.", ok=False
@@ -2663,9 +2668,9 @@ class AutoPipetteService:
             parallel lists plus ``slope``/``intercept``), or ``ok=False`` if
             not every point is recorded yet.
         """
-        session, refusal = self._calibration_turn("preview", "commit")
-        if session is None:
-            return refusal
+        session = self._calibration_turn("preview", "commit")
+        if isinstance(session, CommandResult):
+            return session
         syringe = self._autopipette.pipette_model.syringe
         fit = _curve(*session.measured())
         current = (
@@ -2702,9 +2707,9 @@ class AutoPipetteService:
             Result naming the written file, or ``ok=False`` if not previewed
             yet or the write was refused (the session is kept then).
         """
-        session, refusal = self._calibration_turn("commit")
-        if session is None:
-            return refusal
+        session = self._calibration_turn("commit")
+        if isinstance(session, CommandResult):
+            return session
         active = self._autopipette.config_manager.active_pipette_file()
         if active != session.pipette_file:
             return self._calibration_result(
@@ -2764,7 +2769,7 @@ class AutoPipetteService:
 
     def _calibration_turn(
         self, step: CalibrationStep, *also: CalibrationStep
-    ) -> tuple[CalibrationSession, None] | tuple[None, CommandResult]:
+    ) -> CalibrationSession | CommandResult:
         """Check that `step` is what the calibration session accepts next.
 
         Args:
@@ -2772,22 +2777,21 @@ class AutoPipetteService:
             *also: Other session steps during which it is accepted too.
 
         Returns:
-            ``(session, None)`` if it is, else ``(None, refusal)`` with an
-            ``ok=False`` result naming the step that is due.
+            The session if it is, else an ``ok=False`` result naming the step
+            that is due.
         """
         session = self._calibration
         if session is None:
-            return None, self._calibration_result(
+            return self._calibration_result(
                 "No calibration in progress; start one with 'calibrate start'.",
                 ok=False,
             )
         if session.step not in (step, *also):
-            return None, self._calibration_result(
-                f"Can't {step} now: the next calibration step is "
-                f"'{session.step}'.",
+            return self._calibration_result(
+                f"Can't {step} now: the next calibration step is '{session.step}'.",
                 ok=False,
             )
-        return session, None
+        return session
 
     def _calibration_result(self, message: str, ok: bool = True) -> CommandResult:
         """Build a result carrying the current session state.

@@ -24,7 +24,11 @@ from tricca_autopipette.core.pipette_models import TipState
 from tricca_autopipette.core.plates import PlateParams
 from tricca_autopipette.core.volume_converter import VolumeConverter
 from tricca_autopipette.core.well import StrategyType, Well
-from tricca_autopipette.daemon.service import AutoPipetteService, RunStatus
+from tricca_autopipette.daemon.service import (
+    AutoPipetteService,
+    CommandResult,
+    RunStatus,
+)
 
 _CATEGORY_ATTRS = {
     "system": ("DIR_CONFIG_SYSTEM", "DIR_LOCAL_SYSTEM"),
@@ -94,7 +98,9 @@ def svc(shared: Path, tmp_path: Path) -> AutoPipetteService:
     return service
 
 
-def _start(svc: AutoPipetteService, volumes: list[float] | None = None):  # noqa: ANN202
+def _start(
+    svc: AutoPipetteService, volumes: list[float] | None = None
+) -> CommandResult:
     return svc.calibrate_start(
         CalibrateStartArgs(source="reservoir", dest="balance", volumes_ul=volumes)
     )
@@ -197,11 +203,9 @@ class TestDispense:
         self, svc: AutoPipetteService
     ) -> None:
         _start(svc, [40.0, 80.0])
-        emitted: list[str] = []
-        with patch.object(
-            svc, "output_gcode", side_effect=lambda g, *a, **k: emitted.extend(g)
-        ):
+        with patch.object(svc, "output_gcode") as output:
             result = svc.calibrate_dispense()
+        emitted: list[str] = [line for c in output.call_args_list for line in c.args[0]]
 
         assert result.ok, result.message
         assert result.data is not None
@@ -296,17 +300,19 @@ class TestPreview:
 
 class TestOutOfOrder:
     @pytest.mark.parametrize(
-        "step",
+        ("step", "args"),
         [
-            lambda s: s.calibrate_dispense(),
-            lambda s: s.calibrate_record(0.05),
-            lambda s: s.calibrate_preview(),
-            lambda s: s.calibrate_commit(),
-            lambda s: s.calibrate_abort(),
+            ("calibrate_dispense", ()),
+            ("calibrate_record", (0.05,)),
+            ("calibrate_preview", ()),
+            ("calibrate_commit", ()),
+            ("calibrate_abort", ()),
         ],
     )
-    def test_every_step_needs_a_session(self, svc: AutoPipetteService, step) -> None:  # noqa: ANN001
-        result = step(svc)
+    def test_every_step_needs_a_session(
+        self, svc: AutoPipetteService, step: str, args: tuple[float, ...]
+    ) -> None:
+        result: CommandResult = getattr(svc, step)(*args)
 
         assert not result.ok
         assert "No calibration in progress" in result.message
@@ -381,7 +387,11 @@ class TestCommit:
         local = json.loads(
             (DefaultPaths.DIR_LOCAL_PIPETTE / "p100_vertical.json").read_text()
         )
-        assert local["syringe"]["calibration_volumes"] == pytest.approx([19.0, 41.0, 80.0])
+        assert local["syringe"]["calibration_volumes"] == pytest.approx([
+            19.0,
+            41.0,
+            80.0,
+        ])
         assert local["syringe"]["calibration_mm"] == pytest.approx([10.0, 20.0, 40.0])
         assert shared_file.read_bytes() == shared_before
         # Live: the next aspirate/dispense uses the new curve...
