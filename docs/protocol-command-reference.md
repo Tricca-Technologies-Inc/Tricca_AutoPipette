@@ -500,12 +500,12 @@ Options:
   -h, --help  show this help message and exit
 ```
 
-### `vol_to_steps`
+### `vol_to_mm`
 
 ```
-Usage: vol_to_steps [-h] vol
+Usage: vol_to_mm [-h] vol
 
-Convert a volume in μL to motor steps.
+Convert a volume in μL to plunger travel in mm.
 
 Positional Arguments:
   vol         Volume in microliters

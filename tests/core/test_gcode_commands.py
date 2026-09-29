@@ -20,19 +20,19 @@ class TestStandardGCode:
 
 
 class TestManualStepper:
-    def test_homing_move_matches_legacy_numeric_endstop_text(self) -> None:
+    def test_homing_move(self) -> None:
         line = gc.manual_stepper(
             "pipette_stepper",
             set_position=0,
             move=499.5,
             speed=200.0,
             accel=800.0,
-            stop_on_endstop=1,
+            stop_on_endstop="home",
         )
 
         assert line == (
             "MANUAL_STEPPER STEPPER=pipette_stepper SET_POSITION=0 "
-            "MOVE=499.5 SPEED=200.0 ACCEL=800.0 STOP_ON_ENDSTOP=1\n"
+            "MOVE=499.5 SPEED=200.0 ACCEL=800.0 STOP_ON_ENDSTOP=home\n"
         )
 
     def test_string_form_stop_on_endstop(self) -> None:

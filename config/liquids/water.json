@@ -12,5 +12,5 @@
   "pre_air_gap_ul": 0.0,
   "post_air_gap_ul": 0.0,
   "calibration_volumes": null,
-  "calibration_steps": null
+  "calibration_mm": null
 }
