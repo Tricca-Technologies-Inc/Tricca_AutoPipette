@@ -12,9 +12,9 @@ load_locations examples_deck.json --replace
 next_tip
 
 # Transfer 20uL from the first well of example_source to the first well of
-# example_dest. --keep_tip overrides pipette's own default of disposing the
+# example_dest. --tip_end keep overrides pipette's own default of disposing the
 # tip at the end, so the explicit dispose_tip below has something to do.
-pipette 20 example_source example_dest --keep_tip
+pipette 20 example_source example_dest --tip_end keep
 
 # Eject the tip into the configured waste container.
 dispose_tip

@@ -52,8 +52,9 @@ address; that's a security decision, not a convenience toggle.
 
 ## Checks
 
-Run all four before opening a PR — there's no CI yet ([#19](https://github.com/Tricca-Technologies-Inc/Tricca_AutoPipette/issues/19)), so this is
-what stands behind a review today:
+CI (`.github/workflows/ci.yml`) runs these on every PR, on x86_64 and arm64,
+plus the kiosk browser tests, and `main` requires them to pass. Run them
+locally first so a red CI run isn't your first signal:
 
 ```bash
 uv run ruff check .

@@ -82,13 +82,15 @@ repeatable on every run, not just the first.
 ```
 load_locations examples_deck.json --replace
 next_tip
-pipette 20 example_source example_dest --keep_tip
+pipette 20 example_source example_dest --tip_end keep
 dispose_tip
 ```
 
 `pipette <vol_ul> <source> <dest>` is the main command: it aspirates from
 `source` and dispenses into `dest`, picking up a tip automatically if none
-is attached and disposing of it into the waste container when it's done.
+is attached and disposing of it into the waste container when it's done
+(or, if the deck has no waste container, putting it back in the tipbox slot
+it came from — that slot is then marked used and never handed out again).
 That means the minimal version of this protocol is really just
 
 ```
@@ -97,11 +99,17 @@ pipette 20 example_source example_dest
 ```
 
 The example spells out `next_tip`/`dispose_tip` explicitly (with
-`--keep_tip` on the `pipette` line, so there's still a tip on when
+`--tip_end keep` on the `pipette` line, so there's still a tip on when
 `dispose_tip` runs) to make the three steps of a transfer visible. Reach
 for the explicit form when you need to hold a tip across more than one
 `aspirate`/`dispense` pair — see `splits.pipette` below — or want a
 specific tipbox via `--tipbox`.
+
+`--tip_end` picks where the tip goes after a transfer: `waste` (the
+default), `keep` (leave it on), or `return` (put it back in its origin slot,
+marked used). Older protocols use `--keep_tip`; it still works as an alias
+for `--tip_end keep`, but logs a deprecation warning on every use and shows
+up as a `validate` finding, so prefer `--tip_end keep` in new files.
 
 ⚠️ **A deck needs a waste container.** `dispose_tip` (and `pipette`'s
 default tip-disposal at the end of a transfer) raise `NoWasteContainerError`
@@ -167,7 +175,7 @@ load_locations examples_deck.json --replace
 next_tip
 move_loc example_source
 break
-pipette 20 example_source example_dest --keep_tip
+pipette 20 example_source example_dest --tip_end keep
 dispose_tip
 ```
 
