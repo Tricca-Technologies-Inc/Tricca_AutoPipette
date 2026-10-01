@@ -25,7 +25,7 @@ jobs:
           - { os: ubuntu-24.04-arm, suffix: " (arm64)" }
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0  # no floating major tags upstream
         with:
           python-version: "3.12"
@@ -43,7 +43,7 @@ jobs:
           - { os: ubuntu-24.04-arm, suffix: " (arm64)" }
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0  # no floating major tags upstream
         with:
           python-version: "3.12"
@@ -65,7 +65,7 @@ jobs:
           - { os: ubuntu-24.04-arm, suffix: " (arm64)" }
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0  # no floating major tags upstream
         with:
           python-version: "3.12"
@@ -79,7 +79,7 @@ jobs:
   test-browser:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0  # no floating major tags upstream
         with:
           python-version: "3.12"
@@ -93,7 +93,7 @@ jobs:
         run: echo "version=$(uv run --frozen python -c 'import importlib.metadata as m; print(m.version("playwright"))')" >> "$GITHUB_OUTPUT"
       - name: Cache chromium
         id: cache-chromium
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: chromium-${{ runner.os }}-playwright-${{ steps.playwright.outputs.version }}
