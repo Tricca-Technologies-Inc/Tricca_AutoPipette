@@ -14,5 +14,5 @@ move_loc example_source
 # of this file from running; choosing "continue" resumes on the next line.
 break
 
-pipette 20 example_source example_dest --keep_tip
+pipette 20 example_source example_dest --tip_end keep
 dispose_tip
