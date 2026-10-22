@@ -51,12 +51,12 @@ license-files = ["LICENSE"]
 # Development tools. Exact-pinned (unlike runtime deps above) so an upstream
 # ruff/pyright release can't silently redden CI; Renovate bumps them.
 dev = [
-    "coverage==7.16.2",
-    "httpx2==2.13.1",  # starlette.testclient.TestClient's transport, for kiosk tests
+    "coverage==7.17.0",
+    "httpx2==2.16.0",  # starlette.testclient.TestClient's transport, for kiosk tests
     "pyright==1.1.414",
     "pytest==9.1.1",
-    "ruff==0.16.10",
-    "sphinx==9.1.0",
+    "ruff==0.17.2",
+    "sphinx==9.2.0",
     "sphinx-rtd-theme==3.1.0",
 ]
 
@@ -65,7 +65,7 @@ dev = [
 # `playwright install` pulls a real browser binary (~300MB) that most work
 # on this repo never touches.
 browser-test = [
-    "pytest-playwright==0.9.0",
+    "pytest-playwright==0.10.0",
 ]
 
 
