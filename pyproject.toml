@@ -9,7 +9,7 @@
 #   - Pytest
 #   - Coverage
 #
-# Python version: 3.12+
+# Python version: 3.14+
 # ============================================================================
 
 [build-system]
@@ -22,7 +22,7 @@ name = "tricca-autopipette"
 version = "0.2.0"
 description = "Automation software for the Tricca AutoPipette"
 
-requires-python = ">=3.12"
+requires-python = ">=3.14"
 
 # Loose lower bounds only -- this is an application, not a library, so the
 # exact resolved versions are pinned (with hashes) in the committed `uv.lock`,
@@ -91,7 +91,7 @@ required-environments = [
 
 [tool.ruff]
 
-target-version = "py312"
+target-version = "py314"
 line-length = 88
 preview = true
 
@@ -102,6 +102,9 @@ exclude = [
     "__pycache__",
     "build",
     "dist",
+    # Plan packages (docs/plans/) carry reference scripts that belong to
+    # other repos (e.g. the Klipper test harness CFG-2 commits elsewhere).
+    "docs/plans",
 ]
 
 
@@ -207,7 +210,7 @@ docstring-code-format = true
 venvPath = "."
 venv = ".venv"
 
-pythonVersion = "3.12"
+pythonVersion = "3.14"
 
 typeCheckingMode = "strict"
 
@@ -219,6 +222,9 @@ reportUnknownParameterType = true
 reportUnknownVariableType = true
 
 extraPaths = ["src", "scripts"]
+
+# Plan packages carry reference scripts owned by other repos (see ruff exclude).
+exclude = ["**/.*", "**/__pycache__", "**/node_modules", ".venv", "docs/plans"]
 
 # The service/daemon tests are deliberately white-box: they assert against
 # `service._autopipette`, drive `ControlServer._call` directly, and check

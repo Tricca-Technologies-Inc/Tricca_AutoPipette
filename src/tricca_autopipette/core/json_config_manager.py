@@ -651,7 +651,7 @@ class JsonConfigManager:
         for path in LocalConfigRoots.list_files("liquids").values():
             try:
                 data = json.loads(path.read_text(encoding="utf-8"))
-            except (OSError, ValueError):
+            except OSError, ValueError:
                 continue
             if (
                 isinstance(data, dict)

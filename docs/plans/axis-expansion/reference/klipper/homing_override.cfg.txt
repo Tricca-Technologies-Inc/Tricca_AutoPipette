@@ -1,0 +1,58 @@
+# homing_override.cfg.txt -- REPLACES the [homing_override] section in
+# tricca-autopipette.cfg (paste it there; it is not a separate include).
+# Deliberately not named *.cfg: cb1-autopipette seeds every root *.cfg onto
+# machines, so this snippet must never be copied to the repo root as a file.
+#
+# Bare G28: Z, X, Y (existing order), park, all plates, then the plunger.
+# G28 <letters>: only what is named. X/Y/Z keep the Z, X, Y order and the park;
+# U V W A B C home single plates; P homes the plunger.
+# Behaviour changes vs. the old override:
+#  - the old if/elif chain homed only the FIRST of Z/X/Y named in one G28
+#    (G28 X Y homed only X). This homes all named.
+#  - the park after a lettered G28 moves only axes that are homed afterwards,
+#    so G28 X on a cold machine no longer errors ("Must home axis first").
+#  - unknown letters are refused (the old override ran a full home for them).
+
+[homing_override]
+axes: xyzuvwabcp
+gcode:
+  {% set c = printer["gcode_macro _PLATE_CFG"] %}
+  {% set gantry = [] %}
+  {% for a in "ZXY" %}{% if a in params %}{% set _ = gantry.append(a) %}{% endif %}{% endfor %}
+  {% set plates = [] %}
+  {% for p, ax in c.axes.items() %}{% if ax in params %}{% set _ = plates.append(p) %}{% endif %}{% endfor %}
+  {% set pipette = 'P' in params %}
+  # "G" is the command's own letter (G28), which Klipper passes as a parameter.
+  {% set known = ["G", "X", "Y", "Z", "P"] + c.axes.values()|list %}
+  {% set unknown = params.keys()|reject("in", known)|list %}
+  {% if unknown %}
+    # e.g. G28 E, or G28 XY (no space: Klipper reads XY as one word). Without
+    # this, they would fall through to a full home, plates and plunger included.
+    {action_raise_error("G28 refused: unknown axis " ~ unknown|join(", ") ~ " (use letters X Y Z " ~ c.axes.values()|join(" ") ~ " P, separated by spaces)")}
+  {% endif %}
+  {% if not gantry and not plates and not pipette %}
+    G28 Z
+    G28 X
+    G28 Y
+    G1 X150 Y150 Z0 F6000
+    HOME_PLATES
+    HOME_PIPETTE
+  {% else %}
+    {% for a in gantry %}
+      G28 {a}
+    {% endfor %}
+    {% if gantry %}
+      {% set homed = printer.toolhead.homed_axes ~ (gantry|join|lower) %}
+      {% set park = [] %}
+      {% if 'x' in homed %}{% set _ = park.append("X150") %}{% endif %}
+      {% if 'y' in homed %}{% set _ = park.append("Y150") %}{% endif %}
+      {% if 'z' in homed %}{% set _ = park.append("Z0") %}{% endif %}
+      G1 {park|join(" ")} F6000
+    {% endif %}
+    {% for p in plates %}
+      HOME_PLATE PLATE={p}
+    {% endfor %}
+    {% if pipette %}
+      HOME_PIPETTE
+    {% endif %}
+  {% endif %}
