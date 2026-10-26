@@ -1,0 +1,143 @@
+# Rev L run, 2026-10-22, Klipper 7bc4d09, Octopus V1.1 F446 firmware dictionary. Configs built with make_fixture.py from Tricca_Autopipette_Configs d7c45ce.
+##### fx1
+stage 1, 55 cases, work dir <tmp>
+PASS C-01 config loads | STATE axis_map={'X': 0, 'Y': 1, 'Z': 2, 'E': 3} pos=(0.0, 0.0, 0.0, 0.0) pip_homed=0 homed= plates=0 abs=True
+PASS C-02 G1 U10 with Z unhomed | Move refused by interlock: Z not homed
+PASS C-03 G1 U10 with Z at 0 and plates homed |  'V': 5, 'W': 6, 'A': 7, 'B': 8, 'C': 9} pos=(150.0, 150.0, 0.0, 0.0, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0) pip_homed=0 homed=xyz plates=6 abs=True
+PASS C-04 Z lowered, then G1 U10 | Move refused by interlock: tip below safe height (Z > 0.0)
+PASS C-05 plate mid-travel, then G1 Z20 | Move refused by interlock: plate1 mid-travel (10.0)
+PASS C-06 plates parked (V fully out), G1 Z20 | V': 5, 'W': 6, 'A': 7, 'B': 8, 'C': 9} pos=(150.0, 150.0, 20.0, 0.0, 0.0, 350.0, 0.0, 0.0, 0.0, 0.0) pip_homed=0 homed=xyz plates=6 abs=True
+PASS C-07 G1 Z20 U0 in one move | Move refused by interlock: tip below safe height (Z > 0.0)
+PASS C-08 raw MANUAL_STEPPER on a plate | MANUAL_STEPPER on plate1 refused: use HOME_PLATE / PLATE_* macros
+PASS C-08b same with _PLATE_INTERNAL=1 | no output
+PASS C-09 G91 relative Z descent, plate mid-travel | Move refused by interlock: plate3 mid-travel (5.0)
+PASS C-10 SET_GCODE_OFFSET Z=30 then G1 Z0, plate mid-travel | Move refused by interlock: plate4 mid-travel (7.0)
+PASS C-11 G0 U10 with Z lowered | Move refused by interlock: tip below safe height (Z > 0.0)
+PASS C-12 G1 U351 | Move out of range: 150.000 150.000 0.000 [0.000]
+PASS C-14b startup bind body binds P | STATE axis_map={'X': 0, 'Y': 1, 'Z': 2, 'E': 3, 'P': 4} pos=(0.0, 0.0, 0.0, 0.0, 0.0) pip_homed=0 homed= plates=0 abs=True
+PASS C-15 G1 P before plunger homing | Move refused by interlock: plunger not homed
+PASS C-19 M84 then G1 U5 | Move refused by interlock: plate1 not homed
+PASS C-19c stepper off/on by hand then G1 U5 | Move refused by interlock: plate1 not homed
+PASS C-21 G28 U with Z unhomed | HOME_PLATE refused: home Z and raise the tip first
+PASS C-22 bare G28 homes everything |  6, 'A': 7, 'B': 8, 'C': 9, 'P': 10} pos=(150.0, 150.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) pip_homed=1 homed=xyz plates=6 abs=True
+PASS C-23 G28 X Y homes the gantry only | STATE axis_map={'X': 0, 'Y': 1, 'Z': 2, 'E': 3} pos=(150.0, 150.0, 0.0, 0.0) pip_homed=0 homed=xy plates=0 abs=True
+PASS C-24 G28 P homes the plunger only | STATE axis_map={'X': 0, 'Y': 1, 'Z': 2, 'E': 3, 'P': 4} pos=(0.0, 0.0, 0.0, 0.0, 0.0) pip_homed=1 homed= plates=0 abs=True
+PASS C-25 G92 P5 has no effect | STATE axis_map={'X': 0, 'Y': 1, 'Z': 2, 'E': 3, 'P': 4} pos=(0.0, 0.0, 0.0, 0.0, 0.0) pip_homed=1 homed= plates=0 abs=True
+PASS C-26 RESUME would lower the tip onto a mid-travel plate | Move refused by interlock: plate1 mid-travel (100.0)
+PASS C-26b RESUME with plates parked returns the tip |  'V': 5, 'W': 6, 'A': 7, 'B': 8, 'C': 9} pos=(150.0, 150.0, 20.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) pip_homed=0 homed=xyz plates=6 abs=True
+PASS C-27 RESTORE_GCODE_STATE MOVE=1 onto a mid-travel plate | Move refused by interlock: plate1 mid-travel (100.0)
+PASS C-27b RESTORE_GCODE_STATE MOVE=1 of an unknown state | RESTORE_GCODE_STATE MOVE=1 refused: state 'nope' was not saved through SAVE_GCODE_STATE
+PASS C-27c PLATE_MOVE still works (SAVE/RESTORE without MOVE) | 'V': 5, 'W': 6, 'A': 7, 'B': 8, 'C': 9} pos=(150.0, 150.0, 0.0, 0.0, 0.0, 350.0, 0.0, 0.0, 0.0, 0.0) pip_homed=0 homed=xyz plates=6 abs=True
+PASS C-28 SET_GCODE_OFFSET Z_ADJUST=20 MOVE=1, plate mid-travel | Move refused by interlock: plate1 mid-travel (100.0)
+PASS C-28b SET_GCODE_OFFSET Z=20 MOVE=1, plate mid-travel | Move refused by interlock: plate1 mid-travel (100.0)
+PASS C-28c SET_GCODE_OFFSET Z_ADJUST=5 MOVE=1, plates parked | , 'V': 5, 'W': 6, 'A': 7, 'B': 8, 'C': 9} pos=(150.0, 150.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) pip_homed=0 homed=xyz plates=6 abs=True
+PASS C-30 STEPPER_BUZZ on a plate with the tip low | STEPPER_BUZZ on plate1 refused: home Z and raise the tip first
+PASS C-30b STEPPER_BUZZ on a Z stepper, plate mid-travel | Move refused by interlock: plate1 mid-travel (100.0)
+PASS C-31 M84, re-enable via the base command, G1 U5 | Move refused by interlock: plate1 not homed
+PASS C-33 G28 X on a cold machine (park only homed axes) | STATE axis_map={'X': 0, 'Y': 1, 'Z': 2, 'E': 3} pos=(150.0, 0.0, 0.0, 0.0) pip_homed=0 homed=x plates=0 abs=True
+PASS C-34 unbound plate flagged homed: clean refusal, no crash | Move refused by interlock: plate1 not homed
+PASS C-35 lower-case g1 u10 with the tip low | Move refused by interlock: tip below safe height (Z > 0.0)
+PASS C-38 MANUAL_PROBE refused (TESTZ would bypass) | MANUAL_PROBE is disabled on this machine: its TESTZ moves Z without the collision interlock
+PASS C-38b Z_ENDSTOP_CALIBRATE refused | Z_ENDSTOP_CALIBRATE is disabled on this machine: its TESTZ moves Z without the collision interlock
+PASS C-40 SET_STEPPER_ENABLE ENABLE=0 on a Z stepper | SET_STEPPER_ENABLE ENABLE=0 on stepper_z refused: use M84 (it also unhomes the axis)
+PASS C-41 refused PLATE_MOVE keeps relative mode | Move refused by interlock: tip below safe height (Z > 0.0)
+PASS C-41b PLATE_MOVE beyond travel refused before any change | PLATE_MOVE refused: POS 351.0 outside 0..350.0
+PASS C-42 G28 E (unknown letter) refused, no full home | G28 refused: unknown axis E (use letters X Y Z U V W A B C P, separated by spaces)
+PASS C-42b G28 XY (no space) refused | G28 refused: unknown axis XY (use letters X Y Z U V W A B C P, separated by spaces)
+PASS C-43 SAVE_GCODE_STATE name with a quote refused | SAVE_GCODE_STATE refused: NAME must not contain quotes or backslashes
+PASS C-45 command inventory matches | 117 commands, all classified
+PASS C-13 tapd-style plunger move, P rebound | STATE axis_map={'X': 0, 'Y': 1, 'Z': 2, 'E': 3, 'P': 4} pos=(0.0, 0.0, 0.0, 0.0, -5.0) pip_homed=1 homed= plates=0 abs=True
+PASS C-16 tapd homing sequence then G1 P-2 | STATE axis_map={'X': 0, 'Y': 1, 'Z': 2, 'E': 3, 'P': 4} pos=(0.0, 0.0, 0.0, 0.0, -2.0) pip_homed=1 homed= plates=0 abs=True
+PASS C-18 SYNC=0 on the plunger | SYNC=0 is not supported on pipette_stepper while it is bound to P
+PASS C-19b M84 then G1 P-1 | Move refused by interlock: plunger not homed
+PASS C-20 P unbound, then G1 P-1 | Move refused by interlock: plunger axis P not bound (send any pipette_stepper command to rebind)
+PASS C-32 M84, tapd-style try_home move, then G1 P-3 | Move refused by interlock: plunger not homed
+PASS C-32b M84, MANUAL_STEPPER ENABLE=1, then G1 P-1 | Move refused by interlock: plunger not homed
+PASS C-39 motors off by Klipper, ENABLE=1, then G1 P-1 | Move refused by interlock: plunger not homed
+PASS C-39b motors off by Klipper, tapd try_home move, then G1 P-3 | Move refused by interlock: plunger not homed
+PASS C-39c normal tapd re-zero and move keep the plunger homed | STATE axis_map={'X': 0, 'Y': 1, 'Z': 2, 'E': 3, 'P': 4} pos=(0.0, 0.0, 0.0, 0.0, -2.0) pip_homed=1 homed= plates=0 abs=True
+FAILURES: 0
+##### fx2
+stage 2, 52 cases, work dir <tmp>
+PASS C-01 config loads | STATE axis_map={'X': 0, 'Y': 1, 'Z': 2, 'E': 3} pos=(0.0, 0.0, 0.0, 0.0) pip_homed=0 homed= plates=0 abs=True
+PASS C-02 G1 U10 with Z unhomed | Move refused by interlock: Z not homed
+PASS C-03 G1 U10 with Z at 0 and plates homed |  'V': 5, 'W': 6, 'A': 7, 'B': 8, 'C': 9} pos=(150.0, 150.0, 0.0, 0.0, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0) pip_homed=0 homed=xyz plates=6 abs=True
+PASS C-04 Z lowered, then G1 U10 | Move refused by interlock: tip below safe height (Z > 0.0)
+PASS C-05 plate mid-travel, then G1 Z20 | Move refused by interlock: plate1 mid-travel (10.0)
+PASS C-06 plates parked (V fully out), G1 Z20 | V': 5, 'W': 6, 'A': 7, 'B': 8, 'C': 9} pos=(150.0, 150.0, 20.0, 0.0, 0.0, 350.0, 0.0, 0.0, 0.0, 0.0) pip_homed=0 homed=xyz plates=6 abs=True
+PASS C-07 G1 Z20 U0 in one move | Move refused by interlock: tip below safe height (Z > 0.0)
+PASS C-08 raw MANUAL_STEPPER on a plate | MANUAL_STEPPER on plate1 refused: use HOME_PLATE / PLATE_* macros
+PASS C-08b same with _PLATE_INTERNAL=1 | no output
+PASS C-09 G91 relative Z descent, plate mid-travel | Move refused by interlock: plate3 mid-travel (5.0)
+PASS C-10 SET_GCODE_OFFSET Z=30 then G1 Z0, plate mid-travel | Move refused by interlock: plate4 mid-travel (7.0)
+PASS C-11 G0 U10 with Z lowered | Move refused by interlock: tip below safe height (Z > 0.0)
+PASS C-12 G1 U351 | Move out of range: 150.000 150.000 0.000 [0.000]
+PASS C-14b startup bind body binds P | STATE axis_map={'X': 0, 'Y': 1, 'Z': 2, 'E': 3, 'P': 4} pos=(0.0, 0.0, 0.0, 0.0, 0.0) pip_homed=0 homed= plates=0 abs=True
+PASS C-15 G1 P before plunger homing | Move refused by interlock: plunger not homed
+PASS C-19 M84 then G1 U5 | Move refused by interlock: plate1 not homed
+PASS C-19c stepper off/on by hand then G1 U5 | Move refused by interlock: plate1 not homed
+PASS C-21 G28 U with Z unhomed | HOME_PLATE refused: home Z and raise the tip first
+PASS C-22 bare G28 homes everything |  6, 'A': 7, 'B': 8, 'C': 9, 'P': 10} pos=(150.0, 150.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) pip_homed=1 homed=xyz plates=6 abs=True
+PASS C-23 G28 X Y homes the gantry only | STATE axis_map={'X': 0, 'Y': 1, 'Z': 2, 'E': 3} pos=(150.0, 150.0, 0.0, 0.0) pip_homed=0 homed=xy plates=0 abs=True
+PASS C-24 G28 P homes the plunger only | STATE axis_map={'X': 0, 'Y': 1, 'Z': 2, 'E': 3, 'P': 4} pos=(0.0, 0.0, 0.0, 0.0, 0.0) pip_homed=1 homed= plates=0 abs=True
+PASS C-25 G92 P5 has no effect | STATE axis_map={'X': 0, 'Y': 1, 'Z': 2, 'E': 3, 'P': 4} pos=(0.0, 0.0, 0.0, 0.0, 0.0) pip_homed=1 homed= plates=0 abs=True
+PASS C-26 RESUME would lower the tip onto a mid-travel plate | Move refused by interlock: plate1 mid-travel (100.0)
+PASS C-26b RESUME with plates parked returns the tip |  'V': 5, 'W': 6, 'A': 7, 'B': 8, 'C': 9} pos=(150.0, 150.0, 20.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) pip_homed=0 homed=xyz plates=6 abs=True
+PASS C-27 RESTORE_GCODE_STATE MOVE=1 onto a mid-travel plate | Move refused by interlock: plate1 mid-travel (100.0)
+PASS C-27b RESTORE_GCODE_STATE MOVE=1 of an unknown state | RESTORE_GCODE_STATE MOVE=1 refused: state 'nope' was not saved through SAVE_GCODE_STATE
+PASS C-27c PLATE_MOVE still works (SAVE/RESTORE without MOVE) | 'V': 5, 'W': 6, 'A': 7, 'B': 8, 'C': 9} pos=(150.0, 150.0, 0.0, 0.0, 0.0, 350.0, 0.0, 0.0, 0.0, 0.0) pip_homed=0 homed=xyz plates=6 abs=True
+PASS C-28 SET_GCODE_OFFSET Z_ADJUST=20 MOVE=1, plate mid-travel | Move refused by interlock: plate1 mid-travel (100.0)
+PASS C-28b SET_GCODE_OFFSET Z=20 MOVE=1, plate mid-travel | Move refused by interlock: plate1 mid-travel (100.0)
+PASS C-28c SET_GCODE_OFFSET Z_ADJUST=5 MOVE=1, plates parked | , 'V': 5, 'W': 6, 'A': 7, 'B': 8, 'C': 9} pos=(150.0, 150.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) pip_homed=0 homed=xyz plates=6 abs=True
+PASS C-30 STEPPER_BUZZ on a plate with the tip low | STEPPER_BUZZ on plate1 refused: home Z and raise the tip first
+PASS C-30b STEPPER_BUZZ on a Z stepper, plate mid-travel | Move refused by interlock: plate1 mid-travel (100.0)
+PASS C-31 M84, re-enable via the base command, G1 U5 | Move refused by interlock: plate1 not homed
+PASS C-33 G28 X on a cold machine (park only homed axes) | STATE axis_map={'X': 0, 'Y': 1, 'Z': 2, 'E': 3} pos=(150.0, 0.0, 0.0, 0.0) pip_homed=0 homed=x plates=0 abs=True
+PASS C-34 unbound plate flagged homed: clean refusal, no crash | Move refused by interlock: plate1 not homed
+PASS C-35 lower-case g1 u10 with the tip low | Move refused by interlock: tip below safe height (Z > 0.0)
+PASS C-38 MANUAL_PROBE refused (TESTZ would bypass) | MANUAL_PROBE is disabled on this machine: its TESTZ moves Z without the collision interlock
+PASS C-38b Z_ENDSTOP_CALIBRATE refused | Z_ENDSTOP_CALIBRATE is disabled on this machine: its TESTZ moves Z without the collision interlock
+PASS C-40 SET_STEPPER_ENABLE ENABLE=0 on a Z stepper | SET_STEPPER_ENABLE ENABLE=0 on stepper_z refused: use M84 (it also unhomes the axis)
+PASS C-41 refused PLATE_MOVE keeps relative mode | Move refused by interlock: tip below safe height (Z > 0.0)
+PASS C-41b PLATE_MOVE beyond travel refused before any change | PLATE_MOVE refused: POS 351.0 outside 0..350.0
+PASS C-42 G28 E (unknown letter) refused, no full home | G28 refused: unknown axis E (use letters X Y Z U V W A B C P, separated by spaces)
+PASS C-42b G28 XY (no space) refused | G28 refused: unknown axis XY (use letters X Y Z U V W A B C P, separated by spaces)
+PASS C-43 SAVE_GCODE_STATE name with a quote refused | SAVE_GCODE_STATE refused: NAME must not contain quotes or backslashes
+PASS C-45 command inventory matches | 117 commands, all classified
+PASS C-17 G1 P-61 beyond travel | Move out of range: 0.000 0.000 0.000 [0.000]
+PASS C-17b G1 P-2 after G28 P | STATE axis_map={'X': 0, 'Y': 1, 'Z': 2, 'E': 3, 'P': 4} pos=(0.0, 0.0, 0.0, 0.0, -2.0) pip_homed=1 homed= plates=0 abs=True
+PASS C-17c G1 P1 above home | Move out of range: 0.000 0.000 0.000 [0.000]
+PASS C-13s plain MANUAL_STEPPER on the bound plunger | Must unregister from gcode axis first
+PASS C-19s M84 then G1 P-1 | Move refused by interlock: plunger not homed
+PASS C-36s re-zeroing the plunger by hand makes it unhomed | Move refused by interlock: plunger not homed
+PASS C-37s M84, base re-enable, then G1 P-5 | Move refused by interlock: plunger not homed
+FAILURES: 0
+
+# (Rev K, Octopus Pro dictionary) Same Rev K suite against the Rev J config (before the second-review fixes).
+# Every new Rev K refusal case fails, as intended; the positive control C-39c passes.
+##### Rev J config, fx1
+stage 1, 55 cases, work dir <tmp>
+FAIL C-38 MANUAL_PROBE refused (TESTZ would bypass) | unexpected log line: Starting manual Z probe. Use TESTZ to adjust position.
+FAIL C-38b Z_ENDSTOP_CALIBRATE refused | unexpected log line: Starting manual Z probe. Use TESTZ to adjust position.
+FAIL C-40 SET_STEPPER_ENABLE ENABLE=0 on a Z stepper | unexpected log line: stepper_z has been manually disabled
+FAIL C-41 refused PLATE_MOVE keeps relative mode | refused, but state after doesn't match 'abs=False': : 7, 'B': 8, 'C': 9} pos=(150.0, 150.0, 20.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) pip_homed=0 home
+FAIL C-41b PLATE_MOVE beyond travel refused before any change | unexpected log line: Move out of range: 150.000 150.000 0.000 [0.000]
+FAIL C-42 G28 E (unknown letter) refused, no full home |  6, 'A': 7, 'B': 8, 'C': 9, 'P': 10} pos=(150.0, 150.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) pip_homed=1 homed=xyz plates=6 abs=True
+FAIL C-42b G28 XY (no space) refused |  6, 'A': 7, 'B': 8, 'C': 9, 'P': 10} pos=(150.0, 150.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) pip_homed=1 homed=xyz plates=6 abs=True
+FAIL C-43 SAVE_GCODE_STATE name with a quote refused | unexpected log line: Malformed command 'SET_GCODE_VARIABLE MACRO=_GSTATE VARIABLE=z VALUE="{"it's": 0.0}"'
+FAIL C-45 command inventory matches | not in inventory: []; listed but missing: ['MANUAL_PROBE_BASE', 'Z_ENDSTOP_CALIBRATE_BASE', '_PLATE_PRECHECK']
+FAIL C-39 motors off by Klipper, ENABLE=1, then G1 P-1 | STATE axis_map={'X': 0, 'Y': 1, 'Z': 2, 'E': 3, 'P': 4} pos=(0.0, 0.0, 0.0, 0.0, -1.0) pip_homed=1 homed= plates=0 abs=True
+FAIL C-39b motors off by Klipper, tapd try_home move, then G1 P-3 | STATE axis_map={'X': 0, 'Y': 1, 'Z': 2, 'E': 3, 'P': 4} pos=(0.0, 0.0, 0.0, 0.0, -3.0) pip_homed=1 homed= plates=0 abs=True
+FAILURES: 11
+##### Rev J config, fx2
+stage 2, 52 cases, work dir <tmp>
+FAIL C-38 MANUAL_PROBE refused (TESTZ would bypass) | unexpected log line: Starting manual Z probe. Use TESTZ to adjust position.
+FAIL C-38b Z_ENDSTOP_CALIBRATE refused | unexpected log line: Starting manual Z probe. Use TESTZ to adjust position.
+FAIL C-40 SET_STEPPER_ENABLE ENABLE=0 on a Z stepper | unexpected log line: stepper_z has been manually disabled
+FAIL C-41 refused PLATE_MOVE keeps relative mode | refused, but state after doesn't match 'abs=False': : 7, 'B': 8, 'C': 9} pos=(150.0, 150.0, 20.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) pip_homed=0 home
+FAIL C-41b PLATE_MOVE beyond travel refused before any change | unexpected log line: Move out of range: 150.000 150.000 0.000 [0.000]
+FAIL C-42 G28 E (unknown letter) refused, no full home |  6, 'A': 7, 'B': 8, 'C': 9, 'P': 10} pos=(150.0, 150.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) pip_homed=1 homed=xyz plates=6 abs=True
+FAIL C-42b G28 XY (no space) refused |  6, 'A': 7, 'B': 8, 'C': 9, 'P': 10} pos=(150.0, 150.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) pip_homed=1 homed=xyz plates=6 abs=True
+FAIL C-43 SAVE_GCODE_STATE name with a quote refused | unexpected log line: Malformed command 'SET_GCODE_VARIABLE MACRO=_GSTATE VARIABLE=z VALUE="{"it's": 0.0}"'
+FAIL C-45 command inventory matches | not in inventory: []; listed but missing: ['MANUAL_PROBE_BASE', 'Z_ENDSTOP_CALIBRATE_BASE', '_PLATE_PRECHECK']
+FAILURES: 9
