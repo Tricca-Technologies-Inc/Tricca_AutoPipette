@@ -10,6 +10,8 @@ The root `README.md` is a thin front door (quickstart + links) — this file is 
 
 This file describes the system as it **is**. Planned-but-unimplemented work lives in **GitHub Issues** — start from the backlog map (issue #34), which carries the dependency order, the standing findings, and an index of every entry. Check it before starting anything non-trivial, since several issues record decisions already taken and open questions that must be settled first. The backlog also flags problems that are true of the code *today*. Note that neither `tapd`'s control plane nor the kiosk has **any** authentication — both are protected solely by binding loopback, so treat any change to a bind address as a security decision (see `systemd/README.md` and `docs/adr/0002-loopback-only-trust-boundary.md`). `tapd` enforces this fail-closed: `daemon/main.py`'s `check_bind_host` refuses a non-loopback `--host` unless `--allow-insecure-bind` is passed. The kiosk has no such guard (its bind is uvicorn's own `--host`), so its systemd unit's `127.0.0.1` is the only thing keeping it local.
 
+**Axis expansion in progress.** Six plate drawers (axes U V W A B C) and a plunger axis P are being added (`docs/plans/axis-expansion/`, issues TAP-1…TAP-12; the 2026-10-26 addendum wins over Rev L). None of it is in the code yet, so nothing below describes it. `docs/adr/0004-klipper-owned-extra-axes-and-parity-exception.md` records the decisions (Klipper owns those axes and its interlock is the authority; the kiosk is temporarily exempt from client parity until TAP-10), and `CONTEXT.md` has the terms. The sections on the homed-safety interlock, `GCodeCommands`, Moonraker state, location loading (the `drawers` block) and the stage-2 plunger model get updated as TAP-1…TAP-6 and TAP-12 land.
+
 ## Commands
 
 ```bash
@@ -231,7 +233,7 @@ The five canonical triage roles, each label string equal to its name, plus a rep
 
 ### Domain docs
 
-Single-context — `CONTEXT.md` (glossary) and `docs/adr/` (ADRs 0001–0003) at the repo root. See `docs/agents/domain.md`.
+Single-context — `CONTEXT.md` (glossary) and `docs/adr/` (ADRs 0001–0004) at the repo root. See `docs/agents/domain.md`.
 
 ### Test-driven development
 
