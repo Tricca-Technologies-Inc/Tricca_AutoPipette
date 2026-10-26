@@ -270,7 +270,7 @@ def test_builder_method_is_dispatchable(
             )
         # Any other ValueError (e.g. a real validation error) means the
         # method WAS recognized -- that's what this test checks for.
-    except (AutoPipetteError, FileNotFoundError, RuntimeError):
+    except AutoPipetteError, FileNotFoundError, RuntimeError:
         # Reaching a real precondition failure (unhomed pipette, missing
         # file, no WebSocket client) means dispatch found the right branch
         # and got as far as calling into the service -- a pass here.

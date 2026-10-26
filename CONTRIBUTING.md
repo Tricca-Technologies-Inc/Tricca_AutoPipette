@@ -81,7 +81,7 @@ docs-affecting PR, not the plain build.)
 ## Code style
 
 Briefly, since `CLAUDE.md`'s "Code style" section is authoritative: Python
-3.12+, `from __future__ import annotations`, Google-style docstrings
+3.14+, `from __future__ import annotations`, Google-style docstrings
 enforced repo-wide via ruff's `D`/`DOC` rules (only `tests/**` is exempt from
 `D`, none are exempt from `DOC`), pyright strict mode. Match the surrounding
 file's docstring density and naming rather than introducing a new style
