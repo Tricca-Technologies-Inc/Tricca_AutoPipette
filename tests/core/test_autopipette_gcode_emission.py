@@ -48,10 +48,14 @@ import re
 from collections.abc import Sequence
 from pathlib import Path
 
+import pytest
+
 from tricca_autopipette.core.autopipette import AutoPipette
 from tricca_autopipette.core.coordinate import Coordinate
+from tricca_autopipette.core.gcode_commands import GCodeCommands
 
 GOLDEN = Path(__file__).parents[1] / "fixtures" / "gcode" / "autopipette_emission.gcode"
+EXTRA_AXIS_GOLDEN = GOLDEN.with_name("extra_axis_emission.gcode")
 
 
 _NUMBER = re.compile(r"-?\d+(\.\d+)?")
@@ -101,6 +105,55 @@ def test_every_emission_site_emits_unchanged_gcode(
         zip(actual_numbers, golden_numbers, strict=True)
     ):
         assert math.isclose(actual, golden, rel_tol=1e-9), (index, actual, golden)
+
+
+def test_extra_axis_builders_emit_the_klipper_contract() -> None:
+    """Every extra-axis emission (issue #137), byte for byte.
+
+    No ``AutoPipette`` site emits these yet (TAP-4/TAP-5 add them), so this
+    drives the builders directly. The golden was written by hand from the
+    Klipper <-> tapd contract (``docs/plans/axis-expansion/00-umbrella-plan.md``
+    §6.3, and ``reference/klipper/plate-macros.cfg``'s macro parameters), not
+    captured from the builders.
+    """
+    gc = GCodeCommands()
+    emitted = [
+        gc.linear_move(z=0, axes={"U": 120.5}, feedrate=3000),
+        gc.linear_move(z=2.0, axes={"P": -3.5}, feedrate=600),
+        gc.home("U", "V", "W", "A", "B", "C"),
+        gc.home("P"),
+        gc.home_plate("plate2"),
+        gc.home_plates(),
+        gc.home_pipette(),
+        gc.plate_move("plate2", 120.5),
+        gc.plate_move("plate2", 0, speed=50),
+        gc.plate_in("plate1"),
+        gc.plate_in("plate1", speed=25),
+        gc.plate_out("plate6"),
+        gc.plate_out("plate6", speed=25),
+        gc.plates_in(),
+        gc.set_velocity_limit(accel=500),
+    ]
+
+    assert "".join(emitted) == EXTRA_AXIS_GOLDEN.read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize(
+    "never_send",
+    [
+        "G1.1",
+        "G0.1",
+        "_BASE",
+        "M84.1",
+        "M18.1",
+        "_PLATE_INTERNAL",
+        "SET_GCODE_VARIABLE",
+    ],
+)
+def test_no_golden_emission_bypasses_the_klipper_interlock(never_send: str) -> None:
+    # Umbrella plan §6.3's never-send list: each bypasses the interlock.
+    for golden in GOLDEN.parent.glob("*.gcode"):
+        assert never_send not in golden.read_text(encoding="utf-8"), golden.name
 
 
 def test_set_trigger_drains_motion_then_drives_the_configured_pin(

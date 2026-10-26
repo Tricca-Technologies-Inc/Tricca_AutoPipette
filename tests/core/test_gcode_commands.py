@@ -111,6 +111,26 @@ class TestMotionAndModes:
     def test_home_several_axes(self) -> None:
         assert gc.home("X", "Y") == "G28 X Y\n"
 
+    def test_linear_move_extra_axes_follow_xyz_before_feedrate(self) -> None:
+        assert gc.linear_move(z=2.0, axes={"P": -3.5}, feedrate=600) == (
+            "G1 Z2.0 P-3.5 F600\n"
+        )
+
+    def test_home_extra_axes(self) -> None:
+        assert gc.home("U", "P") == "G28 U P\n"
+
+    @pytest.mark.parametrize(
+        "letter", ["X", "Y", "Z", "E", "F", "N", "UV", "", "u", "1", "\n"]
+    )
+    def test_reserved_or_malformed_extra_axis_is_rejected(self, letter: str) -> None:
+        with pytest.raises(ValueError, match="axis letter"):
+            gc.linear_move(axes={letter: 1.0})
+
+    @pytest.mark.parametrize("letter", ["E", "F", "N", "UV", "", "u", "1", "\n"])
+    def test_home_rejects_reserved_or_malformed_letter(self, letter: str) -> None:
+        with pytest.raises(ValueError, match="axis letter"):
+            gc.home(letter)
+
     def test_speed_factor(self) -> None:
         assert gc.speed_factor(150) == "M220 S150\n"
 
