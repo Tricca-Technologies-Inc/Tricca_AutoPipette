@@ -79,13 +79,11 @@ A plate position, from Klipper's per-plate list in `_PLATE_CFG` (default
 to lower the tip below `z_safe` unless every plate is homed and within
 `park_tol` of one of its own tip-safe positions (interlock rule I2, D39).
 Klipper's list is the authority; `tapd`'s pipetting stops are checked against
-it.
-
-**Parked**:
-A plate within `park_tol` of 0 (in) or `position_max` (out) (umbrella §3).
-With the default tip-safe list these are the only tip-safe positions; D39
-widens I2 to any tip-safe position, so "parked" is the default case, not the
-whole rule.
+it. The two ends of travel are simply **in** (0) and **out** (`position_max`).
+_Avoid_: "parked". Rev L defined it as within `park_tol` of 0 or
+`position_max`, which D39 made narrower than the rule I2 actually checks; the
+term is dropped (D45). Say "at a tip-safe position", or "in"/"out" for the
+ends.
 
 **`z_safe`**:
 The highest raw Z (closest to 0) at which the tip clears every plate and
