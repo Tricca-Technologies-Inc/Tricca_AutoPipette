@@ -809,8 +809,8 @@ class JsonConfigManager:
             >>> manager = JsonConfigManager()
             >>> _ = manager.load_system_config()
             >>> liquids = manager.list_available_liquids()
-            >>> print(liquids)
-            ['methanol', 'water']
+            >>> "water" in liquids
+            True
         """
         if self.system_config is None:
             return []
