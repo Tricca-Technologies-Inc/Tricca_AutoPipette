@@ -128,16 +128,16 @@ Usage: dispense [-h] [--volume VOLUME] [--dest_row DEST_ROW]
 Dispense liquid to a destination location.
 
 Positional Arguments:
-  dest                  Destination location name
+  dest                 Destination location name
 
 Options:
-  -h, --help            show this help message and exit
-  --volume, -v VOLUME   Volume to dispense in μL (default: all remaining
-                        liquid)
-  --dest_row DEST_ROW   Destination row index (for plate locations)
-  --dest_col DEST_COL   Destination column index (for plate locations)
-  --wiggle              Wiggle tip during dispensing to dislodge residual
-                        droplets
+  -h, --help           show this help message and exit
+  --volume, -v VOLUME  Volume to dispense in μL (default: all remaining
+                       liquid)
+  --dest_row DEST_ROW  Destination row index (for plate locations)
+  --dest_col DEST_COL  Destination column index (for plate locations)
+  --wiggle             Wiggle tip during dispensing to dislodge residual
+                       droplets
 ```
 
 ### `pipette`

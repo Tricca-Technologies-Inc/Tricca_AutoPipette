@@ -104,7 +104,7 @@ html_static_path = ["_static"]
 
 
 def _skip_undocumented_dunder(
-    _app: "Sphinx", _what: str, name: str, obj: object, skip: bool, _options: object
+    _app: Sphinx, _what: str, name: str, obj: object, skip: bool, _options: object
 ) -> bool:
     """Keep a dunder member only if it carries its own docstring.
 
@@ -135,7 +135,7 @@ def _skip_undocumented_dunder(
     return doc == base_doc or skip
 
 
-def setup(app: "Sphinx") -> None:
+def setup(app: Sphinx) -> None:
     """Register the dunder-filtering hook with the Sphinx build.
 
     Args:
