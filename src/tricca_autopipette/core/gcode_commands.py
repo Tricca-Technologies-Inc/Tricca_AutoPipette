@@ -71,6 +71,32 @@ def _config_name(name: str) -> str:
     return shlex.quote(name)
 
 
+#: Letters Klipper refuses as a ``GCODE_AXIS`` (``manual_stepper.py``): the
+#: gantry axes, extrude, feed rate and line number.
+RESERVED_AXIS_LETTERS = frozenset("XYZEFN")
+
+
+def _extra_axis(letter: str) -> str:
+    """Check that ``letter`` can name an extra (non-gantry) G-code axis.
+
+    Args:
+        letter: The axis letter, e.g. ``U`` or ``P``.
+
+    Returns:
+        ``letter``, unchanged.
+
+    Raises:
+        ValueError: If ``letter`` isn't one uppercase ``A``-``Z`` letter,
+            or is one of ``RESERVED_AXIS_LETTERS``.
+    """
+    if len(letter) != 1 or not "A" <= letter <= "Z" or letter in RESERVED_AXIS_LETTERS:
+        raise ValueError(
+            f"Invalid extra axis letter {letter!r}: must be one letter A-Z, "
+            f"not {' '.join(sorted(RESERVED_AXIS_LETTERS))}"
+        )
+    return letter
+
+
 def _line(command: str, **params: ParamValue) -> GCode:
     """Format ``COMMAND KEY=VALUE ...`` as one newline-terminated line.
 
@@ -178,29 +204,37 @@ class GCodeCommands:
         x: float | None = None,
         y: float | None = None,
         z: float | None = None,
+        axes: Mapping[str, float] | None = None,
         feedrate: float | None = None,
     ) -> GCode:
         r"""Build ``G1``: a linear toolhead move.
 
-        Omitted axes don't move. Whether ``x``/``y``/``z`` are absolute or
+        Omitted axes don't move. Whether the targets are absolute or
         relative depends on the last ``G90``/``G91``.
 
         Args:
             x: X target, in mm.
             y: Y target, in mm.
             z: Z target, in mm.
+            axes: Extra G-code axes bound in Klipper (a plate's ``U``, the
+                plunger's ``P``, ...), letter -> target in mm, emitted
+                after ``Z`` in the given order. The caller supplies the
+                letters; there is no fixed list here.
             feedrate: Move speed, in mm/**min** (G-code's ``F`` unit).
 
         Returns:
-            ``G1 [X<x>] [Y<y>] [Z<z>] [F<feedrate>]``.
+            ``G1 [X<x>] [Y<y>] [Z<z>] [<axis><value>...] [F<feedrate>]``.
 
         Example:
             >>> GCodeCommands().linear_move(z=5.0, feedrate=600)
             'G1 Z5.0 F600\n'
+            >>> GCodeCommands().linear_move(axes={"U": 120.0}, feedrate=3000)
+            'G1 U120.0 F3000\n'
         """
+        extra = [(_extra_axis(letter), value) for letter, value in (axes or {}).items()]
         words = [
             f"{letter}{value}"
-            for letter, value in (("X", x), ("Y", y), ("Z", z), ("F", feedrate))
+            for letter, value in (("X", x), ("Y", y), ("Z", z), *extra, ("F", feedrate))
             if value is not None
         ]
         return GCode(" ".join(["G1", *words]) + "\n")
@@ -229,22 +263,32 @@ class GCodeCommands:
         """
         return GCode("G91\n")
 
-    def home(self, *axes: Literal["X", "Y", "Z"]) -> GCode:
-        r"""Build ``G28``: home the given gantry axes, or all of them.
+    def home(self, *axes: str) -> GCode:
+        r"""Build ``G28``: home the given axes, or all of them.
+
+        Besides the gantry's ``X``/``Y``/``Z``, any extra axis letter the
+        machine's ``[homing_override]`` knows (plates, the plunger ``P``)
+        may be named; the caller supplies those letters. A letter other
+        than ``X``/``Y``/``Z`` that isn't a single ``A``-``Z`` letter, or
+        is reserved (``RESERVED_AXIS_LETTERS``), raises ``ValueError``.
 
         Args:
-            *axes: Axes to home; none means all.
+            *axes: Axes to home, space-separated in the output (Klipper
+                reads ``XY`` as one word); none means all.
 
         Returns:
-            ``G28 [X] [Y] [Z]``.
+            ``G28 [<axis>...]``.
 
         Example:
             >>> GCodeCommands().home()
             'G28\n'
             >>> GCodeCommands().home("X")
             'G28 X\n'
+            >>> GCodeCommands().home("U", "P")
+            'G28 U P\n'
         """
-        return GCode(" ".join(["G28", *axes]) + "\n")
+        letters = [a if a in {"X", "Y", "Z"} else _extra_axis(a) for a in axes]
+        return GCode(" ".join(["G28", *letters]) + "\n")
 
     def speed_factor(self, percent: float) -> GCode:
         r"""Build ``M220``: override the speed factor.
@@ -789,3 +833,114 @@ class GCodeCommands:
             'STEPPER_BUZZ STEPPER=stepper_x\n'
         """
         return _line("STEPPER_BUZZ", STEPPER=_config_name(stepper))
+
+    # ------------------------------------------------------------------
+    # Plate and plunger macros (axis-expansion umbrella plan §6.3)
+    # ------------------------------------------------------------------
+    # Not Klipper built-ins: macros defined by the machine's
+    # plate-macros.cfg, which run the interlock before any motion. Plates
+    # are named by their [manual_stepper <plate>] name (plate1...plate6).
+
+    def home_plate(self, plate: str) -> GCode:
+        r"""Build ``HOME_PLATE``: home one plate (same as ``G28 <letter>``).
+
+        Args:
+            plate: The plate's ``[manual_stepper <name>]`` name.
+
+        Returns:
+            ``HOME_PLATE PLATE=<plate>``.
+
+        Example:
+            >>> GCodeCommands().home_plate("plate1")
+            'HOME_PLATE PLATE=plate1\n'
+        """
+        return _line("HOME_PLATE", PLATE=_config_name(plate))
+
+    def home_plates(self) -> GCode:
+        r"""Build ``HOME_PLATES``: home every plate, one at a time.
+
+        Returns:
+            ``HOME_PLATES``.
+
+        Example:
+            >>> GCodeCommands().home_plates()
+            'HOME_PLATES\n'
+        """
+        return _line("HOME_PLATES")
+
+    def home_pipette(self) -> GCode:
+        r"""Build ``HOME_PIPETTE``: home the plunger (same as ``G28 P``).
+
+        Returns:
+            ``HOME_PIPETTE``.
+
+        Example:
+            >>> GCodeCommands().home_pipette()
+            'HOME_PIPETTE\n'
+        """
+        return _line("HOME_PIPETTE")
+
+    def plate_move(
+        self, plate: str, pos: float, *, speed: float | None = None
+    ) -> GCode:
+        r"""Build ``PLATE_MOVE``: move a plate to an absolute position.
+
+        Klipper refuses an out-of-range ``POS`` itself.
+
+        Args:
+            plate: The plate's ``[manual_stepper <name>]`` name.
+            pos: Target position, in mm (0 = fully in).
+            speed: Move speed, in mm/**s**; ``None`` uses the plate's limit.
+
+        Returns:
+            ``PLATE_MOVE PLATE=<plate> POS=<pos> [SPEED=<speed>]``.
+
+        Example:
+            >>> GCodeCommands().plate_move("plate2", 120.5, speed=50)
+            'PLATE_MOVE PLATE=plate2 POS=120.5 SPEED=50\n'
+        """
+        return _line("PLATE_MOVE", PLATE=_config_name(plate), POS=pos, SPEED=speed)
+
+    def plate_in(self, plate: str, *, speed: float | None = None) -> GCode:
+        r"""Build ``PLATE_IN``: move a plate fully in (position 0).
+
+        Args:
+            plate: The plate's ``[manual_stepper <name>]`` name.
+            speed: Move speed, in mm/s; ``None`` uses the plate's limit.
+
+        Returns:
+            ``PLATE_IN PLATE=<plate> [SPEED=<speed>]``.
+
+        Example:
+            >>> GCodeCommands().plate_in("plate1")
+            'PLATE_IN PLATE=plate1\n'
+        """
+        return _line("PLATE_IN", PLATE=_config_name(plate), SPEED=speed)
+
+    def plate_out(self, plate: str, *, speed: float | None = None) -> GCode:
+        r"""Build ``PLATE_OUT``: move a plate fully out (its ``position_max``).
+
+        Args:
+            plate: The plate's ``[manual_stepper <name>]`` name.
+            speed: Move speed, in mm/s; ``None`` uses the plate's limit.
+
+        Returns:
+            ``PLATE_OUT PLATE=<plate> [SPEED=<speed>]``.
+
+        Example:
+            >>> GCodeCommands().plate_out("plate1", speed=25)
+            'PLATE_OUT PLATE=plate1 SPEED=25\n'
+        """
+        return _line("PLATE_OUT", PLATE=_config_name(plate), SPEED=speed)
+
+    def plates_in(self) -> GCode:
+        r"""Build ``PLATES_IN``: move every plate fully in.
+
+        Returns:
+            ``PLATES_IN``.
+
+        Example:
+            >>> GCodeCommands().plates_in()
+            'PLATES_IN\n'
+        """
+        return _line("PLATES_IN")
