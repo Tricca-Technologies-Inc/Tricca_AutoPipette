@@ -33,7 +33,7 @@ import uuid
 from collections.abc import Callable, Generator, Iterable
 from contextlib import contextmanager
 from contextvars import ContextVar
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Literal
 
@@ -111,7 +111,7 @@ from tricca_autopipette.core.splits import parse_splits_spec
 from tricca_autopipette.core.traversal import parse_well_ranges
 from tricca_autopipette.core.volume_converter import VolumeConverter
 from tricca_autopipette.core.well import StrategyType, Well
-from tricca_autopipette.daemon.moonraker_state import MoonrakerStateTracker
+from tricca_autopipette.daemon.moonraker_state import AxisConfig, MoonrakerStateTracker
 from tricca_autopipette.moonraker.moonraker_requests import MoonrakerRequests
 from tricca_autopipette.moonraker.websocket_client import WebSocketClient
 
@@ -2981,10 +2981,17 @@ class AutoPipetteService:
 
         Returns:
             Result with a flat ``data`` dict of system/pipette/gantry/
-            network settings.
+            network settings, plus ``extra_axes``: Klipper's plate and
+            plunger axis config (`AxisConfig` as a dict; no plates and
+            ``pipette`` None when Klipper doesn't define them).
         """
         ap = self._autopipette
         config = ap.system_config
+        axes = (
+            self.moonraker_state.axis_config
+            if self.moonraker_state is not None
+            else AxisConfig()
+        )
         data = {
             "system_name": config.system_name,
             "version": config.version,
@@ -2999,6 +3006,7 @@ class AutoPipetteService:
             "port": config.network.get("port"),
             "system_profile": ap.config_manager.system_file,
             "system_profiles": [p.name for p in LocalConfigRoots.list_system_configs()],
+            "extra_axes": asdict(axes),
         }
         return CommandResult(ok=True, message="System configuration.", data=data)
 
