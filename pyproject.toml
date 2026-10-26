@@ -102,6 +102,9 @@ exclude = [
     "__pycache__",
     "build",
     "dist",
+    # Plan packages (docs/plans/) carry reference scripts that belong to
+    # other repos (e.g. the Klipper test harness CFG-2 commits elsewhere).
+    "docs/plans",
 ]
 
 
@@ -219,6 +222,9 @@ reportUnknownParameterType = true
 reportUnknownVariableType = true
 
 extraPaths = ["src", "scripts"]
+
+# Plan packages carry reference scripts owned by other repos (see ruff exclude).
+exclude = ["**/.*", "**/__pycache__", "**/node_modules", ".venv", "docs/plans"]
 
 # The service/daemon tests are deliberately white-box: they assert against
 # `service._autopipette`, drive `ControlServer._call` directly, and check
