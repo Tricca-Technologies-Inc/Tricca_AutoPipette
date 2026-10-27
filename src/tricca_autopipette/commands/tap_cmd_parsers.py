@@ -59,7 +59,8 @@ class HomeArgs:
     """Arguments for the ``home`` command.
 
     Attributes:
-        motors: Which motors to home (x, y, z, pipette, axis, all, servo).
+        motors: Which motors to home (x, y, z, pipette, axis, all, servo,
+            plates, or a plate name/axis letter).
     """
 
     motors: str
@@ -572,7 +573,11 @@ class TAPCmdParsers:
     parser_home.add_argument(
         "motors",
         type=str,
-        help="Motors to home: x, y, z, pipette, axis, all, servo",
+        help=(
+            "Motors to home: x, y, z, pipette, axis, all, servo; and, where "
+            "Klipper configures plates, plates or a plate name (plate1...) "
+            "or its axis letter"
+        ),
     )
 
     parser_move: Cmd2ArgumentParser = Cmd2ArgumentParser(
