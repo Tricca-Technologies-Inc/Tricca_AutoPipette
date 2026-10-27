@@ -103,7 +103,8 @@ class AxisConfig:
 
     Attributes:
         plates: Every plate in ``_PLATE_CFG.axes`` order.
-        z_safe: Raw Z at or above which the tip clears every plate, or None.
+        z_safe: Highest raw Z (closest to 0) at which the tip clears every
+            plate; the tip is safe when raw Z <= z_safe. None if absent.
         park_tol: Tolerance (mm) for "at a tip-safe position", or None.
         pipette: The P axis, or None if ``_PIPETTE_CFG`` is absent.
     """
