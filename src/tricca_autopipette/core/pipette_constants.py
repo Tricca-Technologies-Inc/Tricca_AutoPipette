@@ -93,7 +93,6 @@ class HomingTargets:
         "y": ("home_y.gcode", "home_y"),
         "z": ("home_z.gcode", "home_z"),
         "pipette": ("home_pipette.gcode", "home_pipette_motors"),
-        "axis": ("home_axis.gcode", "home_axis"),
         "servo": ("home_servo.gcode", "home_servo"),
     }
 
@@ -106,7 +105,6 @@ class HomingTargets:
         "y",
         "z",
         "pipette",
-        "axis",
         "servo",
         "all",
     })

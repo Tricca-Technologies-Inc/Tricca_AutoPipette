@@ -8,6 +8,7 @@ config, homed plates, live axis positions); G-code is read back through
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -94,21 +95,44 @@ def model(service: AutoPipetteService) -> dict[str, float]:
     return service._autopipette.location_manager.drawer_positions
 
 
+#: The raise a plate move starts with unless Z is known to be at or above
+#: z_safe (owner decision D49): absolute mode, then z_safe at the gantry's Z
+#: speed (default_gantry.json's speed_z).
+RAISE = ["G90\n", "G1 Z0.0 F12000.0\n"]
+
+
+def interactive(
+    service: AutoPipetteService,
+    monkeypatch: pytest.MonkeyPatch,
+    call: Callable[[], object],
+) -> list[GCode]:
+    # What a command uploads outside a batch (a tap/kiosk command).
+    sent: list[GCode] = []
+
+    def capture(gcode: list[GCode], *args: object, **kwargs: object) -> None:
+        del args, kwargs
+        sent.extend(gcode)
+
+    monkeypatch.setattr(service, "output_gcode", capture)
+    call()
+    return [g for g in sent if g.strip() and not g.startswith(";")]
+
+
 class TestPlateMove:
     def test_to_a_named_stop(self, svc: AutoPipetteService) -> None:
         gcode = emitted(svc, lambda: svc.plate_move(move("plate2", "work_b")))
-        assert gcode == ["PLATE_MOVE PLATE=plate2 POS=120.0\n"]
+        assert gcode == [*RAISE, "PLATE_MOVE PLATE=plate2 POS=120.0\n"]
 
     def test_to_raw_mm_with_speed(self, svc: AutoPipetteService) -> None:
         gcode = emitted(svc, lambda: svc.plate_move(move("plate1", "42.5", 25)))
-        assert gcode == ["PLATE_MOVE PLATE=plate1 POS=42.5 SPEED=25\n"]
+        assert gcode == [*RAISE, "PLATE_MOVE PLATE=plate1 POS=42.5 SPEED=25\n"]
 
     @pytest.mark.parametrize("target", ["V", "v", "PLATE2"])
     def test_axis_letter_and_name_are_case_insensitive(
         self, svc: AutoPipetteService, target: str
     ) -> None:
         gcode = emitted(svc, lambda: svc.plate_move(move(target, "load")))
-        assert gcode == ["PLATE_MOVE PLATE=plate2 POS=350.0\n"]
+        assert gcode == [*RAISE, "PLATE_MOVE PLATE=plate2 POS=350.0\n"]
 
     def test_updates_the_drawer_model(self, svc: AutoPipetteService) -> None:
         emitted(svc, lambda: svc.plate_move(move("plate2", "cover")))
@@ -157,7 +181,7 @@ class TestPlatesIn:
         self, svc: AutoPipetteService
     ) -> None:
         gcode = emitted(svc, svc.plates_in)
-        assert gcode == ["PLATES_IN\n"]
+        assert gcode == [*RAISE, "PLATES_IN\n"]
         assert model(svc) == {"plate1": 0.0, "plate2": 0.0}
 
     def test_needs_every_plate_homed(
@@ -172,6 +196,95 @@ class TestPlatesIn:
             service.plates_in()
 
 
+class TestRaisesTheTipFirst:
+    """D49: a plate move raises the tip to z_safe unless Z is known safe."""
+
+    @pytest.mark.parametrize("command", ["plate_move", "plates_in"])
+    def test_skipped_when_live_z_is_already_safe(
+        self,
+        svc: AutoPipetteService,
+        fake: FakeMoonrakerState,
+        monkeypatch: pytest.MonkeyPatch,
+        command: str,
+    ) -> None:
+        fake.positions = {"Z": 0.0}
+        gcode = interactive(
+            svc,
+            monkeypatch,
+            (lambda: svc.plate_move(move("plate2", "load")))
+            if command == "plate_move"
+            else svc.plates_in,
+        )
+        assert gcode[-1].startswith(("PLATE_MOVE", "PLATES_IN"))
+        assert not any(g.startswith(("G1", "G90")) for g in gcode)
+
+    def test_raised_when_live_z_is_below_z_safe(
+        self,
+        svc: AutoPipetteService,
+        fake: FakeMoonrakerState,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        fake.positions = {"Z": 5.0}
+        gcode = interactive(svc, monkeypatch, svc.plates_in)
+        assert gcode == [*RAISE, "PLATES_IN\n"]
+
+    def test_raised_to_the_configured_z_safe(
+        self,
+        svc: AutoPipetteService,
+        fake: FakeMoonrakerState,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        fake.axis_config = replace(AXES, z_safe=2.5)  # type: ignore[misc]
+        fake.positions = {"Z": 7.0}
+        gcode = interactive(svc, monkeypatch, svc.plates_in)
+        assert gcode == ["G90\n", "G1 Z2.5 F12000.0\n", "PLATES_IN\n"]
+
+    def test_never_lowers_a_tip_already_above_z_safe(
+        self,
+        svc: AutoPipetteService,
+        fake: FakeMoonrakerState,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        fake.axis_config = replace(AXES, z_safe=2.5)  # type: ignore[misc]
+        fake.positions = {"Z": 1.0}
+        gcode = interactive(svc, monkeypatch, svc.plates_in)
+        assert gcode == ["PLATES_IN\n"]
+
+    def test_raised_to_z0_when_z_safe_is_unknown(
+        self,
+        svc: AutoPipetteService,
+        fake: FakeMoonrakerState,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        fake.axis_config = replace(AXES, z_safe=None)  # type: ignore[misc]
+        fake.positions = {"Z": 7.0}
+        gcode = interactive(svc, monkeypatch, svc.plates_in)
+        assert gcode == [*RAISE, "PLATES_IN\n"]
+
+    def test_raised_when_live_z_is_unknown(
+        self, svc: AutoPipetteService, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        gcode = interactive(svc, monkeypatch, svc.plates_in)
+        assert gcode == [*RAISE, "PLATES_IN\n"]
+
+    def test_always_raised_in_a_batch(
+        self, svc: AutoPipetteService, fake: FakeMoonrakerState
+    ) -> None:
+        # Live Z is where the tip was before the protocol, not where its
+        # earlier lines leave it.
+        fake.positions = {"Z": 0.0}
+        assert emitted(svc, svc.plates_in) == [*RAISE, "PLATES_IN\n"]
+
+    def test_refused_before_raising_when_z_is_not_homed(
+        self, svc: AutoPipetteService, fake: FakeMoonrakerState
+    ) -> None:
+        fake.set_homed(False)
+        gcode: list[GCode] = []
+        with pytest.raises(NotHomedError, match="Z not homed"):
+            gcode = emitted(svc, svc.plates_in)
+        assert gcode == []
+
+
 class TestHomingUpdatesTheModel:
     @pytest.mark.parametrize(
         ("motors", "expected"),
@@ -183,8 +296,11 @@ class TestHomingUpdatesTheModel:
         emitted(svc, lambda: svc.home(HomeArgs(motors)))
         assert model(svc) == expected
 
-    def test_full_home_homes_the_plates_too(self, svc: AutoPipetteService) -> None:
-        emitted(svc, svc.init)
+    @pytest.mark.parametrize("motors", ["all", None])
+    def test_full_home_homes_the_plates_too(
+        self, svc: AutoPipetteService, motors: str | None
+    ) -> None:
+        emitted(svc, svc.init if motors is None else lambda: svc.home(HomeArgs(motors)))
         assert model(svc) == {"plate1": 0.0, "plate2": 0.0}
 
     def test_no_plates_leaves_the_model_alone(

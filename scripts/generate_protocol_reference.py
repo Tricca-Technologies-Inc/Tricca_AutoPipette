@@ -119,7 +119,7 @@ _COMMANDS: list[_CommandDoc] = [
         manual_usage=(
             "Usage: plates_in\n\n"
             "Move every plate drawer in (Klipper's PLATES_IN). Needs Z and "
-            "every plate homed; Klipper refuses it unless the tip is raised."
+            "every plate homed; raises the tip to z_safe first if it is below it."
         ),
     ),
     # -- Pipetting ------------------------------------------------------------

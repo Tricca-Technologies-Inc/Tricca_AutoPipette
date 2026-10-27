@@ -110,13 +110,22 @@ def test_compliant_protocol_has_no_findings(svc: AutoPipetteService) -> None:
     assert findings(svc, "compliant.pipette") == []
 
 
+def test_plate_move_after_lowering_validates_clean(
+    svc: AutoPipetteService, tmp_path: Path
+) -> None:
+    # D49: plate_move/plates_in raise the tip to z_safe first, so lowering
+    # into a well and then moving a drawer is no longer an I1 refusal.
+    (tmp_path / "lowered.pipette").write_text(
+        "next_tip\nmove 10 20 5\nplate_move plate2 load\n"
+        "move 10 20 5\nplates_in\nplate_move plate2 work_b\n"
+        "aspirate 10 sample_plate\n"
+    )
+    assert findings(svc, "lowered.pipette") == []
+
+
 def test_one_finding_per_violation_with_its_line(svc: AutoPipetteService) -> None:
+    # Line 2's plate_move after next_tip raises the tip first (D49): no I1.
     assert findings(svc, "violations.pipette") == [
-        (
-            2,
-            "error",
-            "Klipper will refuse this (I1): tip below safe height (Z 5 > z_safe 0).",
-        ),
         (
             5,
             "error",
