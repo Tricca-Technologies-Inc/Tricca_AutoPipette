@@ -55,6 +55,23 @@ PLATE_CFG_OBJECT = "gcode_macro _PLATE_CFG"
 PIPETTE_CFG_OBJECT = "gcode_macro _PIPETTE_CFG"
 PIPETTE_STEPPER_SECTION = "manual_stepper pipette_stepper"
 
+#: Live objects behind plate/plunger homed state and plate positions (issue
+#: #140). Klipper's own homed test is the macro flag AND the stepper still
+#: enabled (``plate-macros.cfg``); a flag can outlive a motors-off that didn't
+#: go through ``M84``. Objects Klipper doesn't have are simply never reported.
+PLATE_STATE_OBJECT = "gcode_macro _PLATE_STATE"
+PIPETTE_STATE_OBJECT = "gcode_macro _PIPETTE_STATE"
+STEPPER_ENABLE_OBJECT = "stepper_enable"
+GCODE_MOVE_OBJECT = "gcode_move"
+SUBSCRIBED_OBJECTS: dict[str, list[str] | None] = {
+    "toolhead": None,
+    "print_stats": None,
+    PLATE_STATE_OBJECT: None,
+    PIPETTE_STATE_OBJECT: None,
+    STEPPER_ENABLE_OBJECT: None,
+    GCODE_MOVE_OBJECT: ["position", "axis_map"],
+}
+
 
 @dataclass(frozen=True)
 class PlateAxis:
@@ -195,9 +212,12 @@ class MoonrakerStateTracker:
         self._print_state: str = "standby"
         self._print_state_callbacks: list[Callable[[str], None]] = []
         self._axis_config: AxisConfig | None = None
+        #: Last-known fields of the extra-axis objects, merged push by push
+        #: (Moonraker only sends fields that changed).
+        self._live: dict[str, dict[str, Any]] = {}
 
     def start(self) -> None:
-        """Subscribe to ``toolhead`` and ``print_stats`` status updates.
+        """Subscribe to gantry, job and plate/plunger state updates.
 
         Also watches ``notify_klippy_ready`` so :attr:`axis_config` is re-read
         after a Klipper restart. Must be called after the underlying
@@ -206,7 +226,10 @@ class MoonrakerStateTracker:
         self.client.register_handler("notify_status_update", self._on_status_update)
         self.client.register_handler("notify_klippy_ready", self._on_klippy_ready)
         self._axis_config = None
-        request = self.mrr.request_sub_to_objs(["toolhead", "print_stats"])
+        # Not `request_sub_to_objs`: its allow-list drops `gcode_macro <name>`.
+        request = self.mrr.gen_request(
+            "printer.objects.subscribe", {"objects": SUBSCRIBED_OBJECTS}
+        )
         response = self.client.send_jsonrpc(request)
         result = as_dict(response.get("result"))
         status = as_dict(result.get("status"))
@@ -220,6 +243,56 @@ class MoonrakerStateTracker:
             ``homed_axes`` reported by Klipper's ``toolhead`` object.
         """
         return self._homed_axes >= REQUIRED_HOMED_AXES
+
+    @property
+    def homed_axes(self) -> frozenset[str]:
+        """Gantry axes Klipper's ``toolhead`` currently reports homed."""
+        return self._homed_axes
+
+    def _stepper_enabled(self, stepper: str) -> bool:
+        steppers = as_dict(self._live.get(STEPPER_ENABLE_OBJECT, {}).get("steppers"))
+        return bool(steppers.get(stepper))
+
+    def is_plate_homed(self, plate: str) -> bool:
+        """Check Klipper's live homed state for one plate (issue #140).
+
+        Args:
+            plate: Plate name (``plate1``...).
+
+        Returns:
+            True only if ``_PLATE_STATE`` flags it homed and its stepper is
+            still enabled. False for a plate Klipper doesn't know.
+        """
+        flag = self._live.get(PLATE_STATE_OBJECT, {}).get(plate)
+        return bool(flag) and self._stepper_enabled(f"manual_stepper {plate}")
+
+    def is_plunger_homed(self) -> bool:
+        """Check Klipper's live homed state for the plunger (issue #140).
+
+        Returns:
+            True only if ``_PIPETTE_STATE.homed`` is set and
+            ``pipette_stepper`` is still enabled.
+        """
+        flag = self._live.get(PIPETTE_STATE_OBJECT, {}).get("homed")
+        return bool(flag) and self._stepper_enabled(PIPETTE_STEPPER_SECTION)
+
+    def axis_position(self, letter: str) -> float | None:
+        """Live raw position of a G-code axis, e.g. a plate's (issue #140).
+
+        Args:
+            letter: G-code axis letter (``V``, ``P``...).
+
+        Returns:
+            ``gcode_move.position`` at the letter's ``axis_map`` index, or
+            None while the letter isn't bound (or nothing was reported yet).
+        """
+        move = self._live.get(GCODE_MOVE_OBJECT, {})
+        index = as_dict(move.get("axis_map")).get(letter)
+        position = move.get("position")
+        if not isinstance(index, int) or not isinstance(position, list):
+            return None
+        values = cast("list[Any]", position)
+        return float(values[index]) if index < len(values) else None
 
     @property
     def axis_config(self) -> AxisConfig:
@@ -301,6 +374,15 @@ class MoonrakerStateTracker:
             self._homed_axes = frozenset(
                 str(axis) for axis in cast("list[Any]", homed_axes)
             )
+
+        for name in (
+            PLATE_STATE_OBJECT,
+            PIPETTE_STATE_OBJECT,
+            STEPPER_ENABLE_OBJECT,
+            GCODE_MOVE_OBJECT,
+        ):
+            if name in status:
+                self._live.setdefault(name, {}).update(as_dict(status[name]))
 
         print_stats = as_dict(status.get("print_stats"))
         new_state = print_stats.get("state")
