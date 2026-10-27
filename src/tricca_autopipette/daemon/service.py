@@ -920,31 +920,69 @@ class AutoPipetteService:
             Result describing the completed initialisation.
         """
         autopipette = self._autopipette
-        autopipette.init_pipette()
+        autopipette.init_pipette(self._plunger_axis())
         self.output_gcode(autopipette.get_gcode(), "home_all.gcode")
         self._homing_invalidated = False
         return CommandResult(
             ok=True, message="Pipette initialised and all motors homed."
         )
 
+    @property
+    def axis_config(self) -> AxisConfig:
+        """Klipper's plate/plunger axis config; "not configured" when unconnected."""
+        state = self.moonraker_state
+        return state.axis_config if state is not None else AxisConfig()
+
+    def _plunger_axis(self) -> str | None:
+        pipette = self.axis_config.pipette
+        return pipette.letter if pipette is not None else None
+
     @persist_tip_liquid_state
     def home(self, args: HomeArgs) -> CommandResult:
         """Home one or more motors on the pipette.
 
+        With Klipper's plate/plunger axes configured (issue #146), ``all``
+        relies on bare ``G28`` for the plates and plunger, ``pipette`` homes
+        the plunger with ``G28 P``, and ``plates`` / a plate's name (or its
+        axis letter) emit ``G28 <letter>...``. Only ``all`` clears
+        ``_homing_invalidated``. Without them, behavior is unchanged.
+
         Args:
-            args: Motor specification (x, y, z, pipette, axis, all, servo).
+            args: Motor specification (x, y, z, pipette, axis, all, servo,
+                plates, or a plate name/letter).
 
         Returns:
             Result describing the completed homing operation.
 
         Raises:
-            ValueError: If ``args.motors`` is not a recognized motor name.
+            ValueError: If ``args.motors`` is not a recognized target, or is
+                ``plates`` with no plates configured.
         """
         autopipette = self._autopipette
         motors = args.motors.lower()
+        all_plates = {p.name: p.letter for p in self.axis_config.plates}
+        plates = {
+            name: letter
+            for name, letter in all_plates.items()
+            if motors in {name.lower(), letter.lower()}
+        }
+
+        if motors == "plates":
+            if not all_plates:
+                raise ValueError(
+                    "No plates configured in Klipper (no _PLATE_CFG); nothing to home."
+                )
+            plates = all_plates
+
+        if plates:
+            autopipette.home_plates(plates)
+            name = motors if motors == "plates" else next(iter(plates))
+            self.output_gcode(autopipette.get_gcode(), f"home_{name}.gcode")
+            return CommandResult(ok=True, message=f"Homed {', '.join(plates)}.")
 
         if motors not in HomingTargets.VALID_MOTORS:
-            valid = ", ".join(sorted(HomingTargets.VALID_MOTORS))
+            extra = {"plates", *all_plates} if all_plates else set[str]()
+            valid = ", ".join(sorted(HomingTargets.VALID_MOTORS | extra))
             raise ValueError(
                 f"'{motors}' is not a valid motor specification. Valid options: {valid}"
             )
@@ -953,7 +991,7 @@ class AutoPipetteService:
             # "all" -- delegate to init_pipette() so coordinate system and
             # speed are always reset alongside homing (identical to init()).
             filename = HomingTargets.MOTOR_SPECIAL[motors]
-            autopipette.init_pipette()
+            autopipette.init_pipette(self._plunger_axis())
             self.output_gcode(autopipette.get_gcode(), filename)
             self._homing_invalidated = False
             return CommandResult(
@@ -961,7 +999,10 @@ class AutoPipetteService:
             )
 
         filename, method_name = HomingTargets.MOTOR_METHODS[motors]
-        getattr(autopipette, method_name)()
+        if motors == "pipette":
+            autopipette.home_pipette_motors(self._plunger_axis())
+        else:
+            getattr(autopipette, method_name)()
         self.output_gcode(autopipette.get_gcode(), filename)
         return CommandResult(ok=True, message=f"Homed {motors}.")
 
@@ -3076,11 +3117,7 @@ class AutoPipetteService:
         """
         ap = self._autopipette
         config = ap.system_config
-        axes = (
-            self.moonraker_state.axis_config
-            if self.moonraker_state is not None
-            else AxisConfig()
-        )
+        axes = self.axis_config
         data = {
             "system_name": config.system_name,
             "version": config.version,
