@@ -27,6 +27,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from fakes.fake_moonraker_state import FakeMoonrakerState
 from support.live_control_plane import LiveControlPlane
 from support.polling import poll_until
 
@@ -705,3 +706,55 @@ class TestCalibrate:
         cal_shell.onecmd_plus_hooks("help calibrate")
 
         assert "recalibrate after swapping a syringe" in _output(cal_shell)
+
+
+class TestPlateCommands:
+    """`plate_move`/`plates_in`/`plates` over the wire (issue #143)."""
+
+    @pytest.fixture
+    def plates(self, live_control_plane: LiveControlPlane) -> FakeMoonrakerState:
+        fake = live_control_plane.service.moonraker_state
+        assert isinstance(fake, FakeMoonrakerState)
+        fake.axis_config = AxisConfig(  # type: ignore[misc]
+            plates=(PlateAxis("plate2", "V", 0.0, 350.0, (0.0, 120.0, 350.0)),),
+            z_safe=0.0,
+            park_tol=0.1,
+        )
+        fake.set_homed(True)
+        fake.homed_plates = {"plate2"}
+        return fake
+
+    @pytest.mark.usefixtures("plates")
+    def test_plate_move_and_plates_in_reach_the_daemon(
+        self, shell: RemoteTapShell
+    ) -> None:
+        shell.onecmd_plus_hooks("plate_move V 120 --speed 30")
+        shell.onecmd_plus_hooks("plates_in")
+
+        out = _output(shell)
+        assert "Moving plate2 to 120 mm" in out
+        assert "Moving every plate in" in out
+
+    @pytest.mark.usefixtures("plates")
+    def test_plate_move_refusal_is_surfaced(
+        self, shell: RemoteTapShell, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        capsys.readouterr()
+        shell.onecmd_plus_hooks("plate_move plate2 999")
+        assert "outside" in capsys.readouterr().err
+
+    def test_plates_renders_a_status_table(
+        self, shell: RemoteTapShell, plates: FakeMoonrakerState
+    ) -> None:
+        plates.positions = {"V": 120.0}
+
+        shell.onecmd_plus_hooks("plates")
+
+        out = _output(shell)
+        assert "plate2" in out
+        assert "120" in out
+        assert "Tip-safe" in out
+
+    def test_plates_not_configured(self, shell: RemoteTapShell) -> None:
+        shell.onecmd_plus_hooks("plates")
+        assert "No plates configured" in _output(shell)

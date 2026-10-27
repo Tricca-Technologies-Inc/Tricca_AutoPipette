@@ -55,6 +55,7 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     MoveRelArgs,
     PipetteArgs,
     PlateArgs,
+    PlateMoveArgs,
     ResetPlateArgs,
     ResetTipsArgs,
     SetArgs,
@@ -115,7 +116,11 @@ from tricca_autopipette.daemon.interlock import (
     InterlockRefusal,
     parse_interlock_refusal,
 )
-from tricca_autopipette.daemon.moonraker_state import AxisConfig, MoonrakerStateTracker
+from tricca_autopipette.daemon.moonraker_state import (
+    AxisConfig,
+    MoonrakerStateTracker,
+    PlateAxis,
+)
 from tricca_autopipette.moonraker.moonraker_requests import MoonrakerRequests
 from tricca_autopipette.moonraker.websocket_client import JsonRpcError, WebSocketClient
 
@@ -127,6 +132,7 @@ WEBSOCKET_TIMEOUT_SECONDS = 10
 #: connection (as opposed to `output_gcode`'s own "no client at all" case,
 #: which degrades gracefully instead -- see its docstring).
 _NOT_CONNECTED_MSG = "WebSocket not connected. Cannot communicate with pipette."
+_NO_PLATES_MSG = "No plates configured in Klipper (no _PLATE_CFG)."
 
 #: Set for the duration of AutoPipetteService.validate_protocol's dry-run
 #: replay (issue #36). Checked directly by require_homed/
@@ -897,12 +903,22 @@ class AutoPipetteService:
     def _live_drawer_positions(self) -> dict[str, float]:
         """Return each drawer's live position (mm), as Klipper reports it.
 
+        Only a homed plate counts: an unhomed one's position means nothing,
+        so its drawer stays at an unknown position (fail-closed).
+
         Returns:
-            Drawer name to position. Empty until TAP-3 (#140) tracks live
-            plate positions: until then every drawer is at an unknown
-            position, so a drawer-linked location is always refused.
+            Plate name to its live position, for every homed plate Klipper
+            reports a position for (TAP-3's ``axis_position``).
         """
-        return {}
+        state = self.moonraker_state
+        if state is None:
+            return {}
+        positions: dict[str, float] = {}
+        for plate in self.axis_config.plates:
+            position = state.axis_position(plate.letter)
+            if position is not None and state.is_plate_homed(plate.name):
+                positions[plate.name] = position
+        return positions
 
     # ==================== Movement commands ====================
     #
@@ -956,9 +972,22 @@ class AutoPipetteService:
         autopipette.init_pipette(self._plunger_axis())
         self.output_gcode(autopipette.get_gcode(), "home_all.gcode")
         self._homing_invalidated = False
+        self._model_plates_in(p.name for p in self.axis_config.plates)
         return CommandResult(
             ok=True, message="Pipette initialised and all motors homed."
         )
+
+    def _model_plates_in(self, plates: Iterable[str]) -> None:
+        """Record plates as in (0 mm) in the compile-time drawer model.
+
+        Where homing (``HOME_PLATE``, also run by bare ``G28``'s
+        ``[homing_override]``) and ``PLATES_IN`` leave them.
+
+        Args:
+            plates: Plate names.
+        """
+        for plate in plates:
+            self._autopipette.location_manager.set_drawer_position(plate, 0.0)
 
     @property
     def axis_config(self) -> AxisConfig:
@@ -1011,6 +1040,7 @@ class AutoPipetteService:
             autopipette.home_plates(plates)
             name = motors if motors == "plates" else next(iter(plates))
             self.output_gcode(autopipette.get_gcode(), f"home_{name}.gcode")
+            self._model_plates_in(plates)
             return CommandResult(ok=True, message=f"Homed {', '.join(plates)}.")
 
         if motors not in HomingTargets.VALID_MOTORS:
@@ -1027,6 +1057,7 @@ class AutoPipetteService:
             autopipette.init_pipette(self._plunger_axis())
             self.output_gcode(autopipette.get_gcode(), filename)
             self._homing_invalidated = False
+            self._model_plates_in(all_plates)
             return CommandResult(
                 ok=True, message="All motors homed (full init complete)."
             )
@@ -1037,7 +1068,185 @@ class AutoPipetteService:
         else:
             getattr(autopipette, method_name)()
         self.output_gcode(autopipette.get_gcode(), filename)
+        if motors == "axis":  # bare G28: Klipper's override homes the plates too
+            self._model_plates_in(all_plates)
         return CommandResult(ok=True, message=f"Homed {motors}.")
+
+    # ==================== Plate drawer commands (issue #143) ====================
+    #
+    # Klipper's plate macros carry the interlock (umbrella §6.3); these refuse
+    # early with a clear message and keep the compile-time drawer model
+    # (issue #142) in step with what they emit.
+
+    def _plate(self, plate: str) -> PlateAxis:
+        """Resolve a plate by name or axis letter, case-insensitively.
+
+        Args:
+            plate: Plate name (``plate1``...) or its axis letter.
+
+        Returns:
+            Klipper's config for that plate.
+
+        Raises:
+            ValueError: If no plates are configured, or none matches.
+        """
+        plates = self.axis_config.plates
+        if not plates:
+            raise ValueError(_NO_PLATES_MSG)
+        key = plate.lower()
+        for candidate in plates:
+            if key in {candidate.name.lower(), candidate.letter.lower()}:
+                return candidate
+        valid = ", ".join(f"{p.name} ({p.letter})" for p in plates)
+        raise ValueError(f"Unknown plate '{plate}'. Valid: {valid}")
+
+    def _plate_target(self, plate: PlateAxis, target: str) -> float:
+        """Resolve a ``plate_move`` target to mm and check it against travel.
+
+        A stop name from the plate's ``drawers`` entry wins over reading the
+        target as a number.
+
+        Args:
+            plate: The plate being moved.
+            target: A stop name, or a position in mm.
+
+        Returns:
+            The position (mm).
+
+        Raises:
+            ValueError: An unknown stop (listing the valid ones), or a
+                position outside the plate's travel.
+        """
+        drawer = self._autopipette.location_manager.drawers.get(plate.name)
+        if drawer is not None and target in drawer.stops:
+            position = drawer.stops[target]
+        else:
+            try:
+                position = float(target)
+            except ValueError:
+                if drawer is None:
+                    raise ValueError(
+                        f"{plate.name} has no named stops (no 'drawers' entry); "
+                        f"give a position in mm."
+                    ) from None
+                raise ValueError(
+                    f"Unknown stop '{target}' for {plate.name}. "
+                    f"Valid: {', '.join(sorted(drawer.stops))}"
+                ) from None
+        # Klipper's PLATE_MOVE refuses below 0 whatever position_min says.
+        low = max(0.0, plate.position_min or 0.0)
+        high = math.inf if plate.position_max is None else plate.position_max
+        if not low <= position <= high:
+            raise ValueError(
+                f"Position {position:g} mm is outside {plate.name}'s travel "
+                f"({low:g} to {high:g} mm)."
+            )
+        return position
+
+    def plate_move(self, args: PlateMoveArgs) -> CommandResult:
+        """Move a plate drawer to a named stop or a position (``PLATE_MOVE``).
+
+        Gated by :meth:`require_plates_homed` (Z and that plate); everything
+        is checked before any G-code is emitted. Updates the compile-time
+        drawer model.
+
+        Args:
+            args: Plate (name or letter), target (stop or mm), optional speed.
+
+        Returns:
+            Result describing the move.
+
+        Raises:
+            ValueError: No plates configured, unknown plate or stop, a
+                position outside the plate's travel, or a bad speed.
+            NotHomedError: Z or the plate isn't homed.
+        """  # ruff: ignore[docstring-extraneous-exception]
+        plate = self._plate(args.plate)
+        position = self._plate_target(plate, args.target)
+        if args.speed is not None and not (
+            math.isfinite(args.speed) and args.speed > 0
+        ):
+            raise ValueError(f"Invalid speed {args.speed}: must be positive (mm/s).")
+        self.require_plates_homed("plate_move", [plate.name])
+        autopipette = self._autopipette
+        autopipette.plate_move(plate.name, position, args.speed)
+        self.output_gcode(autopipette.get_gcode())
+        autopipette.location_manager.set_drawer_position(plate.name, position)
+        return CommandResult(
+            ok=True, message=f"Moving {plate.name} to {position:g} mm."
+        )
+
+    def plates_in(self) -> CommandResult:
+        """Move every plate drawer in (``PLATES_IN``).
+
+        Klipper's macro moves every plate, so every plate must be homed.
+
+        Returns:
+            Result describing the move.
+
+        Raises:
+            ValueError: No plates configured.
+            NotHomedError: Z or any plate isn't homed.
+        """  # ruff: ignore[docstring-extraneous-exception]
+        names = [p.name for p in self.axis_config.plates]
+        if not names:
+            raise ValueError(_NO_PLATES_MSG)
+        self.require_plates_homed("plates_in", names)
+        self._autopipette.plates_in()
+        self.output_gcode(self._autopipette.get_gcode())
+        self._model_plates_in(names)
+        return CommandResult(ok=True, message="Moving every plate in.")
+
+    def plates(self) -> CommandResult:
+        """Report each plate drawer's live state, as Klipper reports it.
+
+        Returns:
+            Result with ``data["plates"]``: per plate ``name``, ``letter``,
+            ``homed``, ``position`` (mm, None if unknown), ``stop`` (the
+            nearest named stop within ``park_tol``, else ``in``/``out`` at
+            an end of travel, else None) and ``tip_safe`` (homed and within
+            ``park_tol`` of one of Klipper's tip-safe positions, interlock
+            rule I2). ``ok=False`` with no plates configured.
+        """
+        axes = self.axis_config
+        state = self.moonraker_state
+        if not axes.plates or state is None:
+            return CommandResult(ok=False, message=_NO_PLATES_MSG)
+        tol = axes.park_tol or 0.0
+        drawers = self._autopipette.location_manager.drawers
+        rows: list[dict[str, Any]] = []
+        for plate in axes.plates:
+            homed = state.is_plate_homed(plate.name)
+            position = state.axis_position(plate.letter)
+            stop: str | None = None
+            tip_safe = False
+            if position is not None:
+                drawer = drawers.get(plate.name)
+                ends = {"in": 0.0, "out": plate.position_max}
+                # A named stop wins; the ends of travel are the fallback.
+                for stops in (drawer.stops if drawer is not None else {}, ends):
+                    near = [
+                        (abs(position - mm), name)
+                        for name, mm in stops.items()
+                        if mm is not None and abs(position - mm) <= tol
+                    ]
+                    if near:
+                        stop = min(near)[1]
+                        break
+                tip_safe = homed and any(
+                    abs(position - safe) <= tol for safe in plate.safe_stops
+                )
+            rows.append({
+                "name": plate.name,
+                "letter": plate.letter,
+                "homed": homed,
+                "position": position,
+                "stop": stop,
+                "tip_safe": tip_safe,
+            })
+        return CommandResult(
+            ok=True, message=f"{len(rows)} plate(s).", data={"plates": rows}
+        )
 
     @require_homed("move")
     @persist_tip_liquid_state
@@ -4294,6 +4503,10 @@ _LINE_DISPATCH: dict[str, _LineCommand] = {
     "move_rel": _LineCommand(
         TAPCmdParsers.parser_move_rel, MoveRelArgs, AutoPipetteService.move_rel
     ),
+    "plate_move": _LineCommand(
+        TAPCmdParsers.parser_plate_move, PlateMoveArgs, AutoPipetteService.plate_move
+    ),
+    "plates_in": _LineCommand(None, None, AutoPipetteService.plates_in),
     "aspirate": _LineCommand(
         TAPCmdParsers.parser_aspirate, AspirateArgs, AutoPipetteService.aspirate
     ),

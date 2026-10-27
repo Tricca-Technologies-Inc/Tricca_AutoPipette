@@ -550,6 +550,25 @@ class AutoPipette:
         self.note_action(f"Homing plates: {', '.join(plates)}")
         self.gcode_buffers.add(self.gcode_commands.home(*plates.values()))
 
+    def plate_move(self, plate: str, pos: float, speed: float | None = None) -> None:
+        """Move a plate drawer with Klipper's ``PLATE_MOVE`` macro (issue #143).
+
+        The macro carries Klipper's interlock: it refuses unless Z is homed
+        and raised and the plate is homed, and checks the range itself.
+
+        Args:
+            plate: Plate name (``plate1``...).
+            pos: Target position (mm, 0 = in).
+            speed: Speed (mm/s), or None for the plate's limit.
+        """
+        self.note_action(f"Moving {plate} to {pos:g} mm")
+        self.gcode_buffers.add(self.gcode_commands.plate_move(plate, pos, speed=speed))
+
+    def plates_in(self) -> None:
+        """Move every plate drawer in with Klipper's ``PLATES_IN`` (issue #143)."""
+        self.note_action("Moving every plate in")
+        self.gcode_buffers.add(self.gcode_commands.plates_in())
+
     def home_servo(self) -> None:
         """Retract the tip ejection servo to home position."""
         self.note_action("Homing servo (retract to home position)")
