@@ -42,6 +42,8 @@ class FakeMoonrakerState:
         #: matching a first run with nothing persisted yet.
         self.stored_tip_liquid_state: dict[str, Any] = {}
         self._print_state_callback: Callable[[str], None] | None = None
+        #: Klipper's ``print_stats.message``, read with each state change.
+        self.print_message = ""
         #: What Klipper's plate/plunger axis config reads as; "not
         #: configured" by default, like a machine without the axis expansion.
         self.axis_config = AxisConfig()
