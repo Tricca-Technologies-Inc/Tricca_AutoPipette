@@ -8,6 +8,7 @@ specific to this module to build, just canned `send_jsonrpc` responses.
 
 from __future__ import annotations
 
+import pytest
 from fakes.fake_websocket_client import FakeWebSocketClient
 
 from tricca_autopipette.daemon.moonraker_state import (
@@ -36,7 +37,7 @@ class TestStart:
 
         assert "notify_status_update" in fake_websocket_client.handlers
 
-    def test_subscribes_to_toolhead_and_print_stats(
+    def test_subscribes_to_gantry_job_and_extra_axis_state(
         self, fake_websocket_client: FakeWebSocketClient
     ) -> None:
         tracker = _tracker(fake_websocket_client)
@@ -46,7 +47,14 @@ class TestStart:
         assert len(fake_websocket_client.sent_requests) == 1
         request = fake_websocket_client.sent_requests[0]
         assert request["method"] == "printer.objects.subscribe"
-        assert set(request["params"]["objects"]) == {"toolhead", "print_stats"}
+        assert set(request["params"]["objects"]) == {
+            "toolhead",
+            "print_stats",
+            "gcode_macro _PLATE_STATE",
+            "gcode_macro _PIPETTE_STATE",
+            "stepper_enable",
+            "gcode_move",
+        }
 
     def test_applies_initial_status_from_subscribe_response(
         self, fake_websocket_client: FakeWebSocketClient
@@ -123,6 +131,136 @@ class TestIsHomed:
         tracker._apply_status({"toolhead": {"homed_axes": ""}})
 
         assert tracker.is_homed() is False
+
+
+def _push(client: FakeWebSocketClient, status: dict[str, object]) -> None:
+    client.trigger_notification("notify_status_update", [status, 0.0])
+
+
+def _enabled(plate2: bool, pipette: bool) -> dict[str, object]:
+    return {
+        "steppers": {
+            "manual_stepper plate1": False,
+            "manual_stepper plate2": plate2,
+            "manual_stepper pipette_stepper": pipette,
+        }
+    }
+
+
+class TestExtraAxisHomedState:
+    """Issue #140: plate/plunger "homed" = Klipper's macro flag AND the
+    stepper still enabled, both read live from Moonraker pushes.
+    """
+
+    def test_homed_flags_follow_home_m84_reenable_rehome(
+        self, fake_websocket_client: FakeWebSocketClient
+    ) -> None:
+        tracker = _tracker(fake_websocket_client)
+        tracker.start()
+        _push(
+            fake_websocket_client,
+            {
+                "gcode_macro _PLATE_STATE": {"plate1": 0, "plate2": 0},
+                "gcode_macro _PIPETTE_STATE": {"homed": 0},
+                "stepper_enable": _enabled(plate2=False, pipette=False),
+            },
+        )
+        assert tracker.is_plate_homed("plate2") is False
+        assert tracker.is_plunger_homed() is False
+
+        # Home plate2 and the plunger.
+        _push(
+            fake_websocket_client,
+            {
+                "gcode_macro _PLATE_STATE": {"plate2": 1},
+                "gcode_macro _PIPETTE_STATE": {"homed": 1},
+                "stepper_enable": _enabled(plate2=True, pipette=True),
+            },
+        )
+        assert tracker.is_plate_homed("plate2") is True
+        assert tracker.is_plate_homed("plate1") is False
+        assert tracker.is_plunger_homed() is True
+
+        # M84: Klipper clears the flags and disables the steppers.
+        _push(
+            fake_websocket_client,
+            {
+                "gcode_macro _PLATE_STATE": {"plate2": 0},
+                "gcode_macro _PIPETTE_STATE": {"homed": 0},
+                "stepper_enable": _enabled(plate2=False, pipette=False),
+            },
+        )
+        assert tracker.is_plate_homed("plate2") is False
+        assert tracker.is_plunger_homed() is False
+
+        # Re-enabling the steppers alone doesn't restore homed state.
+        _push(fake_websocket_client, {"stepper_enable": _enabled(True, True)})
+        assert tracker.is_plate_homed("plate2") is False
+        assert tracker.is_plunger_homed() is False
+
+        # Re-home.
+        _push(
+            fake_websocket_client,
+            {
+                "gcode_macro _PLATE_STATE": {"plate2": 1},
+                "gcode_macro _PIPETTE_STATE": {"homed": 1},
+            },
+        )
+        assert tracker.is_plate_homed("plate2") is True
+        assert tracker.is_plunger_homed() is True
+
+    def test_flag_set_but_stepper_disabled_is_not_homed(
+        self, fake_websocket_client: FakeWebSocketClient
+    ) -> None:
+        # Klipper's own motors-off (e.g. a failed G28) disables the stepper
+        # without going through M84, so the flag can be stale.
+        tracker = _tracker(fake_websocket_client)
+        tracker._apply_status({
+            "gcode_macro _PLATE_STATE": {"plate2": 1},
+            "gcode_macro _PIPETTE_STATE": {"homed": 1},
+            "stepper_enable": _enabled(plate2=False, pipette=False),
+        })
+
+        assert tracker.is_plate_homed("plate2") is False
+        assert tracker.is_plunger_homed() is False
+
+    def test_machine_without_extra_axes_reads_unhomed_and_gantry_unchanged(
+        self, fake_websocket_client: FakeWebSocketClient
+    ) -> None:
+        # Klipper omits objects it doesn't have from the subscribe response.
+        fake_websocket_client.queue_response({
+            "result": {
+                "status": {
+                    "toolhead": {"homed_axes": "xyz"},
+                    "stepper_enable": {"steppers": {"stepper_x": True}},
+                }
+            }
+        })
+        tracker = _tracker(fake_websocket_client)
+        tracker.start()
+
+        assert tracker.is_homed() is True
+        assert tracker.homed_axes == frozenset("xyz")
+        assert tracker.is_plate_homed("plate1") is False
+        assert tracker.is_plunger_homed() is False
+
+    def test_axis_position_reads_gcode_move_via_axis_map(
+        self, fake_websocket_client: FakeWebSocketClient
+    ) -> None:
+        tracker = _tracker(fake_websocket_client)
+        tracker._apply_status({
+            "gcode_move": {
+                "axis_map": {"X": 0, "Y": 1, "Z": 2, "E": 3, "V": 4},
+                "position": [10.0, 20.0, 0.0, 0.0, 120.0],
+            }
+        })
+        # A later push carrying only the position keeps the axis map.
+        tracker._apply_status({
+            "gcode_move": {"position": [10.0, 20.0, 0.0, 0.0, 350.0]}
+        })
+
+        assert tracker.axis_position("V") == pytest.approx(350.0)
+        assert tracker.axis_position("U") is None
 
 
 class TestStatusUpdateNotifications:

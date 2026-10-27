@@ -248,6 +248,46 @@ def require_homed(
     return decorator
 
 
+def require_plunger_homed(
+    command_name: str,
+) -> Callable[[Callable[..., CommandResult]], Callable[..., CommandResult]]:
+    """Decorator factory: block a stage-2 plunger move until P is homed.
+
+    Issue #140, for TAP-6's absolute ``G1 P`` moves; nothing applies it yet.
+    An early, friendly refusal only: Klipper's ``G1`` wrapper (rule I6) is
+    the authority. Reads live Klipper state (``_PIPETTE_STATE.homed`` and the
+    stepper still enabled), never a local flag, and is skipped while
+    :data:`_dry_run` is set, like :func:`require_homed`. Doesn't check the
+    gantry: the plunger moves it would gate are already ``require_homed``.
+
+    Args:
+        command_name: Name to include in the raised ``NotHomedError``.
+
+    Returns:
+        Decorator wrapping the method with the plunger homed check.
+    """
+
+    def decorator(
+        func: Callable[..., CommandResult],
+    ) -> Callable[..., CommandResult]:
+        @functools.wraps(func)
+        def wrapper(
+            self: AutoPipetteService,
+            *args: Any,  # ruff:ignore[any-type]
+            **kwargs: Any,  # ruff:ignore[any-type]
+        ) -> CommandResult:
+            if not _dry_run.get() and not (
+                self.moonraker_state is not None
+                and self.moonraker_state.is_plunger_homed()
+            ):
+                raise NotHomedError(command_name, "plunger not homed")
+            return func(self, *args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
 def refuse_while_running(
     func: Callable[..., CommandResult],
 ) -> Callable[..., CommandResult]:
@@ -822,6 +862,39 @@ class AutoPipetteService:
     # the sole owner of its command's business logic -- ControlServer
     # dispatches the matching movement.* RPC method straight here, with no
     # cmd2 involved on that path at all.
+
+    def require_plates_homed(self, command_name: str, plates: Iterable[str]) -> None:
+        """Refuse a plate command unless gantry Z and every named plate are homed.
+
+        Issue #140, for TAP-4's plate commands; nothing calls it yet. A
+        method rather than a decorator like :func:`require_homed`, since the
+        plates come from the command's arguments. An early, friendly refusal
+        only: Klipper's interlock (rules I1/I4) is the authority. Reads live
+        Klipper state, never a local flag; honours ``_homing_invalidated``
+        like :func:`require_homed`, and is skipped while :data:`_dry_run` is
+        set.
+
+        Args:
+            command_name: Name to include in the raised ``NotHomedError``.
+            plates: Plate names (``plate1``...) the command moves.
+
+        Raises:
+            NotHomedError: Homing was invalidated by a config change, Z isn't
+                homed, or a named plate isn't (named in the message).
+        """
+        if _dry_run.get():
+            return
+        if self._homing_invalidated:
+            raise NotHomedError(
+                command_name,
+                "homing invalidated by a pipette/gantry/system config change",
+            )
+        state = self.moonraker_state
+        if state is None or "z" not in state.homed_axes:
+            raise NotHomedError(command_name, "Z not homed")
+        for plate in plates:
+            if not state.is_plate_homed(plate):
+                raise NotHomedError(command_name, f"{plate} not homed")
 
     @persist_tip_liquid_state
     def init(self) -> CommandResult:
