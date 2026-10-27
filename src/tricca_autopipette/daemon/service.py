@@ -682,6 +682,13 @@ class AutoPipetteService:
             persisted = self.moonraker_state.load_tip_liquid_state()
             self._apply_persisted_state(persisted)
             self._apply_persisted_tip_presence(self.moonraker_state.load_tip_presence())
+            # Drawers loaded before Klipper could be read are checked now
+            # (issue #142); a bad one stays loaded but can't be used.
+            location_manager = self._autopipette.location_manager
+            for problem in location_manager.set_axis_config(
+                self.moonraker_state.axis_config
+            ):
+                logger.error("Drawer config rejected by Klipper's: %s", problem)
 
         self._run_startup_script()
         return connected
@@ -852,8 +859,34 @@ class AutoPipetteService:
         Returns:
             Whatever ``func`` returns.
         """
+
+        def seeded() -> CommandResult:
+            self._seed_drawer_model()
+            return func()
+
         async with self._lock:
-            return await asyncio.to_thread(func)
+            return await asyncio.to_thread(seeded)
+
+    def _seed_drawer_model(self) -> None:
+        """Seed the compile-time drawer-position model from live state (#142).
+
+        Called at the start of every protocol, dry run and dispatched command,
+        so the model starts from where the drawers really are rather than
+        where an earlier command left them.
+        """
+        self._autopipette.location_manager.seed_drawer_positions(
+            self._live_drawer_positions()
+        )
+
+    def _live_drawer_positions(self) -> dict[str, float]:
+        """Return each drawer's live position (mm), as Klipper reports it.
+
+        Returns:
+            Drawer name to position. Empty until TAP-3 (#140) tracks live
+            plate positions: until then every drawer is at an unknown
+            position, so a drawer-linked location is always refused.
+        """
+        return {}
 
     # ==================== Movement commands ====================
     #
@@ -2998,7 +3031,9 @@ class AutoPipetteService:
 
         Returns:
             Result with ``data["locations"]``: a list of dicts with
-            ``name``/``type``/``x``/``y``/``z``/``details`` keys.
+            ``name``/``type``/``x``/``y``/``z``/``details`` keys, plus
+            ``drawer``/``stop`` for a location linked to a drawer stop
+            (issue #142).
         """
         loc_mgr = self._autopipette.location_manager
         rows: list[dict[str, Any]] = []
@@ -3026,6 +3061,9 @@ class AutoPipetteService:
                     "z": location.z,
                     "details": "",
                 })
+            if name in loc_mgr.drawer_links:
+                drawer, stop = loc_mgr.drawer_links[name]
+                rows[-1].update(drawer=drawer, stop=stop)
         return CommandResult(
             ok=bool(rows),
             message=f"{len(rows)} location(s)." if rows else "No locations defined.",
@@ -3097,7 +3135,9 @@ class AutoPipetteService:
             Result with a flat ``data`` dict of system/pipette/gantry/
             network settings, plus ``extra_axes``: Klipper's plate and
             plunger axis config (`AxisConfig` as a dict; no plates and
-            ``pipette`` None when Klipper doesn't define them).
+            ``pipette`` None when Klipper doesn't define them), and
+            ``drawers``: each loaded drawer's ``stops``, ``pipetting``
+            stops, modelled ``position`` (None if unknown) and ``source``.
         """
         ap = self._autopipette
         config = ap.system_config
@@ -3117,6 +3157,15 @@ class AutoPipetteService:
             "system_profile": ap.config_manager.system_file,
             "system_profiles": [p.name for p in LocalConfigRoots.list_system_configs()],
             "extra_axes": asdict(axes),
+            "drawers": {
+                name: {
+                    "stops": drawer.stops,
+                    "pipetting": list(drawer.pipetting),
+                    "position": ap.location_manager.drawer_positions.get(name),
+                    "source": drawer.source,
+                }
+                for name, drawer in ap.location_manager.drawers.items()
+            },
         }
         return CommandResult(ok=True, message="System configuration.", data=data)
 
@@ -3278,7 +3327,9 @@ class AutoPipetteService:
     ) -> Generator[None]:
         """Snapshot deck/pipette state, restoring it depending on the outcome.
 
-        Captures four things a protocol replay can advance: which
+        Captures five things a protocol replay can advance: the
+        compile-time drawer-position model
+        (``LocationManager.drawer_positions``, issue #142), which
         locations/tipboxes are registered at all
         (:meth:`LocationManager.snapshot_membership` -- undoes
         ``del_loc``/``clear_locs``/``load_locations``/``unload_locations``),
@@ -3330,6 +3381,7 @@ class AutoPipetteService:
         membership_snapshot = location_manager.snapshot_membership()
         tip_presence_snapshot = tipbox_manager.snapshot()
         cursor_snapshot = location_manager.snapshot_cursors()
+        drawer_positions_snapshot = dict(location_manager.drawer_positions)
         state = autopipette.state
         pipette_state_snapshot = (
             state.tip_state,
@@ -3347,6 +3399,7 @@ class AutoPipetteService:
             location_manager.restore_membership(membership_snapshot)
             tipbox_manager.restore(tip_presence_snapshot)
             location_manager.restore_cursors(cursor_snapshot)
+            location_manager.drawer_positions = drawer_positions_snapshot
 
             tip_state, tip_origin, has_liquid, active_liquid = pipette_state_snapshot
             state.tip_state = tip_state
@@ -3470,6 +3523,7 @@ class AutoPipetteService:
             # upload below it -- see its docstring for why that boundary is
             # the compile-time/runtime-failure line.
             with self.domain_state_snapshot(), gcode_manager.batch_mode():
+                self._seed_drawer_model()
                 for line in commands:
                     self._dispatch_protocol_line(line)
 
@@ -3694,6 +3748,7 @@ class AutoPipetteService:
                 self.domain_state_snapshot(restore="always"),
                 gcode_manager.batch_mode(),
             ):
+                self._seed_drawer_model()
                 for line_number, raw_line in enumerate(lines, start=1):
                     line = raw_line.strip()
                     if not line or line.startswith("#"):
