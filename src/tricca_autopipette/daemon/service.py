@@ -995,7 +995,7 @@ class AutoPipetteService:
         ``_homing_invalidated``. Without them, behavior is unchanged.
 
         Args:
-            args: Motor specification (x, y, z, pipette, axis, all, servo,
+            args: Motor specification (x, y, z, pipette, all, servo,
                 plates, or a plate name/letter).
 
         Returns:
@@ -1053,8 +1053,6 @@ class AutoPipetteService:
         else:
             getattr(autopipette, method_name)()
         self.output_gcode(autopipette.get_gcode(), filename)
-        if motors == "axis":  # bare G28: Klipper's override homes the plates too
-            self._model_plates_in(all_plates)
         return CommandResult(ok=True, message=f"Homed {motors}.")
 
     # ==================== Plate drawer commands (issue #143) ====================
@@ -1128,12 +1126,37 @@ class AutoPipetteService:
             )
         return position
 
+    def _raise_tip_for_plates(self) -> None:
+        """Raise the tip to ``z_safe`` unless Z is known to be there (D49).
+
+        Klipper refuses ``PLATE_MOVE``/``PLATES_IN`` with the tip below
+        ``z_safe`` (raw Z > ``z_safe``; Z0 is fully raised). Known Z is live
+        ``gcode_move`` Z, outside a batch only: in a protocol or dry run
+        live Z is where the tip was before the batch, not where its earlier
+        lines leave it, so the raise is always emitted there. Unknown Z gets
+        the raise too; raising to ``z_safe`` is always safe. A tip already
+        above ``z_safe`` (raw Z <= ``z_safe``) is left alone rather than
+        lowered to it. ``z_safe`` not discovered raises to Z0.
+        """
+        z_safe = self.axis_config.z_safe or 0.0
+        state = self.moonraker_state
+        z = None
+        if (
+            not self.gcode_manager.is_batch_mode
+            and state is not None
+            and "z" in state.homed_axes
+        ):
+            z = state.axis_position("Z")
+        if z is None or z > z_safe:
+            self._autopipette.raise_tip(z_safe)
+
     def plate_move(self, args: PlateMoveArgs) -> CommandResult:
         """Move a plate drawer to a named stop or a position (``PLATE_MOVE``).
 
         Gated by :meth:`require_plates_homed` (Z and that plate); everything
-        is checked before any G-code is emitted. Updates the compile-time
-        drawer model.
+        is checked before any G-code is emitted. Raises the tip to
+        ``z_safe`` first (:meth:`_raise_tip_for_plates`). Updates the
+        compile-time drawer model.
 
         Args:
             args: Plate (name or letter), target (stop or mm), optional speed.
@@ -1154,6 +1177,7 @@ class AutoPipetteService:
             raise ValueError(f"Invalid speed {args.speed}: must be positive (mm/s).")
         self.require_plates_homed("plate_move", [plate.name])
         autopipette = self._autopipette
+        self._raise_tip_for_plates()
         autopipette.plate_move(plate.name, position, args.speed)
         self.output_gcode(autopipette.get_gcode())
         autopipette.location_manager.set_drawer_position(plate.name, position)
@@ -1165,6 +1189,7 @@ class AutoPipetteService:
         """Move every plate drawer in (``PLATES_IN``).
 
         Klipper's macro moves every plate, so every plate must be homed.
+        Raises the tip to ``z_safe`` first, like :meth:`plate_move`.
 
         Returns:
             Result describing the move.
@@ -1177,6 +1202,7 @@ class AutoPipetteService:
         if not names:
             raise ValueError(_NO_PLATES_MSG)
         self.require_plates_homed("plates_in", names)
+        self._raise_tip_for_plates()
         self._autopipette.plates_in()
         self.output_gcode(self._autopipette.get_gcode())
         self._model_plates_in(names)

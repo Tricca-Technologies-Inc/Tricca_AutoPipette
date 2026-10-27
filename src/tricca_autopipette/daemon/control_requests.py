@@ -63,7 +63,7 @@ class ControlRequests(JsonRpcRequestBuilder):
         """Build a request to home one or more motors.
 
         Args:
-            args: Motor specification (x, y, z, pipette, axis, all, servo).
+            args: Motor specification (x, y, z, pipette, all, servo).
 
         Returns:
             Request to home the given motor(s).

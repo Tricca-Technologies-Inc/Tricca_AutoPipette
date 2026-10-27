@@ -564,6 +564,21 @@ class AutoPipette:
         self.note_action(f"Moving {plate} to {pos:g} mm")
         self.gcode_buffers.add(self.gcode_commands.plate_move(plate, pos, speed=speed))
 
+    def raise_tip(self, z: float) -> None:
+        """Raise the tip to raw ``z`` before a plate move (owner decision D49).
+
+        Absolute mode first, so a ``G91`` left by a print Klipper aborted
+        part-way can't turn this into a relative move.
+
+        Args:
+            z: Target raw Z (mm; Z0 is fully raised), normally ``z_safe``.
+        """
+        self.note_action(f"Raising the tip to Z{z:g} before a plate move")
+        self.set_coor_sys(CoordinateSystem.ABSOLUTE)
+        self.gcode_buffers.add(
+            self.gcode_commands.linear_move(z=z, feedrate=self.gantry.speed_z)
+        )
+
     def plates_in(self) -> None:
         """Move every plate drawer in with Klipper's ``PLATES_IN`` (issue #143)."""
         self.note_action("Moving every plate in")

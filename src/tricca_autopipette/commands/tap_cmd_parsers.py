@@ -59,7 +59,7 @@ class HomeArgs:
     """Arguments for the ``home`` command.
 
     Attributes:
-        motors: Which motors to home (x, y, z, pipette, axis, all, servo,
+        motors: Which motors to home (x, y, z, pipette, all, servo,
             plates, or a plate name/axis letter).
     """
 
@@ -589,9 +589,9 @@ class TAPCmdParsers:
         "motors",
         type=str,
         help=(
-            "Motors to home: x, y, z, pipette, axis, all, servo; and, where "
-            "Klipper configures plates, plates or a plate name (plate1...) "
-            "or its axis letter"
+            "Motors to home: x, y, z, pipette, servo, or all (gantry, "
+            "plunger, servo and any plates); and, where Klipper configures "
+            "plates, plates or a plate name (plate1...) or its axis letter"
         ),
     )
 
@@ -629,7 +629,7 @@ class TAPCmdParsers:
     parser_plate_move: Cmd2ArgumentParser = Cmd2ArgumentParser(
         description=(
             "Move a plate drawer to a named stop or a position in mm. Needs Z "
-            "and the plate homed; Klipper refuses it unless the tip is raised."
+            "and the plate homed; raises the tip to z_safe first if it is below it."
         )
     )
     parser_plate_move.add_argument(
