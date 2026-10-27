@@ -204,6 +204,7 @@ class AutoPipette:
             prewet_vol_ul=merged["prewet_vol_ul"],
             pre_air_gap_ul=merged["pre_air_gap_ul"],
             post_air_gap_ul=merged["post_air_gap_ul"],
+            air_gap_rise_mm=merged["air_gap_rise_mm"],
         )
         self._technique_provenance = self._compute_technique_provenance()
 
@@ -558,7 +559,13 @@ class AutoPipette:
         if self.plunger is not None:
             self.plunger.position_mm = 0.0
 
-    def move_plunger_to(self, target_mm: float, speed: float, accel: float) -> None:
+    def move_plunger_to(
+        self,
+        target_mm: float,
+        speed: float,
+        accel: float,
+        z_move: tuple[float, float] | None = None,
+    ) -> None:
         """Move the stage-2 plunger to an absolute position (issue #147).
 
         Emits ``SET_VELOCITY_LIMIT ACCEL=<accel>``, ``G1 P<target>
@@ -568,10 +575,17 @@ class AutoPipette:
         emitted. The target is rounded to 1e-6 mm. Klipper's soft limits
         stay the authority.
 
+        With ``z_move`` the plunger rides a Z move as one ``G1 Z<to>
+        P<target>`` (issue #148). Klipper's ``F`` and accel then apply to Z,
+        and the plunger moves ``|dP|/|dZ|`` times as fast and as hard, so
+        both are scaled to keep the plunger within ``speed``/``accel``, and
+        Z within its own ``speed_z``/``gantry_accel``.
+
         Args:
             target_mm: Absolute target, in mm from the homed zero.
             speed: Plunger speed, in mm/s.
             accel: Plunger acceleration, in mm/s².
+            z_move: ``(from, to)`` Z of a move to coordinate with, or None.
 
         Raises:
             NotHomedError: If the position model is unknown (plunger not
@@ -594,12 +608,23 @@ class AutoPipette:
                 f"Plunger target {plunger.letter}{target_mm:g} mm is outside "
                 f"{low:g}...{high:g} mm; refusing to move the syringe."
             )
-        if target_mm == plunger.position_mm:
-            return
         gc = self.gcode_commands
+        if target_mm == plunger.position_mm:
+            if z_move is not None:
+                self.gcode_buffers.add(
+                    gc.linear_move(z=z_move[1], feedrate=self.gantry.speed_z)
+                )
+            return
+        z = None
+        feedrate = speed * 60
+        if z_move is not None:
+            z_from, z = z_move
+            ratio = abs(z - z_from) / abs(target_mm - plunger.position_mm)
+            feedrate = round(min(self.gantry.speed_z, feedrate * ratio), 3)
+            accel = round(min(self.gantry_accel, accel * ratio), 3)
         self.gcode_buffers.add(gc.set_velocity_limit(accel=accel))
         self.gcode_buffers.add(
-            gc.linear_move(axes={plunger.letter: target_mm}, feedrate=speed * 60)
+            gc.linear_move(z=z, axes={plunger.letter: target_mm}, feedrate=feedrate)
         )
         self.gcode_buffers.add(gc.set_velocity_limit(accel=self.gantry_accel))
         plunger.position_mm = target_mm
@@ -751,6 +776,7 @@ class AutoPipette:
         stepper: str | None = None,
         speed: float | None = None,
         accel: float | None = None,
+        z_move: tuple[float, float] | None = None,
     ) -> None:
         """Move the plunger stepper motor a specific distance.
 
@@ -762,6 +788,8 @@ class AutoPipette:
             stepper: Name of stepper, or None for configured stepper.
             speed: Movement speed in mm/s, or None for default.
             accel: Movement acceleration in mm/s², or None for default.
+            z_move: Stage 2 only: ``(from, to)`` Z of a move the plunger
+                rides (``move_plunger_to``), or None.
 
         Raises:
             NotHomedError: At stage 2 (``plunger`` set), if the plunger's
@@ -777,8 +805,11 @@ class AutoPipette:
         if self.plunger is not None:
             if self.plunger.position_mm is None:
                 raise NotHomedError("plunger move", "plunger not homed")
-            self.move_plunger_to(self.plunger.position_mm + distance, speed, accel)
+            self.move_plunger_to(
+                self.plunger.position_mm + distance, speed, accel, z_move
+            )
             return
+        assert z_move is None, "coordinated moves need the stage-2 plunger"
 
         self.logger.debug(
             "MANUAL_STEPPER %s move: distance=%s speed=%s accel=%s",
@@ -1017,6 +1048,7 @@ class AutoPipette:
         stepper: str | None = None,
         speed: float | None = None,
         accel: float | None = None,
+        z_move: tuple[float, float] | None = None,
     ) -> None:
         """Move syringe to aspirate or dispense a volume.
 
@@ -1032,6 +1064,8 @@ class AutoPipette:
             stepper: Name of stepper, or None for configured stepper.
             speed: Plunger movement speed in mm/s, or None for default.
             accel: Plunger movement acceleration, or None for default.
+            z_move: Stage 2 only: ``(from, to)`` Z of a move the plunger
+                rides, as one ``G1 Z P`` (issue #148), or None.
 
         Raises:
             ValueError: If the calibration maps ``vol_ul`` to negative plunger
@@ -1064,7 +1098,7 @@ class AutoPipette:
             vol_ul,
             travel_mm,
         )
-        self.move_pipette_stepper(travel_mm, stepper, speed, accel)
+        self.move_pipette_stepper(travel_mm, stepper, speed, accel, z_move)
 
     def clear_syringe(
         self,
@@ -1307,8 +1341,17 @@ class AutoPipette:
         post_air_gap_ul: float | None = None,
         prewet_cycles: int | None = None,
         prewet_vol_ul: float | None = None,
+        air_gap_rise_mm: float | None = None,
     ) -> None:
         """Aspirate liquid from a source location into the pipette tip.
+
+        With the stage-2 plunger and a positive ``air_gap_rise_mm`` (issue
+        #148), the pre-aspirate air gap is drawn while Z descends from that
+        far above the well's clearance height (its location Z) to it, and
+        the post-aspirate gap while Z rises back up, each as one ``G1 Z P``.
+        Both segments stay at or above the clearance height, so air is never
+        drawn with the tip in the liquid. Otherwise the gaps are drawn
+        stationary at the clearance height, as before.
 
         Args:
             volume: Volume to aspirate in microliters.
@@ -1322,13 +1365,21 @@ class AutoPipette:
             prewet_cycles: Number of prewet cycles, or None for the profile's value.
             prewet_vol_ul: Volume per prewet cycle in μL, or None for the
                 profile's value.
+            air_gap_rise_mm: Z travel in mm over which the air gaps are
+                drawn at stage 2, or None for the profile's value.
 
         Raises:
-            ValueError: If source is not a plate with dipping strategy.
+            ValueError: If source is not a plate with dipping strategy, or
+                ``air_gap_rise_mm`` is negative.
             VolumeCapacityError: If ``volume`` alone exceeds usable syringe
                 capacity.
             NotALocationError: If ``source`` is not a defined location.
         """  # ruff: ignore[docstring-extraneous-exception]
+        rise = (
+            self.syringe.air_gap_rise_mm if air_gap_rise_mm is None else air_gap_rise_mm
+        )
+        if rise < 0:
+            raise ValueError(f"air_gap_rise must be >= 0 mm, got {rise:g}")
         coor_source = self.location_manager.get_coordinate(source, src_row, src_col)
         loc_source = self.location_manager.locations[source]
 
@@ -1366,11 +1417,22 @@ class AutoPipette:
             f"prewet={prewet_cycles}x{prewet_vol_ul:g}μL[{sources[2]}/{sources[3]}])"
         )
 
-        self.move_to(coor_source)
-        self.home_pipette_stepper()
-
-        if pre_air_gap_ul:
-            self.operate_syringe(FluidDisplacement.aspiration, pre_air_gap_ul)
+        # Larger Z lowers the tip and Z0 is fully raised, so `above_z` is
+        # never below the clearance height.
+        clear_z = coor_source.z
+        above_z = max(0.0, clear_z - rise)
+        coordinated = self.plunger is not None and above_z < clear_z
+        if coordinated and pre_air_gap_ul:
+            self.move_to(Coordinate(x=coor_source.x, y=coor_source.y, z=above_z))
+            self.home_pipette_stepper()
+            self.operate_syringe(
+                FluidDisplacement.aspiration, pre_air_gap_ul, z_move=(above_z, clear_z)
+            )
+        else:
+            self.move_to(coor_source)
+            self.home_pipette_stepper()
+            if pre_air_gap_ul:
+                self.operate_syringe(FluidDisplacement.aspiration, pre_air_gap_ul)
 
         self.dip_z_down(coor_source, loc_source.get_dip_distance(volume))
 
@@ -1390,7 +1452,11 @@ class AutoPipette:
         self.dip_z_return(coor_source)
 
         if post_air_gap_ul:
-            self.operate_syringe(FluidDisplacement.aspiration, post_air_gap_ul)
+            self.operate_syringe(
+                FluidDisplacement.aspiration,
+                post_air_gap_ul,
+                z_move=(clear_z, above_z) if coordinated else None,
+            )
 
     def dispense_volume(
         self,
@@ -1475,6 +1541,7 @@ class AutoPipette:
         post_air_gap_ul: float | None = None,
         prewet_cycles: int | None = None,
         prewet_vol_ul: float | None = None,
+        air_gap_rise_mm: float | None = None,
         wiggle: bool = False,
         tip_end: TipEnd = "waste",
     ) -> None:
@@ -1503,6 +1570,8 @@ class AutoPipette:
             prewet_cycles: Number of prewet cycles, or None for the profile's value.
             prewet_vol_ul: Volume per prewet cycle in μL, or None for the
                 profile's value.
+            air_gap_rise_mm: Z travel over which the air gaps are drawn at
+                stage 2 (see ``aspirate_volume``), or None for the profile's.
             wiggle: If True, shake tip during dispensing.
             tip_end: Where the tip goes afterwards -- see `finish_tip`.
 
@@ -1588,6 +1657,7 @@ class AutoPipette:
                 post_air_gap_ul=post_air_gap_ul,
                 prewet_cycles=prewet_cycles,
                 prewet_vol_ul=prewet_vol_ul,
+                air_gap_rise_mm=air_gap_rise_mm,
             )
 
             # Only dispense the passed in amount if present
@@ -1701,6 +1771,7 @@ class AutoPipette:
         post_air_gap_ul: float | None = None,
         prewet_cycles: int | None = None,
         prewet_vol_ul: float | None = None,
+        air_gap_rise_mm: float | None = None,
         wiggle: bool = False,
         leftover: LeftoverAction | None = None,
         tip_end: TipEnd = "waste",
@@ -1728,6 +1799,8 @@ class AutoPipette:
             prewet_cycles: Number of prewet cycles, or None for the profile's value.
             prewet_vol_ul: Volume per prewet cycle in μL, or None for the
                 profile's value.
+            air_gap_rise_mm: Z travel over which the air gaps are drawn at
+                stage 2 (see ``aspirate_volume``), or None for the profile's.
             wiggle: If True, shake tip during each dispense.
             leftover: What to do with liquid remaining after the last split.
                 Required when the splits do not consume the whole aspirate.
@@ -1786,6 +1859,7 @@ class AutoPipette:
             post_air_gap_ul=post_air_gap_ul,
             prewet_cycles=prewet_cycles,
             prewet_vol_ul=prewet_vol_ul,
+            air_gap_rise_mm=air_gap_rise_mm,
         )
         # fit_air_volumes may have shrunk the cushion during the aspirate; the
         # first dispense has to purge exactly what actually went in.

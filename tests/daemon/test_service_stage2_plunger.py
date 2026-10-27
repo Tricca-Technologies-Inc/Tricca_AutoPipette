@@ -188,3 +188,64 @@ class TestRollback:
         assert ap.plunger is not None
         assert ap.plunger.position_mm == pytest.approx(-7.0)
         assert ap.gantry_accel == accel
+
+
+class TestCoordinatedAirGaps:
+    """``--air_gap_rise`` reaches the domain from a protocol line (issue #148)."""
+
+    @pytest.fixture(autouse=True)
+    def _protocols_in_tmp(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        monkeypatch.setattr(DefaultPaths, "DIR_PROTOCOL", tmp_path)
+
+    def _run(self, svc: AutoPipetteService, tmp_path: Path, *lines: str) -> list[str]:
+        (tmp_path / "p.pipette").write_text("\n".join(lines) + "\n", encoding="utf-8")
+        manager = svc.gcode_manager
+        with patch.object(
+            manager, "write_gcode_file", wraps=manager.write_gcode_file
+        ) as spy:
+            svc._run_protocol_sync("p.pipette")
+        return [g.rstrip("\n") for g in spy.call_args.args[0]]
+
+    @pytest.mark.parametrize(
+        "line",
+        [
+            "aspirate 20 plate_a --pre_air_gap 4 --post_air_gap 2 --prewet 0 "
+            "--air_gap_rise 2",
+            "pipette 20 plate_a plate_a --pre_air_gap 4 --post_air_gap 2 "
+            "--prewet 0 --air_gap_rise 2 --tip_end keep",
+        ],
+    )
+    def test_flag_draws_both_gaps_during_z_moves(
+        self, svc: AutoPipetteService, tmp_path: Path, line: str
+    ) -> None:
+        _configure(svc, STAGE2, homed=True, position=0.0)
+
+        gcode = self._run(svc, tmp_path, line)
+
+        # 4 μL = 2 mm while descending 3 -> 5; 2 μL = 1 mm while rising 5 -> 3.
+        assert [
+            g.split(" F")[0] for g in gcode if g.startswith("G1 Z") and " P" in g
+        ] == [
+            "G1 Z5.0 P-2.0",
+            "G1 Z3.0 P-13.0",
+        ]
+
+    def test_rollback_restores_the_plunger_model(
+        self, svc: AutoPipetteService, tmp_path: Path
+    ) -> None:
+        _configure(svc, STAGE2, homed=True, position=0.0)
+        svc._autopipette.plunger = AbsolutePlunger("P", -60.0, 0.0, 0.0)
+        (tmp_path / "p.pipette").write_text(
+            "aspirate 20 plate_a --pre_air_gap 4 --post_air_gap 2 --prewet 0 "
+            "--air_gap_rise 2\nmove_loc nowhere\n",
+            encoding="utf-8",
+        )
+
+        with pytest.raises(Exception, match="nowhere"):
+            svc._run_protocol_sync("p.pipette")
+
+        plunger = svc._autopipette.plunger
+        assert plunger is not None
+        assert plunger.position_mm == pytest.approx(0.0)

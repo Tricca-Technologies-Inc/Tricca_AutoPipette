@@ -1221,6 +1221,7 @@ class AutoPipetteService:
             post_air_gap_ul=args.post_air_gap_ul,
             prewet_cycles=args.prewet_cycles,
             prewet_vol_ul=args.prewet_vol_ul,
+            air_gap_rise_mm=args.air_gap_rise_mm,
         )
         self.output_gcode(autopipette.get_gcode())
         return CommandResult(
@@ -1330,6 +1331,7 @@ class AutoPipetteService:
                 post_air_gap_ul=args.post_air_gap_ul,
                 prewet_cycles=args.prewet_cycles,
                 prewet_vol_ul=args.prewet_vol_ul,
+                air_gap_rise_mm=args.air_gap_rise_mm,
                 wiggle=args.wiggle,
                 leftover=args.leftover,
                 tip_end=tip_end,
@@ -1351,6 +1353,7 @@ class AutoPipetteService:
                 post_air_gap_ul=args.post_air_gap_ul,
                 prewet_cycles=args.prewet_cycles,
                 prewet_vol_ul=args.prewet_vol_ul,
+                air_gap_rise_mm=args.air_gap_rise_mm,
                 wiggle=args.wiggle,
                 tip_end=tip_end,
             )

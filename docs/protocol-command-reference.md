@@ -93,7 +93,7 @@ Options:
 Usage: aspirate [-h] [--src_row SRC_ROW] [--src_col SRC_COL]
                 [--pre_air_gap PRE_AIR_GAP_UL]
                 [--post_air_gap POST_AIR_GAP_UL] [--prewet PREWET_CYCLES]
-                [--prewet_vol PREWET_VOL_UL]
+                [--prewet_vol PREWET_VOL_UL] [--air_gap_rise AIR_GAP_RISE_MM]
                 vol_ul source
 
 Aspirate liquid from a source location.
@@ -118,6 +118,11 @@ Options:
   --prewet_vol PREWET_VOL_UL
                         Volume per prewet cycle in μL (default: active liquid
                         profile)
+  --air_gap_rise AIR_GAP_RISE_MM
+                        Stage-2 plunger only: draw the air gaps while Z moves
+                        this many mm above the well's clearance height, as one
+                        G1 Z P move each (0 = stationary; default: active
+                        liquid profile)
 ```
 
 ### `dispense`
@@ -149,9 +154,9 @@ Usage: pipette [-h] [--dispense_vol DISP_VOL_UL] [--src_row SRC_ROW]
                [--src_col SRC_COL] [--dest_row DEST_ROW] [--dest_col DEST_COL]
                [--tipbox TIPBOX_NAME] [--pre_air_gap PRE_AIR_GAP_UL]
                [--post_air_gap POST_AIR_GAP_UL] [--prewet PREWET_CYCLES]
-               [--prewet_vol PREWET_VOL_UL] [--wiggle] [--keep_tip]
-               [--tip_end {keep,waste,return}] [--splits SPLITS]
-               [--leftover {keep,waste}]
+               [--prewet_vol PREWET_VOL_UL] [--air_gap_rise AIR_GAP_RISE_MM]
+               [--wiggle] [--keep_tip] [--tip_end {keep,waste,return}]
+               [--splits SPLITS] [--leftover {keep,waste}]
                vol_ul source dest
 
 Transfer liquid from source to destination.
@@ -183,6 +188,11 @@ Options:
   --prewet_vol PREWET_VOL_UL
                         Volume per prewet cycle in μL (default: active liquid
                         profile)
+  --air_gap_rise AIR_GAP_RISE_MM
+                        Stage-2 plunger only: draw the air gaps while Z moves
+                        this many mm above the well's clearance height, as one
+                        G1 Z P move each (0 = stationary; default: active
+                        liquid profile)
   --wiggle              Wiggle tip during dispensing to dislodge residual
                         droplets
   --keep_tip            Deprecated: same as --tip_end keep

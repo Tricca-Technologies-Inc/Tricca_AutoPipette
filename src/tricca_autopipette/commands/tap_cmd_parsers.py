@@ -22,6 +22,12 @@ from cmd2 import Cmd2ArgumentParser
 from tricca_autopipette.core.pipette_models import TipEnd
 from tricca_autopipette.core.splits import LeftoverAction
 
+_AIR_GAP_RISE_HELP = (
+    "Stage-2 plunger only: draw the air gaps while Z moves this many mm above "
+    "the well's clearance height, as one G1 Z P move each (0 = stationary; "
+    "default: active liquid profile)"
+)
+
 
 def args_from_namespace[ArgsT](
     args_cls: type[ArgsT],
@@ -131,6 +137,8 @@ class AspirateArgs:
             liquid profile's value.
         prewet_cycles: Prewet cycles, or None for the profile's value.
         prewet_vol_ul: Volume per prewet cycle (μL), or None for the profile's.
+        air_gap_rise_mm: Z travel (mm) over which the air gaps are drawn at
+            stage 2, or None for the profile's (issue #148).
     """
 
     vol_ul: float
@@ -141,6 +149,7 @@ class AspirateArgs:
     post_air_gap_ul: float | None
     prewet_cycles: int | None
     prewet_vol_ul: float | None
+    air_gap_rise_mm: float | None = None
 
 
 @dataclass
@@ -194,6 +203,8 @@ class PipetteArgs:
         tip_end: Where the tip goes afterwards -- ``keep``, ``waste``, or
             ``return`` (to the slot it came from) -- or None for the
             default (``waste``, or ``keep`` under ``--keep_tip``).
+        air_gap_rise_mm: Z travel (mm) over which the air gaps are drawn at
+            stage 2, or None for the profile's (issue #148).
     """
 
     vol_ul: float
@@ -214,6 +225,7 @@ class PipetteArgs:
     splits: str | None
     leftover: LeftoverAction | None
     tip_end: TipEnd | None = None
+    air_gap_rise_mm: float | None = None
 
 
 @dataclass
@@ -662,6 +674,13 @@ class TAPCmdParsers:
         type=float,
         help="Volume per prewet cycle in μL (default: active liquid profile)",
     )
+    parser_aspirate.add_argument(
+        "--air_gap_rise",
+        dest="air_gap_rise_mm",
+        default=None,
+        type=float,
+        help=_AIR_GAP_RISE_HELP,
+    )
 
     parser_dispense: Cmd2ArgumentParser = Cmd2ArgumentParser(
         description="Dispense liquid to a destination location."
@@ -766,6 +785,13 @@ class TAPCmdParsers:
         default=None,
         type=float,
         help="Volume per prewet cycle in μL (default: active liquid profile)",
+    )
+    parser_pipette.add_argument(
+        "--air_gap_rise",
+        dest="air_gap_rise_mm",
+        default=None,
+        type=float,
+        help=_AIR_GAP_RISE_HELP,
     )
     parser_pipette.add_argument(
         "--wiggle",
