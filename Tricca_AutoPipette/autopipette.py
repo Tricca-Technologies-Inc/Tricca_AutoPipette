@@ -753,7 +753,7 @@ class AutoPipette:
         self.set_servo_angle(angle_ready)
         self.gcode_wait(wait_eject)
         self.set_servo_angle(angle_retract)
-        self.gcode_wait(wait_movement)
+        self.gcode_wait(50)
 
         self.state.has_tip = False
 
@@ -805,7 +805,8 @@ class AutoPipette:
         """
         coor_dip = Coordinate(x=curr_coor.x, y=curr_coor.y, z=distance)
         self.move_to_z(coor_dip)
-        self.gcode_wait(self.pipette_params.wait_movement)
+        #self.gcode_wait(self.pipette_params.wait_movement)
+        self.gcode_wait(50)
 
     def dip_z_return(self, curr_coor: Coordinate) -> None:
         """Return the pipette to the original Z height.
@@ -1058,7 +1059,7 @@ class AutoPipette:
         if prewet:
             AIR_CUSHION_UL = ext_vol
             self.operate_syringe(FluidDisplacement.aspiration, AIR_CUSHION_UL, speed = self.pipette_params.speed_pipette_up)
-            self.gcode_wait(self.pipette_params.wait_aspirate)
+            #self.gcode_wait(self.pipette_params.wait_aspirate)
 
             self.move_to_z(Coordinate(
                 x=coor_source.x,
@@ -1084,7 +1085,7 @@ class AutoPipette:
         if extra_air:
             AIR_CUSHION_UL = ext_vol
             self.operate_syringe(FluidDisplacement.aspiration, AIR_CUSHION_UL, speed = self.pipette_params.speed_pipette_up)
-            self.gcode_wait(self.pipette_params.wait_aspirate)
+            #self.gcode_wait(self.pipette_params.wait_aspirate)
 
         # dip down into the liquid
         self.dip_z_down(coor_source, dip_z)    
