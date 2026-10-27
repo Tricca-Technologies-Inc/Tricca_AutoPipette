@@ -49,6 +49,8 @@ class FakeMoonrakerState:
         self.homed_plates: set[str] = set()
         #: What ``is_plunger_homed`` reports.
         self.plunger_homed = False
+        #: What ``axis_position`` reports, by axis letter (issue #147).
+        self.axis_positions: dict[str, float] = {}
 
     def is_homed(self) -> bool:
         """Return the fake's configured homed state."""
@@ -73,6 +75,17 @@ class FakeMoonrakerState:
     def is_plunger_homed(self) -> bool:
         """Return ``plunger_homed``."""
         return self.plunger_homed
+
+    def axis_position(self, letter: str) -> float | None:
+        """Return ``axis_positions[letter]``, or None if unset.
+
+        Args:
+            letter: G-code axis letter.
+
+        Returns:
+            The position a test set, if any.
+        """
+        return self.axis_positions.get(letter)
 
     def start(self) -> None:
         """No-op: there is no real subscription to start."""

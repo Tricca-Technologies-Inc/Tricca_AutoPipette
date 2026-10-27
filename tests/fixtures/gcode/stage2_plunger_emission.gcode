@@ -1,0 +1,53 @@
+G90
+M220 S100
+SET_VELOCITY_LIMIT VELOCITY=99999.0
+SET_VELOCITY_LIMIT ACCEL=40000.0
+; Homing all axes (X, Y, Z)
+G28
+; Homing servo (retract to home position)
+SET_SERVO SERVO=pipette_servo ANGLE=100
+G4 P850
+; Pipette initialized: absolute coordinates, speed configured, XYZ and pipette motors homed
+SET_VELOCITY_LIMIT ACCEL=3000
+SET_VELOCITY_LIMIT ACCEL=200.0
+G1 P-1.125 F3000.0
+SET_VELOCITY_LIMIT ACCEL=3000
+SET_VELOCITY_LIMIT ACCEL=200.0
+G1 P0.0 F3000.0
+SET_VELOCITY_LIMIT ACCEL=3000
+; Transferring 20μL from 'plate_a' to 'plate_a' (1 chunk(s))
+; Aspirating 20μL from 'plate_a' (pre_air_gap=0μL[explicit flag], post_air_gap=0μL[explicit flag], prewet=0x10μL[explicit flag/explicit flag])
+G1 X100.0 Y100.0 F38000.0
+G1 Z5.0 F12000.0
+G1 Z5.0 F12000.0
+G4 P100
+SET_VELOCITY_LIMIT ACCEL=200.0
+G1 P-15.253167 F1500.0
+SET_VELOCITY_LIMIT ACCEL=3000
+G4 P200
+G1 Z5.0 F12000.0
+G4 P100
+; Dispensing remaining volume to 'plate_a'
+G1 X91.0 Y100.0 F38000.0
+G1 Z5.0 F12000.0
+G1 Z5.0 F12000.0
+G4 P100
+SET_VELOCITY_LIMIT ACCEL=200.0
+G1 P0.0 F3000.0
+SET_VELOCITY_LIMIT ACCEL=3000
+G4 P200
+G1 Z5.0 F12000.0
+G4 P100
+; Disposing tip to waste container
+G1 X50.0 Y50.0 F38000.0
+G1 Z5.0 F12000.0
+G1 Z5.0 F12000.0
+G4 P100
+; Ejecting tip
+SET_SERVO SERVO=pipette_servo ANGLE=100
+SET_SERVO SERVO=pipette_servo ANGLE=130
+G4 P850
+SET_SERVO SERVO=pipette_servo ANGLE=100
+G4 P850
+G1 Z5.0 F12000.0
+G4 P100

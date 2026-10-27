@@ -44,12 +44,14 @@ from tricca_autopipette.core.pipette_constants import (
 )
 from tricca_autopipette.core.pipette_exceptions import (
     NotALocationError,
+    NotHomedError,
     NoTipOriginError,
     NoWasteContainerError,
     TipAlreadyOnError,
     VolumeCapacityError,
 )
 from tricca_autopipette.core.pipette_models import (
+    AbsolutePlunger,
     FluidDisplacement,
     GantryKinematics,
     PipetteModel,
@@ -62,6 +64,9 @@ from tricca_autopipette.core.pipette_models import (
 from tricca_autopipette.core.splits import LeftoverAction, Split
 from tricca_autopipette.core.traversal import well_id_to_rc
 from tricca_autopipette.core.volume_converter import VolumeConverter
+
+#: Float noise tolerated at a stage-2 plunger limit before refusing (mm).
+_PLUNGER_EPS_MM = 1e-6
 
 
 class AutoPipette:
@@ -86,6 +91,12 @@ class AutoPipette:
         last_syringe_travel_mm: Unsigned plunger travel of the most recent
             `operate_syringe` call, in mm -- what a calibration dispense
             actually commanded.
+        plunger: The stage-2 plunger (issue #147), or None for stage 1 and
+            machines without a P axis, whose syringe moves stay relative
+            ``MANUAL_STEPPER`` moves. Set by ``AutoPipetteService`` from
+            Klipper's axis config.
+        gantry_accel: The toolhead acceleration tapd last set (mm/s²), which
+            a stage-2 plunger move restores after its own.
         gcode_buffers: G-code command buffer.
 
     Example:
@@ -157,6 +168,8 @@ class AutoPipette:
         # State tracking
         self.state = PipetteState()
         self.last_syringe_travel_mm = 0.0
+        self.plunger: AbsolutePlunger | None = None
+        self.gantry_accel: float = self.gantry.accel_max
 
         # G-code management
         self.gcode_buffers = GCodeBuffer()
@@ -406,6 +419,7 @@ class AutoPipette:
             self.home_pipette_motors()
         else:
             self.home_servo()
+            self._plunger_homed()
         self.state.homed = True
         self.note_action(
             "Pipette initialized: absolute coordinates, speed configured, "
@@ -495,6 +509,7 @@ class AutoPipette:
             >>> pipette.set_max_accel(3000)  # doctest: +SKIP
         """
         self.logger.debug("Max acceleration: %s mm/s²", accel)
+        self.gantry_accel = accel
         self.gcode_buffers.add(self.gcode_commands.set_velocity_limit(accel=accel))
 
     def home_axis(self) -> None:
@@ -536,6 +551,58 @@ class AutoPipette:
             self.home_pipette_stepper()
         else:
             self.gcode_buffers.add(self.gcode_commands.home(plunger_axis))
+            self._plunger_homed()
+
+    def _plunger_homed(self) -> None:
+        # `G28 P` (or bare G28) sets the stage-2 frame's zero.
+        if self.plunger is not None:
+            self.plunger.position_mm = 0.0
+
+    def move_plunger_to(self, target_mm: float, speed: float, accel: float) -> None:
+        """Move the stage-2 plunger to an absolute position (issue #147).
+
+        Emits ``SET_VELOCITY_LIMIT ACCEL=<accel>``, ``G1 P<target>
+        F<speed * 60>`` and ``SET_VELOCITY_LIMIT ACCEL=<gantry_accel>``, and
+        advances the position model. A target within float noise of a limit
+        is clamped to it; anything further out is refused before anything is
+        emitted. The target is rounded to 1e-6 mm. Klipper's soft limits
+        stay the authority.
+
+        Args:
+            target_mm: Absolute target, in mm from the homed zero.
+            speed: Plunger speed, in mm/s.
+            accel: Plunger acceleration, in mm/s².
+
+        Raises:
+            NotHomedError: If the position model is unknown (plunger not
+                homed).
+            ValueError: If the target leaves Klipper's limits, or is
+                positive: aspiration is negative (D26), so a positive target
+                would drive the plunger the wrong way past its zero.
+        """
+        plunger = self.plunger
+        assert plunger is not None
+        if plunger.position_mm is None:
+            raise NotHomedError("plunger move", "plunger not homed")
+        low, high = plunger.position_min, min(plunger.position_max, 0.0)
+        if low - _PLUNGER_EPS_MM <= target_mm <= high + _PLUNGER_EPS_MM:
+            # Rounded to well under a microstep, so the curve fit's float
+            # noise neither reaches the G-code nor builds up in the model.
+            target_mm = round(min(max(target_mm, low), high), 6) + 0.0  # no -0.0
+        else:
+            raise ValueError(
+                f"Plunger target {plunger.letter}{target_mm:g} mm is outside "
+                f"{low:g}...{high:g} mm; refusing to move the syringe."
+            )
+        if target_mm == plunger.position_mm:
+            return
+        gc = self.gcode_commands
+        self.gcode_buffers.add(gc.set_velocity_limit(accel=accel))
+        self.gcode_buffers.add(
+            gc.linear_move(axes={plunger.letter: target_mm}, feedrate=speed * 60)
+        )
+        self.gcode_buffers.add(gc.set_velocity_limit(accel=self.gantry_accel))
+        plunger.position_mm = target_mm
 
     def home_plates(self, plates: dict[str, str]) -> None:
         """Home plates with ``G28 <letter>...`` (issue #146).
@@ -574,6 +641,12 @@ class AutoPipette:
             speed = self.syringe.speed_dispense  # Use dispense speed for homing
         if accel is None:
             accel = self.syringe.accel_home
+
+        if self.plunger is not None:
+            # Stage 2: the frame is already absolute, so "re-zero" is a move
+            # back to the homed zero; Klipper refuses MANUAL_STEPPER here.
+            self.move_plunger_to(0.0, speed, accel)
+            return
 
         # Deliberate 2x overshoot: a `home` move stops at the endstop trigger
         distance = 2 * self.syringe.max_travel_mm
@@ -681,11 +754,18 @@ class AutoPipette:
     ) -> None:
         """Move the plunger stepper motor a specific distance.
 
+        At stage 2 (``plunger`` set, issue #147) this is an absolute
+        ``G1 P`` to the modelled position plus ``distance``.
+
         Args:
             distance: Distance to move in millimetres.
             stepper: Name of stepper, or None for configured stepper.
             speed: Movement speed in mm/s, or None for default.
             accel: Movement acceleration in mm/s², or None for default.
+
+        Raises:
+            NotHomedError: At stage 2 (``plunger`` set), if the plunger's
+                position is unknown. ``move_plunger_to`` adds its own refusals.
         """
         if stepper is None:
             stepper = self.syringe.stepper_name
@@ -693,6 +773,12 @@ class AutoPipette:
             speed = self.syringe.speed_dispense
         if accel is None:
             accel = self.syringe.accel_move
+
+        if self.plunger is not None:
+            if self.plunger.position_mm is None:
+                raise NotHomedError("plunger move", "plunger not homed")
+            self.move_plunger_to(self.plunger.position_mm + distance, speed, accel)
+            return
 
         self.logger.debug(
             "MANUAL_STEPPER %s move: distance=%s speed=%s accel=%s",
@@ -934,6 +1020,12 @@ class AutoPipette:
     ) -> None:
         """Move syringe to aspirate or dispense a volume.
 
+        The signed travel (direction x ``motor_orientation``, so aspiration
+        is negative) is a relative ``MANUAL_STEPPER`` move at stage 1, and
+        at stage 2 the absolute target ``G1 P<position + travel>``
+        (``move_pipette_stepper``, issue #147), refused before emission if
+        it would leave Klipper's limits.
+
         Args:
             direction: Direction to move the syringe plunger.
             vol_ul: Volume to aspirate or dispense in microliters.
@@ -993,6 +1085,11 @@ class AutoPipette:
             speed = self.syringe.speed_dispense
         if accel is None:
             accel = self.syringe.accel_home
+
+        if self.plunger is not None:
+            # Stage 2: the soft limit replaces the endstop overshoot.
+            self.move_plunger_to(0.0, speed, accel)
+            return
 
         distance = 2 * self.syringe.max_travel_mm
         distance *= FluidDisplacement.dispense
