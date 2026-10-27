@@ -120,7 +120,8 @@ class AxisConfig:
 
     Attributes:
         plates: Every plate in ``_PLATE_CFG.axes`` order.
-        z_safe: Raw Z at or above which the tip clears every plate, or None.
+        z_safe: Highest raw Z (closest to 0) at which the tip clears every
+            plate; the tip is safe when raw Z <= z_safe. None if absent.
         park_tol: Tolerance (mm) for "at a tip-safe position", or None.
         pipette: The P axis, or None if ``_PIPETTE_CFG`` is absent.
     """
@@ -210,6 +211,7 @@ class MoonrakerStateTracker:
         self.mrr = mrr
         self._homed_axes: frozenset[str] = frozenset()
         self._print_state: str = "standby"
+        self._print_message: str = ""
         self._print_state_callbacks: list[Callable[[str], None]] = []
         self._axis_config: AxisConfig | None = None
         #: Last-known fields of the extra-axis objects, merged push by push
@@ -333,6 +335,11 @@ class MoonrakerStateTracker:
         """The last known Klipper ``print_stats.state`` value."""
         return self._print_state
 
+    @property
+    def print_message(self) -> str:
+        """The last known ``print_stats.message`` (Klipper's error text)."""
+        return self._print_message
+
     def on_print_state_change(self, callback: Callable[[str], None]) -> None:
         """Register a callback invoked whenever ``print_stats.state`` changes.
 
@@ -385,6 +392,9 @@ class MoonrakerStateTracker:
                 self._live.setdefault(name, {}).update(as_dict(status[name]))
 
         print_stats = as_dict(status.get("print_stats"))
+        message = print_stats.get("message")
+        if isinstance(message, str):
+            self._print_message = message
         new_state = print_stats.get("state")
         if isinstance(new_state, str) and new_state != self._print_state:
             self._print_state = new_state

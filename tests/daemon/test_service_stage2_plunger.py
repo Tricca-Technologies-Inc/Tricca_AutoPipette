@@ -63,7 +63,7 @@ def _configure(
     fake.axis_config = axes  # type: ignore[misc]
     fake.plunger_homed = homed
     if position is not None:
-        fake.axis_positions["P"] = position
+        fake.positions["P"] = position
 
 
 class TestStageSelection:

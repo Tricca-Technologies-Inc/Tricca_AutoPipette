@@ -61,6 +61,7 @@ from tricca_autopipette.core.pipette_models import (
     TipEnd,
     TipState,
 )
+from tricca_autopipette.core.plates import Plate
 from tricca_autopipette.core.splits import LeftoverAction, Split
 from tricca_autopipette.core.traversal import well_id_to_rc
 from tricca_autopipette.core.volume_converter import VolumeConverter
@@ -616,6 +617,25 @@ class AutoPipette:
         self.note_action(f"Homing plates: {', '.join(plates)}")
         self.gcode_buffers.add(self.gcode_commands.home(*plates.values()))
 
+    def plate_move(self, plate: str, pos: float, speed: float | None = None) -> None:
+        """Move a plate drawer with Klipper's ``PLATE_MOVE`` macro (issue #143).
+
+        The macro carries Klipper's interlock: it refuses unless Z is homed
+        and raised and the plate is homed, and checks the range itself.
+
+        Args:
+            plate: Plate name (``plate1``...).
+            pos: Target position (mm, 0 = in).
+            speed: Speed (mm/s), or None for the plate's limit.
+        """
+        self.note_action(f"Moving {plate} to {pos:g} mm")
+        self.gcode_buffers.add(self.gcode_commands.plate_move(plate, pos, speed=speed))
+
+    def plates_in(self) -> None:
+        """Move every plate drawer in with Klipper's ``PLATES_IN`` (issue #143)."""
+        self.note_action("Moving every plate in")
+        self.gcode_buffers.add(self.gcode_commands.plates_in())
+
     def home_servo(self) -> None:
         """Retract the tip ejection servo to home position."""
         self.note_action("Homing servo (retract to home position)")
@@ -849,12 +869,19 @@ class AutoPipette:
             NoTipboxError: If no tipbox has been configured.
             NotALocationError: If `tipbox_name` is given but no box is
                 configured under that name.
+            DrawerNotAtStopError: If the supplying box is linked to a drawer
+                stop and the drawer isn't there; no slot is consumed.
             OutOfTipsError: If every tried tipbox is exhausted. Reload the
                 boxes and run ``reset_tips`` rather than reusing a tip.
             TipAlreadyOnError: If a tip is already attached.
         """  # ruff: ignore[docstring-extraneous-exception]
         if self.state.tip_state == TipState.ATTACHED:
             raise TipAlreadyOnError()
+        # Checked on the box that will supply the tip, before a slot is taken.
+        peeked = self.location_manager.tipbox_manager.peek_tip()
+        supplier = tipbox_name or (peeked[0] if peeked else None)
+        if supplier is not None:
+            self.location_manager.check_drawer(supplier)
 
         # The supplying box comes back with the coordinate: boxes may sit at
         # different heights, so the dip distance must come from *that* box.
@@ -912,6 +939,7 @@ class AutoPipette:
             self.return_tip()
             return
 
+        self._check_drawer_of(self.location_manager.waste_container)
         self.note_action("Disposing tip to waste container")
         curr_coor = self.location_manager.waste_container.next()
         self.move_to(curr_coor)
@@ -934,6 +962,7 @@ class AutoPipette:
         if self.state.tip_origin is None:
             raise NoTipOriginError()
         name, index = self.state.tip_origin
+        self.location_manager.check_drawer(name)
         box = self.location_manager.tipbox_manager.return_tip(name, index)
         coor = box.wells[index].coor
 
@@ -1542,6 +1571,9 @@ class AutoPipette:
         """  # ruff: ignore[docstring-extraneous-exception]
         if vol_ul < 0:
             raise ValueError(f"Invalid volume: {vol_ul}μL. Volume must be positive.")
+        # Refuse before the tip pickup, not partway through the transfer.
+        for name in (source, dest):
+            self.location_manager.check_drawer(name)
 
         # Resolve here as well as in aspirate_volume: chunking below needs the
         # real air overhead, and passing the resolved values down keeps every
@@ -1651,6 +1683,7 @@ class AutoPipette:
             if not self.location_manager.has_location(split.dest):
                 raise NotALocationError(split.dest)
 
+            self.location_manager.check_drawer(split.dest)
             loc = self.location_manager.locations[split.dest]
             if isinstance(loc, Coordinate):
                 raise ValueError(
@@ -1762,6 +1795,7 @@ class AutoPipette:
             raise ValueError(f"Invalid volume: {vol_ul}μL. Volume must be positive.")
 
         resolved = self.resolve_splits(vol_ul, splits, leftover)
+        self.location_manager.check_drawer(source)
 
         pre_air_gap_ul, post_air_gap_ul, prewet_cycles, prewet_vol_ul = (
             self.resolve_technique(
@@ -1820,6 +1854,16 @@ class AutoPipette:
         if not has_leftover:
             self.finish_tip(tip_end)
 
+    def _check_drawer_of(self, location: Plate) -> None:
+        """`LocationManager.check_drawer` for a location held by object.
+
+        Args:
+            location: A registered location, e.g. the waste container.
+        """
+        for name, candidate in self.location_manager.locations.items():
+            if candidate is location:
+                self.location_manager.check_drawer(name)
+
     def empty_tip_to_waste(self) -> None:
         """Expel whatever is left in the tip into the waste container.
 
@@ -1832,6 +1876,7 @@ class AutoPipette:
         waste = self.location_manager.waste_container
         if waste is None:
             raise NoWasteContainerError()
+        self._check_drawer_of(waste)
 
         self.note_action("Emptying leftover tip contents to waste container")
         curr_coor = waste.next()

@@ -36,6 +36,7 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     MoveRelArgs,
     PipetteArgs,
     PlateArgs,
+    PlateMoveArgs,
     ResetPlateArgs,
     ResetTipsArgs,
     SetArgs,
@@ -99,6 +100,9 @@ _RPC_DISPATCH: dict[str, _RpcCommand] = {
     "movement.move": _RpcCommand(MoveArgs, AutoPipetteService.move),
     "movement.move_loc": _RpcCommand(MoveLocArgs, AutoPipetteService.move_loc),
     "movement.move_rel": _RpcCommand(MoveRelArgs, AutoPipetteService.move_rel),
+    "movement.plate_move": _RpcCommand(PlateMoveArgs, AutoPipetteService.plate_move),
+    "movement.plates_in": _RpcCommand(None, AutoPipetteService.plates_in),
+    "movement.plates": _RpcCommand(None, AutoPipetteService.plates),
     "pipette.aspirate": _RpcCommand(AspirateArgs, AutoPipetteService.aspirate),
     "pipette.dispense": _RpcCommand(DispenseArgs, AutoPipetteService.dispense),
     "pipette.transfer": _RpcCommand(PipetteArgs, AutoPipetteService.transfer),
@@ -153,17 +157,12 @@ def _run_status_to_dict(status: RunStatus) -> dict[str, Any]:
         status: The ``RunStatus`` instance to convert.
 
     Returns:
-        Dict with ``status``, ``message``, ``run_id``, ``filename`` and
+        Dict with ``status``, ``message``, ``run_id``, ``filename``,
+        ``refusal`` (a Klipper interlock refusal, or None) and
         ``config_locked`` (config changes refused while a run is active)
         keys.
     """
-    return {
-        "status": status.status,
-        "message": status.message,
-        "run_id": status.run_id,
-        "filename": status.filename,
-        "config_locked": status.config_locked,
-    }
+    return status.to_dict()
 
 
 class ControlServer:

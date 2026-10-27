@@ -103,4 +103,6 @@ jobs:
       - name: Install chromium OS deps only (cache hit)
         if: steps.cache-chromium.outputs.cache-hit == 'true'
         run: uv run --frozen playwright install-deps chromium
-      - run: uv run --frozen pytest -q
+      # Only the browser suite: the `test` job already runs everything else
+      # (it skips these, having no playwright).
+      - run: uv run --frozen pytest -q tests/kiosk/browser

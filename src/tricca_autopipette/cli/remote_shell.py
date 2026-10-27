@@ -35,6 +35,7 @@ from cmd2 import Cmd, Statement, with_argparser
 
 from tricca_autopipette.cli.report_tables import (
     build_calibration_table,
+    build_drawer_status_table,
     build_endstops_table,
     build_liquids_table,
     build_locations_table,
@@ -59,6 +60,7 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     NotifyArgs,
     PipetteArgs,
     PlateArgs,
+    PlateMoveArgs,
     ResetPlateArgs,
     ResetTipsArgs,
     SeeCalibrationArgs,
@@ -201,6 +203,30 @@ class RemoteTapShell(Cmd):
         self._call_and_print(
             self.requests.move_rel(args_from_namespace(MoveRelArgs, args))
         )
+
+    @with_argparser(TAPCmdParsers.parser_plate_move)  # type: ignore[arg-type]
+    def do_plate_move(self, args: PlateMoveArgs) -> None:
+        """Move a plate drawer to a named stop or a position in mm."""
+        self._call_and_print(
+            self.requests.plate_move(args_from_namespace(PlateMoveArgs, args))
+        )
+
+    def do_plates_in(self, _: Statement) -> None:
+        """Move every plate drawer in. Needs Z and every plate homed."""
+        self._call_and_print(self.requests.plates_in())
+
+    def do_plates(self, _: Statement) -> None:
+        """Show each plate drawer: homed, position, stop, tip-safe."""
+        response = self._send(self.requests.plates())
+        if response is None:
+            return
+        rows: list[dict[str, Any]] = (self._result_data(response) or {}).get(
+            "plates"
+        ) or []
+        if rows:
+            self.poutput(build_drawer_status_table(rows))
+        else:  # "not configured"
+            self.poutput(str(as_dict(response.get("result")).get("message", "")))
 
     # ==================== pipette ====================
 

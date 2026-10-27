@@ -111,6 +111,21 @@ class MoveRelArgs:
     z: float
 
 
+@dataclass
+class PlateMoveArgs:
+    """Arguments for the ``plate_move`` command (issue #143).
+
+    Attributes:
+        plate: Plate name (``plate1``...) or its axis letter.
+        target: A named stop from the ``drawers`` block, or a position in mm.
+        speed: Move speed in mm/s, or None for Klipper's plate limit.
+    """
+
+    plate: str
+    target: str
+    speed: float | None
+
+
 # ===========================================================================
 # Pipetting
 # ===========================================================================
@@ -609,6 +624,24 @@ class TAPCmdParsers:
     )
     parser_move_rel.add_argument(
         "--z", default=0.0, type=float, help="Z-axis offset in mm (default: 0)"
+    )
+
+    parser_plate_move: Cmd2ArgumentParser = Cmd2ArgumentParser(
+        description=(
+            "Move a plate drawer to a named stop or a position in mm. Needs Z "
+            "and the plate homed; Klipper refuses it unless the tip is raised."
+        )
+    )
+    parser_plate_move.add_argument(
+        "plate", type=str, help="Plate name (plate1...) or its axis letter"
+    )
+    parser_plate_move.add_argument(
+        "target",
+        type=str,
+        help="A stop from the locations file's drawers block, or mm (0 = in)",
+    )
+    parser_plate_move.add_argument(
+        "--speed", default=None, type=float, help="Speed in mm/s (default: Klipper's)"
     )
 
     # -----------------------------------------------------------------------
