@@ -42,13 +42,39 @@ class FakeMoonrakerState:
         #: matching a first run with nothing persisted yet.
         self.stored_tip_liquid_state: dict[str, Any] = {}
         self._print_state_callback: Callable[[str], None] | None = None
+        #: Klipper's ``print_stats.message``, read with each state change.
+        self.print_message = ""
         #: What Klipper's plate/plunger axis config reads as; "not
         #: configured" by default, like a machine without the axis expansion.
         self.axis_config = AxisConfig()
+        #: Plates ``is_plate_homed`` reports homed (issue #140).
+        self.homed_plates: set[str] = set()
+        #: What ``is_plunger_homed`` reports.
+        self.plunger_homed = False
 
     def is_homed(self) -> bool:
         """Return the fake's configured homed state."""
         return self._homed
+
+    @property
+    def homed_axes(self) -> frozenset[str]:
+        """X/Y/Z all homed when ``is_homed()``, none otherwise."""
+        return frozenset("xyz") if self._homed else frozenset()
+
+    def is_plate_homed(self, plate: str) -> bool:
+        """Report whether ``plate`` is in ``homed_plates``.
+
+        Args:
+            plate: Plate name.
+
+        Returns:
+            Whether the test marked it homed.
+        """
+        return plate in self.homed_plates
+
+    def is_plunger_homed(self) -> bool:
+        """Return ``plunger_homed``."""
+        return self.plunger_homed
 
     def start(self) -> None:
         """No-op: there is no real subscription to start."""

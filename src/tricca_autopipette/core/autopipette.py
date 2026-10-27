@@ -373,7 +373,7 @@ class AutoPipette:
             f"{len(volumes)} calibration points"
         )
 
-    def init_pipette(self) -> None:
+    def init_pipette(self, plunger_axis: str | None = None) -> None:
         """Initialize all pipette systems and perform homing sequence.
 
         Performs complete initialization including:
@@ -384,6 +384,13 @@ class AutoPipette:
 
         This should be called once after creating an AutoPipette instance
         and before performing any operations.
+
+        Args:
+            plunger_axis: Klipper's plunger axis letter, if it has one
+                (issue #146). Its ``[homing_override]`` then homes the plates
+                and plunger inside bare ``G28``, so the separate
+                ``MANUAL_STEPPER`` plunger homing is left out. None keeps
+                today's sequence.
 
         Note:
             Sets the homed flag to True upon successful completion.
@@ -396,7 +403,10 @@ class AutoPipette:
         self.set_coor_sys(CoordinateSystem.ABSOLUTE)
         self.init_speed()
         self.home_axis()
-        self.home_pipette_motors()
+        if plunger_axis is None:
+            self.home_pipette_motors()
+        else:
+            self.home_servo()
         self.state.homed = True
         self.note_action(
             "Pipette initialized: absolute coordinates, speed configured, "
@@ -512,11 +522,33 @@ class AutoPipette:
         self.note_action("Homing Z axis")
         self.gcode_buffers.add(self.gcode_commands.home("Z"))
 
-    def home_pipette_motors(self) -> None:
-        """Home all pipette-specific motors."""
+    def home_pipette_motors(self, plunger_axis: str | None = None) -> None:
+        """Home all pipette-specific motors.
+
+        Args:
+            plunger_axis: Klipper's plunger axis letter, if it has one: the
+                stepper is then homed with ``G28 <letter>`` (issue #146),
+                at the same zero. None keeps today's ``MANUAL_STEPPER``
+                homing.
+        """
         self.note_action("Homing pipette motors (servo + stepper)")
         self.home_servo()
-        self.home_pipette_stepper()
+        if plunger_axis is None:
+            self.home_pipette_stepper()
+        else:
+            self.gcode_buffers.add(self.gcode_commands.home(plunger_axis))
+
+    def home_plates(self, plates: dict[str, str]) -> None:
+        """Home plates with ``G28 <letter>...`` (issue #146).
+
+        Klipper's ``[homing_override]`` homes each one, and refuses unless Z
+        is homed and the tip raised.
+
+        Args:
+            plates: Plate name to axis letter, for the plates to home.
+        """
+        self.note_action(f"Homing plates: {', '.join(plates)}")
+        self.gcode_buffers.add(self.gcode_commands.home(*plates.values()))
 
     def home_servo(self) -> None:
         """Retract the tip ejection servo to home position."""

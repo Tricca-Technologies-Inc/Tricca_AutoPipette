@@ -33,7 +33,9 @@ Usage: home [-h] motors
 Home motors on the pipette.
 
 Positional Arguments:
-  motors      Motors to home: x, y, z, pipette, axis, all, servo
+  motors      Motors to home: x, y, z, pipette, axis, all, servo; and, where
+              Klipper configures plates, plates or a plate name (plate1...) or
+              its axis letter
 
 Options:
   -h, --help  show this help message and exit

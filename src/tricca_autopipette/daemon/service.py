@@ -33,7 +33,7 @@ import uuid
 from collections.abc import Callable, Generator, Iterable
 from contextlib import contextmanager
 from contextvars import ContextVar
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any, Literal
 
@@ -111,9 +111,13 @@ from tricca_autopipette.core.splits import parse_splits_spec
 from tricca_autopipette.core.traversal import parse_well_ranges
 from tricca_autopipette.core.volume_converter import VolumeConverter
 from tricca_autopipette.core.well import StrategyType, Well
+from tricca_autopipette.daemon.interlock import (
+    InterlockRefusal,
+    parse_interlock_refusal,
+)
 from tricca_autopipette.daemon.moonraker_state import AxisConfig, MoonrakerStateTracker
 from tricca_autopipette.moonraker.moonraker_requests import MoonrakerRequests
-from tricca_autopipette.moonraker.websocket_client import WebSocketClient
+from tricca_autopipette.moonraker.websocket_client import JsonRpcError, WebSocketClient
 
 logger = logging.getLogger(__name__)
 
@@ -149,12 +153,24 @@ class RunStatus:
         message: Human-readable status detail.
         run_id: Unique identifier for the run, or None if idle.
         filename: Protocol filename for the run, or None if idle.
+        refusal: The Klipper interlock refusal behind this status (a print
+            ended by one, or a refused resume), or None (issue #150).
     """
 
     status: Literal["idle", "running", "done", "error"]
     message: str = ""
     run_id: str | None = None
     filename: str | None = None
+    refusal: InterlockRefusal | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        """The JSON shape of ``run.status`` and ``notify_run_status``.
+
+        Returns:
+            Every field (``refusal`` as a dict or None) plus
+            ``config_locked``.
+        """
+        return {**asdict(self), "config_locked": self.config_locked}
 
     @property
     def config_locked(self) -> bool:
@@ -241,6 +257,46 @@ def require_homed(
                 )
                 if not homed:
                     raise NotHomedError(command_name)
+            return func(self, *args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+def require_plunger_homed(
+    command_name: str,
+) -> Callable[[Callable[..., CommandResult]], Callable[..., CommandResult]]:
+    """Decorator factory: block a stage-2 plunger move until P is homed.
+
+    Issue #140, for TAP-6's absolute ``G1 P`` moves; nothing applies it yet.
+    An early, friendly refusal only: Klipper's ``G1`` wrapper (rule I6) is
+    the authority. Reads live Klipper state (``_PIPETTE_STATE.homed`` and the
+    stepper still enabled), never a local flag, and is skipped while
+    :data:`_dry_run` is set, like :func:`require_homed`. Doesn't check the
+    gantry: the plunger moves it would gate are already ``require_homed``.
+
+    Args:
+        command_name: Name to include in the raised ``NotHomedError``.
+
+    Returns:
+        Decorator wrapping the method with the plunger homed check.
+    """
+
+    def decorator(
+        func: Callable[..., CommandResult],
+    ) -> Callable[..., CommandResult]:
+        @functools.wraps(func)
+        def wrapper(
+            self: AutoPipetteService,
+            *args: Any,  # ruff:ignore[any-type]
+            **kwargs: Any,  # ruff:ignore[any-type]
+        ) -> CommandResult:
+            if not _dry_run.get() and not (
+                self.moonraker_state is not None
+                and self.moonraker_state.is_plunger_homed()
+            ):
+                raise NotHomedError(command_name, "plunger not homed")
             return func(self, *args, **kwargs)
 
         return wrapper
@@ -856,6 +912,39 @@ class AutoPipetteService:
     # dispatches the matching movement.* RPC method straight here, with no
     # cmd2 involved on that path at all.
 
+    def require_plates_homed(self, command_name: str, plates: Iterable[str]) -> None:
+        """Refuse a plate command unless gantry Z and every named plate are homed.
+
+        Issue #140, for TAP-4's plate commands; nothing calls it yet. A
+        method rather than a decorator like :func:`require_homed`, since the
+        plates come from the command's arguments. An early, friendly refusal
+        only: Klipper's interlock (rules I1/I4) is the authority. Reads live
+        Klipper state, never a local flag; honours ``_homing_invalidated``
+        like :func:`require_homed`, and is skipped while :data:`_dry_run` is
+        set.
+
+        Args:
+            command_name: Name to include in the raised ``NotHomedError``.
+            plates: Plate names (``plate1``...) the command moves.
+
+        Raises:
+            NotHomedError: Homing was invalidated by a config change, Z isn't
+                homed, or a named plate isn't (named in the message).
+        """
+        if _dry_run.get():
+            return
+        if self._homing_invalidated:
+            raise NotHomedError(
+                command_name,
+                "homing invalidated by a pipette/gantry/system config change",
+            )
+        state = self.moonraker_state
+        if state is None or "z" not in state.homed_axes:
+            raise NotHomedError(command_name, "Z not homed")
+        for plate in plates:
+            if not state.is_plate_homed(plate):
+                raise NotHomedError(command_name, f"{plate} not homed")
+
     @persist_tip_liquid_state
     def init(self) -> CommandResult:
         """Initialise the pipette: coordinate system, speed, and full homing.
@@ -864,31 +953,69 @@ class AutoPipetteService:
             Result describing the completed initialisation.
         """
         autopipette = self._autopipette
-        autopipette.init_pipette()
+        autopipette.init_pipette(self._plunger_axis())
         self.output_gcode(autopipette.get_gcode(), "home_all.gcode")
         self._homing_invalidated = False
         return CommandResult(
             ok=True, message="Pipette initialised and all motors homed."
         )
 
+    @property
+    def axis_config(self) -> AxisConfig:
+        """Klipper's plate/plunger axis config; "not configured" when unconnected."""
+        state = self.moonraker_state
+        return state.axis_config if state is not None else AxisConfig()
+
+    def _plunger_axis(self) -> str | None:
+        pipette = self.axis_config.pipette
+        return pipette.letter if pipette is not None else None
+
     @persist_tip_liquid_state
     def home(self, args: HomeArgs) -> CommandResult:
         """Home one or more motors on the pipette.
 
+        With Klipper's plate/plunger axes configured (issue #146), ``all``
+        relies on bare ``G28`` for the plates and plunger, ``pipette`` homes
+        the plunger with ``G28 P``, and ``plates`` / a plate's name (or its
+        axis letter) emit ``G28 <letter>...``. Only ``all`` clears
+        ``_homing_invalidated``. Without them, behavior is unchanged.
+
         Args:
-            args: Motor specification (x, y, z, pipette, axis, all, servo).
+            args: Motor specification (x, y, z, pipette, axis, all, servo,
+                plates, or a plate name/letter).
 
         Returns:
             Result describing the completed homing operation.
 
         Raises:
-            ValueError: If ``args.motors`` is not a recognized motor name.
+            ValueError: If ``args.motors`` is not a recognized target, or is
+                ``plates`` with no plates configured.
         """
         autopipette = self._autopipette
         motors = args.motors.lower()
+        all_plates = {p.name: p.letter for p in self.axis_config.plates}
+        plates = {
+            name: letter
+            for name, letter in all_plates.items()
+            if motors in {name.lower(), letter.lower()}
+        }
+
+        if motors == "plates":
+            if not all_plates:
+                raise ValueError(
+                    "No plates configured in Klipper (no _PLATE_CFG); nothing to home."
+                )
+            plates = all_plates
+
+        if plates:
+            autopipette.home_plates(plates)
+            name = motors if motors == "plates" else next(iter(plates))
+            self.output_gcode(autopipette.get_gcode(), f"home_{name}.gcode")
+            return CommandResult(ok=True, message=f"Homed {', '.join(plates)}.")
 
         if motors not in HomingTargets.VALID_MOTORS:
-            valid = ", ".join(sorted(HomingTargets.VALID_MOTORS))
+            extra = {"plates", *all_plates} if all_plates else set[str]()
+            valid = ", ".join(sorted(HomingTargets.VALID_MOTORS | extra))
             raise ValueError(
                 f"'{motors}' is not a valid motor specification. Valid options: {valid}"
             )
@@ -897,7 +1024,7 @@ class AutoPipetteService:
             # "all" -- delegate to init_pipette() so coordinate system and
             # speed are always reset alongside homing (identical to init()).
             filename = HomingTargets.MOTOR_SPECIAL[motors]
-            autopipette.init_pipette()
+            autopipette.init_pipette(self._plunger_axis())
             self.output_gcode(autopipette.get_gcode(), filename)
             self._homing_invalidated = False
             return CommandResult(
@@ -905,7 +1032,10 @@ class AutoPipetteService:
             )
 
         filename, method_name = HomingTargets.MOTOR_METHODS[motors]
-        getattr(autopipette, method_name)()
+        if motors == "pipette":
+            autopipette.home_pipette_motors(self._plunger_axis())
+        else:
+            getattr(autopipette, method_name)()
         self.output_gcode(autopipette.get_gcode(), filename)
         return CommandResult(ok=True, message=f"Homed {motors}.")
 
@@ -3027,11 +3157,7 @@ class AutoPipetteService:
         """
         ap = self._autopipette
         config = ap.system_config
-        axes = (
-            self.moonraker_state.axis_config
-            if self.moonraker_state is not None
-            else AxisConfig()
-        )
+        axes = self.axis_config
         data = {
             "system_name": config.system_name,
             "version": config.version,
@@ -3854,10 +3980,40 @@ class AutoPipetteService:
 
         See :meth:`cancel_run` for why this bypasses ``self._lock``.
 
+        Klipper's interlock checks ``RESUME`` too (its ``RESTORE_GCODE_STATE
+        MOVE=1``): if returning the tip would hit a drawer, Klipper refuses
+        and the job stays paused. That refusal is reported on the run status
+        instead of raised, and the next successful resume clears it (issue
+        #150).
+
         Returns:
             The current run status.
+
+        Raises:
+            JsonRpcError: If Moonraker refuses the resume for any reason
+                other than the interlock (today's handling).
         """
-        await asyncio.to_thread(self.send_resume)
+        try:
+            await asyncio.to_thread(self.send_resume)
+        except JsonRpcError as exc:
+            refusal = parse_interlock_refusal(str(exc.error.get("message", "")))
+            if refusal is None:
+                raise
+            self._current = replace(
+                self._current,
+                message=f"Paused: resume refused. {refusal.text}. "
+                "Move the plate to a tip-safe position, then resume.",
+                refusal=refusal,
+            )
+            self._broadcast_status()
+        else:
+            if self._current.refusal is not None:
+                self._current = replace(
+                    self._current,
+                    message=f"Running {self._current.filename}",
+                    refusal=None,
+                )
+                self._broadcast_status()
         return self._current
 
     async def stop_run(self) -> RunStatus:
@@ -3956,17 +4112,24 @@ class AutoPipetteService:
             back onto the service's own event loop before touching any
             asyncio-guarded state.
         """
-        if self._loop is None:
+        if self._loop is None or self.moonraker_state is None:
             return
+        # Read now, on this thread: Klipper sets the message with the state.
+        message = self.moonraker_state.print_message
         asyncio.run_coroutine_threadsafe(
-            self._apply_print_state_change(new_state), self._loop
+            self._apply_print_state_change(new_state, message), self._loop
         )
 
-    async def _apply_print_state_change(self, new_state: str) -> None:
+    async def _apply_print_state_change(
+        self, new_state: str, message: str = ""
+    ) -> None:
         """Update run status from a print-state transition, and broadcast it.
 
         Args:
             new_state: New Klipper ``print_stats.state`` value.
+            message: Klipper's ``print_stats.message``. An interlock refusal
+                in it is reported specifically (issue #150); any other text
+                keeps the generic "Print job error".
         """
         async with self._lock:
             if self._current.status != "running":
@@ -3979,11 +4142,16 @@ class AutoPipetteService:
                     filename=self._current.filename,
                 )
             elif new_state in ("error", "cancelled"):
+                refusal = (
+                    parse_interlock_refusal(message) if new_state == "error" else None
+                )
                 self._current = RunStatus(
                     status="error",
-                    message=f"Print job {new_state}",
+                    message=f"Print job {new_state}"
+                    + (f": {refusal.text}" if refusal else ""),
                     run_id=self._current.run_id,
                     filename=self._current.filename,
+                    refusal=refusal,
                 )
             else:
                 return
@@ -3993,16 +4161,7 @@ class AutoPipetteService:
         """Push the current run status to control-plane clients, if wired up."""
         if self._broadcast_callback is None:
             return
-        self._broadcast_callback(
-            "notify_run_status",
-            {
-                "status": self._current.status,
-                "message": self._current.message,
-                "run_id": self._current.run_id,
-                "filename": self._current.filename,
-                "config_locked": self._current.config_locked,
-            },
-        )
+        self._broadcast_callback("notify_run_status", self._current.to_dict())
 
 
 def _curve(volumes_ul: list[float], travel_mm: list[float]) -> dict[str, Any]:
