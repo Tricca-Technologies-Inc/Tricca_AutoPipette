@@ -189,6 +189,43 @@ class NoTipOriginError(AutoPipetteError):
         )
 
 
+class DrawerNotAtStopError(AutoPipetteError):
+    """Raised when a drawer-linked location is used with the drawer elsewhere.
+
+    tapd's early, friendly refusal (issue #142): a location tied to a drawer
+    stop may only be pipetted at while tapd's compile-time model has that
+    drawer at that stop. Klipper's interlock remains the authority.
+
+    Attributes:
+        location: The deck location that was refused.
+        drawer: The drawer it is linked to.
+        stop: The stop the drawer must be at.
+
+    Example:
+        ``move_loc sample_plate`` while ``plate2`` is at its load stop:
+        "Location 'sample_plate' needs drawer 'plate2' at stop 'work_a';
+        the drawer is at 350 mm."
+    """
+
+    def __init__(self, location: str, drawer: str, stop: str, actual: str) -> None:
+        """Initialize the error.
+
+        Args:
+            location: The deck location that was refused.
+            drawer: The drawer it is linked to.
+            stop: The required stop's name.
+            actual: Where the drawer is (or why that can't be relied on),
+                completing "the drawer is ...".
+        """
+        self.location = location
+        self.drawer = drawer
+        self.stop = stop
+        super().__init__(
+            f"Location '{location}' needs drawer '{drawer}' at stop '{stop}'; "
+            f"the drawer is {actual}."
+        )
+
+
 class VolumeCapacityError(AutoPipetteError):
     """Raised when a requested liquid volume exceeds the syringe's capacity.
 
