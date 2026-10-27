@@ -33,7 +33,7 @@ import uuid
 from collections.abc import Callable, Generator, Iterable
 from contextlib import contextmanager
 from contextvars import ContextVar
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any, Literal
 
@@ -111,9 +111,13 @@ from tricca_autopipette.core.splits import parse_splits_spec
 from tricca_autopipette.core.traversal import parse_well_ranges
 from tricca_autopipette.core.volume_converter import VolumeConverter
 from tricca_autopipette.core.well import StrategyType, Well
+from tricca_autopipette.daemon.interlock import (
+    InterlockRefusal,
+    parse_interlock_refusal,
+)
 from tricca_autopipette.daemon.moonraker_state import AxisConfig, MoonrakerStateTracker
 from tricca_autopipette.moonraker.moonraker_requests import MoonrakerRequests
-from tricca_autopipette.moonraker.websocket_client import WebSocketClient
+from tricca_autopipette.moonraker.websocket_client import JsonRpcError, WebSocketClient
 
 logger = logging.getLogger(__name__)
 
@@ -149,12 +153,24 @@ class RunStatus:
         message: Human-readable status detail.
         run_id: Unique identifier for the run, or None if idle.
         filename: Protocol filename for the run, or None if idle.
+        refusal: The Klipper interlock refusal behind this status (a print
+            ended by one, or a refused resume), or None (issue #150).
     """
 
     status: Literal["idle", "running", "done", "error"]
     message: str = ""
     run_id: str | None = None
     filename: str | None = None
+    refusal: InterlockRefusal | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        """The JSON shape of ``run.status`` and ``notify_run_status``.
+
+        Returns:
+            Every field (``refusal`` as a dict or None) plus
+            ``config_locked``.
+        """
+        return {**asdict(self), "config_locked": self.config_locked}
 
     @property
     def config_locked(self) -> bool:
@@ -3909,10 +3925,40 @@ class AutoPipetteService:
 
         See :meth:`cancel_run` for why this bypasses ``self._lock``.
 
+        Klipper's interlock checks ``RESUME`` too (its ``RESTORE_GCODE_STATE
+        MOVE=1``): if returning the tip would hit a drawer, Klipper refuses
+        and the job stays paused. That refusal is reported on the run status
+        instead of raised, and the next successful resume clears it (issue
+        #150).
+
         Returns:
             The current run status.
+
+        Raises:
+            JsonRpcError: If Moonraker refuses the resume for any reason
+                other than the interlock (today's handling).
         """
-        await asyncio.to_thread(self.send_resume)
+        try:
+            await asyncio.to_thread(self.send_resume)
+        except JsonRpcError as exc:
+            refusal = parse_interlock_refusal(str(exc.error.get("message", "")))
+            if refusal is None:
+                raise
+            self._current = replace(
+                self._current,
+                message=f"Paused: resume refused. {refusal.text}. "
+                "Move the plate to a tip-safe position, then resume.",
+                refusal=refusal,
+            )
+            self._broadcast_status()
+        else:
+            if self._current.refusal is not None:
+                self._current = replace(
+                    self._current,
+                    message=f"Running {self._current.filename}",
+                    refusal=None,
+                )
+                self._broadcast_status()
         return self._current
 
     async def stop_run(self) -> RunStatus:
@@ -4011,17 +4057,24 @@ class AutoPipetteService:
             back onto the service's own event loop before touching any
             asyncio-guarded state.
         """
-        if self._loop is None:
+        if self._loop is None or self.moonraker_state is None:
             return
+        # Read now, on this thread: Klipper sets the message with the state.
+        message = self.moonraker_state.print_message
         asyncio.run_coroutine_threadsafe(
-            self._apply_print_state_change(new_state), self._loop
+            self._apply_print_state_change(new_state, message), self._loop
         )
 
-    async def _apply_print_state_change(self, new_state: str) -> None:
+    async def _apply_print_state_change(
+        self, new_state: str, message: str = ""
+    ) -> None:
         """Update run status from a print-state transition, and broadcast it.
 
         Args:
             new_state: New Klipper ``print_stats.state`` value.
+            message: Klipper's ``print_stats.message``. An interlock refusal
+                in it is reported specifically (issue #150); any other text
+                keeps the generic "Print job error".
         """
         async with self._lock:
             if self._current.status != "running":
@@ -4034,11 +4087,16 @@ class AutoPipetteService:
                     filename=self._current.filename,
                 )
             elif new_state in ("error", "cancelled"):
+                refusal = (
+                    parse_interlock_refusal(message) if new_state == "error" else None
+                )
                 self._current = RunStatus(
                     status="error",
-                    message=f"Print job {new_state}",
+                    message=f"Print job {new_state}"
+                    + (f": {refusal.text}" if refusal else ""),
                     run_id=self._current.run_id,
                     filename=self._current.filename,
+                    refusal=refusal,
                 )
             else:
                 return
@@ -4048,16 +4106,7 @@ class AutoPipetteService:
         """Push the current run status to control-plane clients, if wired up."""
         if self._broadcast_callback is None:
             return
-        self._broadcast_callback(
-            "notify_run_status",
-            {
-                "status": self._current.status,
-                "message": self._current.message,
-                "run_id": self._current.run_id,
-                "filename": self._current.filename,
-                "config_locked": self._current.config_locked,
-            },
-        )
+        self._broadcast_callback("notify_run_status", self._current.to_dict())
 
 
 def _curve(volumes_ul: list[float], travel_mm: list[float]) -> dict[str, Any]:
