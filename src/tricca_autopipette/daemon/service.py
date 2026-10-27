@@ -23,6 +23,7 @@ a plain Python shell or script, while the daemon drives the async
 from __future__ import annotations
 
 import asyncio
+import copy
 import functools
 import logging
 import math
@@ -101,6 +102,7 @@ from tricca_autopipette.core.pipette_exceptions import (
     ProtocolAbortedError,
 )
 from tricca_autopipette.core.pipette_models import (
+    AbsolutePlunger,
     GantryKinematics,
     PipetteSyringeKinematics,
     ServoConfig,
@@ -275,12 +277,23 @@ def require_plunger_homed(
 ) -> Callable[[Callable[..., CommandResult]], Callable[..., CommandResult]]:
     """Decorator factory: block a stage-2 plunger move until P is homed.
 
-    Issue #140, for TAP-6's absolute ``G1 P`` moves; nothing applies it yet.
-    An early, friendly refusal only: Klipper's ``G1`` wrapper (rule I6) is
-    the authority. Reads live Klipper state (``_PIPETTE_STATE.homed`` and the
-    stepper still enabled), never a local flag, and is skipped while
-    :data:`_dry_run` is set, like :func:`require_homed`. Doesn't check the
-    gantry: the plunger moves it would gate are already ``require_homed``.
+    Issue #140, applied by issue #147 to every command that moves the
+    syringe. Does nothing at stage 1 or without a P axis. At stage 2, outside
+    a protocol batch, it first re-seeds the plunger model from live Klipper
+    state (:meth:`AutoPipetteService._sync_plunger`: ``_PIPETTE_STATE.homed``
+    and the stepper still enabled, then the reported P position), and
+    refuses if the plunger isn't homed. Inside a batch the model carries over
+    from the previous line, so a ``home pipette`` line earlier in the same
+    protocol counts. During a dry run the model reads an unhomed plunger as
+    ``0``, so nothing refuses, like :func:`require_homed`. An early,
+    friendly refusal only: Klipper's ``G1`` wrapper (rule I6) and soft
+    limits are the authority. Doesn't check the
+    gantry: the plunger moves it gates are already ``require_homed``.
+
+    A plunger target can be refused mid-command (outside the limits), after
+    other G-code was buffered; outside a batch that G-code is discarded, so
+    it can't ride along with the next command (a batch is rolled back by
+    ``domain_state_snapshot`` instead).
 
     Args:
         command_name: Name to include in the raised ``NotHomedError``.
@@ -298,12 +311,19 @@ def require_plunger_homed(
             *args: Any,  # ruff:ignore[any-type]
             **kwargs: Any,  # ruff:ignore[any-type]
         ) -> CommandResult:
-            if not _dry_run.get() and not (
-                self.moonraker_state is not None
-                and self.moonraker_state.is_plunger_homed()
-            ):
+            # Deliberate: the plunger model is the service's own state.
+            ap = self._autopipette  # pyright: ignore[reportPrivateUsage]
+            batch = self.gcode_manager.is_batch_mode
+            if not batch:
+                self._sync_plunger()  # pyright: ignore[reportPrivateUsage]
+            if ap.plunger is not None and ap.plunger.position_mm is None:
                 raise NotHomedError(command_name, "plunger not homed")
-            return func(self, *args, **kwargs)
+            try:
+                return func(self, *args, **kwargs)
+            except BaseException:
+                if not batch:
+                    ap.get_gcode()
+                raise
 
         return wrapper
 
@@ -999,6 +1019,44 @@ class AutoPipetteService:
         pipette = self.axis_config.pipette
         return pipette.letter if pipette is not None else None
 
+    def _sync_plunger(self) -> None:
+        """Set ``AutoPipette.plunger`` from Klipper's live state (issue #147).
+
+        None unless Klipper's plunger axis is at stage 2. Otherwise the
+        model is seeded from the reported P position if the plunger is
+        homed, else left unknown (moves refuse), except during a dry run,
+        where an unhomed plunger reads as ``0`` so validation still checks
+        the limits.
+
+        Raises:
+            ValueError: Stage 2 without soft limits, or with limits that
+                aren't ``min < 0`` and ``max <= 0``: tapd's frame
+                (aspiration negative, D26) wouldn't match Klipper's, so fail
+                closed rather than fall back to stage-1 commands Klipper
+                refuses.
+        """
+        ap = self._autopipette
+        pipette = self.axis_config.pipette
+        if pipette is None or pipette.stage < 2:
+            ap.plunger = None
+            return
+        low, high = pipette.position_min, pipette.position_max
+        if low is None or high is None or not low < 0 or high > 0:
+            raise ValueError(
+                f"Klipper's stage-2 plunger limits are {low}...{high}; tapd "
+                "needs a negative minimum and a maximum of at most 0 "
+                "(aspiration is negative). Fix the Klipper config."
+            )
+        state = self.moonraker_state
+        position = (
+            state.axis_position(pipette.letter)
+            if state is not None and state.is_plunger_homed()
+            else None
+        )
+        if position is None and _dry_run.get():
+            position = 0.0
+        ap.plunger = AbsolutePlunger(pipette.letter, low, high, position)
+
     @persist_tip_liquid_state
     def home(self, args: HomeArgs) -> CommandResult:
         """Home one or more motors on the pipette.
@@ -1385,6 +1443,7 @@ class AutoPipetteService:
     # group.
 
     @require_homed("aspirate")
+    @require_plunger_homed("aspirate")
     @persist_tip_liquid_state
     def aspirate(self, args: AspirateArgs) -> CommandResult:
         """Aspirate liquid from a source without dispensing.
@@ -1427,6 +1486,7 @@ class AutoPipetteService:
         )
 
     @require_homed("dispense")
+    @require_plunger_homed("dispense")
     @persist_tip_liquid_state
     def dispense(self, args: DispenseArgs) -> CommandResult:
         """Dispense previously-aspirated liquid to a destination.
@@ -1466,6 +1526,7 @@ class AutoPipetteService:
         return CommandResult(ok=True, message=message)
 
     @require_homed("pipette")
+    @require_plunger_homed("pipette")
     @persist_tip_liquid_state
     @persist_tip_presence
     def transfer(self, args: PipetteArgs) -> CommandResult:
@@ -3023,6 +3084,7 @@ class AutoPipetteService:
 
     @refuse_while_running
     @require_homed("calibrate dispense")
+    @require_plunger_homed("calibrate dispense")
     @persist_tip_liquid_state
     def calibrate_dispense(self) -> CommandResult:
         """Aspirate the next target volume of water and dispense it all.
@@ -3562,7 +3624,8 @@ class AutoPipetteService:
         (:meth:`TipBoxManager.snapshot`), every plate's traversal cursor
         (:meth:`LocationManager.snapshot_cursors`), and the pipette's
         tip/liquid state (``AutoPipette.state.tip_state``/``tip_origin``/
-        ``has_liquid`` plus ``active_liquid``). Membership is restored first,
+        ``has_liquid`` plus ``active_liquid``, and the stage-2 plunger model
+        with the gantry accel it restores, issue #147). Membership is restored first,
         before the other three: doing so brings back the exact original objects, so the
         per-object presence/cursor restores that follow always find a
         shape-matched target -- a location reconfigured under the same name
@@ -3614,6 +3677,9 @@ class AutoPipetteService:
             state.has_liquid,
             autopipette.active_liquid,
         )
+        # The stage-2 plunger model and the gantry accel its moves restore
+        # (issue #147).
+        motion_snapshot = (copy.copy(autopipette.plunger), autopipette.gantry_accel)
 
         def _restore() -> None:
             # Restoring membership first means every name in
@@ -3630,6 +3696,7 @@ class AutoPipetteService:
             state.tip_state = tip_state
             state.tip_origin = tip_origin
             state.has_liquid = has_liquid
+            autopipette.plunger, autopipette.gantry_accel = motion_snapshot
             if active_liquid != autopipette.active_liquid:
                 autopipette.switch_liquid(active_liquid)
             # Discard any G-code comment (e.g. from the switch_liquid call
@@ -3748,6 +3815,8 @@ class AutoPipetteService:
             # upload below it -- see its docstring for why that boundary is
             # the compile-time/runtime-failure line.
             with self.domain_state_snapshot(), gcode_manager.batch_mode():
+                # Seed the stage-2 plunger model once, at protocol start.
+                self._sync_plunger()
                 self._seed_drawer_model()
                 for line in commands:
                     self._dispatch_protocol_line(line)
@@ -3973,6 +4042,7 @@ class AutoPipetteService:
                 self.domain_state_snapshot(restore="always"),
                 gcode_manager.batch_mode(),
             ):
+                self._sync_plunger()
                 self._seed_drawer_model()
                 for line_number, raw_line in enumerate(lines, start=1):
                     line = raw_line.strip()
