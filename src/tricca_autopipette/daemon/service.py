@@ -112,6 +112,7 @@ from tricca_autopipette.core.splits import parse_splits_spec
 from tricca_autopipette.core.traversal import parse_well_ranges
 from tricca_autopipette.core.volume_converter import VolumeConverter
 from tricca_autopipette.core.well import StrategyType, Well
+from tricca_autopipette.daemon.interlock_model import InterlockModel
 from tricca_autopipette.daemon.moonraker_state import (
     AxisConfig,
     MoonrakerStateTracker,
@@ -3958,12 +3959,13 @@ class AutoPipetteService:
                 gcode_manager.batch_mode(),
             ):
                 self._seed_drawer_model()
+                interlock = self._interlock_model()
                 for line_number, raw_line in enumerate(lines, start=1):
                     line = raw_line.strip()
                     if not line or line.startswith("#"):
                         continue
                     self._dispatch_protocol_line_for_validation(
-                        line, line_number, findings, warning_capture
+                        line, line_number, findings, warning_capture, interlock
                     )
         finally:
             autopipette_logger.removeHandler(warning_capture)
@@ -3985,12 +3987,34 @@ class AutoPipetteService:
             ok=error_count == 0, message=message, data={"findings": findings}
         )
 
+    def _interlock_model(self) -> InterlockModel | None:
+        """Seed :class:`InterlockModel` for a dry run (issue #149).
+
+        Plate positions come from the compile-time drawer model, already
+        seeded from live state; Z and the plunger from live state.
+
+        Returns:
+            The model, or None on a machine with no plates and no P axis,
+            whose findings are then exactly as before.
+        """
+        axes = self.axis_config
+        state = self.moonraker_state
+        if state is None or not (axes.plates or axes.pipette):
+            return None
+        return InterlockModel(
+            axes,
+            z=state.axis_position("Z") if "z" in state.homed_axes else None,
+            plates=self._autopipette.location_manager.drawer_positions,
+            plunger_homed=state.is_plunger_homed(),
+        )
+
     def _dispatch_protocol_line_for_validation(
         self,
         line: str,
         line_number: int,
         findings: list[dict[str, Any]],
         warning_capture: _LineWarningCapture,
+        interlock: InterlockModel | None = None,
     ) -> None:
         """Dispatch one line during :meth:`validate_protocol`'s dry run.
 
@@ -4021,6 +4045,9 @@ class AutoPipetteService:
             warning_capture: The whole-file handler :meth:`validate_protocol`
                 attached; drained here so a captured message is attributed
                 to the line that caused it.
+            interlock: Klipper's interlock model (issue #149), fed the
+                G-code a successful line emitted; None on a machine without
+                plates or a P axis.
         """
         try:
             tokens = self._tokenize_protocol_line(line)
@@ -4054,10 +4081,14 @@ class AutoPipetteService:
 
         error_message: str | None = None
         result: CommandResult | None = None
+        emitted = len(self.gcode_manager.get_buffer())
         try:
             result = self._dispatch_protocol_line(line)
         except Exception as exc:
             error_message = str(exc)
+            # Drop whatever the failed line left half-built, so it isn't
+            # checked as the next line's G-code.
+            self._autopipette.get_gcode()
 
         for message in warning_capture.drain():
             findings.append(_finding(line_number, command_name, "warning", message))
@@ -4066,6 +4097,10 @@ class AutoPipetteService:
             findings.append(_finding(line_number, command_name, "error", error_message))
             return
         assert result is not None
+        if interlock is not None:
+            gcode = self.gcode_manager.get_buffer()[emitted:]
+            for severity, message in interlock.check(gcode):
+                findings.append(_finding(line_number, command_name, severity, message))
         if not result.ok:
             findings.append(
                 _finding(line_number, command_name, "warning", result.message)
