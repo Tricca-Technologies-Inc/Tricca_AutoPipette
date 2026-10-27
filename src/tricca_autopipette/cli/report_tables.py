@@ -137,7 +137,45 @@ def build_system_table(data: dict[str, Any]) -> Table:
     table.add_row("[bold]Network[/bold]", "")
     table.add_row("  Hostname", data.get("hostname") or "—")
     table.add_row("  Port", str(data.get("port") or "—"))
+    _add_extra_axes_rows(table, data.get("extra_axes") or {})
     return table
+
+
+def _add_extra_axes_rows(table: Table, axes: dict[str, Any]) -> None:
+    """Add Klipper's plate/plunger axis config (issue #138) to the system table.
+
+    Args:
+        table: The system table being built.
+        axes: ``system_summary``'s ``extra_axes`` (`AxisConfig` as a dict).
+    """
+
+    def span(lo: float | None, hi: float | None) -> str:
+        return "no limits" if lo is None or hi is None else f"{lo:g} to {hi:g} mm"
+
+    table.add_row("", "")
+    plates: list[dict[str, Any]] = axes.get("plates") or []
+    if not plates:
+        table.add_row("[bold]Plates[/bold]", "not configured")
+    else:
+        table.add_row(
+            "[bold]Plates[/bold]",
+            f"z_safe {axes['z_safe']:g}, park_tol {axes['park_tol']:g}",
+        )
+        for plate in plates:
+            stops = ", ".join(f"{s:g}" for s in plate["safe_stops"]) or "none"
+            table.add_row(
+                f"  {plate['name']} ({plate['letter']})",
+                f"{span(plate['position_min'], plate['position_max'])}, "
+                f"tip-safe at {stops}",
+            )
+    pipette: dict[str, Any] | None = axes.get("pipette")
+    table.add_row(
+        "[bold]Plunger axis[/bold]",
+        "not configured"
+        if pipette is None
+        else f"{pipette['letter']}, stage {pipette['stage']}, "
+        f"{span(pipette['position_min'], pipette['position_max'])}",
+    )
 
 
 def build_endstops_table(endstops: dict[str, str]) -> Table:

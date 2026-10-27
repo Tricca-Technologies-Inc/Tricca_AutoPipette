@@ -20,6 +20,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
+from tricca_autopipette.daemon.moonraker_state import AxisConfig
+
 
 class FakeMoonrakerState:
     """Fake homed-state source, settable directly by a test."""
@@ -40,6 +42,9 @@ class FakeMoonrakerState:
         #: matching a first run with nothing persisted yet.
         self.stored_tip_liquid_state: dict[str, Any] = {}
         self._print_state_callback: Callable[[str], None] | None = None
+        #: What Klipper's plate/plunger axis config reads as; "not
+        #: configured" by default, like a machine without the axis expansion.
+        self.axis_config = AxisConfig()
 
     def is_homed(self) -> bool:
         """Return the fake's configured homed state."""
