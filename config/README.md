@@ -351,8 +351,12 @@ drawer's travel, and tie a deck location to one:
 - A location's `drawer` + `stop` come as a pair, and the stop must be one of
   that drawer's `pipetting` stops. The drawer may come from another file.
 - tapd refuses to pipette, pick up or drop a tip at a linked location unless it
-  knows the drawer is at that stop. Until drawers can be moved and tracked from
-  tapd (TAP-3/TAP-4), it never knows, so linked locations are always refused.
+  knows the drawer is at that stop: a homed plate's live position from Klipper
+  at the start of each command or protocol, then whatever earlier
+  `plate_move`/`plates_in`/`home` lines in the same protocol left it at.
+- Move a drawer with `plate_move <plate> <stop|mm> [--speed <mm/s>]` (the plate
+  by name, or its axis letter), retract all with `plates_in`, and check them
+  with `plates`.
 
 ## Customization
 

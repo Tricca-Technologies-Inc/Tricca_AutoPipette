@@ -87,6 +87,32 @@ Options:
   --z Z       Z-axis offset in mm (default: 0)
 ```
 
+### `plate_move`
+
+```
+Usage: plate_move [-h] [--speed SPEED] plate target
+
+Move a plate drawer to a named stop or a position in mm. Needs Z and the plate
+homed; Klipper refuses it unless the tip is raised.
+
+Positional Arguments:
+  plate          Plate name (plate1...) or its axis letter
+  target         A stop from the locations file's drawers block, or mm (0 =
+                 in)
+
+Options:
+  -h, --help     show this help message and exit
+  --speed SPEED  Speed in mm/s (default: Klipper's)
+```
+
+### `plates_in`
+
+```
+Usage: plates_in
+
+Move every plate drawer in (Klipper's PLATES_IN). Needs Z and every plate homed; Klipper refuses it unless the tip is raised.
+```
+
 ### `aspirate`
 
 ```

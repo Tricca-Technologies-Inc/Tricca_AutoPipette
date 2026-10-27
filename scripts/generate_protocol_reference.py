@@ -113,6 +113,15 @@ _COMMANDS: list[_CommandDoc] = [
     _CommandDoc("move", parser=TAPCmdParsers.parser_move),
     _CommandDoc("move_loc", parser=TAPCmdParsers.parser_move_loc),
     _CommandDoc("move_rel", parser=TAPCmdParsers.parser_move_rel),
+    _CommandDoc("plate_move", parser=TAPCmdParsers.parser_plate_move),
+    _CommandDoc(
+        "plates_in",
+        manual_usage=(
+            "Usage: plates_in\n\n"
+            "Move every plate drawer in (Klipper's PLATES_IN). Needs Z and "
+            "every plate homed; Klipper refuses it unless the tip is raised."
+        ),
+    ),
     # -- Pipetting ------------------------------------------------------------
     _CommandDoc("aspirate", parser=TAPCmdParsers.parser_aspirate),
     _CommandDoc("dispense", parser=TAPCmdParsers.parser_dispense),
