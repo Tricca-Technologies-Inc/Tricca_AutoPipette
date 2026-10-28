@@ -1,4 +1,8 @@
 #final methanol addition for cal 7 for mega panel b cal 7 adding 2525uL of methanol
 
-
+pipette 505.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 505.0 --tipbox tipbox --prewet 5
+pipette 505.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 505.0 --tipbox tipbox
+pipette 505.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 505.0 --tipbox tipbox
+pipette 505.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 505.0 --tipbox tipbox
+pipette 505.0 --extra_air --after_air WATER KIT1 --dispense_vol 505.0 --tipbox tipbox
 
