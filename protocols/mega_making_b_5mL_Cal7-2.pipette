@@ -1,0 +1,58 @@
+#second of four parts for making mega panel b cal 7
+
+# alpha-Ketoglutaric acid 25uL
+pipette 25 --extra_air --after_air --src_row 0 --src_col 0 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# alpha-Ketoisovaleric acid 25uL
+pipette 25 --extra_air --after_air --src_row 1 --src_col 0 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Argininic acid 25uL
+pipette 25 --extra_air --after_air --src_row 2 --src_col 0 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Benzoic acid 25uL
+pipette 25 --extra_air --after_air --src_row 3 --src_col 0 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Butyric acid 25uL
+pipette 25 --extra_air --after_air --src_row 0 --src_col 0 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Caffeic acid 25uL
+pipette 25 --extra_air --after_air --src_row 1 --src_col 0 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Caproic acid 25uL
+pipette 25 --extra_air --after_air --src_row 2 --src_col 0 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Caprylic acid 25uL
+pipette 25 --extra_air --after_air --src_row 3 --src_col 0 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# cis-Aconitic acid 25uL
+pipette 25 --extra_air --after_air --src_row 0 --src_col 1 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Citric acid 25uL
+pipette 25 --extra_air --after_air --src_row 1 --src_col 1 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Dimethylglycine 25uL
+pipette 25 --extra_air --after_air --src_row 2 --src_col 1 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Ethylmalonic acid 25uL
+pipette 25 --extra_air --after_air --src_row 3 --src_col 1 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Fumaric acid 25uL
+pipette 25 --extra_air --after_air --src_row 0 --src_col 1 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# FDCA 25uL
+pipette 25 --extra_air --after_air --src_row 1 --src_col 1 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Glutaric acid 25uL
+pipette 25 --extra_air --after_air --src_row 2 --src_col 1 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Glyceric acid 25uL
+pipette 25 --extra_air --after_air --src_row 3 --src_col 1 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Guanidinopropionic acid 25uL
+pipette 25 --extra_air --after_air --src_row 0 --src_col 2 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Guanidoacetic acid 25uL
+pipette 25 --extra_air --after_air --src_row 1 --src_col 2 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Hippuric acid 25uL
+pipette 25 --extra_air --after_air --src_row 2 --src_col 2 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Homovanillic acid 25uL
+pipette 25 --extra_air --after_air --src_row 3 --src_col 2 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Indole-3-carboxylic acid 25uL
+pipette 25 --extra_air --after_air --src_row 0 --src_col 2 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Indole-3-propionic acid 25uL
+pipette 25 --extra_air --after_air --src_row 1 --src_col 2 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Indolelactic acid 25uL
+pipette 25 --extra_air --after_air --src_row 2 --src_col 2 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Indoxyl glucuronide 25uL
+pipette 25 --extra_air --after_air --src_row 3 --src_col 2 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Isobutyric acid 25uL
+pipette 25 --extra_air --after_air --src_row 0 --src_col 3 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Isocitric acid 25uL
+pipette 25 --extra_air --after_air --src_row 1 --src_col 3 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Isovaleric acid 25uL
+pipette 25 --extra_air --after_air --src_row 2 --src_col 3 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Kynurenic acid 25uL
+pipette 25 --extra_air --after_air --src_row 3 --src_col 3 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
