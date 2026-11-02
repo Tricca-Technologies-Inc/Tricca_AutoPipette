@@ -37,14 +37,14 @@ The owner already has this board; it was identified from a photo of its label ("
 
 | Slot | Plate / axis | step | dir | enable | UART | Home input |
 |------|---|---|---|---|---|---|
-| Driver0 | plate1 / U | PF13 | PF12 | !PF14 | PC4 | PG6 (STOP_0) |
-| Driver1 | plate2 / V | PG0 | PG1 | !PF15 | PD11 | PG9 (STOP_1) |
-| Driver2 | plate3 / W | PF11 | PG3 | !PG5 | PC6 | PG10 (STOP_2) |
-| Driver3 | plate4 / A | PG4 | PC1 | !PA0 | PC7 | PG11 (STOP_3) |
-| Driver4 | plate5 / B | PF9 | PF10 | !PG2 | PF2 | PG12 (E0DET) |
-| Driver5 | plate6 / C | PC13 | PF0 | !PF1 | PE4 | PG13 (E1DET) |
-| Driver6 | spare | PE2 | PE3 | !PD4 | PE1 | PG14 (E2DET) |
-| Driver7 | spare | PE6 | PA14 | !PE0 | PD3 | PG15 (E3DET) |
+| Driver0 | plate1 / U | PF13 | PF12 | !PF14 | PC4 | PG6 (DIAG0) |
+| Driver1 | plate2 / V | PG0 | PG1 | !PF15 | PD11 | PG9 (DIAG1) |
+| Driver2 | plate3 / W | PF11 | PG3 | !PG5 | PC6 | PG10 (DIAG2) |
+| Driver3 | plate4 / A | PG4 | PC1 | !PA0 | PC7 | PG11 (DIAG3) |
+| Driver4 | plate5 / B | PF9 | PF10 | !PG2 | PF2 | PG12 (DIAG4) |
+| Driver5 | plate6 / C | PC13 | PF0 | !PF1 | PE4 | PG13 (DIAG5) |
+| Driver6 | spare | PE2 | PE3 | !PD4 | PE1 | PG14 (DIAG6) |
+| Driver7 | spare | PE6 | PA14 | !PE0 | PD3 | PG15 (DIAG7) |
 
 - **Driver3's enable pin is PA0 on this board.** On the Pro it's PA2, and on this board PA2 is the HE0 heater output.
 - **Power.** The board has separate inputs for main (board) power, motor power and bed power (BTT manual).
@@ -53,7 +53,7 @@ The owner already has this board; it was identified from a photo of its label ("
   - There are no per-driver voltage jumpers on this board; every driver runs at the motor-power voltage. 24 V is within the TMC2209's rating.
 - **Remove all DIAG jumpers.** A fitted DIAG jumper shares the endstop pin with the driver, and the switch may not read.
 - Set the UART-mode jumpers for TMC2209 (BTT manual).
-- Physically confirm the STOP/DET silkscreen.
+- The home inputs are the DIAG0–DIAG7 headers (BTT pinout, rev 2026-02-01), each `5V / GND / signal`. Wire the NC switch between GND and signal, never 5V.
 - The board arrived with eight TMC2209 V1.3 drivers fitted. Six drive the plates; two are spares.
 
 ### 3.2 EBB42 CAN V1.2 — pipette stepper and servo signal
