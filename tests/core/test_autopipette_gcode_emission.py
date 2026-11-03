@@ -58,6 +58,7 @@ from tricca_autopipette.core.pipette_models import AbsolutePlunger
 GOLDEN = Path(__file__).parents[1] / "fixtures" / "gcode" / "autopipette_emission.gcode"
 EXTRA_AXIS_GOLDEN = GOLDEN.with_name("extra_axis_emission.gcode")
 STAGE2_GOLDEN = GOLDEN.with_name("stage2_plunger_emission.gcode")
+COORDINATED_GOLDEN = GOLDEN.with_name("stage2_coordinated_air_gap_emission.gcode")
 
 
 _NUMBER = re.compile(r"-?\d+(\.\d+)?")
@@ -139,6 +140,43 @@ def test_stage2_plunger_emission_sites(pipette_with_plates: AutoPipette) -> None
     actual_text, actual_numbers = _split_numbers(text)
     golden_text, golden_numbers = _split_numbers(
         STAGE2_GOLDEN.read_text(encoding="utf-8")
+    )
+    assert actual_text == golden_text
+    for actual, golden in zip(actual_numbers, golden_numbers, strict=True):
+        assert math.isclose(actual, golden, rel_tol=1e-9), (actual, golden)
+
+
+def test_stage2_coordinated_air_gap_emission(pipette_with_plates: AutoPipette) -> None:
+    """Both air gaps drawn during Z moves (issue #148).
+
+    A ``pipette`` with a 4 μL pre and 2 μL post air gap and
+    ``air_gap_rise_mm=2``, at stage 2 from the homed zero. Reviewed by hand:
+    Z stops at 3.0, 2 mm above plate_a's clearance height 5.0; the pre gap
+    (5.519353 mm of plunger) rides the 2 mm descent to ``Z5.0`` at
+    F543.542 = 1500 x 2/5.519353, so the plunger runs at exactly its
+    25 mm/s, with accel 72.472 = 200 x 2/5.519353; the liquid is drawn
+    stationary at the dip; the post gap (4.302626 mm) rides the rise back
+    to ``Z3.0`` at F697.249 / accel 92.966, scaled the same way. Each
+    restores the gantry's 3000.
+    """
+    ap = pipette_with_plates
+    ap.plunger = AbsolutePlunger("P", -60.0, 0.0, 0.0)
+    ap.set_max_accel(3000)
+    ap.get_gcode()
+
+    ap.pipette(
+        20.0,
+        "plate_a",
+        "plate_a",
+        pre_air_gap_ul=4.0,
+        post_air_gap_ul=2.0,
+        air_gap_rise_mm=2.0,
+    )
+
+    text = _as_written(ap.get_gcode())
+    actual_text, actual_numbers = _split_numbers(text)
+    golden_text, golden_numbers = _split_numbers(
+        COORDINATED_GOLDEN.read_text(encoding="utf-8")
     )
     assert actual_text == golden_text
     for actual, golden in zip(actual_numbers, golden_numbers, strict=True):

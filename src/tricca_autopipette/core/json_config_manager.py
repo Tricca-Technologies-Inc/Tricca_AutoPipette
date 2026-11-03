@@ -949,6 +949,11 @@ class JsonConfigManager:
                 if liquid.post_air_gap_ul is not None
                 else syringe.post_air_gap_ul
             ),
+            "air_gap_rise_mm": (
+                liquid.air_gap_rise_mm
+                if liquid.air_gap_rise_mm is not None
+                else syringe.air_gap_rise_mm
+            ),
             # Motor configuration (from syringe only, no liquid override)
             "stepper_name": syringe.stepper_name,
             "motor_orientation": syringe.motor_orientation,
