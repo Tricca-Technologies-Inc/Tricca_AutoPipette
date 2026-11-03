@@ -53,9 +53,11 @@ import pytest
 from tricca_autopipette.core.autopipette import AutoPipette
 from tricca_autopipette.core.coordinate import Coordinate
 from tricca_autopipette.core.gcode_commands import GCodeCommands
+from tricca_autopipette.core.pipette_models import AbsolutePlunger
 
 GOLDEN = Path(__file__).parents[1] / "fixtures" / "gcode" / "autopipette_emission.gcode"
 EXTRA_AXIS_GOLDEN = GOLDEN.with_name("extra_axis_emission.gcode")
+STAGE2_GOLDEN = GOLDEN.with_name("stage2_plunger_emission.gcode")
 
 
 _NUMBER = re.compile(r"-?\d+(\.\d+)?")
@@ -105,6 +107,42 @@ def test_every_emission_site_emits_unchanged_gcode(
         zip(actual_numbers, golden_numbers, strict=True)
     ):
         assert math.isclose(actual, golden, rel_tol=1e-9), (index, actual, golden)
+
+
+def test_stage2_plunger_emission_sites(pipette_with_plates: AutoPipette) -> None:
+    """Every syringe site with the stage-2 plunger model (issue #147).
+
+    Same calls as the stage-1 test above, minus the relative-mode switch
+    (stage 2 relies on ``G90``), with Klipper's P axis bound and limited to
+    ``-60...0``. S-TAP6-1: no ``SET_POSITION``/``MANUAL_STEPPER`` reaches
+    the plunger, only bracketed absolute ``G1 P`` moves. Reviewed by hand:
+    bare ``G28`` zeroes the model; the -1.125 mm move lands at ``P-1.125``;
+    ``clear_syringe`` returns to ``P0``; ``pipette`` (no air gaps or prewet
+    in this config) aspirates 20 μL = 15.253 mm to ``P-15.253167`` at
+    ``speed_aspirate`` (25 mm/s = F1500) and dispenses all back to ``P0`` at
+    ``speed_dispense`` (F3000). The re-zeros at ``P0`` already are no-ops,
+    so they emit nothing. Each move sets ``accel_move``/``accel_home``
+    (200) and restores the gantry's 3000.
+    """
+    ap = pipette_with_plates
+    ap.plunger = AbsolutePlunger("P", -60.0, 0.0, None)
+    ap.get_gcode()
+
+    ap.init_pipette("P")
+    ap.set_max_accel(3000)
+    ap.move_pipette_stepper(-1.125)
+    ap.clear_syringe()
+    ap.pipette(20.0, "plate_a", "plate_a")
+
+    text = _as_written(ap.get_gcode())
+    assert "MANUAL_STEPPER" not in text
+    actual_text, actual_numbers = _split_numbers(text)
+    golden_text, golden_numbers = _split_numbers(
+        STAGE2_GOLDEN.read_text(encoding="utf-8")
+    )
+    assert actual_text == golden_text
+    for actual, golden in zip(actual_numbers, golden_numbers, strict=True):
+        assert math.isclose(actual, golden, rel_tol=1e-9), (actual, golden)
 
 
 def test_extra_axis_builders_emit_the_klipper_contract() -> None:

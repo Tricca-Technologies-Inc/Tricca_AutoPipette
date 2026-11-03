@@ -102,6 +102,33 @@ class PipetteState:
         self.tip_state = TipState.ATTACHED if value else TipState.DETACHED
 
 
+@dataclass
+class AbsolutePlunger:
+    """Stage-2 plunger: Klipper's bound axis plus tapd's position model.
+
+    After ``G28 P`` the plunger is absolute, in mm from the switch-release
+    point, with aspiration negative (D26, issue #147). Protocols compile
+    before they run, so ``position_mm`` is where the plunger *will* be once
+    the G-code compiled so far has executed.
+
+    Attributes:
+        letter: G-code axis letter the plunger is bound to (``P``).
+        position_min: Klipper's lower soft limit (mm).
+        position_max: Klipper's upper soft limit (mm).
+        position_mm: Modelled absolute position, or None while the plunger
+            isn't homed (any plunger move then refuses).
+
+    Example:
+        >>> AbsolutePlunger("P", -60.0, 0.0, 0.0).position_mm
+        0.0
+    """
+
+    letter: str
+    position_min: float
+    position_max: float
+    position_mm: float | None = None
+
+
 class FluidDisplacement(IntEnum):
     """Direction of fluid flow in pipetting operations.
 

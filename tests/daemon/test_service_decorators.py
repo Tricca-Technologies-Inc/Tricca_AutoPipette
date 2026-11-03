@@ -14,12 +14,15 @@ from fakes.fake_moonraker_state import FakeMoonrakerState
 
 from tricca_autopipette.commands.tap_cmd_parsers import MoveArgs
 from tricca_autopipette.core.pipette_exceptions import NotHomedError
+from tricca_autopipette.daemon.moonraker_state import AxisConfig, PipetteAxis
 from tricca_autopipette.daemon.service import (
     AutoPipetteService,
     CommandResult,
     _dry_run,
     require_plunger_homed,
 )
+
+STAGE2 = AxisConfig(pipette=PipetteAxis("P", 2, -60.0, 0.0))
 
 
 def _set_homed(service: AutoPipetteService, homed: bool) -> None:
@@ -202,7 +205,10 @@ class TestExtraAxisGates:
             _dry_run.reset(token)
 
     def test_plunger_gate_names_the_plunger(self, service: AutoPipetteService) -> None:
+        # Stage 2 only (issue #147): stage 1 keeps today's commands.
         assert isinstance(service.moonraker_state, FakeMoonrakerState)
+        service.moonraker_state.axis_config = STAGE2  # type: ignore[misc]
+        service.moonraker_state.positions["P"] = 0.0
 
         @require_plunger_homed("aspirate")
         def op(self: AutoPipetteService) -> CommandResult:
@@ -216,6 +222,9 @@ class TestExtraAxisGates:
     def test_plunger_gate_is_bypassed_in_dry_run(
         self, service: AutoPipetteService
     ) -> None:
+        assert isinstance(service.moonraker_state, FakeMoonrakerState)
+        service.moonraker_state.axis_config = STAGE2  # type: ignore[misc]
+
         @require_plunger_homed("aspirate")
         def op(self: AutoPipetteService) -> CommandResult:
             return CommandResult(ok=True, message="moved")
