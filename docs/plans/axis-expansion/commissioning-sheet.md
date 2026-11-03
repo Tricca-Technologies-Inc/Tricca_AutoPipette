@@ -45,7 +45,8 @@ Print one per machine. Tick each box, write the value, initial and date. Test de
 | ☐ | `[mcu]`, `[mcu EBBCan]`, `[mcu octopus]` written into the machine's `printer.cfg` (tick only; **don't copy the IDs**) | | |
 | ☐ | `z_safe` in config (0.0 unless the owner changed it) | mm | |
 | ☐ | Plate travel if not 350 mm | mm | |
-| ☐ | `home_dir` if not +1 | | |
+| ☐ | `home_dir` (confirmed +1, D48; record only if a machine differs) | | |
+| ☐ ⚠ | Measured safe plunger travel (D46): the furthest the plunger can go from the switch-release zero without leaving the syringe, measured carefully in small steps. Set `_PIPETTE_CFG.variable_max_travel` and the stage-2 `position_min` to it; keep 60 until measured | mm | |
 
 ## D. Stage-1 on-machine tests
 

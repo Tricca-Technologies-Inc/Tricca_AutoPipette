@@ -42,6 +42,8 @@ class FakeMoonrakerState:
         #: matching a first run with nothing persisted yet.
         self.stored_tip_liquid_state: dict[str, Any] = {}
         self._print_state_callback: Callable[[str], None] | None = None
+        #: Klipper's ``print_stats.message``, read with each state change.
+        self.print_message = ""
         #: What Klipper's plate/plunger axis config reads as; "not
         #: configured" by default, like a machine without the axis expansion.
         self.axis_config = AxisConfig()
@@ -49,8 +51,8 @@ class FakeMoonrakerState:
         self.homed_plates: set[str] = set()
         #: What ``is_plunger_homed`` reports.
         self.plunger_homed = False
-        #: What ``axis_position`` reports, by axis letter (issue #147).
-        self.axis_positions: dict[str, float] = {}
+        #: Live raw positions ``axis_position`` reports, by axis letter.
+        self.positions: dict[str, float] = {}
 
     def is_homed(self) -> bool:
         """Return the fake's configured homed state."""
@@ -77,15 +79,15 @@ class FakeMoonrakerState:
         return self.plunger_homed
 
     def axis_position(self, letter: str) -> float | None:
-        """Return ``axis_positions[letter]``, or None if unset.
+        """Report ``positions[letter]``, None if the test set none.
 
         Args:
             letter: G-code axis letter.
 
         Returns:
-            The position a test set, if any.
+            The position the test set, or None.
         """
-        return self.axis_positions.get(letter)
+        return self.positions.get(letter)
 
     def start(self) -> None:
         """No-op: there is no real subscription to start."""

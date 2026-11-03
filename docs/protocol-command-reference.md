@@ -33,9 +33,9 @@ Usage: home [-h] motors
 Home motors on the pipette.
 
 Positional Arguments:
-  motors      Motors to home: x, y, z, pipette, axis, all, servo; and, where
-              Klipper configures plates, plates or a plate name (plate1...) or
-              its axis letter
+  motors      Motors to home: x, y, z, pipette, servo, or all (gantry,
+              plunger, servo and any plates); and, where Klipper configures
+              plates, plates or a plate name (plate1...) or its axis letter
 
 Options:
   -h, --help  show this help message and exit
@@ -85,6 +85,32 @@ Options:
   --x X       X-axis offset in mm (default: 0)
   --y Y       Y-axis offset in mm (default: 0)
   --z Z       Z-axis offset in mm (default: 0)
+```
+
+### `plate_move`
+
+```
+Usage: plate_move [-h] [--speed SPEED] plate target
+
+Move a plate drawer to a named stop or a position in mm. Needs Z and the plate
+homed; raises the tip to z_safe first if it is below it.
+
+Positional Arguments:
+  plate          Plate name (plate1...) or its axis letter
+  target         A stop from the locations file's drawers block, or mm (0 =
+                 in)
+
+Options:
+  -h, --help     show this help message and exit
+  --speed SPEED  Speed in mm/s (default: Klipper's)
+```
+
+### `plates_in`
+
+```
+Usage: plates_in
+
+Move every plate drawer in (Klipper's PLATES_IN). Needs Z and every plate homed; raises the tip to z_safe first if it is below it.
 ```
 
 ### `aspirate`

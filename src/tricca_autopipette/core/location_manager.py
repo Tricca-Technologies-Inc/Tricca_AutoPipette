@@ -10,9 +10,11 @@ from __future__ import annotations
 import copy
 import json
 import logging
-from dataclasses import dataclass
+import math
+from collections.abc import Mapping
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from tricca_autopipette.core.config_writer import write_json_atomic
 from tricca_autopipette.core.coordinate import Coordinate
@@ -22,7 +24,10 @@ from tricca_autopipette.core.pipette_constants import (
     LocalConfigRoots,
     PlateType,
 )
-from tricca_autopipette.core.pipette_exceptions import NotALocationError
+from tricca_autopipette.core.pipette_exceptions import (
+    DrawerNotAtStopError,
+    NotALocationError,
+)
 from tricca_autopipette.core.plates import (
     Plate,
     PlateFactory,
@@ -41,9 +46,88 @@ from tricca_autopipette.core.traversal import (
 )
 from tricca_autopipette.core.well import StrategyType, Well
 
+if TYPE_CHECKING:
+    # Type only: core never imports the daemon at runtime. The value is
+    # handed in by `AutoPipetteService` once it has read Klipper (#138).
+    from tricca_autopipette.daemon.moonraker_state import AxisConfig
+
 logger = logging.getLogger(__name__)
 
 CONFIG_LOCATIONS = DefaultFilenames.CONFIG_LOCATIONS
+
+
+@dataclass(frozen=True)
+class Drawer:
+    """A plate drawer's named stops, from a locations file's ``drawers`` block.
+
+    Issue #142 (addendum D37/D38). Klipper knows no stop names: a stop is
+    just a position (mm) along the drawer's travel, named here so protocols
+    and deck locations can refer to it.
+
+    Attributes:
+        stops: Stop name to position (mm).
+        pipetting: The stops at which the tip may descend into the drawer.
+        source: The file (or inline source) that defined it.
+        raw: Its file entry as written, for `LocationManager.save_to_json`.
+    """
+
+    stops: dict[str, float]
+    pipetting: tuple[str, ...]
+    source: str = field(default="<inline>", compare=False)
+    raw: dict[str, Any] = field(default_factory=dict[str, Any], compare=False)
+
+
+def drawer_problems(name: str, drawer: Drawer, axes: AxisConfig) -> list[str]:
+    """Check a drawer's stops against Klipper's plate config (addendum D39).
+
+    Klipper's copy of the tip-safe positions is the safety authority; tapd's
+    named stops are validated against it rather than trusted.
+
+    Args:
+        name: The drawer's name, which must be one of Klipper's plates.
+        drawer: Its stops.
+        axes: Klipper's plate config, as discovered (issue #138).
+
+    Returns:
+        One message per problem; empty if the drawer is valid.
+
+    Example:
+        >>> from tricca_autopipette.daemon.moonraker_state import (
+        ...     AxisConfig,
+        ...     PlateAxis,
+        ... )
+        >>> axes = AxisConfig(plates=(PlateAxis("plate1", "U", 0, 350, (0.0,)),))
+        >>> drawer_problems("plate1", Drawer({"in": 0.0}, ("in",)), axes)
+        []
+    """
+    plate = next((p for p in axes.plates if p.name == name), None)
+    if plate is None:
+        if not axes.plates:
+            return [
+                f"drawer {name!r}: this machine has no plates configured in "
+                f"Klipper, so it accepts no 'drawers' block"
+            ]
+        known = ", ".join(p.name for p in axes.plates)
+        return [f"drawer {name!r} is not a plate Klipper knows ({known})"]
+
+    problems: list[str] = []
+    lo, hi = plate.position_min, plate.position_max
+    tol = axes.park_tol or 0.0
+    for stop, mm in drawer.stops.items():
+        if (lo is not None and mm < lo) or (hi is not None and mm > hi):
+            problems.append(
+                f"drawer {name!r}: stop {stop!r} at {mm:g} mm is outside its "
+                f"travel ({lo} to {hi} mm)"
+            )
+    for stop in drawer.pipetting:
+        mm = drawer.stops[stop]
+        if not any(abs(mm - safe) <= tol for safe in plate.safe_stops):
+            safe = ", ".join(f"{s:g}" for s in plate.safe_stops) or "none"
+            problems.append(
+                f"drawer {name!r}: pipetting stop {stop!r} at {mm:g} mm is not "
+                f"within {tol:g} mm of a tip-safe position in Klipper ({safe})"
+            )
+    return problems
 
 
 @dataclass
@@ -69,6 +153,10 @@ class LocationMembershipSnapshot:
     waste_container: WasteContainer | None
     sources: dict[str, str]
     tipboxes: dict[str, TipBox]
+    drawers: dict[str, Drawer] = field(default_factory=dict[str, Drawer])
+    drawer_links: dict[str, tuple[str, str]] = field(
+        default_factory=dict[str, tuple[str, str]]
+    )
 
 
 class LocationManager:
@@ -86,6 +174,13 @@ class LocationManager:
             merged extra boxes into the first one.
         locations_dir: Directory `load_from_json`/`save_to_json` resolve
             their filenames against.
+        drawers: Named drawer stops, by drawer (plate) name (issue #142).
+        drawer_links: Location name to the ``(drawer, stop)`` it is tied to.
+        drawer_positions: The compile-time drawer-position model: drawer
+            name to where it is (mm), as far as tapd knows. A drawer missing
+            here is at an unknown position.
+        axis_config: Klipper's plate config once tapd has read it, or None
+            before the first connection.
 
     Example:
         >>> manager = LocationManager()
@@ -129,6 +224,10 @@ class LocationManager:
         # once a name is re-set interactively the stored entry no longer
         # matches and is ignored, so no other method has to maintain this.
         self._raw_entries: dict[str, tuple[Coordinate | Plate, dict[str, Any]]] = {}
+        self.drawers: dict[str, Drawer] = {}
+        self.drawer_links: dict[str, tuple[str, str]] = {}
+        self.drawer_positions: dict[str, float] = {}
+        self.axis_config: AxisConfig | None = None
 
     def clear(self) -> None:
         """Clear all locations, tipboxes, and waste container.
@@ -142,6 +241,91 @@ class LocationManager:
         self.waste_container = None
         self.tipbox_manager.clear()
         self._sources.clear()
+        self.drawers.clear()
+        self.drawer_links.clear()
+
+    def set_axis_config(self, axes: AxisConfig) -> list[str]:
+        """Record Klipper's plate config and re-check the loaded drawers.
+
+        Called on connect (issue #142): drawers loaded before tapd could read
+        Klipper were kept unchecked. From now on a load with a bad drawer is
+        refused outright; an already-loaded bad drawer stays loaded (so a save
+        still round-trips) but no location linked to it can be used.
+
+        Args:
+            axes: Klipper's plate config (issue #138).
+
+        Returns:
+            One message per problem with a loaded drawer; empty if all pass.
+        """
+        self.axis_config = axes
+        return [
+            problem
+            for name, drawer in self.drawers.items()
+            for problem in drawer_problems(name, drawer, axes)
+        ]
+
+    def seed_drawer_positions(self, positions: Mapping[str, float]) -> None:
+        """Replace the drawer-position model with live positions.
+
+        Called at the start of a protocol or command; a drawer missing from
+        `positions` becomes unknown.
+
+        Args:
+            positions: Drawer name to its live position (mm).
+        """
+        self.drawer_positions = dict(positions)
+
+    def set_drawer_position(self, drawer: str, position: float) -> None:
+        """Record where a compiled drawer move leaves a drawer.
+
+        The update a ``plate_move``/``plates_in``/plate ``home`` line makes
+        (TAP-4/TAP-5), so later lines in the same batch see the drawer there.
+
+        Args:
+            drawer: Drawer (plate) name.
+            position: Its position after the move (mm).
+        """
+        self.drawer_positions[drawer] = float(position)
+
+    def check_drawer(self, name: str) -> None:
+        """Refuse a drawer-linked location unless its drawer is at its stop.
+
+        tapd's early refusal (issue #142, addendum D40); Klipper's interlock
+        stays the authority. A location with no link passes.
+
+        Args:
+            name: Location name.
+
+        Raises:
+            DrawerNotAtStopError: If the location is linked and its drawer is
+                undefined, rejected by Klipper's config, at an unknown
+                position, or not within ``park_tol`` of the linked stop.
+        """
+        link = self.drawer_links.get(name)
+        if link is None:
+            return
+        drawer_name, stop = link
+        drawer = self.drawers.get(drawer_name)
+        if drawer is None:
+            raise DrawerNotAtStopError(name, drawer_name, stop, "not defined")
+        if self.axis_config is not None:
+            problems = drawer_problems(drawer_name, drawer, self.axis_config)
+            if problems:
+                raise DrawerNotAtStopError(
+                    name, drawer_name, stop, f"misconfigured ({'; '.join(problems)})"
+                )
+        required = drawer.stops.get(stop)
+        if required is None:
+            raise DrawerNotAtStopError(name, drawer_name, stop, "without that stop")
+        actual = self.drawer_positions.get(drawer_name)
+        if actual is None:
+            raise DrawerNotAtStopError(
+                name, drawer_name, stop, "at an unknown position"
+            )
+        tol = (self.axis_config.park_tol if self.axis_config else None) or 0.0
+        if abs(actual - required) > tol:
+            raise DrawerNotAtStopError(name, drawer_name, stop, f"at {actual:g} mm")
 
     def set_coordinate(self, name: str, coord: Coordinate) -> None:
         """Create or update a named coordinate location.
@@ -159,6 +343,8 @@ class LocationManager:
             >>> manager.set_coordinate("home_position", coord)
         """
         self.locations[name] = coord
+        # A location re-set by hand is a new location: no drawer link.
+        self.drawer_links.pop(name, None)
 
     def set_plate(self, name: str, plate_params: PlateParams) -> None:
         """Create or update a plate at a named location.
@@ -257,6 +443,8 @@ class LocationManager:
 
         Raises:
             NotALocationError: If the location name doesn't exist.
+            DrawerNotAtStopError: If the location is linked to a drawer stop
+                and the drawer isn't there (see `check_drawer`).
             ValueError: If only one of row/col is provided, or if row/col
                 address a cell outside the plate.
 
@@ -278,9 +466,10 @@ class LocationManager:
 
             >>> # Get specific well (row 1, col 1 = B2)
             >>> well_b2 = manager.get_coordinate("plate_a", row=1, col=1)
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         if name not in self.locations:
             raise NotALocationError(name)
+        self.check_drawer(name)
 
         location = self.locations[name]
 
@@ -419,6 +608,8 @@ class LocationManager:
             waste_container=self.waste_container,
             sources=dict(self._sources),
             tipboxes=dict(self.tipbox_manager.boxes),
+            drawers=dict(self.drawers),
+            drawer_links=dict(self.drawer_links),
         )
 
     def restore_membership(self, snapshot: LocationMembershipSnapshot) -> None:
@@ -449,6 +640,8 @@ class LocationManager:
         self.waste_container = snapshot.waste_container
         self._sources = dict(snapshot.sources)
         self.tipbox_manager.boxes = dict(snapshot.tipboxes)
+        self.drawers = dict(snapshot.drawers)
+        self.drawer_links = dict(snapshot.drawer_links)
 
     def get_coordinate_names(self) -> list[str]:
         """Get names of all locations that are simple coordinates.
@@ -511,6 +704,7 @@ class LocationManager:
             self.waste_container = None
 
         self.tipbox_manager.unregister(name)
+        self.drawer_links.pop(name, None)
 
         # Remove from locations
         self.locations.pop(name)
@@ -638,10 +832,11 @@ class LocationManager:
             False
         """  # ruff: ignore[docstring-extraneous-exception]
         live = {name for name, src in self._sources.items() if src == filename}
-        if not live:
+        live_drawers = {n for n, d in self.drawers.items() if d.source == filename}
+        if not live and not live_drawers:
             return False
         data = self._read_locations_file(filename)
-        entries = {
+        entries: dict[str, Any] = {
             key: [
                 entry
                 for entry in cast("list[dict[str, Any]]", data.get(key, []))
@@ -649,12 +844,24 @@ class LocationManager:
             ]
             for key in ("coordinates", "plates")
         }
+        drawers: Any = data.get("drawers", {})
+        if isinstance(drawers, dict):  # else left for apply to reject
+            drawers = {
+                name: entry
+                for name, entry in cast("dict[str, Any]", drawers).items()
+                if name in live_drawers or name not in self.drawers
+            }
+        entries["drawers"] = drawers
         self.apply_locations_data(entries, source=filename)
         listed = {
-            entry.get("name") for entry_list in entries.values() for entry in entry_list
+            entry.get("name")
+            for key in ("coordinates", "plates")
+            for entry in entries[key]
         }
         for name in live - listed:
             self.unload(name)
+        for name in live_drawers - set(drawers):
+            del self.drawers[name]
         return True
 
     def load_group(self, filenames: list[str], *, replace: bool = False) -> None:
@@ -761,14 +968,44 @@ class LocationManager:
             ...     {"coordinates": [{"name": "home", "x": 0, "y": 0, "z": 0}]},
             ...     source="system.json",
             ... )
-        """  # ruff: ignore[docstring-extraneous-exception]
+        """
         coordinates = self._parse_coordinates(locations_data, source)
         plates = self._parse_plates(locations_data, source)
+        drawers = self._parse_drawers(locations_data, source)
+        links = self._parse_links(locations_data, source)
+        if self.axis_config is not None:
+            for drawer_name, drawer in drawers.items():
+                problems = drawer_problems(drawer_name, drawer, self.axis_config)
+                if problems:
+                    raise ValueError(f"In {source}: {'; '.join(problems)}")
+        # Every link as it would stand after this load, checked against the
+        # drawers as they would stand: a redefined drawer must still carry
+        # every stop an earlier file's location relies on.
+        incoming = {name for name, _ in coordinates} | {p[0] for p in plates}
+        kept = {
+            name: link
+            for name, link in ({} if replace else self.drawer_links).items()
+            if name not in incoming
+        }
+        self._check_links(
+            {**kept, **links}, {**({} if replace else self.drawers), **drawers}
+        )
 
         # Nothing above mutates state, so a failure here leaves the deck as it
         # was. Only past this point do we commit.
         if replace:
             self.clear()
+
+        for drawer_name, drawer in drawers.items():
+            previous = self.drawers.get(drawer_name)
+            if previous is not None and previous.source != source:
+                logger.warning(
+                    "Drawer %r from %s overwrites the one from %s",
+                    drawer_name,
+                    source,
+                    previous.source,
+                )
+            self.drawers[drawer_name] = drawer
 
         for name, coord in coordinates:
             self._warn_on_duplicate(name, source)
@@ -781,6 +1018,9 @@ class LocationManager:
             self._sources[name] = source
             if consumed is not None:
                 self.tipbox_manager.set_consumed(name, consumed)
+
+        # After set_coordinate/set_plate, which drop any earlier link.
+        self.drawer_links.update(links)
 
         for key in ("coordinates", "plates"):
             for entry in cast("list[dict[str, Any]]", locations_data.get(key, [])):
@@ -953,6 +1193,131 @@ class LocationManager:
         return parsed
 
     @staticmethod
+    def _parse_drawers(
+        locations_data: dict[str, Any], source: str
+    ) -> dict[str, Drawer]:
+        """Build a payload's ``drawers`` block without applying it.
+
+        Args:
+            locations_data: The locations payload.
+            source: Origin, for error messages and `Drawer.source`.
+
+        Returns:
+            Drawer name to `Drawer`, in file order.
+
+        Raises:
+            ValueError: If the block, a drawer, a stop position or the
+                ``pipetting`` list is malformed, or ``pipetting`` names a
+                stop the drawer doesn't have.
+        """
+        block: Any = locations_data.get("drawers", {})
+        if not isinstance(block, dict):
+            raise ValueError(f"'drawers' must be an object in {source}")
+        parsed: dict[str, Drawer] = {}
+        for name, entry in cast("dict[str, Any]", block).items():
+            where = f"drawer {name!r} in {source}"
+            raw_stops: Any = (
+                cast("dict[str, Any]", entry).get("stops")
+                if isinstance(entry, dict)
+                else None
+            )
+            if not isinstance(raw_stops, dict):
+                raise ValueError(f"{where} needs a 'stops' object")
+            stops: dict[str, float] = {}
+            for stop, mm in cast("dict[str, Any]", raw_stops).items():
+                if (
+                    isinstance(mm, bool)
+                    or not isinstance(mm, int | float)
+                    or not math.isfinite(mm)
+                ):
+                    raise ValueError(f"{where}: stop {stop!r} must be a number (mm)")
+                stops[stop] = float(mm)
+            pipetting: Any = cast("dict[str, Any]", entry).get("pipetting", [])
+            if not isinstance(pipetting, list):
+                raise ValueError(f"{where}: 'pipetting' must be a list of stops")
+            for stop in cast("list[Any]", pipetting):
+                if stop not in stops:
+                    raise ValueError(
+                        f"{where}: pipetting stop {stop!r} is not one of its stops"
+                    )
+            parsed[name] = Drawer(
+                stops=stops,
+                pipetting=tuple(cast("list[str]", pipetting)),
+                source=source,
+                raw=copy.deepcopy(cast("dict[str, Any]", entry)),
+            )
+        return parsed
+
+    @staticmethod
+    def _parse_links(
+        locations_data: dict[str, Any], source: str
+    ) -> dict[str, tuple[str, str]]:
+        """Collect the ``drawer``/``stop`` links on a payload's entries.
+
+        Args:
+            locations_data: The locations payload.
+            source: Origin, for error messages.
+
+        Returns:
+            Location name to ``(drawer, stop)``, for linked entries only.
+
+        Raises:
+            ValueError: If an entry carries only one of ``drawer``/``stop``,
+                or either isn't a string.
+        """
+        links: dict[str, tuple[str, str]] = {}
+        for key in ("coordinates", "plates"):
+            for entry in cast("list[dict[str, Any]]", locations_data.get(key, [])):
+                drawer, stop = entry.get("drawer"), entry.get("stop")
+                if drawer is None and stop is None:
+                    continue
+                if not isinstance(drawer, str) or not isinstance(stop, str):
+                    raise ValueError(
+                        f"Location {entry.get('name')!r} in {source} needs both "
+                        f"'drawer' and 'stop' (as names), or neither"
+                    )
+                links[entry["name"]] = (drawer, stop)
+        return links
+
+    @staticmethod
+    def _check_links(
+        links: Mapping[str, tuple[str, str]], drawers: Mapping[str, Drawer]
+    ) -> None:
+        """Check every link against the drawer it names.
+
+        A link to a drawer no file has defined (yet) is allowed, since a deck
+        may load its drawers from another file, and is logged; pipetting at
+        such a location is refused until the drawer exists.
+
+        Args:
+            links: Location name to ``(drawer, stop)``.
+            drawers: The drawers to check them against.
+
+        Raises:
+            ValueError: If a link names a stop its drawer doesn't define, or
+                one that isn't a pipetting stop.
+        """
+        for name, (drawer_name, stop) in links.items():
+            drawer = drawers.get(drawer_name)
+            if drawer is None:
+                logger.warning(
+                    "Location %r is linked to drawer %r, which no loaded file "
+                    "defines; it can't be used until one does",
+                    name,
+                    drawer_name,
+                )
+            elif stop not in drawer.stops:
+                raise ValueError(
+                    f"Location {name!r} is linked to stop {stop!r}, which drawer "
+                    f"{drawer_name!r} doesn't define"
+                )
+            elif stop not in drawer.pipetting:
+                raise ValueError(
+                    f"Location {name!r} is linked to stop {stop!r}, but {stop!r} "
+                    f"is not a pipetting stop of drawer {drawer_name!r}"
+                )
+
+    @staticmethod
     def _require_name(entry: dict[str, Any], source: str, kind: str) -> str:
         """Extract an entry's name, which is its unique identifier.
 
@@ -1092,7 +1457,11 @@ class LocationManager:
             raise ValueError(f"Expected a bare filename, got {filename!r}")
         locations_dir = self.locations_dir or DefaultPaths.DIR_LOCAL_LOCATIONS
 
-        data: dict[str, list[dict[str, Any]]] = {}
+        data: dict[str, Any] = {}
+        if self.drawers:
+            data["drawers"] = {
+                name: copy.deepcopy(drawer.raw) for name, drawer in self.drawers.items()
+            }
         for name, location in self.locations.items():
             raw = self._raw_entries.get(name)
             entry: dict[str, Any]

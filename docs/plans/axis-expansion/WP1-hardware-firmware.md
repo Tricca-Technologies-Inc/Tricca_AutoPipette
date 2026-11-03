@@ -37,14 +37,14 @@ The owner already has this board; it was identified from a photo of its label ("
 
 | Slot | Plate / axis | step | dir | enable | UART | Home input |
 |------|---|---|---|---|---|---|
-| Driver0 | plate1 / U | PF13 | PF12 | !PF14 | PC4 | PG6 (STOP_0) |
-| Driver1 | plate2 / V | PG0 | PG1 | !PF15 | PD11 | PG9 (STOP_1) |
-| Driver2 | plate3 / W | PF11 | PG3 | !PG5 | PC6 | PG10 (STOP_2) |
-| Driver3 | plate4 / A | PG4 | PC1 | !PA0 | PC7 | PG11 (STOP_3) |
-| Driver4 | plate5 / B | PF9 | PF10 | !PG2 | PF2 | PG12 (E0DET) |
-| Driver5 | plate6 / C | PC13 | PF0 | !PF1 | PE4 | PG13 (E1DET) |
-| Driver6 | spare | PE2 | PE3 | !PD4 | PE1 | PG14 (E2DET) |
-| Driver7 | spare | PE6 | PA14 | !PE0 | PD3 | PG15 (E3DET) |
+| Driver0 | plate1 / U | PF13 | PF12 | !PF14 | PC4 | PG6 (DIAG0) |
+| Driver1 | plate2 / V | PG0 | PG1 | !PF15 | PD11 | PG9 (DIAG1) |
+| Driver2 | plate3 / W | PF11 | PG3 | !PG5 | PC6 | PG10 (DIAG2) |
+| Driver3 | plate4 / A | PG4 | PC1 | !PA0 | PC7 | PG11 (DIAG3) |
+| Driver4 | plate5 / B | PF9 | PF10 | !PG2 | PF2 | PG12 (DIAG4) |
+| Driver5 | plate6 / C | PC13 | PF0 | !PF1 | PE4 | PG13 (DIAG5) |
+| Driver6 | spare | PE2 | PE3 | !PD4 | PE1 | PG14 (DIAG6) |
+| Driver7 | spare | PE6 | PA14 | !PE0 | PD3 | PG15 (DIAG7) |
 
 - **Driver3's enable pin is PA0 on this board.** On the Pro it's PA2, and on this board PA2 is the HE0 heater output.
 - **Power.** The board has separate inputs for main (board) power, motor power and bed power (BTT manual).
@@ -53,7 +53,7 @@ The owner already has this board; it was identified from a photo of its label ("
   - There are no per-driver voltage jumpers on this board; every driver runs at the motor-power voltage. 24 V is within the TMC2209's rating.
 - **Remove all DIAG jumpers.** A fitted DIAG jumper shares the endstop pin with the driver, and the switch may not read.
 - Set the UART-mode jumpers for TMC2209 (BTT manual).
-- Physically confirm the STOP/DET silkscreen.
+- The home inputs are the DIAG0–DIAG7 headers (BTT pinout, rev 2026-02-01), each `5V / GND / signal`. Wire the NC switch between GND and signal, never 5V.
 - The board arrived with eight TMC2209 V1.3 drivers fitted. Six drive the plates; two are spares.
 
 ### 3.2 EBB42 CAN V1.2 — pipette stepper and servo signal
@@ -94,7 +94,7 @@ The owner already has this board; it was identified from a photo of its label ("
 |---|---|
 | Travel | **350 mm** (umbrella D19; confirmed against the mechanical design) |
 | Motor | LDO-42STH40-1684AC: NEMA17 40 mm, 1.8°, 1.68 A, 1.65 Ω, 450 mN·m |
-| Belt / pulley / idler | GT2 6 mm; 20T 5 mm bore; matching idler; `rotation_distance: 40`. Belt length ≈ 2 × (pulley-to-idler span) + one pulley circumference, with the span ≥ 350 mm + carriage length |
+| Belt / pulley / idler | GT2 6 mm; 16T 5 mm bore; matching 16T idler; `rotation_distance: 32` (addendum D51). Belt length ≈ 2 × (pulley-to-idler span) + one pulley circumference, with the span ≥ 350 mm + carriage length |
 | Home switch | NC microswitch at the "in" end |
 | Hard stops | Both ends, set ≥ 2 mm beyond the soft limits (0 and 350) |
 | Motor cable | Shielded 4-core from the top bay; lengths measured in Phase 0 |
@@ -148,7 +148,7 @@ Per motor: 2 × I² × R + ≈2 W driver/motion losses. Gantry motors are the st
 | 8 | Servo bulk capacitor | 470 µF+, ≥ 10 V | 1 | §3.3 |
 | 9 | Pipette servo | MG996R | 1 (+1) | |
 | 10 | GT2 6 mm belt | — | per drawer | Length per §3.5 |
-| 11 | GT2 20T pulley (5 mm bore) / idler | — | 6 / 6 | |
+| 11 | GT2 16T pulley (5 mm bore) / idler | — | 6 / 6 | |
 | 12 | Home microswitches (NC) | — | 6 | Plus pipette if absent |
 | 13 | CAN cable, high-flex | — | gantry run + 20% | |
 | 14 | Shielded motor / switch cable | — | 6 + 6 runs | |

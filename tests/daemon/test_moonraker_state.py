@@ -350,6 +350,36 @@ class TestPrintStateCallbacks:
         assert seen == ["a:complete", "b:complete"]
 
 
+class TestPrintMessage:
+    """``print_stats.message`` carries Klipper's error text (issue #150)."""
+
+    def test_message_is_known_when_the_state_callback_fires(
+        self, fake_websocket_client: FakeWebSocketClient
+    ) -> None:
+        tracker = _tracker(fake_websocket_client)
+        seen: list[str] = []
+        tracker.on_print_state_change(lambda _state: seen.append(tracker.print_message))
+
+        tracker._apply_status({
+            "print_stats": {
+                "state": "error",
+                "message": "Move refused by interlock: plate1 not homed",
+            }
+        })
+
+        assert seen == ["Move refused by interlock: plate1 not homed"]
+
+    def test_message_survives_a_push_that_omits_it(
+        self, fake_websocket_client: FakeWebSocketClient
+    ) -> None:
+        tracker = _tracker(fake_websocket_client)
+        tracker._apply_status({"print_stats": {"message": "boom"}})
+
+        tracker._apply_status({"print_stats": {"state": "error"}})
+
+        assert tracker.print_message == "boom"
+
+
 class TestLoadTipLiquidState:
     def test_returns_all_three_keys_when_stored(
         self, fake_websocket_client: FakeWebSocketClient

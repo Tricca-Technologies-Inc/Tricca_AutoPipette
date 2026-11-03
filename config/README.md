@@ -316,6 +316,48 @@ reset_tips_all
 set_tips tipbox_a A1:C12  # declare exactly which positions are used
 ```
 
+### Drawer stops
+
+On a machine with plate drawers, a locations file may name stops along each
+drawer's travel, and tie a deck location to one:
+
+```json
+{
+  "drawers": {
+    "plate2": {
+      "stops": {"load": 350, "cover": 300, "work_a": 0, "work_b": 120},
+      "pipetting": ["work_a", "work_b"]
+    }
+  },
+  "plates": [
+    {"name": "sample_plate", "drawer": "plate2", "stop": "work_a", "...": "..."}
+  ]
+}
+```
+
+- Drawer names are Klipper's plate names. Stops are mm. `pipetting` lists the
+  stops the tip may descend at.
+- `drawers` loads like the rest of the file: additively, last load wins with a
+  warning, all or nothing, and `save_locations` writes it back as written.
+- Once tapd has read Klipper, it checks every drawer:
+  - the drawer must be one of Klipper's plates;
+  - each stop must be inside the plate's travel;
+  - each `pipetting` stop must be within `park_tol` of one of Klipper's
+    tip-safe positions for that plate.
+
+  A machine with no plates accepts no `drawers` block. A file loaded before
+  tapd connects is checked on connect, and a drawer that fails stays loaded
+  but can't be used.
+- A location's `drawer` + `stop` come as a pair, and the stop must be one of
+  that drawer's `pipetting` stops. The drawer may come from another file.
+- tapd refuses to pipette, pick up or drop a tip at a linked location unless it
+  knows the drawer is at that stop: a homed plate's live position from Klipper
+  at the start of each command or protocol, then whatever earlier
+  `plate_move`/`plates_in`/`home` lines in the same protocol left it at.
+- Move a drawer with `plate_move <plate> <stop|mm> [--speed <mm/s>]` (the plate
+  by name, or its axis letter), retract all with `plates_in`, and check them
+  with `plates`.
+
 ## Customization
 
 Per-machine additions (a new pipette calibration, a liquid, a deck, a system

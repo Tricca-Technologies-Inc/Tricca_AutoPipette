@@ -44,6 +44,67 @@ def _configure(service: AutoPipetteService, axes: AxisConfig = AXES) -> None:
     service.moonraker_state.axis_config = axes  # type: ignore[misc]
 
 
+#: Every full home starts with the coordinate system and speed reset.
+_SETUP = [
+    "G90\n",
+    "M220 S100\n",
+    "SET_VELOCITY_LIMIT VELOCITY=99999.0\n",
+    "SET_VELOCITY_LIMIT ACCEL=40000.0\n",
+]
+#: The servo's known position: retracted, then a wait for it to get there.
+_SERVO = ["SET_SERVO SERVO=pipette_servo ANGLE=100\n", "G4 P850\n"]
+
+
+class TestFullHomeEmissions:
+    """D50: ``init``/``home all`` home the gantry, plunger, plates and servo.
+
+    With P and plates, bare ``G28`` is Klipper's ``[homing_override]``
+    (Configs main): ``G28 Z``, ``G28 X``, ``G28 Y``, park at Z0, then
+    ``HOME_PLATES`` and ``HOME_PIPETTE``. So tapd adds only the servo.
+    Without them, Klipper's ``G28`` is the gantry alone and tapd homes the
+    plunger with ``MANUAL_STEPPER``, byte-identical to before.
+    """
+
+    @pytest.mark.parametrize("motors", ["all", None])
+    def test_with_plates_and_plunger_axis(
+        self, service: AutoPipetteService, motors: str | None
+    ) -> None:
+        _configure(service)
+        gcode = _emitted(
+            service,
+            service.init if motors is None else lambda: service.home(HomeArgs(motors)),
+        )
+        assert gcode == [*_SETUP, "G28\n", *_SERVO]
+
+    @pytest.mark.parametrize("motors", ["all", None])
+    def test_without_extra_axes(
+        self, service: AutoPipetteService, motors: str | None
+    ) -> None:
+        gcode = _emitted(
+            service,
+            service.init if motors is None else lambda: service.home(HomeArgs(motors)),
+        )
+        assert gcode == [
+            *_SETUP,
+            "G28\n",
+            *_SERVO,
+            "MANUAL_STEPPER STEPPER=pipette_stepper SET_POSITION=0 MOVE=120.0 "
+            "SPEED=50.0 ACCEL=200.0 STOP_ON_ENDSTOP=home\n",
+            "MANUAL_STEPPER STEPPER=pipette_stepper MOVE=-120.0 "
+            "SPEED=50.0 ACCEL=200.0 STOP_ON_ENDSTOP=inverted_home\n",
+            "MANUAL_STEPPER STEPPER=pipette_stepper SET_POSITION=0\n",
+        ]
+
+
+class TestHomeAxisRemoved:
+    """D50: ``home axis`` was redundant with ``home all`` and is gone."""
+
+    def test_refused_as_an_unknown_target(self, service: AutoPipetteService) -> None:
+        with pytest.raises(ValueError, match="not a valid motor") as raised:
+            service.home(HomeArgs("axis"))
+        assert "axis" not in str(raised.value).split("Valid options:")[1]
+
+
 class TestFullHome:
     @pytest.mark.parametrize("motors", ["all", None])
     def test_bare_g28_replaces_manual_stepper_plunger_homing(

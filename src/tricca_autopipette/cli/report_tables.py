@@ -178,6 +178,37 @@ def _add_extra_axes_rows(table: Table, axes: dict[str, Any]) -> None:
     )
 
 
+def build_drawer_status_table(plates: list[dict[str, Any]]) -> Table:
+    """Build a table of each plate drawer's live state (issue #143).
+
+    Args:
+        plates: ``AutoPipetteService.plates``'s ``data["plates"]``.
+
+    Returns:
+        A populated Table.
+    """
+    table = Table(title="Plate Drawers", show_header=True)
+    table.add_column("Plate", style="cyan")
+    table.add_column("Homed", justify="center")
+    table.add_column("Position", justify="right")
+    table.add_column("Stop")
+    table.add_column("Tip-safe", justify="center")
+
+    def yes_no(value: bool) -> str:
+        return "[green]yes[/green]" if value else "[red]no[/red]"
+
+    for row in plates:
+        position = row["position"]
+        table.add_row(
+            f"{row['name']} ({row['letter']})",
+            yes_no(row["homed"]),
+            "—" if position is None else f"{position:g} mm",
+            row["stop"] or "—",
+            yes_no(row["tip_safe"]),
+        )
+    return table
+
+
 def build_endstops_table(endstops: dict[str, str]) -> Table:
     """Build a table of live endstop trigger states.
 

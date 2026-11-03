@@ -208,7 +208,7 @@ class TestExtraAxisGates:
         # Stage 2 only (issue #147): stage 1 keeps today's commands.
         assert isinstance(service.moonraker_state, FakeMoonrakerState)
         service.moonraker_state.axis_config = STAGE2  # type: ignore[misc]
-        service.moonraker_state.axis_positions["P"] = 0.0
+        service.moonraker_state.positions["P"] = 0.0
 
         @require_plunger_homed("aspirate")
         def op(self: AutoPipetteService) -> CommandResult:
