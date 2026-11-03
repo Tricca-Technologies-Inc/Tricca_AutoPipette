@@ -180,7 +180,7 @@ Upgrade the AutoPipette with:
 | D7 | No new safety-chain hardware | Existing E-stop cuts all power; belts + hard stops |
 | D8 | No spill shields | Electronics on top |
 | D9 | Plate motors **LDO-42STH40-1684AC** | NEMA17, shared spares |
-| D10 | **GT2 6 mm belt, 20T pulley**, `rotation_distance: 40` | Standard |
+| D10 | **GT2 6 mm belt, 16T pulley**, `rotation_distance: 32` (was 20T / 40; superseded by addendum D51) | Standard |
 | D11 | Single PSU. **Keep the existing 24 V, ≥ 200 W supply** (owner, Rev I); Mean Well LRS-350-24 only if it's ever replaced | ≈100 W load (WP1 §4) |
 | D12 | Firmware built on a **workstation** from pinned source | ADR-0004; never build heavy on a CB1 |
 | D13 | Interlock = wrapped `G1`/`G0`, plus wrappers on **every other Klipper command that can move Z or a plate**: `SET_GCODE_OFFSET … MOVE=1`, `SAVE`/`RESTORE_GCODE_STATE` (also covers `RESUME`), `STEPPER_BUZZ`, `MANUAL_STEPPER`, `SET_STEPPER_ENABLE`, `M84`/`M18`; `MANUAL_PROBE` and `Z_ENDSTOP_CALIBRATE` refused outright. Completeness is enforced by a test: Klipper's full command list must match a reviewed, classified inventory (C-45) | Catches tapd's raw moves and console/Mainsail commands without Python changes. The renamed originals (`G1.1`, `…_BASE`, `M84.1`) bypass by design and are never sent (WP2 §4) |

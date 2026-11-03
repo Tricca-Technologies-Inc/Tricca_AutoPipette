@@ -94,7 +94,7 @@ The owner already has this board; it was identified from a photo of its label ("
 |---|---|
 | Travel | **350 mm** (umbrella D19; confirmed against the mechanical design) |
 | Motor | LDO-42STH40-1684AC: NEMA17 40 mm, 1.8°, 1.68 A, 1.65 Ω, 450 mN·m |
-| Belt / pulley / idler | GT2 6 mm; 20T 5 mm bore; matching idler; `rotation_distance: 40`. Belt length ≈ 2 × (pulley-to-idler span) + one pulley circumference, with the span ≥ 350 mm + carriage length |
+| Belt / pulley / idler | GT2 6 mm; 16T 5 mm bore; matching 16T idler; `rotation_distance: 32` (addendum D51). Belt length ≈ 2 × (pulley-to-idler span) + one pulley circumference, with the span ≥ 350 mm + carriage length |
 | Home switch | NC microswitch at the "in" end |
 | Hard stops | Both ends, set ≥ 2 mm beyond the soft limits (0 and 350) |
 | Motor cable | Shielded 4-core from the top bay; lengths measured in Phase 0 |
@@ -148,7 +148,7 @@ Per motor: 2 × I² × R + ≈2 W driver/motion losses. Gantry motors are the st
 | 8 | Servo bulk capacitor | 470 µF+, ≥ 10 V | 1 | §3.3 |
 | 9 | Pipette servo | MG996R | 1 (+1) | |
 | 10 | GT2 6 mm belt | — | per drawer | Length per §3.5 |
-| 11 | GT2 20T pulley (5 mm bore) / idler | — | 6 / 6 | |
+| 11 | GT2 16T pulley (5 mm bore) / idler | — | 6 / 6 | |
 | 12 | Home microswitches (NC) | — | 6 | Plus pipette if absent |
 | 13 | CAN cable, high-flex | — | gantry run + 20% | |
 | 14 | Shielded motor / switch cable | — | 6 + 6 runs | |
