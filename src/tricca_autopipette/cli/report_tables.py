@@ -15,6 +15,7 @@ import string
 from typing import Any, cast
 
 from rich.table import Table
+from rich.text import Text
 
 
 def build_locations_table(locations: list[dict[str, Any]]) -> Table:
@@ -122,19 +123,19 @@ def build_system_table(data: dict[str, Any]) -> Table:
     table.add_row("System Name", data["system_name"])
     table.add_row("Version", data["version"])
     table.add_row("", "")
-    table.add_row("[bold]Pipette[/bold]", "")
+    table.add_row(Text("Pipette", style="bold"), "")
     table.add_row("  Model", data["pipette_model"])
     table.add_row("  Design", data["pipette_design"])
     table.add_row("  Max Volume", f"{data['max_volume_ul']} μL")
     table.add_row("", "")
-    table.add_row("[bold]Active Liquid[/bold]", data["active_liquid"])
+    table.add_row(Text("Active Liquid", style="bold"), data["active_liquid"])
     table.add_row("", "")
-    table.add_row("[bold]Gantry[/bold]", "")
+    table.add_row(Text("Gantry", style="bold"), "")
     table.add_row("  Speed XY", f"{data['gantry_speed_xy']} mm/min")
     table.add_row("  Speed Z", f"{data['gantry_speed_z']} mm/min")
     table.add_row("  Accel Max", f"{data['gantry_accel_max']} mm/s²")
     table.add_row("", "")
-    table.add_row("[bold]Network[/bold]", "")
+    table.add_row(Text("Network", style="bold"), "")
     table.add_row("  Hostname", data.get("hostname") or "—")
     table.add_row("  Port", str(data.get("port") or "—"))
     _add_extra_axes_rows(table, data.get("extra_axes") or {})
@@ -155,10 +156,10 @@ def _add_extra_axes_rows(table: Table, axes: dict[str, Any]) -> None:
     table.add_row("", "")
     plates: list[dict[str, Any]] = axes.get("plates") or []
     if not plates:
-        table.add_row("[bold]Plates[/bold]", "not configured")
+        table.add_row(Text("Plates", style="bold"), "not configured")
     else:
         table.add_row(
-            "[bold]Plates[/bold]",
+            Text("Plates", style="bold"),
             f"z_safe {axes['z_safe']:g}, park_tol {axes['park_tol']:g}",
         )
         for plate in plates:
@@ -170,7 +171,7 @@ def _add_extra_axes_rows(table: Table, axes: dict[str, Any]) -> None:
             )
     pipette: dict[str, Any] | None = axes.get("pipette")
     table.add_row(
-        "[bold]Plunger axis[/bold]",
+        Text("Plunger axis", style="bold"),
         "not configured"
         if pipette is None
         else f"{pipette['letter']}, stage {pipette['stage']}, "
@@ -194,8 +195,8 @@ def build_drawer_status_table(plates: list[dict[str, Any]]) -> Table:
     table.add_column("Stop")
     table.add_column("Tip-safe", justify="center")
 
-    def yes_no(value: bool) -> str:
-        return "[green]yes[/green]" if value else "[red]no[/red]"
+    def yes_no(value: bool) -> Text:
+        return Text("yes", style="green") if value else Text("no", style="red")
 
     for row in plates:
         position = row["position"]
