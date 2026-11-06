@@ -1,0 +1,11 @@
+#adding the larger volumes for the 5mL prime panel B CAL 7-1kit making procedure for the modified 5x diluted homovanillic acid so 2630uL of methanol is added
+
+# Lactic acid
+pipette 500.0 --extra_air --after_air --src_row 0 --src_col 0 MANU1 KIT1 --dispense_vol 500.0 --tipbox tipbox --prewet 1
+
+pipette 438.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 438.0 --tipbox tipbox
+pipette 438.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 438.0 --tipbox tipbox
+pipette 438.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 438.0 --tipbox tipbox
+pipette 438.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 438.0 --tipbox tipbox
+pipette 438.0 --extra_air --after_air --keep_tip WATER KIT1 --dispense_vol 438.0 --tipbox tipbox
+pipette 440.0 --extra_air --after_air WATER KIT1 --dispense_vol 438.0 --tipbox tipbox

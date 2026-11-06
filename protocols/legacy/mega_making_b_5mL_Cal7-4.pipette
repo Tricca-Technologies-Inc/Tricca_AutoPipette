@@ -1,0 +1,32 @@
+#fourth and final part of making cal 7 for mega panel b
+
+# Phenylacetylglutamine 25uL
+pipette 25 --extra_air --after_air --src_row 0 --src_col 0 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Picolinic acid 25uL
+pipette 25 --extra_air --after_air --src_row 1 --src_col 0 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Pipecolic acid 25uL
+pipette 25 --extra_air --after_air --src_row 2 --src_col 0 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Propionic acid 25uL
+pipette 25 --extra_air --after_air --src_row 3 --src_col 0 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Pyruvic acid 25uL
+pipette 25 --extra_air --after_air --src_row 0 --src_col 0 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Quinaldic acid 25uL
+pipette 25 --extra_air --after_air --src_row 1 --src_col 0 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Quinoline-4-carboxylic acid 25uL
+pipette 25 --extra_air --after_air --src_row 2 --src_col 0 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Quinolinic acid 25uL
+pipette 25 --extra_air --after_air --src_row 3 --src_col 0 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Salicylic acid 25uL
+pipette 25 --extra_air --after_air --src_row 0 --src_col 1 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Shikimic acid 25uL
+pipette 25 --extra_air --after_air --src_row 1 --src_col 1 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Succinic acid 25uL
+pipette 25 --extra_air --after_air --src_row 2 --src_col 1 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Tartaric acid 25uL
+pipette 25 --extra_air --after_air --src_row 3 --src_col 1 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Threonic acid 25uL
+pipette 25 --extra_air --after_air --src_row 0 --src_col 1 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Tiglylglycine 25uL
+pipette 25 --extra_air --after_air --src_row 1 --src_col 1 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Valeric acid 25uL
+pipette 25 --extra_air --after_air --src_row 2 --src_col 1 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1

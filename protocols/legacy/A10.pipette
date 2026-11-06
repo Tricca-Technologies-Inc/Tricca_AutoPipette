@@ -1,0 +1,105 @@
+# MEGA Panel A adding PITC to each well of the plate
+
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox --prewet 5
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0 --keep_tip --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
+pipette 50.0  --extra_air --after_air PITC1 96wellplatePITC --dispense_vol 50.0 --tipbox tipbox
