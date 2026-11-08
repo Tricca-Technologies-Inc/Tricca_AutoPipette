@@ -804,7 +804,9 @@ class AutoPipette:
         )
         self.eject_tip()
         self.dip_z_return(curr_coor)
-
+        self.move_to(Coordinate(x=150, y=150, z=0))
+        self.home_z() # home z
+        
     def return_tip(self) -> None:
         """Put the current tip back in the tipbox slot it was picked up from.
 
