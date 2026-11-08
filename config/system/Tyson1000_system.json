@@ -1,6 +1,5 @@
 {
-  "version": "1.0",
-  "system_name": "AutoPipette",
+  "extends": "Tyson_main.json",
   "gantry": "Tyson_gantry",
   "pipette": "TysonP1000",
   "liquids": "Tyson1000_liquids",
