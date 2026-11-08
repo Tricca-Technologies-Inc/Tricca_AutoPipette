@@ -884,7 +884,7 @@ class AutoPipette:
         self.logger.debug("Dipping down to Z=%s", distance)
         coor_dip = Coordinate(x=curr_coor.x, y=curr_coor.y, z=distance)
         self.move_to_z(coor_dip)
-        self.gcode_wait(100)  # Default wait
+        self.gcode_wait(50)  # Default wait
 
     def dip_z_return(self, curr_coor: Coordinate) -> None:
         """Return the pipette to the original Z height.
@@ -894,7 +894,7 @@ class AutoPipette:
         """
         self.logger.debug("Returning to Z=%s", curr_coor.z)
         self.move_to_z(curr_coor)
-        self.gcode_wait(100)  # Default wait
+        self.gcode_wait(50)  # Default wait
 
     def operate_syringe(
         self,
