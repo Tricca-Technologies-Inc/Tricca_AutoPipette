@@ -23,6 +23,7 @@ a plain Python shell or script, while the daemon drives the async
 from __future__ import annotations
 
 import asyncio
+import copy
 import functools
 import logging
 import math
@@ -33,7 +34,7 @@ import uuid
 from collections.abc import Callable, Generator, Iterable
 from contextlib import contextmanager
 from contextvars import ContextVar
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any, Literal
 
@@ -55,6 +56,7 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     MoveRelArgs,
     PipetteArgs,
     PlateArgs,
+    PlateMoveArgs,
     ResetPlateArgs,
     ResetTipsArgs,
     SetArgs,
@@ -100,6 +102,7 @@ from tricca_autopipette.core.pipette_exceptions import (
     ProtocolAbortedError,
 )
 from tricca_autopipette.core.pipette_models import (
+    AbsolutePlunger,
     GantryKinematics,
     PipetteSyringeKinematics,
     ServoConfig,
@@ -111,9 +114,18 @@ from tricca_autopipette.core.splits import parse_splits_spec
 from tricca_autopipette.core.traversal import parse_well_ranges
 from tricca_autopipette.core.volume_converter import VolumeConverter
 from tricca_autopipette.core.well import StrategyType, Well
-from tricca_autopipette.daemon.moonraker_state import MoonrakerStateTracker
+from tricca_autopipette.daemon.interlock import (
+    InterlockRefusal,
+    parse_interlock_refusal,
+)
+from tricca_autopipette.daemon.interlock_model import InterlockModel
+from tricca_autopipette.daemon.moonraker_state import (
+    AxisConfig,
+    MoonrakerStateTracker,
+    PlateAxis,
+)
 from tricca_autopipette.moonraker.moonraker_requests import MoonrakerRequests
-from tricca_autopipette.moonraker.websocket_client import WebSocketClient
+from tricca_autopipette.moonraker.websocket_client import JsonRpcError, WebSocketClient
 
 logger = logging.getLogger(__name__)
 
@@ -123,6 +135,7 @@ WEBSOCKET_TIMEOUT_SECONDS = 10
 #: connection (as opposed to `output_gcode`'s own "no client at all" case,
 #: which degrades gracefully instead -- see its docstring).
 _NOT_CONNECTED_MSG = "WebSocket not connected. Cannot communicate with pipette."
+_NO_PLATES_MSG = "No plates configured in Klipper (no _PLATE_CFG)."
 
 #: Set for the duration of AutoPipetteService.validate_protocol's dry-run
 #: replay (issue #36). Checked directly by require_homed/
@@ -149,12 +162,24 @@ class RunStatus:
         message: Human-readable status detail.
         run_id: Unique identifier for the run, or None if idle.
         filename: Protocol filename for the run, or None if idle.
+        refusal: The Klipper interlock refusal behind this status (a print
+            ended by one, or a refused resume), or None (issue #150).
     """
 
     status: Literal["idle", "running", "done", "error"]
     message: str = ""
     run_id: str | None = None
     filename: str | None = None
+    refusal: InterlockRefusal | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        """The JSON shape of ``run.status`` and ``notify_run_status``.
+
+        Returns:
+            Every field (``refusal`` as a dict or None) plus
+            ``config_locked``.
+        """
+        return {**asdict(self), "config_locked": self.config_locked}
 
     @property
     def config_locked(self) -> bool:
@@ -242,6 +267,64 @@ def require_homed(
                 if not homed:
                     raise NotHomedError(command_name)
             return func(self, *args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+def require_plunger_homed(
+    command_name: str,
+) -> Callable[[Callable[..., CommandResult]], Callable[..., CommandResult]]:
+    """Decorator factory: block a stage-2 plunger move until P is homed.
+
+    Issue #140, applied by issue #147 to every command that moves the
+    syringe. Does nothing at stage 1 or without a P axis. At stage 2, outside
+    a protocol batch, it first re-seeds the plunger model from live Klipper
+    state (:meth:`AutoPipetteService._sync_plunger`: ``_PIPETTE_STATE.homed``
+    and the stepper still enabled, then the reported P position), and
+    refuses if the plunger isn't homed. Inside a batch the model carries over
+    from the previous line, so a ``home pipette`` line earlier in the same
+    protocol counts. During a dry run the model reads an unhomed plunger as
+    ``0``, so nothing refuses, like :func:`require_homed`. An early,
+    friendly refusal only: Klipper's ``G1`` wrapper (rule I6) and soft
+    limits are the authority. Doesn't check the
+    gantry: the plunger moves it gates are already ``require_homed``.
+
+    A plunger target can be refused mid-command (outside the limits), after
+    other G-code was buffered; outside a batch that G-code is discarded, so
+    it can't ride along with the next command (a batch is rolled back by
+    ``domain_state_snapshot`` instead).
+
+    Args:
+        command_name: Name to include in the raised ``NotHomedError``.
+
+    Returns:
+        Decorator wrapping the method with the plunger homed check.
+    """
+
+    def decorator(
+        func: Callable[..., CommandResult],
+    ) -> Callable[..., CommandResult]:
+        @functools.wraps(func)
+        def wrapper(
+            self: AutoPipetteService,
+            *args: Any,  # ruff:ignore[any-type]
+            **kwargs: Any,  # ruff:ignore[any-type]
+        ) -> CommandResult:
+            # Deliberate: the plunger model is the service's own state.
+            ap = self._autopipette  # pyright: ignore[reportPrivateUsage]
+            batch = self.gcode_manager.is_batch_mode
+            if not batch:
+                self._sync_plunger()  # pyright: ignore[reportPrivateUsage]
+            if ap.plunger is not None and ap.plunger.position_mm is None:
+                raise NotHomedError(command_name, "plunger not homed")
+            try:
+                return func(self, *args, **kwargs)
+            except BaseException:
+                if not batch:
+                    ap.get_gcode()
+                raise
 
         return wrapper
 
@@ -642,6 +725,13 @@ class AutoPipetteService:
             persisted = self.moonraker_state.load_tip_liquid_state()
             self._apply_persisted_state(persisted)
             self._apply_persisted_tip_presence(self.moonraker_state.load_tip_presence())
+            # Drawers loaded before Klipper could be read are checked now
+            # (issue #142); a bad one stays loaded but can't be used.
+            location_manager = self._autopipette.location_manager
+            for problem in location_manager.set_axis_config(
+                self.moonraker_state.axis_config
+            ):
+                logger.error("Drawer config rejected by Klipper's: %s", problem)
 
         self._run_startup_script()
         return connected
@@ -812,8 +902,44 @@ class AutoPipetteService:
         Returns:
             Whatever ``func`` returns.
         """
+
+        def seeded() -> CommandResult:
+            self._seed_drawer_model()
+            return func()
+
         async with self._lock:
-            return await asyncio.to_thread(func)
+            return await asyncio.to_thread(seeded)
+
+    def _seed_drawer_model(self) -> None:
+        """Seed the compile-time drawer-position model from live state (#142).
+
+        Called at the start of every protocol, dry run and dispatched command,
+        so the model starts from where the drawers really are rather than
+        where an earlier command left them.
+        """
+        self._autopipette.location_manager.seed_drawer_positions(
+            self._live_drawer_positions()
+        )
+
+    def _live_drawer_positions(self) -> dict[str, float]:
+        """Return each drawer's live position (mm), as Klipper reports it.
+
+        Only a homed plate counts: an unhomed one's position means nothing,
+        so its drawer stays at an unknown position (fail-closed).
+
+        Returns:
+            Plate name to its live position, for every homed plate Klipper
+            reports a position for (TAP-3's ``axis_position``).
+        """
+        state = self.moonraker_state
+        if state is None:
+            return {}
+        positions: dict[str, float] = {}
+        for plate in self.axis_config.plates:
+            position = state.axis_position(plate.letter)
+            if position is not None and state.is_plate_homed(plate.name):
+                positions[plate.name] = position
+        return positions
 
     # ==================== Movement commands ====================
     #
@@ -823,6 +949,39 @@ class AutoPipetteService:
     # dispatches the matching movement.* RPC method straight here, with no
     # cmd2 involved on that path at all.
 
+    def require_plates_homed(self, command_name: str, plates: Iterable[str]) -> None:
+        """Refuse a plate command unless gantry Z and every named plate are homed.
+
+        Issue #140, for TAP-4's plate commands; nothing calls it yet. A
+        method rather than a decorator like :func:`require_homed`, since the
+        plates come from the command's arguments. An early, friendly refusal
+        only: Klipper's interlock (rules I1/I4) is the authority. Reads live
+        Klipper state, never a local flag; honours ``_homing_invalidated``
+        like :func:`require_homed`, and is skipped while :data:`_dry_run` is
+        set.
+
+        Args:
+            command_name: Name to include in the raised ``NotHomedError``.
+            plates: Plate names (``plate1``...) the command moves.
+
+        Raises:
+            NotHomedError: Homing was invalidated by a config change, Z isn't
+                homed, or a named plate isn't (named in the message).
+        """
+        if _dry_run.get():
+            return
+        if self._homing_invalidated:
+            raise NotHomedError(
+                command_name,
+                "homing invalidated by a pipette/gantry/system config change",
+            )
+        state = self.moonraker_state
+        if state is None or "z" not in state.homed_axes:
+            raise NotHomedError(command_name, "Z not homed")
+        for plate in plates:
+            if not state.is_plate_homed(plate):
+                raise NotHomedError(command_name, f"{plate} not homed")
+
     @persist_tip_liquid_state
     def init(self) -> CommandResult:
         """Initialise the pipette: coordinate system, speed, and full homing.
@@ -831,31 +990,121 @@ class AutoPipetteService:
             Result describing the completed initialisation.
         """
         autopipette = self._autopipette
-        autopipette.init_pipette()
+        autopipette.init_pipette(self._plunger_axis())
         self.output_gcode(autopipette.get_gcode(), "home_all.gcode")
         self._homing_invalidated = False
+        self._model_plates_in(p.name for p in self.axis_config.plates)
         return CommandResult(
             ok=True, message="Pipette initialised and all motors homed."
         )
+
+    def _model_plates_in(self, plates: Iterable[str]) -> None:
+        """Record plates as in (0 mm) in the compile-time drawer model.
+
+        Where homing (``HOME_PLATE``, also run by bare ``G28``'s
+        ``[homing_override]``) and ``PLATES_IN`` leave them.
+
+        Args:
+            plates: Plate names.
+        """
+        for plate in plates:
+            self._autopipette.location_manager.set_drawer_position(plate, 0.0)
+
+    @property
+    def axis_config(self) -> AxisConfig:
+        """Klipper's plate/plunger axis config; "not configured" when unconnected."""
+        state = self.moonraker_state
+        return state.axis_config if state is not None else AxisConfig()
+
+    def _plunger_axis(self) -> str | None:
+        pipette = self.axis_config.pipette
+        return pipette.letter if pipette is not None else None
+
+    def _sync_plunger(self) -> None:
+        """Set ``AutoPipette.plunger`` from Klipper's live state (issue #147).
+
+        None unless Klipper's plunger axis is at stage 2. Otherwise the
+        model is seeded from the reported P position if the plunger is
+        homed, else left unknown (moves refuse), except during a dry run,
+        where an unhomed plunger reads as ``0`` so validation still checks
+        the limits.
+
+        Raises:
+            ValueError: Stage 2 without soft limits, or with limits that
+                aren't ``min < 0`` and ``max <= 0``: tapd's frame
+                (aspiration negative, D26) wouldn't match Klipper's, so fail
+                closed rather than fall back to stage-1 commands Klipper
+                refuses.
+        """
+        ap = self._autopipette
+        pipette = self.axis_config.pipette
+        if pipette is None or pipette.stage < 2:
+            ap.plunger = None
+            return
+        low, high = pipette.position_min, pipette.position_max
+        if low is None or high is None or not low < 0 or high > 0:
+            raise ValueError(
+                f"Klipper's stage-2 plunger limits are {low}...{high}; tapd "
+                "needs a negative minimum and a maximum of at most 0 "
+                "(aspiration is negative). Fix the Klipper config."
+            )
+        state = self.moonraker_state
+        position = (
+            state.axis_position(pipette.letter)
+            if state is not None and state.is_plunger_homed()
+            else None
+        )
+        if position is None and _dry_run.get():
+            position = 0.0
+        ap.plunger = AbsolutePlunger(pipette.letter, low, high, position)
 
     @persist_tip_liquid_state
     def home(self, args: HomeArgs) -> CommandResult:
         """Home one or more motors on the pipette.
 
+        With Klipper's plate/plunger axes configured (issue #146), ``all``
+        relies on bare ``G28`` for the plates and plunger, ``pipette`` homes
+        the plunger with ``G28 P``, and ``plates`` / a plate's name (or its
+        axis letter) emit ``G28 <letter>...``. Only ``all`` clears
+        ``_homing_invalidated``. Without them, behavior is unchanged.
+
         Args:
-            args: Motor specification (x, y, z, pipette, axis, all, servo).
+            args: Motor specification (x, y, z, pipette, all, servo,
+                plates, or a plate name/letter).
 
         Returns:
             Result describing the completed homing operation.
 
         Raises:
-            ValueError: If ``args.motors`` is not a recognized motor name.
+            ValueError: If ``args.motors`` is not a recognized target, or is
+                ``plates`` with no plates configured.
         """
         autopipette = self._autopipette
         motors = args.motors.lower()
+        all_plates = {p.name: p.letter for p in self.axis_config.plates}
+        plates = {
+            name: letter
+            for name, letter in all_plates.items()
+            if motors in {name.lower(), letter.lower()}
+        }
+
+        if motors == "plates":
+            if not all_plates:
+                raise ValueError(
+                    "No plates configured in Klipper (no _PLATE_CFG); nothing to home."
+                )
+            plates = all_plates
+
+        if plates:
+            autopipette.home_plates(plates)
+            name = motors if motors == "plates" else next(iter(plates))
+            self.output_gcode(autopipette.get_gcode(), f"home_{name}.gcode")
+            self._model_plates_in(plates)
+            return CommandResult(ok=True, message=f"Homed {', '.join(plates)}.")
 
         if motors not in HomingTargets.VALID_MOTORS:
-            valid = ", ".join(sorted(HomingTargets.VALID_MOTORS))
+            extra = {"plates", *all_plates} if all_plates else set[str]()
+            valid = ", ".join(sorted(HomingTargets.VALID_MOTORS | extra))
             raise ValueError(
                 f"'{motors}' is not a valid motor specification. Valid options: {valid}"
             )
@@ -864,17 +1113,225 @@ class AutoPipetteService:
             # "all" -- delegate to init_pipette() so coordinate system and
             # speed are always reset alongside homing (identical to init()).
             filename = HomingTargets.MOTOR_SPECIAL[motors]
-            autopipette.init_pipette()
+            autopipette.init_pipette(self._plunger_axis())
             self.output_gcode(autopipette.get_gcode(), filename)
             self._homing_invalidated = False
+            self._model_plates_in(all_plates)
             return CommandResult(
                 ok=True, message="All motors homed (full init complete)."
             )
 
         filename, method_name = HomingTargets.MOTOR_METHODS[motors]
-        getattr(autopipette, method_name)()
+        if motors == "pipette":
+            autopipette.home_pipette_motors(self._plunger_axis())
+        else:
+            getattr(autopipette, method_name)()
         self.output_gcode(autopipette.get_gcode(), filename)
         return CommandResult(ok=True, message=f"Homed {motors}.")
+
+    # ==================== Plate drawer commands (issue #143) ====================
+    #
+    # Klipper's plate macros carry the interlock (umbrella §6.3); these refuse
+    # early with a clear message and keep the compile-time drawer model
+    # (issue #142) in step with what they emit.
+
+    def _plate(self, plate: str) -> PlateAxis:
+        """Resolve a plate by name or axis letter, case-insensitively.
+
+        Args:
+            plate: Plate name (``plate1``...) or its axis letter.
+
+        Returns:
+            Klipper's config for that plate.
+
+        Raises:
+            ValueError: If no plates are configured, or none matches.
+        """
+        plates = self.axis_config.plates
+        if not plates:
+            raise ValueError(_NO_PLATES_MSG)
+        key = plate.lower()
+        for candidate in plates:
+            if key in {candidate.name.lower(), candidate.letter.lower()}:
+                return candidate
+        valid = ", ".join(f"{p.name} ({p.letter})" for p in plates)
+        raise ValueError(f"Unknown plate '{plate}'. Valid: {valid}")
+
+    def _plate_target(self, plate: PlateAxis, target: str) -> float:
+        """Resolve a ``plate_move`` target to mm and check it against travel.
+
+        A stop name from the plate's ``drawers`` entry wins over reading the
+        target as a number.
+
+        Args:
+            plate: The plate being moved.
+            target: A stop name, or a position in mm.
+
+        Returns:
+            The position (mm).
+
+        Raises:
+            ValueError: An unknown stop (listing the valid ones), or a
+                position outside the plate's travel.
+        """
+        drawer = self._autopipette.location_manager.drawers.get(plate.name)
+        if drawer is not None and target in drawer.stops:
+            position = drawer.stops[target]
+        else:
+            try:
+                position = float(target)
+            except ValueError:
+                if drawer is None:
+                    raise ValueError(
+                        f"{plate.name} has no named stops (no 'drawers' entry); "
+                        f"give a position in mm."
+                    ) from None
+                raise ValueError(
+                    f"Unknown stop '{target}' for {plate.name}. "
+                    f"Valid: {', '.join(sorted(drawer.stops))}"
+                ) from None
+        # Klipper's PLATE_MOVE refuses below 0 whatever position_min says.
+        low = max(0.0, plate.position_min or 0.0)
+        high = math.inf if plate.position_max is None else plate.position_max
+        if not low <= position <= high:
+            raise ValueError(
+                f"Position {position:g} mm is outside {plate.name}'s travel "
+                f"({low:g} to {high:g} mm)."
+            )
+        return position
+
+    def _raise_tip_for_plates(self) -> None:
+        """Raise the tip to ``z_safe`` unless Z is known to be there (D49).
+
+        Klipper refuses ``PLATE_MOVE``/``PLATES_IN`` with the tip below
+        ``z_safe`` (raw Z > ``z_safe``; Z0 is fully raised). Known Z is live
+        ``gcode_move`` Z, outside a batch only: in a protocol or dry run
+        live Z is where the tip was before the batch, not where its earlier
+        lines leave it, so the raise is always emitted there. Unknown Z gets
+        the raise too; raising to ``z_safe`` is always safe. A tip already
+        above ``z_safe`` (raw Z <= ``z_safe``) is left alone rather than
+        lowered to it. ``z_safe`` not discovered raises to Z0.
+        """
+        z_safe = self.axis_config.z_safe or 0.0
+        state = self.moonraker_state
+        z = None
+        if (
+            not self.gcode_manager.is_batch_mode
+            and state is not None
+            and "z" in state.homed_axes
+        ):
+            z = state.axis_position("Z")
+        if z is None or z > z_safe:
+            self._autopipette.raise_tip(z_safe)
+
+    def plate_move(self, args: PlateMoveArgs) -> CommandResult:
+        """Move a plate drawer to a named stop or a position (``PLATE_MOVE``).
+
+        Gated by :meth:`require_plates_homed` (Z and that plate); everything
+        is checked before any G-code is emitted. Raises the tip to
+        ``z_safe`` first (:meth:`_raise_tip_for_plates`). Updates the
+        compile-time drawer model.
+
+        Args:
+            args: Plate (name or letter), target (stop or mm), optional speed.
+
+        Returns:
+            Result describing the move.
+
+        Raises:
+            ValueError: No plates configured, unknown plate or stop, a
+                position outside the plate's travel, or a bad speed.
+            NotHomedError: Z or the plate isn't homed.
+        """  # ruff: ignore[docstring-extraneous-exception]
+        plate = self._plate(args.plate)
+        position = self._plate_target(plate, args.target)
+        if args.speed is not None and not (
+            math.isfinite(args.speed) and args.speed > 0
+        ):
+            raise ValueError(f"Invalid speed {args.speed}: must be positive (mm/s).")
+        self.require_plates_homed("plate_move", [plate.name])
+        autopipette = self._autopipette
+        self._raise_tip_for_plates()
+        autopipette.plate_move(plate.name, position, args.speed)
+        self.output_gcode(autopipette.get_gcode())
+        autopipette.location_manager.set_drawer_position(plate.name, position)
+        return CommandResult(
+            ok=True, message=f"Moving {plate.name} to {position:g} mm."
+        )
+
+    def plates_in(self) -> CommandResult:
+        """Move every plate drawer in (``PLATES_IN``).
+
+        Klipper's macro moves every plate, so every plate must be homed.
+        Raises the tip to ``z_safe`` first, like :meth:`plate_move`.
+
+        Returns:
+            Result describing the move.
+
+        Raises:
+            ValueError: No plates configured.
+            NotHomedError: Z or any plate isn't homed.
+        """  # ruff: ignore[docstring-extraneous-exception]
+        names = [p.name for p in self.axis_config.plates]
+        if not names:
+            raise ValueError(_NO_PLATES_MSG)
+        self.require_plates_homed("plates_in", names)
+        self._raise_tip_for_plates()
+        self._autopipette.plates_in()
+        self.output_gcode(self._autopipette.get_gcode())
+        self._model_plates_in(names)
+        return CommandResult(ok=True, message="Moving every plate in.")
+
+    def plates(self) -> CommandResult:
+        """Report each plate drawer's live state, as Klipper reports it.
+
+        Returns:
+            Result with ``data["plates"]``: per plate ``name``, ``letter``,
+            ``homed``, ``position`` (mm, None if unknown), ``stop`` (the
+            nearest named stop within ``park_tol``, else ``in``/``out`` at
+            an end of travel, else None) and ``tip_safe`` (homed and within
+            ``park_tol`` of one of Klipper's tip-safe positions, interlock
+            rule I2). ``ok=False`` with no plates configured.
+        """
+        axes = self.axis_config
+        state = self.moonraker_state
+        if not axes.plates or state is None:
+            return CommandResult(ok=False, message=_NO_PLATES_MSG)
+        tol = axes.park_tol or 0.0
+        drawers = self._autopipette.location_manager.drawers
+        rows: list[dict[str, Any]] = []
+        for plate in axes.plates:
+            homed = state.is_plate_homed(plate.name)
+            position = state.axis_position(plate.letter)
+            stop: str | None = None
+            tip_safe = False
+            if position is not None:
+                drawer = drawers.get(plate.name)
+                ends = {"in": 0.0, "out": plate.position_max}
+                # A named stop wins; the ends of travel are the fallback.
+                for stops in (drawer.stops if drawer is not None else {}, ends):
+                    near = [
+                        (abs(position - mm), name)
+                        for name, mm in stops.items()
+                        if mm is not None and abs(position - mm) <= tol
+                    ]
+                    if near:
+                        stop = min(near)[1]
+                        break
+                tip_safe = homed and any(
+                    abs(position - safe) <= tol for safe in plate.safe_stops
+                )
+            rows.append({
+                "name": plate.name,
+                "letter": plate.letter,
+                "homed": homed,
+                "position": position,
+                "stop": stop,
+                "tip_safe": tip_safe,
+            })
+        return CommandResult(
+            ok=True, message=f"{len(rows)} plate(s).", data={"plates": rows}
+        )
 
     @require_homed("move")
     @persist_tip_liquid_state
@@ -1013,6 +1470,7 @@ class AutoPipetteService:
     # group.
 
     @require_homed("aspirate")
+    @require_plunger_homed("aspirate")
     @persist_tip_liquid_state
     def aspirate(self, args: AspirateArgs) -> CommandResult:
         """Aspirate liquid from a source without dispensing.
@@ -1048,6 +1506,7 @@ class AutoPipetteService:
             post_air_gap_ul=args.post_air_gap_ul,
             prewet_cycles=args.prewet_cycles,
             prewet_vol_ul=args.prewet_vol_ul,
+            air_gap_rise_mm=args.air_gap_rise_mm,
         )
         self.output_gcode(autopipette.get_gcode())
         return CommandResult(
@@ -1055,6 +1514,7 @@ class AutoPipetteService:
         )
 
     @require_homed("dispense")
+    @require_plunger_homed("dispense")
     @persist_tip_liquid_state
     def dispense(self, args: DispenseArgs) -> CommandResult:
         """Dispense previously-aspirated liquid to a destination.
@@ -1094,6 +1554,7 @@ class AutoPipetteService:
         return CommandResult(ok=True, message=message)
 
     @require_homed("pipette")
+    @require_plunger_homed("pipette")
     @persist_tip_liquid_state
     @persist_tip_presence
     def transfer(self, args: PipetteArgs) -> CommandResult:
@@ -1155,6 +1616,7 @@ class AutoPipetteService:
                 post_air_gap_ul=args.post_air_gap_ul,
                 prewet_cycles=args.prewet_cycles,
                 prewet_vol_ul=args.prewet_vol_ul,
+                air_gap_rise_mm=args.air_gap_rise_mm,
                 wiggle=args.wiggle,
                 leftover=args.leftover,
                 tip_end=tip_end,
@@ -1176,6 +1638,7 @@ class AutoPipetteService:
                 post_air_gap_ul=args.post_air_gap_ul,
                 prewet_cycles=args.prewet_cycles,
                 prewet_vol_ul=args.prewet_vol_ul,
+                air_gap_rise_mm=args.air_gap_rise_mm,
                 wiggle=args.wiggle,
                 tip_end=tip_end,
             )
@@ -2698,6 +3161,7 @@ class AutoPipetteService:
 
     @refuse_while_running
     @require_homed("calibrate dispense")
+    @require_plunger_homed("calibrate dispense")
     @persist_tip_liquid_state
     def calibrate_dispense(self) -> CommandResult:
         """Aspirate the next target volume of water and dispense it all.
@@ -2931,7 +3395,9 @@ class AutoPipetteService:
 
         Returns:
             Result with ``data["locations"]``: a list of dicts with
-            ``name``/``type``/``x``/``y``/``z``/``details`` keys.
+            ``name``/``type``/``x``/``y``/``z``/``details`` keys, plus
+            ``drawer``/``stop`` for a location linked to a drawer stop
+            (issue #142).
         """
         loc_mgr = self._autopipette.location_manager
         rows: list[dict[str, Any]] = []
@@ -2959,6 +3425,9 @@ class AutoPipetteService:
                     "z": location.z,
                     "details": "",
                 })
+            if name in loc_mgr.drawer_links:
+                drawer, stop = loc_mgr.drawer_links[name]
+                rows[-1].update(drawer=drawer, stop=stop)
         return CommandResult(
             ok=bool(rows),
             message=f"{len(rows)} location(s)." if rows else "No locations defined.",
@@ -3028,10 +3497,15 @@ class AutoPipetteService:
 
         Returns:
             Result with a flat ``data`` dict of system/pipette/gantry/
-            network settings.
+            network settings, plus ``extra_axes``: Klipper's plate and
+            plunger axis config (`AxisConfig` as a dict; no plates and
+            ``pipette`` None when Klipper doesn't define them), and
+            ``drawers``: each loaded drawer's ``stops``, ``pipetting``
+            stops, modelled ``position`` (None if unknown) and ``source``.
         """
         ap = self._autopipette
         config = ap.system_config
+        axes = self.axis_config
         data = {
             "system_name": config.system_name,
             "version": config.version,
@@ -3046,6 +3520,16 @@ class AutoPipetteService:
             "port": config.network.get("port"),
             "system_profile": ap.config_manager.system_file,
             "system_profiles": [p.name for p in LocalConfigRoots.list_system_configs()],
+            "extra_axes": asdict(axes),
+            "drawers": {
+                name: {
+                    "stops": drawer.stops,
+                    "pipetting": list(drawer.pipetting),
+                    "position": ap.location_manager.drawer_positions.get(name),
+                    "source": drawer.source,
+                }
+                for name, drawer in ap.location_manager.drawers.items()
+            },
         }
         return CommandResult(ok=True, message="System configuration.", data=data)
 
@@ -3207,7 +3691,9 @@ class AutoPipetteService:
     ) -> Generator[None]:
         """Snapshot deck/pipette state, restoring it depending on the outcome.
 
-        Captures four things a protocol replay can advance: which
+        Captures five things a protocol replay can advance: the
+        compile-time drawer-position model
+        (``LocationManager.drawer_positions``, issue #142), which
         locations/tipboxes are registered at all
         (:meth:`LocationManager.snapshot_membership` -- undoes
         ``del_loc``/``clear_locs``/``load_locations``/``unload_locations``),
@@ -3215,7 +3701,8 @@ class AutoPipetteService:
         (:meth:`TipBoxManager.snapshot`), every plate's traversal cursor
         (:meth:`LocationManager.snapshot_cursors`), and the pipette's
         tip/liquid state (``AutoPipette.state.tip_state``/``tip_origin``/
-        ``has_liquid`` plus ``active_liquid``). Membership is restored first,
+        ``has_liquid`` plus ``active_liquid``, and the stage-2 plunger model
+        with the gantry accel it restores, issue #147). Membership is restored first,
         before the other three: doing so brings back the exact original objects, so the
         per-object presence/cursor restores that follow always find a
         shape-matched target -- a location reconfigured under the same name
@@ -3259,6 +3746,7 @@ class AutoPipetteService:
         membership_snapshot = location_manager.snapshot_membership()
         tip_presence_snapshot = tipbox_manager.snapshot()
         cursor_snapshot = location_manager.snapshot_cursors()
+        drawer_positions_snapshot = dict(location_manager.drawer_positions)
         state = autopipette.state
         pipette_state_snapshot = (
             state.tip_state,
@@ -3266,6 +3754,9 @@ class AutoPipetteService:
             state.has_liquid,
             autopipette.active_liquid,
         )
+        # The stage-2 plunger model and the gantry accel its moves restore
+        # (issue #147).
+        motion_snapshot = (copy.copy(autopipette.plunger), autopipette.gantry_accel)
 
         def _restore() -> None:
             # Restoring membership first means every name in
@@ -3276,11 +3767,13 @@ class AutoPipetteService:
             location_manager.restore_membership(membership_snapshot)
             tipbox_manager.restore(tip_presence_snapshot)
             location_manager.restore_cursors(cursor_snapshot)
+            location_manager.drawer_positions = drawer_positions_snapshot
 
             tip_state, tip_origin, has_liquid, active_liquid = pipette_state_snapshot
             state.tip_state = tip_state
             state.tip_origin = tip_origin
             state.has_liquid = has_liquid
+            autopipette.plunger, autopipette.gantry_accel = motion_snapshot
             if active_liquid != autopipette.active_liquid:
                 autopipette.switch_liquid(active_liquid)
             # Discard any G-code comment (e.g. from the switch_liquid call
@@ -3399,6 +3892,9 @@ class AutoPipetteService:
             # upload below it -- see its docstring for why that boundary is
             # the compile-time/runtime-failure line.
             with self.domain_state_snapshot(), gcode_manager.batch_mode():
+                # Seed the stage-2 plunger model once, at protocol start.
+                self._sync_plunger()
+                self._seed_drawer_model()
                 for line in commands:
                     self._dispatch_protocol_line(line)
 
@@ -3623,12 +4119,15 @@ class AutoPipetteService:
                 self.domain_state_snapshot(restore="always"),
                 gcode_manager.batch_mode(),
             ):
+                self._sync_plunger()
+                self._seed_drawer_model()
+                interlock = self._interlock_model()
                 for line_number, raw_line in enumerate(lines, start=1):
                     line = raw_line.strip()
                     if not line or line.startswith("#"):
                         continue
                     self._dispatch_protocol_line_for_validation(
-                        line, line_number, findings, warning_capture
+                        line, line_number, findings, warning_capture, interlock
                     )
         finally:
             autopipette_logger.removeHandler(warning_capture)
@@ -3650,12 +4149,34 @@ class AutoPipetteService:
             ok=error_count == 0, message=message, data={"findings": findings}
         )
 
+    def _interlock_model(self) -> InterlockModel | None:
+        """Seed :class:`InterlockModel` for a dry run (issue #149).
+
+        Plate positions come from the compile-time drawer model, already
+        seeded from live state; Z and the plunger from live state.
+
+        Returns:
+            The model, or None on a machine with no plates and no P axis,
+            whose findings are then exactly as before.
+        """
+        axes = self.axis_config
+        state = self.moonraker_state
+        if state is None or not (axes.plates or axes.pipette):
+            return None
+        return InterlockModel(
+            axes,
+            z=state.axis_position("Z") if "z" in state.homed_axes else None,
+            plates=self._autopipette.location_manager.drawer_positions,
+            plunger_homed=state.is_plunger_homed(),
+        )
+
     def _dispatch_protocol_line_for_validation(
         self,
         line: str,
         line_number: int,
         findings: list[dict[str, Any]],
         warning_capture: _LineWarningCapture,
+        interlock: InterlockModel | None = None,
     ) -> None:
         """Dispatch one line during :meth:`validate_protocol`'s dry run.
 
@@ -3686,6 +4207,9 @@ class AutoPipetteService:
             warning_capture: The whole-file handler :meth:`validate_protocol`
                 attached; drained here so a captured message is attributed
                 to the line that caused it.
+            interlock: Klipper's interlock model (issue #149), fed the
+                G-code a successful line emitted; None on a machine without
+                plates or a P axis.
         """
         try:
             tokens = self._tokenize_protocol_line(line)
@@ -3719,10 +4243,14 @@ class AutoPipetteService:
 
         error_message: str | None = None
         result: CommandResult | None = None
+        emitted = len(self.gcode_manager.get_buffer())
         try:
             result = self._dispatch_protocol_line(line)
         except Exception as exc:
             error_message = str(exc)
+            # Drop whatever the failed line left half-built, so it isn't
+            # checked as the next line's G-code.
+            self._autopipette.get_gcode()
 
         for message in warning_capture.drain():
             findings.append(_finding(line_number, command_name, "warning", message))
@@ -3731,6 +4259,10 @@ class AutoPipetteService:
             findings.append(_finding(line_number, command_name, "error", error_message))
             return
         assert result is not None
+        if interlock is not None:
+            gcode = self.gcode_manager.get_buffer()[emitted:]
+            for severity, message in interlock.check(gcode):
+                findings.append(_finding(line_number, command_name, severity, message))
         if not result.ok:
             findings.append(
                 _finding(line_number, command_name, "warning", result.message)
@@ -3838,10 +4370,40 @@ class AutoPipetteService:
 
         See :meth:`cancel_run` for why this bypasses ``self._lock``.
 
+        Klipper's interlock checks ``RESUME`` too (its ``RESTORE_GCODE_STATE
+        MOVE=1``): if returning the tip would hit a drawer, Klipper refuses
+        and the job stays paused. That refusal is reported on the run status
+        instead of raised, and the next successful resume clears it (issue
+        #150).
+
         Returns:
             The current run status.
+
+        Raises:
+            JsonRpcError: If Moonraker refuses the resume for any reason
+                other than the interlock (today's handling).
         """
-        await asyncio.to_thread(self.send_resume)
+        try:
+            await asyncio.to_thread(self.send_resume)
+        except JsonRpcError as exc:
+            refusal = parse_interlock_refusal(str(exc.error.get("message", "")))
+            if refusal is None:
+                raise
+            self._current = replace(
+                self._current,
+                message=f"Paused: resume refused. {refusal.text}. "
+                "Move the plate to a tip-safe position, then resume.",
+                refusal=refusal,
+            )
+            self._broadcast_status()
+        else:
+            if self._current.refusal is not None:
+                self._current = replace(
+                    self._current,
+                    message=f"Running {self._current.filename}",
+                    refusal=None,
+                )
+                self._broadcast_status()
         return self._current
 
     async def stop_run(self) -> RunStatus:
@@ -3940,17 +4502,24 @@ class AutoPipetteService:
             back onto the service's own event loop before touching any
             asyncio-guarded state.
         """
-        if self._loop is None:
+        if self._loop is None or self.moonraker_state is None:
             return
+        # Read now, on this thread: Klipper sets the message with the state.
+        message = self.moonraker_state.print_message
         asyncio.run_coroutine_threadsafe(
-            self._apply_print_state_change(new_state), self._loop
+            self._apply_print_state_change(new_state, message), self._loop
         )
 
-    async def _apply_print_state_change(self, new_state: str) -> None:
+    async def _apply_print_state_change(
+        self, new_state: str, message: str = ""
+    ) -> None:
         """Update run status from a print-state transition, and broadcast it.
 
         Args:
             new_state: New Klipper ``print_stats.state`` value.
+            message: Klipper's ``print_stats.message``. An interlock refusal
+                in it is reported specifically (issue #150); any other text
+                keeps the generic "Print job error".
         """
         async with self._lock:
             if self._current.status != "running":
@@ -3963,11 +4532,16 @@ class AutoPipetteService:
                     filename=self._current.filename,
                 )
             elif new_state in ("error", "cancelled"):
+                refusal = (
+                    parse_interlock_refusal(message) if new_state == "error" else None
+                )
                 self._current = RunStatus(
                     status="error",
-                    message=f"Print job {new_state}",
+                    message=f"Print job {new_state}"
+                    + (f": {refusal.text}" if refusal else ""),
                     run_id=self._current.run_id,
                     filename=self._current.filename,
+                    refusal=refusal,
                 )
             else:
                 return
@@ -3977,16 +4551,7 @@ class AutoPipetteService:
         """Push the current run status to control-plane clients, if wired up."""
         if self._broadcast_callback is None:
             return
-        self._broadcast_callback(
-            "notify_run_status",
-            {
-                "status": self._current.status,
-                "message": self._current.message,
-                "run_id": self._current.run_id,
-                "filename": self._current.filename,
-                "config_locked": self._current.config_locked,
-            },
-        )
+        self._broadcast_callback("notify_run_status", self._current.to_dict())
 
 
 def _curve(volumes_ul: list[float], travel_mm: list[float]) -> dict[str, Any]:
@@ -4119,6 +4684,10 @@ _LINE_DISPATCH: dict[str, _LineCommand] = {
     "move_rel": _LineCommand(
         TAPCmdParsers.parser_move_rel, MoveRelArgs, AutoPipetteService.move_rel
     ),
+    "plate_move": _LineCommand(
+        TAPCmdParsers.parser_plate_move, PlateMoveArgs, AutoPipetteService.plate_move
+    ),
+    "plates_in": _LineCommand(None, None, AutoPipetteService.plates_in),
     "aspirate": _LineCommand(
         TAPCmdParsers.parser_aspirate, AspirateArgs, AutoPipetteService.aspirate
     ),

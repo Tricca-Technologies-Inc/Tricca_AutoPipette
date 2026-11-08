@@ -21,7 +21,11 @@ from concurrent.futures import Future
 from pathlib import Path
 from typing import Any
 
-from tricca_autopipette.moonraker.websocket_client import MessageType, QueuedMessage
+from tricca_autopipette.moonraker.websocket_client import (
+    JsonRpcError,
+    MessageType,
+    QueuedMessage,
+)
 
 
 class FakeWebSocketClient:
@@ -68,12 +72,19 @@ class FakeWebSocketClient:
         Returns:
             The next queued canned response, or ``{"result": {}}`` if the
             queue is empty.
+
+        Raises:
+            JsonRpcError: If the canned response carries an ``"error"``
+                field, as the real client does.
         """
         del timeout
         self.sent_requests.append(payload)
-        if self._responses:
-            return self._responses.popleft()
-        return {"result": {}}
+        if not self._responses:
+            return {"result": {}}
+        response = self._responses.popleft()
+        if "error" in response:
+            raise JsonRpcError(response["error"])
+        return response
 
     def send_notification(
         self, method: str, params: dict[str, Any] | None = None

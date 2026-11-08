@@ -1,0 +1,92 @@
+#second part of making mega panel a QC3 5mL
+
+# L-Glutamine 80uL
+pipette 40 --extra_air --after_air --src_row 0 --src_col 0 manu2 KIT1 --dispense_vol 40 --tipbox tipbox --prewet 1 --keep_tip
+pipette 40 --extra_air --after_air --src_row 0 --src_col 0 manu2 KIT1 --dispense_vol 40 --tipbox tipbox --prewet 1
+
+# L-Kynurenine 17.5uL
+pipette 17.5 --extra_air --after_air --src_row 1 --src_col 0 manu2 KIT1 --dispense_vol 17.5 --tipbox tipbox --prewet 1
+# L-Leucine 17.5uL
+pipette 17.5 --extra_air --after_air --src_row 2 --src_col 0 manu2 KIT1 --dispense_vol 17.5 --tipbox tipbox --prewet 1
+# L-Methionine 17.5uL
+pipette 17.5 --extra_air --after_air --src_row 3 --src_col 0 manu2 KIT1 --dispense_vol 17.5 --tipbox tipbox --prewet 1
+# L-Tryptophan 80uL
+pipette 40 --extra_air --after_air --src_row 0 --src_col 0 manu1 KIT1 --dispense_vol 40 --tipbox tipbox --prewet 1 --keep_tip
+pipette 40 --extra_air --after_air --src_row 0 --src_col 0 manu1 KIT1 --dispense_vol 40 --tipbox tipbox --prewet 1
+
+# L-Valine 17.5uL
+pipette 17.5 --extra_air --after_air --src_row 1 --src_col 0 manu1 KIT1 --dispense_vol 17.5 --tipbox tipbox --prewet 1
+# Lysine 17.5uL
+pipette 17.5 --extra_air --after_air --src_row 2 --src_col 0 manu1 KIT1 --dispense_vol 17.5 --tipbox tipbox --prewet 1
+# Methionine sulfoxide 17.5uL
+pipette 17.5 --extra_air --after_air --src_row 3 --src_col 0 manu1 KIT1 --dispense_vol 17.5 --tipbox tipbox --prewet 1
+# Methylamine 22.5uL
+pipette 22.5 --extra_air --after_air --src_row 0 --src_col 1 manu2 KIT1 --dispense_vol 22.5 --tipbox tipbox --prewet 1
+# N1,N12-Diacetylspermine 17.5uL
+pipette 17.5 --extra_air --after_air --src_row 1 --src_col 1 manu2 KIT1 --dispense_vol 17.5 --tipbox tipbox --prewet 1
+# N1-Acetylspermidine 22.5uL
+pipette 22.5 --extra_air --after_air --src_row 2 --src_col 1 manu2 KIT1 --dispense_vol 22.5 --tipbox tipbox --prewet 1
+# N1-Acetylspermine 17.5uL
+pipette 17.5 --extra_air --after_air --src_row 3 --src_col 1 manu2 KIT1 --dispense_vol 17.5 --tipbox tipbox --prewet 1
+# N2-Acetyl-L-ornithine 17.5uL
+pipette 17.5 --extra_air --after_air --src_row 0 --src_col 1 manu1 KIT1 --dispense_vol 17.5 --tipbox tipbox --prewet 1
+# N-Acetylputrescine 22.5uL
+pipette 22.5 --extra_air --after_air --src_row 1 --src_col 1 manu1 KIT1 --dispense_vol 22.5 --tipbox tipbox --prewet 1
+# Nicotinamide ribotide 17.5uL
+pipette 17.5 --extra_air --after_air --src_row 2 --src_col 1 manu1 KIT1 --dispense_vol 17.5 --tipbox tipbox --prewet 1
+# Norepinephrine 20uL
+pipette 20 --extra_air --after_air --src_row 3 --src_col 1 manu1 KIT1 --dispense_vol 20 --tipbox tipbox --prewet 1
+# Nudifloramide 17.5uL
+pipette 17.5 --extra_air --after_air --src_row 0 --src_col 2 manu2 KIT1 --dispense_vol 17.5 --tipbox tipbox --prewet 1
+# Ornithine 17.5uL
+pipette 17.5 --extra_air --after_air --src_row 1 --src_col 2 manu2 KIT1 --dispense_vol 17.5 --tipbox tipbox --prewet 1
+# Phenylalanine 17.5uL
+pipette 17.5 --extra_air --after_air --src_row 2 --src_col 2 manu2 KIT1 --dispense_vol 17.5 --tipbox tipbox --prewet 1
+# Phenylethylamine 17.5uL
+pipette 17.5 --extra_air --after_air --src_row 3 --src_col 2 manu2 KIT1 --dispense_vol 17.5 --tipbox tipbox --prewet 1
+# Proline 17.5uL
+pipette 17.5 --extra_air --after_air --src_row 0 --src_col 2 manu1 KIT1 --dispense_vol 17.5 --tipbox tipbox --prewet 1
+# Putrescine 22.5uL
+pipette 22.5 --extra_air --after_air --src_row 1 --src_col 2 manu1 KIT1 --dispense_vol 22.5 --tipbox tipbox --prewet 1
+# Sarcosine 17.5uL
+pipette 17.5 --extra_air --after_air --src_row 2 --src_col 2 manu1 KIT1 --dispense_vol 17.5 --tipbox tipbox --prewet 1
+# Serine 17.5uL
+pipette 17.5 --extra_air --after_air --src_row 3 --src_col 2 manu1 KIT1 --dispense_vol 17.5 --tipbox tipbox --prewet 1
+# Serotonin 20uL
+pipette 20 --extra_air --after_air --src_row 0 --src_col 3 manu2 KIT1 --dispense_vol 20 --tipbox tipbox --prewet 1
+# Spermidine 17.5uL
+pipette 17.5 --extra_air --after_air --src_row 1 --src_col 3 manu2 KIT1 --dispense_vol 17.5 --tipbox tipbox --prewet 1
+# Spermine 17.5uL
+pipette 17.5 --extra_air --after_air --src_row 2 --src_col 3 manu2 KIT1 --dispense_vol 17.5 --tipbox tipbox --prewet 1
+# Taurine 17.5uL
+pipette 17.5 --extra_air --after_air --src_row 3 --src_col 3 manu2 KIT1 --dispense_vol 17.5 --tipbox tipbox --prewet 1
+# Threonine 17.5uL
+pipette 17.5 --extra_air --after_air --src_row 0 --src_col 0 manu4 KIT1 --dispense_vol 17.5 --tipbox tipbox --prewet 1
+# Thymidine 22.5uL
+pipette 22.5 --extra_air --after_air --src_row 1 --src_col 0 manu4 KIT1 --dispense_vol 22.5 --tipbox tipbox --prewet 1
+# Thymine 17.5uL
+pipette 17.5 --extra_air --after_air --src_row 2 --src_col 0 manu4 KIT1 --dispense_vol 17.5 --tipbox tipbox --prewet 1
+# trans-4-Hydroxyproline 17.5uL
+pipette 17.5 --extra_air --after_air --src_row 3 --src_col 0 manu4 KIT1 --dispense_vol 17.5 --tipbox tipbox --prewet 1
+# Trimethylamine 17.5uL
+pipette 17.5 --extra_air --after_air --src_row 0 --src_col 0 manu3 KIT1 --dispense_vol 17.5 --tipbox tipbox --prewet 1
+# Trimethylamine N-oxide 17.5uL
+pipette 17.5 --extra_air --after_air --src_row 1 --src_col 0 manu3 KIT1 --dispense_vol 17.5 --tipbox tipbox --prewet 1
+# Tryptamine 22.5uL
+pipette 22.5 --extra_air --after_air --src_row 2 --src_col 0 manu3 KIT1 --dispense_vol 22.5 --tipbox tipbox --prewet 1
+# Tyramine 22.5uL
+pipette 22.5 --extra_air --after_air --src_row 3 --src_col 0 manu3 KIT1 --dispense_vol 22.5 --tipbox tipbox --prewet 1
+# Tyrosine 160uL
+pipette 60 --extra_air --after_air --src_row 0 --src_col 1 manu4 KIT1 --dispense_vol 60 --tipbox tipbox --prewet 1 --keep_tip
+pipette 50 --extra_air --after_air --src_row 0 --src_col 1 manu4 KIT1 --dispense_vol 50 --tipbox tipbox --prewet 1 --keep_tip
+pipette 50 --extra_air --after_air --src_row 0 --src_col 1 manu4 KIT1 --dispense_vol 50 --tipbox tipbox --prewet 1
+
+# Uracil 22.5uL
+pipette 22.5 --extra_air --after_air --src_row 1 --src_col 1 manu4 KIT1 --dispense_vol 22.5 --tipbox tipbox --prewet 1
+# Urea 15uL
+pipette 15 --extra_air --after_air --src_row 2 --src_col 1 manu4 KIT1 --dispense_vol 15 --tipbox tipbox --prewet 1
+# Uridine 17.5uL
+pipette 17.5 --extra_air --after_air --src_row 3 --src_col 1 manu4 KIT1 --dispense_vol 17.5 --tipbox tipbox --prewet 1
+# L-Glutamic acid 100uL
+pipette 50 --extra_air --after_air --src_row 0 --src_col 1 manu3 KIT1 --dispense_vol 50 --tipbox tipbox --prewet 1 --keep_tip
+pipette 50 --extra_air --after_air --src_row 0 --src_col 1 manu3 KIT1 --dispense_vol 50 --tipbox tipbox --prewet 1

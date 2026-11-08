@@ -27,6 +27,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from fakes.fake_moonraker_state import FakeMoonrakerState
 from support.live_control_plane import LiveControlPlane
 from support.polling import poll_until
 
@@ -34,6 +35,7 @@ from tricca_autopipette.cli import remote_shell as remote_shell_module
 from tricca_autopipette.cli.remote_shell import RemoteTapShell
 from tricca_autopipette.core.pipette_constants import DefaultPaths
 from tricca_autopipette.core.pipette_models import TipState
+from tricca_autopipette.daemon.moonraker_state import AxisConfig, PipetteAxis, PlateAxis
 from tricca_autopipette.daemon.service import RunStatus
 
 
@@ -388,6 +390,33 @@ class TestReporting:
         # config.system_summary round trip reached the renderer at all.
         assert _output(shell).strip() != ""
 
+    def test_ls_system_reports_extra_axes_not_configured(
+        self, shell: RemoteTapShell
+    ) -> None:
+        shell.onecmd_plus_hooks("ls system")
+
+        out = _output(shell)
+        assert "Plates" in out
+        assert "not configured" in out
+
+    def test_ls_system_renders_discovered_extra_axes(
+        self, shell: RemoteTapShell, live_control_plane: LiveControlPlane
+    ) -> None:
+        live_control_plane.service.moonraker_state.axis_config = AxisConfig(  # type: ignore[union-attr]
+            plates=(PlateAxis("plate2", "V", 0.0, 350.0, (0.0, 120.0, 350.0)),),
+            z_safe=0.0,
+            park_tol=0.1,
+            pipette=PipetteAxis("P", 2, -60.0, 0.0),
+        )
+
+        shell.onecmd_plus_hooks("ls system")
+
+        out = _output(shell)
+        assert "plate2 (V)" in out
+        assert "0 to 350 mm, tip-safe at 0, 120, 350" in out
+        assert "z_safe 0, park_tol 0.1" in out
+        assert "P, stage 2, -60 to 0 mm" in out
+
     def test_list_liquids_reports_the_active_liquid(
         self, shell: RemoteTapShell
     ) -> None:
@@ -677,3 +706,55 @@ class TestCalibrate:
         cal_shell.onecmd_plus_hooks("help calibrate")
 
         assert "recalibrate after swapping a syringe" in _output(cal_shell)
+
+
+class TestPlateCommands:
+    """`plate_move`/`plates_in`/`plates` over the wire (issue #143)."""
+
+    @pytest.fixture
+    def plates(self, live_control_plane: LiveControlPlane) -> FakeMoonrakerState:
+        fake = live_control_plane.service.moonraker_state
+        assert isinstance(fake, FakeMoonrakerState)
+        fake.axis_config = AxisConfig(  # type: ignore[misc]
+            plates=(PlateAxis("plate2", "V", 0.0, 350.0, (0.0, 120.0, 350.0)),),
+            z_safe=0.0,
+            park_tol=0.1,
+        )
+        fake.set_homed(True)
+        fake.homed_plates = {"plate2"}
+        return fake
+
+    @pytest.mark.usefixtures("plates")
+    def test_plate_move_and_plates_in_reach_the_daemon(
+        self, shell: RemoteTapShell
+    ) -> None:
+        shell.onecmd_plus_hooks("plate_move V 120 --speed 30")
+        shell.onecmd_plus_hooks("plates_in")
+
+        out = _output(shell)
+        assert "Moving plate2 to 120 mm" in out
+        assert "Moving every plate in" in out
+
+    @pytest.mark.usefixtures("plates")
+    def test_plate_move_refusal_is_surfaced(
+        self, shell: RemoteTapShell, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        capsys.readouterr()
+        shell.onecmd_plus_hooks("plate_move plate2 999")
+        assert "outside" in capsys.readouterr().err
+
+    def test_plates_renders_a_status_table(
+        self, shell: RemoteTapShell, plates: FakeMoonrakerState
+    ) -> None:
+        plates.positions = {"V": 120.0}
+
+        shell.onecmd_plus_hooks("plates")
+
+        out = _output(shell)
+        assert "plate2" in out
+        assert "120" in out
+        assert "Tip-safe" in out
+
+    def test_plates_not_configured(self, shell: RemoteTapShell) -> None:
+        shell.onecmd_plus_hooks("plates")
+        assert "No plates configured" in _output(shell)

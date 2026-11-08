@@ -34,6 +34,7 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     MoveRelArgs,
     PipetteArgs,
     PlateArgs,
+    PlateMoveArgs,
     ResetPlateArgs,
     ResetTipsArgs,
     SeeCalibrationArgs,
@@ -65,6 +66,9 @@ _BUILDER_CALLS: list[tuple[str, tuple[Any, ...]]] = [
     ("move", (MoveArgs(x=1.0, y=1.0, z=1.0),)),
     ("move_loc", (MoveLocArgs(name_loc="bench", row=None, col=None),)),
     ("move_rel", (MoveRelArgs(x=1.0, y=0.0, z=0.0),)),
+    ("plate_move", (PlateMoveArgs(plate="plate1", target="0", speed=None),)),
+    ("plates_in", ()),
+    ("plates", ()),
     (
         "aspirate",
         (
@@ -270,7 +274,7 @@ def test_builder_method_is_dispatchable(
             )
         # Any other ValueError (e.g. a real validation error) means the
         # method WAS recognized -- that's what this test checks for.
-    except (AutoPipetteError, FileNotFoundError, RuntimeError):
+    except AutoPipetteError, FileNotFoundError, RuntimeError:
         # Reaching a real precondition failure (unhomed pipette, missing
         # file, no WebSocket client) means dispatch found the right branch
         # and got as far as calling into the service -- a pass here.

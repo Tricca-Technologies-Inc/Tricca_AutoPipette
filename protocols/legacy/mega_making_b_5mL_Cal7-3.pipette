@@ -1,0 +1,58 @@
+#Third of four parts making 5mL of cal 7 for mega panel b
+
+# L-Lactic acid 25uL
+pipette 25 --extra_air --after_air --src_row 0 --src_col 0 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Maleic acid 25uL
+pipette 25 --extra_air --after_air --src_row 1 --src_col 0 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Malic acid 25uL
+pipette 25 --extra_air --after_air --src_row 2 --src_col 0 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Malonic acid 25uL
+pipette 25 --extra_air --after_air --src_row 3 --src_col 0 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Methylmalonic acid 25uL
+pipette 25 --extra_air --after_air --src_row 0 --src_col 0 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# N1-Acetyl-L-lysine 25uL
+pipette 25 --extra_air --after_air --src_row 1 --src_col 0 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# N6-Acetyl-L-lysine 25uL
+pipette 25 --extra_air --after_air --src_row 2 --src_col 0 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# N-Acetyl-Glycine 25uL
+pipette 25 --extra_air --after_air --src_row 3 --src_col 0 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# N-Acetyl-L-alanine 25uL
+pipette 25 --extra_air --after_air --src_row 0 --src_col 1 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# N-Acetyl-L-arginine 25uL
+pipette 25 --extra_air --after_air --src_row 1 --src_col 1 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# N-Acetyl-L-asparagine 25uL
+pipette 25 --extra_air --after_air --src_row 2 --src_col 1 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# N-Acetyl-L-aspartic acid 25uL
+pipette 25 --extra_air --after_air --src_row 3 --src_col 1 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# N-Acetyl-L-glutamic acid 25uL
+pipette 25 --extra_air --after_air --src_row 0 --src_col 1 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# N-Acetyl-L-glutamine 25uL
+pipette 25 --extra_air --after_air --src_row 1 --src_col 1 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# N-Acetyl-L-histidine 25uL
+pipette 25 --extra_air --after_air --src_row 2 --src_col 1 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# N-Acetyl-L-Isoleucine 25uL
+pipette 25 --extra_air --after_air --src_row 3 --src_col 1 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# N-Acetyl-L-leucine 25uL
+pipette 25 --extra_air --after_air --src_row 0 --src_col 2 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# N-Acetyl-L-methionine 25uL
+pipette 25 --extra_air --after_air --src_row 1 --src_col 2 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# N-Acetyl-L-serine 25uL
+pipette 25 --extra_air --after_air --src_row 2 --src_col 2 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# N-Acetyl-L-tryptophan 25uL
+pipette 25 --extra_air --after_air --src_row 3 --src_col 2 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# N-Acetyl-L-tyrosine 25uL
+pipette 25 --extra_air --after_air --src_row 0 --src_col 2 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# N-Acetyl-L-valine 25uL
+pipette 25 --extra_air --after_air --src_row 1 --src_col 2 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# N-Acetyl-proline 25uL
+pipette 25 --extra_air --after_air --src_row 2 --src_col 2 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# N-Methyl-D-aspartic acid 25uL
+pipette 25 --extra_air --after_air --src_row 3 --src_col 2 manu1 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Orotic acid 25uL
+pipette 25 --extra_air --after_air --src_row 0 --src_col 3 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Oxalacetic acid 25uL
+pipette 25 --extra_air --after_air --src_row 1 --src_col 3 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Oxalic acid 25uL
+pipette 25 --extra_air --after_air --src_row 2 --src_col 3 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1
+# Phenylacetic acid 25uL
+pipette 25 --extra_air --after_air --src_row 3 --src_col 3 manu2 KIT1 --dispense_vol 25 --tipbox tipbox --prewet 1

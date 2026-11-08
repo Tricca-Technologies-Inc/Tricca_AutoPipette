@@ -48,10 +48,17 @@ import re
 from collections.abc import Sequence
 from pathlib import Path
 
+import pytest
+
 from tricca_autopipette.core.autopipette import AutoPipette
 from tricca_autopipette.core.coordinate import Coordinate
+from tricca_autopipette.core.gcode_commands import GCodeCommands
+from tricca_autopipette.core.pipette_models import AbsolutePlunger
 
 GOLDEN = Path(__file__).parents[1] / "fixtures" / "gcode" / "autopipette_emission.gcode"
+EXTRA_AXIS_GOLDEN = GOLDEN.with_name("extra_axis_emission.gcode")
+STAGE2_GOLDEN = GOLDEN.with_name("stage2_plunger_emission.gcode")
+COORDINATED_GOLDEN = GOLDEN.with_name("stage2_coordinated_air_gap_emission.gcode")
 
 
 _NUMBER = re.compile(r"-?\d+(\.\d+)?")
@@ -101,6 +108,128 @@ def test_every_emission_site_emits_unchanged_gcode(
         zip(actual_numbers, golden_numbers, strict=True)
     ):
         assert math.isclose(actual, golden, rel_tol=1e-9), (index, actual, golden)
+
+
+def test_stage2_plunger_emission_sites(pipette_with_plates: AutoPipette) -> None:
+    """Every syringe site with the stage-2 plunger model (issue #147).
+
+    Same calls as the stage-1 test above, minus the relative-mode switch
+    (stage 2 relies on ``G90``), with Klipper's P axis bound and limited to
+    ``-60...0``. S-TAP6-1: no ``SET_POSITION``/``MANUAL_STEPPER`` reaches
+    the plunger, only bracketed absolute ``G1 P`` moves. Reviewed by hand:
+    bare ``G28`` zeroes the model; the -1.125 mm move lands at ``P-1.125``;
+    ``clear_syringe`` returns to ``P0``; ``pipette`` (no air gaps or prewet
+    in this config) aspirates 20 μL = 15.253 mm to ``P-15.253167`` at
+    ``speed_aspirate`` (25 mm/s = F1500) and dispenses all back to ``P0`` at
+    ``speed_dispense`` (F3000). The re-zeros at ``P0`` already are no-ops,
+    so they emit nothing. Each move sets ``accel_move``/``accel_home``
+    (200) and restores the gantry's 3000.
+    """
+    ap = pipette_with_plates
+    ap.plunger = AbsolutePlunger("P", -60.0, 0.0, None)
+    ap.get_gcode()
+
+    ap.init_pipette("P")
+    ap.set_max_accel(3000)
+    ap.move_pipette_stepper(-1.125)
+    ap.clear_syringe()
+    ap.pipette(20.0, "plate_a", "plate_a")
+
+    text = _as_written(ap.get_gcode())
+    assert "MANUAL_STEPPER" not in text
+    actual_text, actual_numbers = _split_numbers(text)
+    golden_text, golden_numbers = _split_numbers(
+        STAGE2_GOLDEN.read_text(encoding="utf-8")
+    )
+    assert actual_text == golden_text
+    for actual, golden in zip(actual_numbers, golden_numbers, strict=True):
+        assert math.isclose(actual, golden, rel_tol=1e-9), (actual, golden)
+
+
+def test_stage2_coordinated_air_gap_emission(pipette_with_plates: AutoPipette) -> None:
+    """Both air gaps drawn during Z moves (issue #148).
+
+    A ``pipette`` with a 4 μL pre and 2 μL post air gap and
+    ``air_gap_rise_mm=2``, at stage 2 from the homed zero. Reviewed by hand:
+    Z stops at 3.0, 2 mm above plate_a's clearance height 5.0; the pre gap
+    (5.519353 mm of plunger) rides the 2 mm descent to ``Z5.0`` at
+    F543.542 = 1500 x 2/5.519353, so the plunger runs at exactly its
+    25 mm/s, with accel 72.472 = 200 x 2/5.519353; the liquid is drawn
+    stationary at the dip; the post gap (4.302626 mm) rides the rise back
+    to ``Z3.0`` at F697.249 / accel 92.966, scaled the same way. Each
+    restores the gantry's 3000.
+    """
+    ap = pipette_with_plates
+    ap.plunger = AbsolutePlunger("P", -60.0, 0.0, 0.0)
+    ap.set_max_accel(3000)
+    ap.get_gcode()
+
+    ap.pipette(
+        20.0,
+        "plate_a",
+        "plate_a",
+        pre_air_gap_ul=4.0,
+        post_air_gap_ul=2.0,
+        air_gap_rise_mm=2.0,
+    )
+
+    text = _as_written(ap.get_gcode())
+    actual_text, actual_numbers = _split_numbers(text)
+    golden_text, golden_numbers = _split_numbers(
+        COORDINATED_GOLDEN.read_text(encoding="utf-8")
+    )
+    assert actual_text == golden_text
+    for actual, golden in zip(actual_numbers, golden_numbers, strict=True):
+        assert math.isclose(actual, golden, rel_tol=1e-9), (actual, golden)
+
+
+def test_extra_axis_builders_emit_the_klipper_contract() -> None:
+    """Every extra-axis emission (issue #137), byte for byte.
+
+    No ``AutoPipette`` site emits these yet (TAP-4/TAP-5 add them), so this
+    drives the builders directly. The golden was written by hand from the
+    Klipper <-> tapd contract (``docs/plans/axis-expansion/00-umbrella-plan.md``
+    §6.3, and ``reference/klipper/plate-macros.cfg``'s macro parameters), not
+    captured from the builders.
+    """
+    gc = GCodeCommands()
+    emitted = [
+        gc.linear_move(z=0, axes={"U": 120.5}, feedrate=3000),
+        gc.linear_move(z=2.0, axes={"P": -3.5}, feedrate=600),
+        gc.home("U", "V", "W", "A", "B", "C"),
+        gc.home("P"),
+        gc.home_plate("plate2"),
+        gc.home_plates(),
+        gc.home_pipette(),
+        gc.plate_move("plate2", 120.5),
+        gc.plate_move("plate2", 0, speed=50),
+        gc.plate_in("plate1"),
+        gc.plate_in("plate1", speed=25),
+        gc.plate_out("plate6"),
+        gc.plate_out("plate6", speed=25),
+        gc.plates_in(),
+        gc.set_velocity_limit(accel=500),
+    ]
+
+    assert "".join(emitted) == EXTRA_AXIS_GOLDEN.read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize(
+    "never_send",
+    [
+        "G1.1",
+        "G0.1",
+        "_BASE",
+        "M84.1",
+        "M18.1",
+        "_PLATE_INTERNAL",
+        "SET_GCODE_VARIABLE",
+    ],
+)
+def test_no_golden_emission_bypasses_the_klipper_interlock(never_send: str) -> None:
+    # Umbrella plan §6.3's never-send list: each bypasses the interlock.
+    for golden in GOLDEN.parent.glob("*.gcode"):
+        assert never_send not in golden.read_text(encoding="utf-8"), golden.name
 
 
 def test_set_trigger_drains_motion_then_drives_the_configured_pin(

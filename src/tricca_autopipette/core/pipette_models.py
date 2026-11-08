@@ -102,6 +102,33 @@ class PipetteState:
         self.tip_state = TipState.ATTACHED if value else TipState.DETACHED
 
 
+@dataclass
+class AbsolutePlunger:
+    """Stage-2 plunger: Klipper's bound axis plus tapd's position model.
+
+    After ``G28 P`` the plunger is absolute, in mm from the switch-release
+    point, with aspiration negative (D26, issue #147). Protocols compile
+    before they run, so ``position_mm`` is where the plunger *will* be once
+    the G-code compiled so far has executed.
+
+    Attributes:
+        letter: G-code axis letter the plunger is bound to (``P``).
+        position_min: Klipper's lower soft limit (mm).
+        position_max: Klipper's upper soft limit (mm).
+        position_mm: Modelled absolute position, or None while the plunger
+            isn't homed (any plunger move then refuses).
+
+    Example:
+        >>> AbsolutePlunger("P", -60.0, 0.0, 0.0).position_mm
+        0.0
+    """
+
+    letter: str
+    position_min: float
+    position_max: float
+    position_mm: float | None = None
+
+
 class FluidDisplacement(IntEnum):
     """Direction of fluid flow in pipetting operations.
 
@@ -255,6 +282,9 @@ class PipetteSyringeKinematics(BaseModel):
         prewet_vol_ul: Default volume drawn per prewet cycle in μL.
         pre_air_gap_ul: Default air drawn before the liquid in μL.
         post_air_gap_ul: Default air drawn after the liquid in μL.
+        air_gap_rise_mm: Default Z travel above the well's clearance height
+            over which the air gaps are drawn, at stage 2 (issue #148); 0
+            draws them stationary.
 
     Example:
         >>> syringe = PipetteSyringeKinematics(
@@ -369,6 +399,15 @@ class PipetteSyringeKinematics(BaseModel):
         description="Air drawn after the liquid, to stop it dripping (μL)",
     )
 
+    air_gap_rise_mm: float = Field(
+        default=0.0,
+        ge=0,
+        description=(
+            "Stage 2 only: draw the air gaps while Z travels this far above "
+            "the well's clearance height (mm); 0 draws them stationary"
+        ),
+    )
+
     def model_post_init(self, __context: Any) -> None:  # ruff:ignore[any-type]
         """Validate calibration data after initialization.
 
@@ -478,6 +517,8 @@ class LiquidProfile(BaseModel):
         prewet_vol_ul: Volume drawn per prewet cycle in μL, or None.
         pre_air_gap_ul: Air drawn before the liquid in μL, or None.
         post_air_gap_ul: Air drawn after the liquid in μL, or None.
+        air_gap_rise_mm: Z travel over which the air gaps are drawn at
+            stage 2 (issue #148), or None.
         calibration_volumes: Calibration volume points in μL (overrides pipette).
         calibration_mm: Corresponding plunger travel in millimetres
             (overrides pipette default).
@@ -548,6 +589,15 @@ class LiquidProfile(BaseModel):
         default=None,
         ge=0,
         description="Air drawn after the liquid, to stop it dripping (μL)",
+    )
+
+    air_gap_rise_mm: float | None = Field(
+        default=None,
+        ge=0,
+        description=(
+            "Stage 2 only: draw the air gaps while Z travels this far above "
+            "the well's clearance height (mm); 0 draws them stationary"
+        ),
     )
 
     # Volume Curve

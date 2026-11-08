@@ -44,12 +44,14 @@ from tricca_autopipette.core.pipette_constants import (
 )
 from tricca_autopipette.core.pipette_exceptions import (
     NotALocationError,
+    NotHomedError,
     NoTipOriginError,
     NoWasteContainerError,
     TipAlreadyOnError,
     VolumeCapacityError,
 )
 from tricca_autopipette.core.pipette_models import (
+    AbsolutePlunger,
     FluidDisplacement,
     GantryKinematics,
     PipetteModel,
@@ -59,9 +61,13 @@ from tricca_autopipette.core.pipette_models import (
     TipEnd,
     TipState,
 )
+from tricca_autopipette.core.plates import Plate
 from tricca_autopipette.core.splits import LeftoverAction, Split
 from tricca_autopipette.core.traversal import well_id_to_rc
 from tricca_autopipette.core.volume_converter import VolumeConverter
+
+#: Float noise tolerated at a stage-2 plunger limit before refusing (mm).
+_PLUNGER_EPS_MM = 1e-6
 
 
 class AutoPipette:
@@ -86,6 +92,12 @@ class AutoPipette:
         last_syringe_travel_mm: Unsigned plunger travel of the most recent
             `operate_syringe` call, in mm -- what a calibration dispense
             actually commanded.
+        plunger: The stage-2 plunger (issue #147), or None for stage 1 and
+            machines without a P axis, whose syringe moves stay relative
+            ``MANUAL_STEPPER`` moves. Set by ``AutoPipetteService`` from
+            Klipper's axis config.
+        gantry_accel: The toolhead acceleration tapd last set (mm/s²), which
+            a stage-2 plunger move restores after its own.
         gcode_buffers: G-code command buffer.
 
     Example:
@@ -157,6 +169,8 @@ class AutoPipette:
         # State tracking
         self.state = PipetteState()
         self.last_syringe_travel_mm = 0.0
+        self.plunger: AbsolutePlunger | None = None
+        self.gantry_accel: float = self.gantry.accel_max
 
         # G-code management
         self.gcode_buffers = GCodeBuffer()
@@ -191,6 +205,7 @@ class AutoPipette:
             prewet_vol_ul=merged["prewet_vol_ul"],
             pre_air_gap_ul=merged["pre_air_gap_ul"],
             post_air_gap_ul=merged["post_air_gap_ul"],
+            air_gap_rise_mm=merged["air_gap_rise_mm"],
         )
         self._technique_provenance = self._compute_technique_provenance()
 
@@ -372,7 +387,7 @@ class AutoPipette:
             f"{len(volumes)} calibration points"
         )
 
-    def init_pipette(self) -> None:
+    def init_pipette(self, plunger_axis: str | None = None) -> None:
         """Initialize all pipette systems and perform homing sequence.
 
         Performs complete initialization including:
@@ -383,6 +398,13 @@ class AutoPipette:
 
         This should be called once after creating an AutoPipette instance
         and before performing any operations.
+
+        Args:
+            plunger_axis: Klipper's plunger axis letter, if it has one
+                (issue #146). Its ``[homing_override]`` then homes the plates
+                and plunger inside bare ``G28``, so the separate
+                ``MANUAL_STEPPER`` plunger homing is left out. None keeps
+                today's sequence.
 
         Note:
             Sets the homed flag to True upon successful completion.
@@ -395,7 +417,11 @@ class AutoPipette:
         self.set_coor_sys(CoordinateSystem.ABSOLUTE)
         self.init_speed()
         self.home_axis()
-        self.home_pipette_motors()
+        if plunger_axis is None:
+            self.home_pipette_motors()
+        else:
+            self.home_servo()
+            self._plunger_homed()
         self.state.homed = True
         self.note_action(
             "Pipette initialized: absolute coordinates, speed configured, "
@@ -485,6 +511,7 @@ class AutoPipette:
             >>> pipette.set_max_accel(3000)  # doctest: +SKIP
         """
         self.logger.debug("Max acceleration: %s mm/s²", accel)
+        self.gantry_accel = accel
         self.gcode_buffers.add(self.gcode_commands.set_velocity_limit(accel=accel))
 
     def home_axis(self) -> None:
@@ -511,11 +538,143 @@ class AutoPipette:
         self.note_action("Homing Z axis")
         self.gcode_buffers.add(self.gcode_commands.home("Z"))
 
-    def home_pipette_motors(self) -> None:
-        """Home all pipette-specific motors."""
+    def home_pipette_motors(self, plunger_axis: str | None = None) -> None:
+        """Home all pipette-specific motors.
+
+        Args:
+            plunger_axis: Klipper's plunger axis letter, if it has one: the
+                stepper is then homed with ``G28 <letter>`` (issue #146),
+                at the same zero. None keeps today's ``MANUAL_STEPPER``
+                homing.
+        """
         self.note_action("Homing pipette motors (servo + stepper)")
         self.home_servo()
-        self.home_pipette_stepper()
+        if plunger_axis is None:
+            self.home_pipette_stepper()
+        else:
+            self.gcode_buffers.add(self.gcode_commands.home(plunger_axis))
+            self._plunger_homed()
+
+    def _plunger_homed(self) -> None:
+        # `G28 P` (or bare G28) sets the stage-2 frame's zero.
+        if self.plunger is not None:
+            self.plunger.position_mm = 0.0
+
+    def move_plunger_to(
+        self,
+        target_mm: float,
+        speed: float,
+        accel: float,
+        z_move: tuple[float, float] | None = None,
+    ) -> None:
+        """Move the stage-2 plunger to an absolute position (issue #147).
+
+        Emits ``SET_VELOCITY_LIMIT ACCEL=<accel>``, ``G1 P<target>
+        F<speed * 60>`` and ``SET_VELOCITY_LIMIT ACCEL=<gantry_accel>``, and
+        advances the position model. A target within float noise of a limit
+        is clamped to it; anything further out is refused before anything is
+        emitted. The target is rounded to 1e-6 mm. Klipper's soft limits
+        stay the authority.
+
+        With ``z_move`` the plunger rides a Z move as one ``G1 Z<to>
+        P<target>`` (issue #148). Klipper's ``F`` and accel then apply to Z,
+        and the plunger moves ``|dP|/|dZ|`` times as fast and as hard, so
+        both are scaled to keep the plunger within ``speed``/``accel``, and
+        Z within its own ``speed_z``/``gantry_accel``.
+
+        Args:
+            target_mm: Absolute target, in mm from the homed zero.
+            speed: Plunger speed, in mm/s.
+            accel: Plunger acceleration, in mm/s².
+            z_move: ``(from, to)`` Z of a move to coordinate with, or None.
+
+        Raises:
+            NotHomedError: If the position model is unknown (plunger not
+                homed).
+            ValueError: If the target leaves Klipper's limits, or is
+                positive: aspiration is negative (D26), so a positive target
+                would drive the plunger the wrong way past its zero.
+        """
+        plunger = self.plunger
+        assert plunger is not None
+        if plunger.position_mm is None:
+            raise NotHomedError("plunger move", "plunger not homed")
+        low, high = plunger.position_min, min(plunger.position_max, 0.0)
+        if low - _PLUNGER_EPS_MM <= target_mm <= high + _PLUNGER_EPS_MM:
+            # Rounded to well under a microstep, so the curve fit's float
+            # noise neither reaches the G-code nor builds up in the model.
+            target_mm = round(min(max(target_mm, low), high), 6) + 0.0  # no -0.0
+        else:
+            raise ValueError(
+                f"Plunger target {plunger.letter}{target_mm:g} mm is outside "
+                f"{low:g}...{high:g} mm; refusing to move the syringe."
+            )
+        gc = self.gcode_commands
+        if target_mm == plunger.position_mm:
+            if z_move is not None:
+                self.gcode_buffers.add(
+                    gc.linear_move(z=z_move[1], feedrate=self.gantry.speed_z)
+                )
+            return
+        z = None
+        feedrate = speed * 60
+        if z_move is not None:
+            z_from, z = z_move
+            ratio = abs(z - z_from) / abs(target_mm - plunger.position_mm)
+            feedrate = round(min(self.gantry.speed_z, feedrate * ratio), 3)
+            accel = round(min(self.gantry_accel, accel * ratio), 3)
+        self.gcode_buffers.add(gc.set_velocity_limit(accel=accel))
+        self.gcode_buffers.add(
+            gc.linear_move(z=z, axes={plunger.letter: target_mm}, feedrate=feedrate)
+        )
+        self.gcode_buffers.add(gc.set_velocity_limit(accel=self.gantry_accel))
+        plunger.position_mm = target_mm
+
+    def home_plates(self, plates: dict[str, str]) -> None:
+        """Home plates with ``G28 <letter>...`` (issue #146).
+
+        Klipper's ``[homing_override]`` homes each one, and refuses unless Z
+        is homed and the tip raised.
+
+        Args:
+            plates: Plate name to axis letter, for the plates to home.
+        """
+        self.note_action(f"Homing plates: {', '.join(plates)}")
+        self.gcode_buffers.add(self.gcode_commands.home(*plates.values()))
+
+    def plate_move(self, plate: str, pos: float, speed: float | None = None) -> None:
+        """Move a plate drawer with Klipper's ``PLATE_MOVE`` macro (issue #143).
+
+        The macro carries Klipper's interlock: it refuses unless Z is homed
+        and raised and the plate is homed, and checks the range itself.
+
+        Args:
+            plate: Plate name (``plate1``...).
+            pos: Target position (mm, 0 = in).
+            speed: Speed (mm/s), or None for the plate's limit.
+        """
+        self.note_action(f"Moving {plate} to {pos:g} mm")
+        self.gcode_buffers.add(self.gcode_commands.plate_move(plate, pos, speed=speed))
+
+    def raise_tip(self, z: float) -> None:
+        """Raise the tip to raw ``z`` before a plate move (owner decision D49).
+
+        Absolute mode first, so a ``G91`` left by a print Klipper aborted
+        part-way can't turn this into a relative move.
+
+        Args:
+            z: Target raw Z (mm; Z0 is fully raised), normally ``z_safe``.
+        """
+        self.note_action(f"Raising the tip to Z{z:g} before a plate move")
+        self.set_coor_sys(CoordinateSystem.ABSOLUTE)
+        self.gcode_buffers.add(
+            self.gcode_commands.linear_move(z=z, feedrate=self.gantry.speed_z)
+        )
+
+    def plates_in(self) -> None:
+        """Move every plate drawer in with Klipper's ``PLATES_IN`` (issue #143)."""
+        self.note_action("Moving every plate in")
+        self.gcode_buffers.add(self.gcode_commands.plates_in())
 
     def home_servo(self) -> None:
         """Retract the tip ejection servo to home position."""
@@ -542,6 +701,12 @@ class AutoPipette:
             speed = self.syringe.speed_dispense  # Use dispense speed for homing
         if accel is None:
             accel = self.syringe.accel_home
+
+        if self.plunger is not None:
+            # Stage 2: the frame is already absolute, so "re-zero" is a move
+            # back to the homed zero; Klipper refuses MANUAL_STEPPER here.
+            self.move_plunger_to(0.0, speed, accel)
+            return
 
         # Deliberate 2x overshoot: a `home` move stops at the endstop trigger
         distance = 2 * self.syringe.max_travel_mm
@@ -646,14 +811,24 @@ class AutoPipette:
         stepper: str | None = None,
         speed: float | None = None,
         accel: float | None = None,
+        z_move: tuple[float, float] | None = None,
     ) -> None:
         """Move the plunger stepper motor a specific distance.
+
+        At stage 2 (``plunger`` set, issue #147) this is an absolute
+        ``G1 P`` to the modelled position plus ``distance``.
 
         Args:
             distance: Distance to move in millimetres.
             stepper: Name of stepper, or None for configured stepper.
             speed: Movement speed in mm/s, or None for default.
             accel: Movement acceleration in mm/s², or None for default.
+            z_move: Stage 2 only: ``(from, to)`` Z of a move the plunger
+                rides (``move_plunger_to``), or None.
+
+        Raises:
+            NotHomedError: At stage 2 (``plunger`` set), if the plunger's
+                position is unknown. ``move_plunger_to`` adds its own refusals.
         """
         if stepper is None:
             stepper = self.syringe.stepper_name
@@ -661,6 +836,15 @@ class AutoPipette:
             speed = self.syringe.speed_dispense
         if accel is None:
             accel = self.syringe.accel_move
+
+        if self.plunger is not None:
+            if self.plunger.position_mm is None:
+                raise NotHomedError("plunger move", "plunger not homed")
+            self.move_plunger_to(
+                self.plunger.position_mm + distance, speed, accel, z_move
+            )
+            return
+        assert z_move is None, "coordinated moves need the stage-2 plunger"
 
         self.logger.debug(
             "MANUAL_STEPPER %s move: distance=%s speed=%s accel=%s",
@@ -731,12 +915,19 @@ class AutoPipette:
             NoTipboxError: If no tipbox has been configured.
             NotALocationError: If `tipbox_name` is given but no box is
                 configured under that name.
+            DrawerNotAtStopError: If the supplying box is linked to a drawer
+                stop and the drawer isn't there; no slot is consumed.
             OutOfTipsError: If every tried tipbox is exhausted. Reload the
                 boxes and run ``reset_tips`` rather than reusing a tip.
             TipAlreadyOnError: If a tip is already attached.
         """  # ruff: ignore[docstring-extraneous-exception]
         if self.state.tip_state == TipState.ATTACHED:
             raise TipAlreadyOnError()
+        # Checked on the box that will supply the tip, before a slot is taken.
+        peeked = self.location_manager.tipbox_manager.peek_tip()
+        supplier = tipbox_name or (peeked[0] if peeked else None)
+        if supplier is not None:
+            self.location_manager.check_drawer(supplier)
 
         # The supplying box comes back with the coordinate: boxes may sit at
         # different heights, so the dip distance must come from *that* box.
@@ -796,6 +987,7 @@ class AutoPipette:
             self.return_tip()
             return
 
+        self._check_drawer_of(self.location_manager.waste_container)
         self.note_action("Disposing tip to waste container")
         curr_coor = self.location_manager.waste_container.next()
         self.move_to(curr_coor)
@@ -820,6 +1012,7 @@ class AutoPipette:
         if self.state.tip_origin is None:
             raise NoTipOriginError()
         name, index = self.state.tip_origin
+        self.location_manager.check_drawer(name)
         box = self.location_manager.tipbox_manager.return_tip(name, index)
         coor = box.wells[index].coor
 
@@ -903,8 +1096,15 @@ class AutoPipette:
         stepper: str | None = None,
         speed: float | None = None,
         accel: float | None = None,
+        z_move: tuple[float, float] | None = None,
     ) -> None:
         """Move syringe to aspirate or dispense a volume.
+
+        The signed travel (direction x ``motor_orientation``, so aspiration
+        is negative) is a relative ``MANUAL_STEPPER`` move at stage 1, and
+        at stage 2 the absolute target ``G1 P<position + travel>``
+        (``move_pipette_stepper``, issue #147), refused before emission if
+        it would leave Klipper's limits.
 
         Args:
             direction: Direction to move the syringe plunger.
@@ -912,6 +1112,8 @@ class AutoPipette:
             stepper: Name of stepper, or None for configured stepper.
             speed: Plunger movement speed in mm/s, or None for default.
             accel: Plunger movement acceleration, or None for default.
+            z_move: Stage 2 only: ``(from, to)`` Z of a move the plunger
+                rides, as one ``G1 Z P`` (issue #148), or None.
 
         Raises:
             ValueError: If the calibration maps ``vol_ul`` to negative plunger
@@ -944,7 +1146,7 @@ class AutoPipette:
             vol_ul,
             travel_mm,
         )
-        self.move_pipette_stepper(travel_mm, stepper, speed, accel)
+        self.move_pipette_stepper(travel_mm, stepper, speed, accel, z_move)
 
     def clear_syringe(
         self,
@@ -965,6 +1167,11 @@ class AutoPipette:
             speed = self.syringe.speed_dispense
         if accel is None:
             accel = self.syringe.accel_home
+
+        if self.plunger is not None:
+            # Stage 2: the soft limit replaces the endstop overshoot.
+            self.move_plunger_to(0.0, speed, accel)
+            return
 
         distance = 2 * self.syringe.max_travel_mm
         distance *= FluidDisplacement.dispense
@@ -1182,8 +1389,17 @@ class AutoPipette:
         post_air_gap_ul: float | None = None,
         prewet_cycles: int | None = None,
         prewet_vol_ul: float | None = None,
+        air_gap_rise_mm: float | None = None,
     ) -> None:
         """Aspirate liquid from a source location into the pipette tip.
+
+        With the stage-2 plunger and a positive ``air_gap_rise_mm`` (issue
+        #148), the pre-aspirate air gap is drawn while Z descends from that
+        far above the well's clearance height (its location Z) to it, and
+        the post-aspirate gap while Z rises back up, each as one ``G1 Z P``.
+        Both segments stay at or above the clearance height, so air is never
+        drawn with the tip in the liquid. Otherwise the gaps are drawn
+        stationary at the clearance height, as before.
 
         Args:
             volume: Volume to aspirate in microliters.
@@ -1197,13 +1413,21 @@ class AutoPipette:
             prewet_cycles: Number of prewet cycles, or None for the profile's value.
             prewet_vol_ul: Volume per prewet cycle in μL, or None for the
                 profile's value.
+            air_gap_rise_mm: Z travel in mm over which the air gaps are
+                drawn at stage 2, or None for the profile's value.
 
         Raises:
-            ValueError: If source is not a plate with dipping strategy.
+            ValueError: If source is not a plate with dipping strategy, or
+                ``air_gap_rise_mm`` is negative.
             VolumeCapacityError: If ``volume`` alone exceeds usable syringe
                 capacity.
             NotALocationError: If ``source`` is not a defined location.
         """  # ruff: ignore[docstring-extraneous-exception]
+        rise = (
+            self.syringe.air_gap_rise_mm if air_gap_rise_mm is None else air_gap_rise_mm
+        )
+        if rise < 0:
+            raise ValueError(f"air_gap_rise must be >= 0 mm, got {rise:g}")
         coor_source = self.location_manager.get_coordinate(source, src_row, src_col)
         loc_source = self.location_manager.locations[source]
 
@@ -1375,6 +1599,7 @@ class AutoPipette:
         post_air_gap_ul: float | None = None,
         prewet_cycles: int | None = None,
         prewet_vol_ul: float | None = None,
+        air_gap_rise_mm: float | None = None,
         wiggle: bool = False,
         tip_end: TipEnd = "waste",
     ) -> None:
@@ -1403,6 +1628,8 @@ class AutoPipette:
             prewet_cycles: Number of prewet cycles, or None for the profile's value.
             prewet_vol_ul: Volume per prewet cycle in μL, or None for the
                 profile's value.
+            air_gap_rise_mm: Z travel over which the air gaps are drawn at
+                stage 2 (see ``aspirate_volume``), or None for the profile's.
             wiggle: If True, shake tip during dispensing.
             tip_end: Where the tip goes afterwards -- see `finish_tip`.
 
@@ -1442,6 +1669,9 @@ class AutoPipette:
         """  # ruff: ignore[docstring-extraneous-exception]
         if vol_ul < 0:
             raise ValueError(f"Invalid volume: {vol_ul}μL. Volume must be positive.")
+        # Refuse before the tip pickup, not partway through the transfer.
+        for name in (source, dest):
+            self.location_manager.check_drawer(name)
 
         # Resolve here as well as in aspirate_volume: chunking below needs the
         # real air overhead, and passing the resolved values down keeps every
@@ -1559,6 +1789,7 @@ class AutoPipette:
             if not self.location_manager.has_location(split.dest):
                 raise NotALocationError(split.dest)
 
+            self.location_manager.check_drawer(split.dest)
             loc = self.location_manager.locations[split.dest]
             if isinstance(loc, Coordinate):
                 raise ValueError(
@@ -1609,6 +1840,7 @@ class AutoPipette:
         post_air_gap_ul: float | None = None,
         prewet_cycles: int | None = None,
         prewet_vol_ul: float | None = None,
+        air_gap_rise_mm: float | None = None,
         wiggle: bool = False,
         leftover: LeftoverAction | None = None,
         tip_end: TipEnd = "waste",
@@ -1636,6 +1868,8 @@ class AutoPipette:
             prewet_cycles: Number of prewet cycles, or None for the profile's value.
             prewet_vol_ul: Volume per prewet cycle in μL, or None for the
                 profile's value.
+            air_gap_rise_mm: Z travel over which the air gaps are drawn at
+                stage 2 (see ``aspirate_volume``), or None for the profile's.
             wiggle: If True, shake tip during each dispense.
             leftover: What to do with liquid remaining after the last split.
                 Required when the splits do not consume the whole aspirate.
@@ -1670,6 +1904,7 @@ class AutoPipette:
             raise ValueError(f"Invalid volume: {vol_ul}μL. Volume must be positive.")
 
         resolved = self.resolve_splits(vol_ul, splits, leftover)
+        self.location_manager.check_drawer(source)
 
         pre_air_gap_ul, post_air_gap_ul, prewet_cycles, prewet_vol_ul = (
             self.resolve_technique(
@@ -1694,6 +1929,7 @@ class AutoPipette:
             post_air_gap_ul=post_air_gap_ul,
             prewet_cycles=prewet_cycles,
             prewet_vol_ul=prewet_vol_ul,
+            air_gap_rise_mm=air_gap_rise_mm,
         )
         # fit_air_volumes may have shrunk the cushion during the aspirate; the
         # first dispense has to purge exactly what actually went in.
@@ -1728,6 +1964,16 @@ class AutoPipette:
         if not has_leftover:
             self.finish_tip(tip_end)
 
+    def _check_drawer_of(self, location: Plate) -> None:
+        """`LocationManager.check_drawer` for a location held by object.
+
+        Args:
+            location: A registered location, e.g. the waste container.
+        """
+        for name, candidate in self.location_manager.locations.items():
+            if candidate is location:
+                self.location_manager.check_drawer(name)
+
     def empty_tip_to_waste(self) -> None:
         """Expel whatever is left in the tip into the waste container.
 
@@ -1740,6 +1986,7 @@ class AutoPipette:
         waste = self.location_manager.waste_container
         if waste is None:
             raise NoWasteContainerError()
+        self._check_drawer_of(waste)
 
         self.note_action("Emptying leftover tip contents to waste container")
         curr_coor = waste.next()

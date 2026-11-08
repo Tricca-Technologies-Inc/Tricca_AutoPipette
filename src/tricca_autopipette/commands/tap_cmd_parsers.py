@@ -22,6 +22,12 @@ from cmd2 import Cmd2ArgumentParser
 from tricca_autopipette.core.pipette_models import TipEnd
 from tricca_autopipette.core.splits import LeftoverAction
 
+_AIR_GAP_RISE_HELP = (
+    "Stage-2 plunger only: draw the air gaps while Z moves this many mm above "
+    "the well's clearance height, as one G1 Z P move each (0 = stationary; "
+    "default: active liquid profile)"
+)
+
 
 def args_from_namespace[ArgsT](
     args_cls: type[ArgsT],
@@ -59,7 +65,8 @@ class HomeArgs:
     """Arguments for the ``home`` command.
 
     Attributes:
-        motors: Which motors to home (x, y, z, pipette, axis, all, servo).
+        motors: Which motors to home (x, y, z, pipette, all, servo,
+            plates, or a plate name/axis letter).
     """
 
     motors: str
@@ -110,6 +117,21 @@ class MoveRelArgs:
     z: float
 
 
+@dataclass
+class PlateMoveArgs:
+    """Arguments for the ``plate_move`` command (issue #143).
+
+    Attributes:
+        plate: Plate name (``plate1``...) or its axis letter.
+        target: A named stop from the ``drawers`` block, or a position in mm.
+        speed: Move speed in mm/s, or None for Klipper's plate limit.
+    """
+
+    plate: str
+    target: str
+    speed: float | None
+
+
 # ===========================================================================
 # Pipetting
 # ===========================================================================
@@ -130,6 +152,8 @@ class AspirateArgs:
             liquid profile's value.
         prewet_cycles: Prewet cycles, or None for the profile's value.
         prewet_vol_ul: Volume per prewet cycle (μL), or None for the profile's.
+        air_gap_rise_mm: Z travel (mm) over which the air gaps are drawn at
+            stage 2, or None for the profile's (issue #148).
     """
 
     vol_ul: float
@@ -140,6 +164,7 @@ class AspirateArgs:
     post_air_gap_ul: float | None
     prewet_cycles: int | None
     prewet_vol_ul: float | None
+    air_gap_rise_mm: float | None = None
 
 
 @dataclass
@@ -193,6 +218,8 @@ class PipetteArgs:
         tip_end: Where the tip goes afterwards -- ``keep``, ``waste``, or
             ``return`` (to the slot it came from) -- or None for the
             default (``waste``, or ``keep`` under ``--keep_tip``).
+        air_gap_rise_mm: Z travel (mm) over which the air gaps are drawn at
+            stage 2, or None for the profile's (issue #148).
     """
 
     vol_ul: float
@@ -213,6 +240,7 @@ class PipetteArgs:
     splits: str | None
     leftover: LeftoverAction | None
     tip_end: TipEnd | None = None
+    air_gap_rise_mm: float | None = None
 
 
 @dataclass
@@ -572,7 +600,11 @@ class TAPCmdParsers:
     parser_home.add_argument(
         "motors",
         type=str,
-        help="Motors to home: x, y, z, pipette, axis, all, servo",
+        help=(
+            "Motors to home: x, y, z, pipette, servo, or all (gantry, "
+            "plunger, servo and any plates); and, where Klipper configures "
+            "plates, plates or a plate name (plate1...) or its axis letter"
+        ),
     )
 
     parser_move: Cmd2ArgumentParser = Cmd2ArgumentParser(
@@ -604,6 +636,24 @@ class TAPCmdParsers:
     )
     parser_move_rel.add_argument(
         "--z", default=0.0, type=float, help="Z-axis offset in mm (default: 0)"
+    )
+
+    parser_plate_move: Cmd2ArgumentParser = Cmd2ArgumentParser(
+        description=(
+            "Move a plate drawer to a named stop or a position in mm. Needs Z "
+            "and the plate homed; raises the tip to z_safe first if it is below it."
+        )
+    )
+    parser_plate_move.add_argument(
+        "plate", type=str, help="Plate name (plate1...) or its axis letter"
+    )
+    parser_plate_move.add_argument(
+        "target",
+        type=str,
+        help="A stop from the locations file's drawers block, or mm (0 = in)",
+    )
+    parser_plate_move.add_argument(
+        "--speed", default=None, type=float, help="Speed in mm/s (default: Klipper's)"
     )
 
     # -----------------------------------------------------------------------
@@ -656,6 +706,13 @@ class TAPCmdParsers:
         default=None,
         type=float,
         help="Volume per prewet cycle in μL (default: active liquid profile)",
+    )
+    parser_aspirate.add_argument(
+        "--air_gap_rise",
+        dest="air_gap_rise_mm",
+        default=None,
+        type=float,
+        help=_AIR_GAP_RISE_HELP,
     )
 
     parser_dispense: Cmd2ArgumentParser = Cmd2ArgumentParser(
@@ -761,6 +818,13 @@ class TAPCmdParsers:
         default=None,
         type=float,
         help="Volume per prewet cycle in μL (default: active liquid profile)",
+    )
+    parser_pipette.add_argument(
+        "--air_gap_rise",
+        dest="air_gap_rise_mm",
+        default=None,
+        type=float,
+        help=_AIR_GAP_RISE_HELP,
     )
     parser_pipette.add_argument(
         "--wiggle",

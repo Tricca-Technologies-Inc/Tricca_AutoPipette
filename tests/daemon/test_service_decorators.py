@@ -14,7 +14,15 @@ from fakes.fake_moonraker_state import FakeMoonrakerState
 
 from tricca_autopipette.commands.tap_cmd_parsers import MoveArgs
 from tricca_autopipette.core.pipette_exceptions import NotHomedError
-from tricca_autopipette.daemon.service import AutoPipetteService, _dry_run
+from tricca_autopipette.daemon.moonraker_state import AxisConfig, PipetteAxis
+from tricca_autopipette.daemon.service import (
+    AutoPipetteService,
+    CommandResult,
+    _dry_run,
+    require_plunger_homed,
+)
+
+STAGE2 = AxisConfig(pipette=PipetteAxis("P", 2, -60.0, 0.0))
 
 
 def _set_homed(service: AutoPipetteService, homed: bool) -> None:
@@ -146,3 +154,83 @@ class TestDryRunShortCircuits:
             _dry_run.reset(token)
 
         assert service_with_plates.moonraker_state.saved_tip_presence == []
+
+
+class TestExtraAxisGates:
+    """Issue #140: early refusals for plate and plunger commands, read from
+
+    live Klipper state. Klipper's interlock stays the authority.
+    """
+
+    def test_plate_gate_names_the_unhomed_plate(
+        self, service: AutoPipetteService
+    ) -> None:
+        assert isinstance(service.moonraker_state, FakeMoonrakerState)
+        _set_homed(service, True)
+        service.moonraker_state.homed_plates = {"plate1"}
+
+        service.require_plates_homed("plate_move", ["plate1"])  # passes
+        with pytest.raises(NotHomedError, match="plate2 not homed"):
+            service.require_plates_homed("plate_move", ["plate1", "plate2"])
+
+    def test_plate_gate_needs_gantry_z_homed_first(
+        self, service: AutoPipetteService
+    ) -> None:
+        assert isinstance(service.moonraker_state, FakeMoonrakerState)
+        _set_homed(service, False)
+        service.moonraker_state.homed_plates = {"plate1"}
+
+        with pytest.raises(NotHomedError, match="Z not homed"):
+            service.require_plates_homed("plate_move", ["plate1"])
+
+    def test_plate_gate_honours_homing_invalidated(
+        self, service: AutoPipetteService
+    ) -> None:
+        assert isinstance(service.moonraker_state, FakeMoonrakerState)
+        _set_homed(service, True)
+        service.moonraker_state.homed_plates = {"plate1"}
+        service._homing_invalidated = True
+
+        with pytest.raises(NotHomedError, match="invalidated"):
+            service.require_plates_homed("plate_move", ["plate1"])
+
+    def test_plate_gate_is_bypassed_in_dry_run(
+        self, service: AutoPipetteService
+    ) -> None:
+        _set_homed(service, False)
+        token = _dry_run.set(True)
+        try:
+            service.require_plates_homed("plate_move", ["plate1"])
+        finally:
+            _dry_run.reset(token)
+
+    def test_plunger_gate_names_the_plunger(self, service: AutoPipetteService) -> None:
+        # Stage 2 only (issue #147): stage 1 keeps today's commands.
+        assert isinstance(service.moonraker_state, FakeMoonrakerState)
+        service.moonraker_state.axis_config = STAGE2  # type: ignore[misc]
+        service.moonraker_state.positions["P"] = 0.0
+
+        @require_plunger_homed("aspirate")
+        def op(self: AutoPipetteService) -> CommandResult:
+            return CommandResult(ok=True, message="moved")
+
+        with pytest.raises(NotHomedError, match="plunger not homed"):
+            op(service)
+        service.moonraker_state.plunger_homed = True
+        assert op(service).ok is True
+
+    def test_plunger_gate_is_bypassed_in_dry_run(
+        self, service: AutoPipetteService
+    ) -> None:
+        assert isinstance(service.moonraker_state, FakeMoonrakerState)
+        service.moonraker_state.axis_config = STAGE2  # type: ignore[misc]
+
+        @require_plunger_homed("aspirate")
+        def op(self: AutoPipetteService) -> CommandResult:
+            return CommandResult(ok=True, message="moved")
+
+        token = _dry_run.set(True)
+        try:
+            assert op(service).ok is True
+        finally:
+            _dry_run.reset(token)

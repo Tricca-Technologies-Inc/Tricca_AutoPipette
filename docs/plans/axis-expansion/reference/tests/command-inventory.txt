@@ -1,0 +1,136 @@
+# Reviewed inventory of every G-code command Klipper registers with this config
+# (Klipper 7bc4d09, configs d7c45ce + plan Rev K reference files).
+# The offline tests (C-45) fail if Klipper registers a command that is not
+# listed here, or if a listed one disappears. Before adding a line, decide how
+# the new command can move Z, a plate or the plunger, and add a check + C-test
+# if it can (WP2 section 4, umbrella section 6.2).
+#
+# Classes:
+#   CHECKED   can cause motion; goes through the interlock
+#   REFUSED   can cause motion; disabled on this machine
+#   BYPASS    renamed original, unchecked by design; never send (tapd or by hand)
+#   INTERNAL  part of the interlock; harmless to call, but SET_GCODE_VARIABLE on
+#             the state/config macros is a bypass (never send)
+#   STATE     changes homed/stepper state; conservative (can only unhome)
+#   NOMOTION  no motion of its own
+#   RESTART   restarts Klipper (everything unhomed)
+#   TESTONLY  exists only because the test harness enables [force_move]
+#
+# name | class | note
+_CHECK_Z_DESCENT | INTERNAL | I2 check for non-G1 Z moves
+_CLEAR_HOMED | INTERNAL | clears all homed flags
+_CLIENT_EXTRUDE | CHECKED | Mainsail macro; moves via G1
+_CLIENT_LINEAR_MOVE | CHECKED | Mainsail macro; moves via G1
+_CLIENT_RETRACT | CHECKED | Mainsail macro; moves via G1
+_CLIENT_VARIABLE | NOMOTION | Mainsail settings
+_GSTATE | INTERNAL | saved-state raw Z store
+_PIPETTE_BIND | INTERNAL | binds the plunger to P
+_PIPETTE_CFG | INTERNAL | plunger config
+_PIPETTE_STATE | INTERNAL | plunger homed flag
+_PLATE_CFG | INTERNAL | plate config, z_safe
+_PLATE_PRECHECK | INTERNAL | PLATE_MOVE pre-check
+_PLATE_STATE | INTERNAL | plate homed flags
+_TOOLHEAD_PARK_PAUSE_CANCEL | CHECKED | Mainsail macro; moves via G1
+CANCEL_PRINT | CHECKED | Mainsail macro; park via G1
+CANCEL_PRINT_BASE | NOMOTION | pause_resume cancel
+CLEAR_PAUSE | NOMOTION |
+DUMP_TMC | NOMOTION |
+ECHO | NOMOTION |
+FIRMWARE_RESTART | RESTART |
+FORCE_MOVE | TESTONLY | production: enable_force_move False
+G0 | CHECKED | forwards to G1
+G0.1 | BYPASS | original G0
+G1 | CHECKED | I1, I2, I6
+G1.1 | BYPASS | original G1
+G20 | NOMOTION |
+G21 | NOMOTION |
+G28 | CHECKED | homing_override: I4, unknown letters refused; G28 Z retract dips to raw Z 3 (owner: clear of all drawers)
+G4 | NOMOTION |
+G90 | NOMOTION |
+G91 | NOMOTION |
+G92 | NOMOTION | X/Y/Z/E only; interlock reads raw position
+GET_POSITION | NOMOTION |
+HELP | NOMOTION |
+HOME_PIPETTE | CHECKED | plunger homing
+HOME_PLATE | CHECKED | I4 + switch-release check
+HOME_PLATES | CHECKED | I4
+INIT_TMC | NOMOTION |
+M105 | NOMOTION |
+M110 | NOMOTION |
+M112 | RESTART | emergency stop
+M114 | NOMOTION |
+M115 | NOMOTION |
+M117 | NOMOTION | tapd uses it
+M118 | NOMOTION |
+M119 | NOMOTION |
+M18 | STATE | clears all homed flags, then motors off
+M18.1 | BYPASS | original M18 (motors off without clearing flags)
+M20 | NOMOTION |
+M204 | NOMOTION |
+M21 | NOMOTION |
+M220 | NOMOTION |
+M221 | NOMOTION |
+M23 | NOMOTION |
+M24 | CHECKED | runs a print file; every line goes through the wrappers
+M25 | NOMOTION |
+M26 | NOMOTION |
+M27 | NOMOTION |
+M28 | NOMOTION |
+M29 | NOMOTION |
+M30 | NOMOTION |
+M400 | NOMOTION | tapd uses it
+M73 | NOMOTION |
+M82 | NOMOTION |
+M83 | NOMOTION |
+M84 | STATE | clears all homed flags, then motors off
+M84.1 | BYPASS | original M84 (motors off without clearing flags)
+MANUAL_PROBE | REFUSED | TESTZ would move Z directly
+MANUAL_PROBE_BASE | BYPASS | original MANUAL_PROBE
+MANUAL_STEPPER | CHECKED | I3; plunger rules per stage
+MANUAL_STEPPER_BASE | BYPASS | original MANUAL_STEPPER
+PAUSE | NOMOTION | machine override: pause in place
+PAUSE_ORIG | NOMOTION | Mainsail PAUSE (saves state)
+PLATE_IN | CHECKED | via PLATE_MOVE
+PLATE_MOVE | CHECKED | pre-check, then G1
+PLATE_OUT | CHECKED | via PLATE_MOVE
+PLATES_IN | CHECKED | via PLATE_MOVE
+QUERY_ADC | NOMOTION |
+QUERY_ENDSTOPS | NOMOTION |
+QUERY_PLATES | NOMOTION |
+RESPOND | NOMOTION |
+RESTART | RESTART |
+RESTORE_GCODE_STATE | CHECKED | MOVE=1 checked against I2
+RESTORE_GCODE_STATE_BASE | BYPASS | original RESTORE_GCODE_STATE
+RESUME | CHECKED | Mainsail macro -> RESUME_BASE -> RESTORE_GCODE_STATE MOVE=1
+RESUME_BASE | CHECKED | pause_resume; moves via RESTORE_GCODE_STATE
+SAVE_CONFIG | RESTART |
+SAVE_GCODE_STATE | INTERNAL | records raw Z per state name
+SAVE_GCODE_STATE_BASE | BYPASS | original (state saved without its raw Z: a later MOVE=1 restore is refused)
+SDCARD_PRINT_FILE | CHECKED | runs a print file through the wrappers
+SDCARD_RESET_FILE | NOMOTION |
+SET_DISPLAY_TEXT | NOMOTION |
+SET_GCODE_OFFSET | CHECKED | MOVE=1 checked against I2
+SET_GCODE_OFFSET_BASE | BYPASS | original SET_GCODE_OFFSET
+SET_GCODE_VARIABLE | NOMOTION | never on _PLATE_CFG/_PLATE_STATE/_PIPETTE_CFG/_PIPETTE_STATE/_GSTATE (bypass)
+SET_IDLE_TIMEOUT | NOMOTION |
+SET_KINEMATIC_POSITION | TESTONLY | production: enable_force_move False
+SET_PAUSE_AT_LAYER | NOMOTION |
+SET_PAUSE_NEXT_LAYER | NOMOTION |
+SET_PRINT_STATS_INFO | NOMOTION |
+SET_PRINT_STATS_INFO_BASE | NOMOTION |
+SET_SERVO | NOMOTION | tip-eject servo
+SET_STEPPER_ENABLE | STATE | unhomes plates/plunger; ENABLE=0 on gantry refused (use M84)
+SET_STEPPER_ENABLE_BASE | BYPASS | original SET_STEPPER_ENABLE
+SET_TMC_CURRENT | NOMOTION | changes holding force; not used by tapd
+SET_TMC_FIELD | NOMOTION |
+SET_VELOCITY_LIMIT | NOMOTION | tapd stage 2 brackets plunger moves
+STATUS | NOMOTION |
+STEPPER_BUZZ | CHECKED | plates: tip raised; Z steppers: I2 for 1 mm
+STEPPER_BUZZ_BASE | BYPASS | original STEPPER_BUZZ
+TEMPERATURE_WAIT | NOMOTION |
+TUNING_TOWER | NOMOTION | changes a parameter as Z moves; the moves are still G1
+TURN_OFF_HEATERS | NOMOTION |
+UPDATE_DELAYED_GCODE | NOMOTION | can only re-run the P bind
+Z_ENDSTOP_CALIBRATE | REFUSED | TESTZ would move Z directly
+Z_ENDSTOP_CALIBRATE_BASE | BYPASS | original Z_ENDSTOP_CALIBRATE
+Z_OFFSET_APPLY_ENDSTOP | NOMOTION | edits config for SAVE_CONFIG

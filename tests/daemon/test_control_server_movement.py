@@ -44,10 +44,10 @@ class TestMovementDispatch:
     def test_movement_home(self, service: AutoPipetteService) -> None:
         server = ControlServer(service)
 
-        result = _call(server, "movement.home", {"motors": "axis"})
+        result = _call(server, "movement.home", {"motors": "x"})
 
         assert result["ok"] is True
-        assert "axis" in result["message"]
+        assert "x" in result["message"]
 
     def test_movement_move_requires_homed(self, service: AutoPipetteService) -> None:
         server = ControlServer(service)

@@ -651,7 +651,7 @@ class JsonConfigManager:
         for path in LocalConfigRoots.list_files("liquids").values():
             try:
                 data = json.loads(path.read_text(encoding="utf-8"))
-            except (OSError, ValueError):
+            except OSError, ValueError:
                 continue
             if (
                 isinstance(data, dict)
@@ -809,8 +809,8 @@ class JsonConfigManager:
             >>> manager = JsonConfigManager()
             >>> _ = manager.load_system_config()
             >>> liquids = manager.list_available_liquids()
-            >>> print(liquids)
-            ['methanol', 'water']
+            >>> "water" in liquids
+            True
         """
         if self.system_config is None:
             return []
@@ -948,6 +948,11 @@ class JsonConfigManager:
                 liquid.post_air_gap_ul
                 if liquid.post_air_gap_ul is not None
                 else syringe.post_air_gap_ul
+            ),
+            "air_gap_rise_mm": (
+                liquid.air_gap_rise_mm
+                if liquid.air_gap_rise_mm is not None
+                else syringe.air_gap_rise_mm
             ),
             # Motor configuration (from syringe only, no liquid override)
             "stepper_name": syringe.stepper_name,

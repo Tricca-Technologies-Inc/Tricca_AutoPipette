@@ -31,6 +31,7 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     MoveRelArgs,
     PipetteArgs,
     PlateArgs,
+    PlateMoveArgs,
     ResetPlateArgs,
     ResetTipsArgs,
     SeeCalibrationArgs,
@@ -62,7 +63,7 @@ class ControlRequests(JsonRpcRequestBuilder):
         """Build a request to home one or more motors.
 
         Args:
-            args: Motor specification (x, y, z, pipette, axis, all, servo).
+            args: Motor specification (x, y, z, pipette, all, servo).
 
         Returns:
             Request to home the given motor(s).
@@ -101,6 +102,33 @@ class ControlRequests(JsonRpcRequestBuilder):
             Request to perform the move.
         """
         return self.gen_request("movement.move_rel", dataclasses.asdict(args))
+
+    def plate_move(self, args: PlateMoveArgs) -> dict[str, Any]:
+        """Build a request to move a plate drawer to a stop or position.
+
+        Args:
+            args: Plate, target (stop name or mm) and optional speed.
+
+        Returns:
+            Request to perform the move.
+        """
+        return self.gen_request("movement.plate_move", dataclasses.asdict(args))
+
+    def plates_in(self) -> dict[str, Any]:
+        """Build a request to move every plate drawer in.
+
+        Returns:
+            Request to perform the move.
+        """
+        return self.gen_request("movement.plates_in")
+
+    def plates(self) -> dict[str, Any]:
+        """Build a request for each plate drawer's live status.
+
+        Returns:
+            Request for the plate status.
+        """
+        return self.gen_request("movement.plates")
 
     def aspirate(self, args: AspirateArgs) -> dict[str, Any]:
         """Build a request to aspirate liquid from a source.

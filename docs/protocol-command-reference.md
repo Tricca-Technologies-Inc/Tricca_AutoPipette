@@ -33,7 +33,9 @@ Usage: home [-h] motors
 Home motors on the pipette.
 
 Positional Arguments:
-  motors      Motors to home: x, y, z, pipette, axis, all, servo
+  motors      Motors to home: x, y, z, pipette, servo, or all (gantry,
+              plunger, servo and any plates); and, where Klipper configures
+              plates, plates or a plate name (plate1...) or its axis letter
 
 Options:
   -h, --help  show this help message and exit
@@ -85,13 +87,39 @@ Options:
   --z Z       Z-axis offset in mm (default: 0)
 ```
 
+### `plate_move`
+
+```
+Usage: plate_move [-h] [--speed SPEED] plate target
+
+Move a plate drawer to a named stop or a position in mm. Needs Z and the plate
+homed; raises the tip to z_safe first if it is below it.
+
+Positional Arguments:
+  plate          Plate name (plate1...) or its axis letter
+  target         A stop from the locations file's drawers block, or mm (0 =
+                 in)
+
+Options:
+  -h, --help     show this help message and exit
+  --speed SPEED  Speed in mm/s (default: Klipper's)
+```
+
+### `plates_in`
+
+```
+Usage: plates_in
+
+Move every plate drawer in (Klipper's PLATES_IN). Needs Z and every plate homed; raises the tip to z_safe first if it is below it.
+```
+
 ### `aspirate`
 
 ```
 Usage: aspirate [-h] [--src_row SRC_ROW] [--src_col SRC_COL]
                 [--pre_air_gap PRE_AIR_GAP_UL]
                 [--post_air_gap POST_AIR_GAP_UL] [--prewet PREWET_CYCLES]
-                [--prewet_vol PREWET_VOL_UL]
+                [--prewet_vol PREWET_VOL_UL] [--air_gap_rise AIR_GAP_RISE_MM]
                 vol_ul source
 
 Aspirate liquid from a source location.
@@ -116,6 +144,11 @@ Options:
   --prewet_vol PREWET_VOL_UL
                         Volume per prewet cycle in μL (default: active liquid
                         profile)
+  --air_gap_rise AIR_GAP_RISE_MM
+                        Stage-2 plunger only: draw the air gaps while Z moves
+                        this many mm above the well's clearance height, as one
+                        G1 Z P move each (0 = stationary; default: active
+                        liquid profile)
 ```
 
 ### `dispense`
@@ -128,16 +161,16 @@ Usage: dispense [-h] [--volume VOLUME] [--dest_row DEST_ROW]
 Dispense liquid to a destination location.
 
 Positional Arguments:
-  dest                  Destination location name
+  dest                 Destination location name
 
 Options:
-  -h, --help            show this help message and exit
-  --volume, -v VOLUME   Volume to dispense in μL (default: all remaining
-                        liquid)
-  --dest_row DEST_ROW   Destination row index (for plate locations)
-  --dest_col DEST_COL   Destination column index (for plate locations)
-  --wiggle              Wiggle tip during dispensing to dislodge residual
-                        droplets
+  -h, --help           show this help message and exit
+  --volume, -v VOLUME  Volume to dispense in μL (default: all remaining
+                       liquid)
+  --dest_row DEST_ROW  Destination row index (for plate locations)
+  --dest_col DEST_COL  Destination column index (for plate locations)
+  --wiggle             Wiggle tip during dispensing to dislodge residual
+                       droplets
 ```
 
 ### `pipette`
@@ -147,9 +180,9 @@ Usage: pipette [-h] [--dispense_vol DISP_VOL_UL] [--src_row SRC_ROW]
                [--src_col SRC_COL] [--dest_row DEST_ROW] [--dest_col DEST_COL]
                [--tipbox TIPBOX_NAME] [--pre_air_gap PRE_AIR_GAP_UL]
                [--post_air_gap POST_AIR_GAP_UL] [--prewet PREWET_CYCLES]
-               [--prewet_vol PREWET_VOL_UL] [--wiggle] [--keep_tip]
-               [--tip_end {keep,waste,return}] [--splits SPLITS]
-               [--leftover {keep,waste}]
+               [--prewet_vol PREWET_VOL_UL] [--air_gap_rise AIR_GAP_RISE_MM]
+               [--wiggle] [--keep_tip] [--tip_end {keep,waste,return}]
+               [--splits SPLITS] [--leftover {keep,waste}]
                vol_ul source dest
 
 Transfer liquid from source to destination.
@@ -181,6 +214,11 @@ Options:
   --prewet_vol PREWET_VOL_UL
                         Volume per prewet cycle in μL (default: active liquid
                         profile)
+  --air_gap_rise AIR_GAP_RISE_MM
+                        Stage-2 plunger only: draw the air gaps while Z moves
+                        this many mm above the well's clearance height, as one
+                        G1 Z P move each (0 = stationary; default: active
+                        liquid profile)
   --wiggle              Wiggle tip during dispensing to dislodge residual
                         droplets
   --keep_tip            Deprecated: same as --tip_end keep
