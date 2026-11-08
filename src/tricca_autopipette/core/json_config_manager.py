@@ -116,6 +116,27 @@ class JsonConfigManager:
         if self.system_config is None:
             raise RuntimeError("No system configuration loaded.")
         return self.system_config
+        
+    def snapshot_runtime_state(self) -> ConfigManagerSnapshot:
+        """Capture active config and runtime membership for protocol rollback."""
+        if self.system_config is None:
+            raise RuntimeError("No system configuration loaded.")
+    
+        return ConfigManagerSnapshot(
+            system_config=copy.deepcopy(self.system_config),
+            system_file=self._system_file,
+            gantry_file=self._gantry_file,
+            pipette_file=self._pipette_file,
+            unloaded_liquids=frozenset(self._unloaded_liquids),
+        )
+
+    def restore_runtime_state(self, snapshot: ConfigManagerSnapshot) -> None:
+        """Restore a snapshot made by snapshot_runtime_state()."""
+        self.system_config = copy.deepcopy(snapshot.system_config)
+        self._system_file = snapshot.system_file
+        self._gantry_file = snapshot.gantry_file
+        self._pipette_file = snapshot.pipette_file
+        self._unloaded_liquids = set(snapshot.unloaded_liquids)
 
     # ========================================================================
     # BATCH LOADING - For initialization
