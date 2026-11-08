@@ -1,0 +1,12 @@
+{
+  "extends": "Tyson_main.json",
+  "gantry": "Tyson_gantry",
+  "pipette": "TysonP100",
+  "liquids": "Tyson100_liquids",
+  "locations": "Tyson100_locations",
+  "network": {
+    "hostname": "tyson.local",
+    "ip": "192.168.0.100"
+  },
+  "trigger_pins": {}
+}

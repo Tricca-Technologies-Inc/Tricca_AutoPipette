@@ -938,7 +938,9 @@ class AutoPipette:
             f"Picking up tip from '{name}' at (X:{loc_tip.x:.2f}, Y:{loc_tip.y:.2f})"
         )
         self.move_to(loc_tip)
-        self.dip_z_down(loc_tip, box.get_dip_distance(vol=None))
+        self.dip_z_down(loc_tip, box.get_dip_distance(vol=None)-2)
+        self.gcode_buffers.add(f"{GCodeCommand.LINEAR_MOVE} Z{self.location_manager.tipboxes.get_dip_distance(vol=None)} F{100}\n")
+        self.gcode_wait(100)
         self.dip_z_return(loc_tip)
         self.state.tip_state = TipState.ATTACHED
         self.state.tip_origin = (name, index)
@@ -994,7 +996,9 @@ class AutoPipette:
         )
         self.eject_tip()
         self.dip_z_return(curr_coor)
-
+        self.move_to(Coordinate(x=150, y=150, z=0))
+        self.home_z() # home z
+        
     def return_tip(self) -> None:
         """Put the current tip back in the tipbox slot it was picked up from.
 
@@ -1073,7 +1077,7 @@ class AutoPipette:
         self.logger.debug("Dipping down to Z=%s", distance)
         coor_dip = Coordinate(x=curr_coor.x, y=curr_coor.y, z=distance)
         self.move_to_z(coor_dip)
-        self.gcode_wait(100)  # Default wait
+        self.gcode_wait(50)  # Default wait
 
     def dip_z_return(self, curr_coor: Coordinate) -> None:
         """Return the pipette to the original Z height.
@@ -1083,7 +1087,7 @@ class AutoPipette:
         """
         self.logger.debug("Returning to Z=%s", curr_coor.z)
         self.move_to_z(curr_coor)
-        self.gcode_wait(100)  # Default wait
+        self.gcode_wait(50)  # Default wait
 
     def operate_syringe(
         self,
@@ -1461,33 +1465,47 @@ class AutoPipette:
             f"prewet={prewet_cycles}x{prewet_vol_ul:g}μL[{sources[2]}/{sources[3]}])"
         )
 
-        # Larger Z lowers the tip and Z0 is fully raised, so `above_z` is
-        # never below the clearance height.
-        clear_z = coor_source.z
-        above_z = max(0.0, clear_z - rise)
-        coordinated = self.plunger is not None and above_z < clear_z
-        if coordinated and pre_air_gap_ul:
-            self.move_to(Coordinate(x=coor_source.x, y=coor_source.y, z=above_z))
-            self.home_pipette_stepper()
-            self.operate_syringe(
-                FluidDisplacement.aspiration, pre_air_gap_ul, z_move=(above_z, clear_z)
-            )
+        self.move_to(coor_source)
+        self.home_pipette_stepper()
+
+        # in the case where the total volume of pipetting plus extra air cushions are above the maximum, the extra air before pipetting is reduced.
+        if pre_air_gap_ul:
+            if (pre_air_gap_ul+volume+post_air_gap_ul>= self.max_volume_ul):
+                ext_vol = self.max_volume_ul - (volume+post_air_ul+2)
+                if ext_vol < 0:
+                    ext_vol = 0
+            else:
+                ext_vol = pre_air_gap_ul
         else:
-            self.move_to(coor_source)
-            self.home_pipette_stepper()
-            if pre_air_gap_ul:
-                self.operate_syringe(FluidDisplacement.aspiration, pre_air_gap_ul)
-
-        self.dip_z_down(coor_source, loc_source.get_dip_distance(volume))
-
+            ext_vol = 0
+            
         # Prewetting cycle
         if prewet_cycles and prewet_vol_ul > PhysicalConstants.VOLUME_TOLERANCE_UL:
+            self.operate_syringe(FluidDisplacement.aspiration, ext_vol, speed=self.syringe.speed_dispense)
+            
+            self.dip_z_down(coor_source, loc_source.get_dip_distance(volume))
+            
             for _ in range(prewet_cycles):
-                self.operate_syringe(FluidDisplacement.aspiration, prewet_vol_ul)
+                self.operate_syringe(FluidDisplacement.aspiration, prewet_vol_ul, speed=self.syringe.speed_dispense)
                 self.gcode_wait(self.syringe.wait_aspirate_ms)
                 self.operate_syringe(FluidDisplacement.dispense, prewet_vol_ul)
                 self.gcode_wait(self.syringe.wait_aspirate_ms)
+            
+            raise_z = 0 if (dip_z - 30) < 0 else dip_z - 30
+            
+            self.move_to_z(Coordinate(
+                x=coor_source.x,
+                y=coor_source.y,
+                z=raise_z
+            ))    
+            
+            self.operate_syringe(FluidDisplacement.dispense, ext_vol)
+            
+        if pre_air_gap_ul:
+            self.operate_syringe(FluidDisplacement.aspiration, ext_vol, speed=self.syringe.speed_dispense)
 
+        self.dip_z_down(coor_source, loc_source.get_dip_distance(volume))
+        
         # Aspirate liquid
         self.operate_syringe(FluidDisplacement.aspiration, volume)
         self.state.has_liquid = True
@@ -1496,11 +1514,7 @@ class AutoPipette:
         self.dip_z_return(coor_source)
 
         if post_air_gap_ul:
-            self.operate_syringe(
-                FluidDisplacement.aspiration,
-                post_air_gap_ul,
-                z_move=(clear_z, above_z) if coordinated else None,
-            )
+            self.operate_syringe(FluidDisplacement.aspiration, post_air_gap_ul, speed=self.syringe.speed_dispense)
 
     def dispense_volume(
         self,
@@ -1662,6 +1676,11 @@ class AutoPipette:
         # Resolve here as well as in aspirate_volume: chunking below needs the
         # real air overhead, and passing the resolved values down keeps every
         # chunk on the same technique even if the liquid were switched.
+        
+        use_aspirate_volume_for_prewet = (
+            prewet_vol_ul is None
+            and self.system_config.liquids[self.active_liquid].prewet_vol_ul is None
+        )
         pre_air_gap_ul, post_air_gap_ul, prewet_cycles, prewet_vol_ul = (
             self.resolve_technique(
                 pre_air_gap_ul, post_air_gap_ul, prewet_cycles, prewet_vol_ul
@@ -1695,6 +1714,9 @@ class AutoPipette:
 
         # Execute transfer sequence
         for pip_vol in transfer_volumes:
+            chunk_prewet_vol_ul = (
+                pip_vol if use_aspirate_volume_for_prewet else prewet_vol_ul
+            )
             self.aspirate_volume(
                 pip_vol,
                 source,
@@ -1703,8 +1725,7 @@ class AutoPipette:
                 pre_air_gap_ul=pre_air_gap_ul,
                 post_air_gap_ul=post_air_gap_ul,
                 prewet_cycles=prewet_cycles,
-                prewet_vol_ul=prewet_vol_ul,
-                air_gap_rise_mm=air_gap_rise_mm,
+                prewet_vol_ul=chunk_prewet_vol_ul,,
             )
 
             # Only dispense the passed in amount if present

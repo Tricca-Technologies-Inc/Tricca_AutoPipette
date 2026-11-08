@@ -1889,6 +1889,53 @@ class AutoPipetteService:
         )
 
     @refuse_while_running
+
+    def select_setup(self, filename: str) -> CommandResult:
+        """Select a pipette setup during protocol replay.
+    
+        A setup is a local system profile containing the pipette model,
+        liquid settings, and locations for one pipette arrangement. The
+        selection doesn't change system/active.json.
+    
+        Args:
+            filename: A profile in the local config root's system/ directory.
+    
+        Returns:
+            Result naming the selected setup.
+    
+        Raises:
+            RuntimeError: If called outside protocol batch mode.
+            ValueError: If a tip is attached or contains liquid.
+            FileNotFoundError: If the profile or its configuration is missing.
+        """
+        if not self.gcode_manager.is_batch_mode:
+            raise RuntimeError("select_setup is only valid inside a protocol.")
+    
+        ap = self._autopipette
+        if ap.state.tip_state == TipState.ATTACHED or ap.state.has_liquid:
+            raise ValueError(
+                "Put away the current tip and empty its contents before "
+                "selecting another setup."
+            )
+    
+        manager = ap.config_manager
+        manager.load_system_config(filename)
+        ap.apply_config()
+    
+        # Always replace the deck: setup profiles may differ in locations,
+        # tipboxes, waste containers, and plate geometry.
+        self._load_locations(ap.location_manager, ap.system_config, None, replace=True)
+    
+        # A pipette profile may change mechanical limits. Require a full init
+        # before the next movement or pipetting command.
+        self._homing_invalidated = True
+    
+        return CommandResult(
+            ok=True,
+            message=f"Selected setup: {filename}. Run 'init' before moving.",
+            data={"filename": filename, "pipette": ap.pipette_model.name},
+        )
+    
     def switch_system(self, filename: str) -> CommandResult:
         """Switch the active local system profile live, without restarting.
 
