@@ -48,7 +48,16 @@ DEFAULT_PIPETTE_REF = "p100_vertical"
 
 logger = logging.getLogger(__name__)
 
+@dataclass(frozen=True)
+class ConfigManagerSnapshot:
+    """Runtime config state to restore after protocol rollback."""
 
+    system_config: SystemConfig
+    system_file: str
+    gantry_file: str | None
+    pipette_file: str | None
+    unloaded_liquids: frozenset[str]
+    
 class JsonConfigManager:
     """Manages JSON-based configuration loading and merging.
 
