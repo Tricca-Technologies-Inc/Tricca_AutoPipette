@@ -1417,6 +1417,11 @@ class AutoPipette:
         # Resolve here as well as in aspirate_volume: chunking below needs the
         # real air overhead, and passing the resolved values down keeps every
         # chunk on the same technique even if the liquid were switched.
+        
+        use_aspirate_volume_for_prewet = (
+            prewet_vol_ul is None
+            and self.system_config.liquids[self.active_liquid].prewet_vol_ul is None
+        )
         pre_air_gap_ul, post_air_gap_ul, prewet_cycles, prewet_vol_ul = (
             self.resolve_technique(
                 pre_air_gap_ul, post_air_gap_ul, prewet_cycles, prewet_vol_ul
@@ -1450,6 +1455,9 @@ class AutoPipette:
 
         # Execute transfer sequence
         for pip_vol in transfer_volumes:
+            chunk_prewet_vol_ul = (
+                pip_vol if use_aspirate_volume_for_prewet else prewet_vol_ul
+            )
             self.aspirate_volume(
                 pip_vol,
                 source,
@@ -1458,7 +1466,7 @@ class AutoPipette:
                 pre_air_gap_ul=pre_air_gap_ul,
                 post_air_gap_ul=post_air_gap_ul,
                 prewet_cycles=prewet_cycles,
-                prewet_vol_ul=prewet_vol_ul,
+                prewet_vol_ul=chunk_prewet_vol_ul,,
             )
 
             # Only dispense the passed in amount if present
