@@ -747,7 +747,9 @@ class AutoPipette:
             f"Picking up tip from '{name}' at (X:{loc_tip.x:.2f}, Y:{loc_tip.y:.2f})"
         )
         self.move_to(loc_tip)
-        self.dip_z_down(loc_tip, box.get_dip_distance(vol=None))
+        self.dip_z_down(loc_tip, box.get_dip_distance(vol=None)-2)
+        self.gcode_buffers.add(f"{GCodeCommand.LINEAR_MOVE} Z{self.location_manager.tipboxes.get_dip_distance(vol=None)} F{100}\n")
+        self.gcode_wait(100)
         self.dip_z_return(loc_tip)
         self.state.tip_state = TipState.ATTACHED
         self.state.tip_origin = (name, index)
