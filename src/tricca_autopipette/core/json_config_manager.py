@@ -13,6 +13,8 @@ import contextlib
 import json
 import logging
 from typing import Any, Literal, cast
+import copy
+from dataclasses import dataclass
 
 from tricca_autopipette.core.pipette_constants import (
     DefaultFilenames,
