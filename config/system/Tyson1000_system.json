@@ -1,0 +1,13 @@
+{
+  "version": "1.0",
+  "system_name": "AutoPipette",
+  "gantry": "Tyson_gantry",
+  "pipette": "TysonP1000",
+  "liquids": "Tyson1000_liquids",
+  "locations": "Tyson1000_locations",
+  "network": {
+    "hostname": "tyson.local",
+    "ip": "192.168.0.100"
+  },
+  "trigger_pins": {}
+}
