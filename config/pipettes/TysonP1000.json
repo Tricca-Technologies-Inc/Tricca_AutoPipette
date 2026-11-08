@@ -1,0 +1,30 @@
+{
+  "name": "TysonP1000",
+  "manufacturer": "Tricca",
+  "description": "1000µL vertical displacement pipette for TAP-Tyson",
+  "design_type": "vertical",
+  "syringe": {
+    "syringe_model": "Hamilton 1000µL",
+    "stepper_name": "pipette_stepper",
+    "motor_orientation": -1,
+    "max_volume_ul": 505.0,
+    "min_volume_ul": 0.5,
+    "capacity_margin_ul": 2.0,
+    "max_travel_mm": 60.0,
+    "calibration_volumes": [501.23, 487.57, 479.03, 469.07, 448.58, 417.87, 398, 377.43, 347.08, 316.36, 297.51, 247.27, 196.15, 147.6, 95.25, 79.24, 49.56],
+    "calibration_mm": [61.9133675, 60.655945, 59.3996875, 58.1445975, 55.6379175, 51.8866425, 49.391625, 46.90125, 43.17447463, 39.458215, 36.9865, 30.8277, 24.698, 18.5975, 12.52625, 10.10575, 6.4841],
+    "speed_aspirate": 30.0,
+    "speed_dispense": 200.0,
+    "accel_home": 200.0,
+    "accel_move": 800.0,
+    "wait_aspirate_ms": 200,
+    "wait_dispense_ms": 200
+  },
+  "servo": {
+    "name": "pipette_servo",
+    "angle_retract": 80,
+    "angle_eject": 60,
+    "wait_ms": 400
+  },
+  "compatible_tips": ["1000µL_standard"]
+}
