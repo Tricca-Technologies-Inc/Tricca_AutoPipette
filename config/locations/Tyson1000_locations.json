@@ -1,1 +1,187 @@
-
+{
+    "plates": [
+        {
+            "name": "waste_container",
+            "type": "waste_container",
+            "x": 48,
+            "y": 53.5,
+            "z": "${BOUNDARY:safe_altitude}",
+            "dip_top": 50
+        },
+        {
+            "name": "tipbox",
+            "type": "tipbox",
+            "x": 32.75,
+            "y": 93.5,
+            "z": "${BOUNDARY:safe_altitude}",
+            "dip_top": 82.5,
+            "num_row": 7,
+            "num_col": 1,
+            "spacing_row": 11.5,
+            "spacing_col": 11.5
+        },
+        {
+            "name": "96wellplate",
+            "type": "array",
+            "x": 324.7,
+            "y": 283.5,
+            "z": "${BOUNDARY:safe_altitude}",
+            "dip_top": 9,
+            "num_row": 8,
+            "num_col": 12,
+            "spacing_row": 9,
+            "spacing_col": 9
+        },
+        {
+            "name": "pcrplate",
+            "type": "array",
+            "x": 324.5,
+            "y": 283.5,
+            "z": "${BOUNDARY:safe_altitude}",
+            "dip_top": 7,
+            "num_row": 8,
+            "num_col": 12,
+            "spacing_row": 9,
+            "spacing_col": 9
+        },
+        {
+            "name": "SOLV",
+            "type": "singleton",
+            "x": 56.5,
+            "y": 147,
+            "z": "${BOUNDARY:safe_altitude}",
+            "dip_top": 27,
+            "dip_btm": 117,
+            "dip_func": "cylinder",
+            "well_diameter": 27
+        },
+        {
+            "name": "WATER",
+            "type": "singleton",
+            "x": 56.5,
+            "y": 148,
+            "z": "${BOUNDARY:safe_altitude}",
+            "dip_top": 27,
+            "dip_btm": 117,
+            "dip_func": "cylinder",
+            "well_diameter": 27
+        },
+        {
+            "name": "DFIBUF",
+            "type": "singleton",
+            "x": 56.5,
+            "y": 111,
+            "z": "${BOUNDARY:safe_altitude}",
+            "dip_top": 27,
+            "dip_btm": 117,
+            "dip_func": "cylinder",
+            "well_diameter": 27
+        },
+        {
+            "name": "ICEM",
+            "type": "singleton",
+            "x": 125.5,
+            "y": 149,
+            "z": "${BOUNDARY:safe_altitude}",
+            "dip_top": 29,
+            "dip_btm": 80,
+            "dip_func": "cylinder",
+            "well_diameter": 17.6
+        },
+        {
+            "name": "LCPLATE",
+            "type": "array",
+            "x": 324.7,
+            "y": 191,
+            "z": "${BOUNDARY:safe_altitude}",
+            "dip_top": 15,
+            "num_row": 8,
+            "num_col": 12,
+            "spacing_row": 9,
+            "spacing_col": 9
+        },
+        {
+            "name": "DFIPLATE",
+            "type": "array",
+            "x": 132.5,
+            "y": 191,
+            "z": "${BOUNDARY:safe_altitude}",
+            "dip_top": 15,
+            "num_row": 8,
+            "num_col": 12,
+            "spacing_row": 9,
+            "spacing_col": 9
+        },
+        {
+            "name": "MSPLATE",
+            "type": "array",
+            "x": 132.5,
+            "y": 191,
+            "z": "${BOUNDARY:safe_altitude}",
+            "dip_top": 14,
+            "num_row": 8,
+            "num_col": 12,
+            "spacing_row": 9,
+            "spacing_col": 9
+        },
+        {
+            "name": "STANS1_FULL",
+            "type": "array",
+            "x": 327,
+            "y": 186.5,
+            "z": "${BOUNDARY:safe_altitude}",
+            "dip_top": 8,
+            "num_row": 4,
+            "num_col": 8,
+            "spacing_row": 21.67,
+            "spacing_col": 15.86
+        },
+        {
+            "name": "STANS2",
+            "type": "array",
+            "x": 327,
+            "y": 186.5,
+            "z": "${BOUNDARY:safe_altitude}",
+            "dip_top": 8,
+            "num_row": 4,
+            "num_col": 8,
+            "spacing_row": 21.67,
+            "spacing_col": 15.86
+        },
+        {
+            "name": "STANS3",
+            "type": "array",
+            "x": 327,
+            "y": 3,
+            "z": "${BOUNDARY:safe_altitude}",
+            "dip_top": 8,
+            "num_row": 4,
+            "num_col": 8,
+            "spacing_row": 21.67,
+            "spacing_col": 15.86
+        },
+        {
+            "name": "MANU1",
+            "type": "array",
+            "x": 135.5,
+            "y": 195,
+            "z": "${BOUNDARY:safe_altitude}",
+            "dip_top": 50.8,
+            "num_row": 4,
+            "num_col": 3,
+            "spacing_row": 17,
+            "spacing_col": 35
+        },
+        {
+            "name": "KIT1",
+            "type": "singleton",
+            "x": 125.5,
+            "y": 149,
+            "z": "${BOUNDARY:safe_altitude}",
+            "dip_top": 35,
+            "dip_btm": 35,
+            "dip_func": "cylinder",
+            "well_diameter": 17.6
+        }
+    ]
+}
