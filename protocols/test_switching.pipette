@@ -1,0 +1,16 @@
+# test protocol to test switching between pipettes in a protocol
+
+select_setup Tyson100_system.json
+init
+
+pipette 50.0 --src_row 0 --src_col 0 manu2 KIT1 --tipbox tipbox --prewet 1 --prewet_vol 50.0
+
+select_setup Tyson1000_system.json
+init
+
+pipette 150 WATER KIT1 --tipbox tipbox  --prewet5
+
+select_setup Tyson100_system.json
+init
+
+pipette 50.0 --src_row 0 --src_col 0 manu2 KIT1 --tipbox tipbox --prewet 1
