@@ -1,0 +1,112 @@
+# MEGA Panel A adding PITC to each well of the plate
+#
+select_setup Tyson100_system.json
+init
+#
+# This protocol uses the Tyson100 liquid profile's air gaps explicitly:
+# pre-air 30 µL, post-air 5 µL. Each prewet cycle uses the transfer volume.
+
+
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox --prewet 5
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0 --tip_end keep PITC1 96wellplatePITC --tipbox tipbox
+pipette 50.0  PITC1 96wellplatePITC --tipbox tipbox
