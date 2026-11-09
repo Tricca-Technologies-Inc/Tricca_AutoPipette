@@ -1887,9 +1887,7 @@ class AutoPipetteService:
             message=f"Loaded pipette: {name}. Run 'init' before moving.",
             data={"name": name},
         )
-
-   
-
+        
     def select_setup(self, filename: str) -> CommandResult:
         """Select a pipette setup during protocol replay.
     
