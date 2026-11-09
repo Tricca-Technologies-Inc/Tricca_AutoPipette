@@ -3743,6 +3743,10 @@ class AutoPipetteService:
         location_manager = autopipette.location_manager
         tipbox_manager = location_manager.tipbox_manager
 
+        config_manager = autopipette.config_manager
+        config_snapshot = config_manager.snapshot_runtime_state()
+        homing_invalidated_snapshot = self._homing_invalidated
+        
         membership_snapshot = location_manager.snapshot_membership()
         tip_presence_snapshot = tipbox_manager.snapshot()
         cursor_snapshot = location_manager.snapshot_cursors()
@@ -3757,8 +3761,18 @@ class AutoPipetteService:
         # The stage-2 plunger model and the gantry accel its moves restore
         # (issue #147).
         motion_snapshot = (copy.copy(autopipette.plunger), autopipette.gantry_accel)
-
+        config_manager = autopipette.config_manager
+        config_snapshot = config_manager.snapshot_runtime_state()
+        homing_invalidated_snapshot = self._homing_invalidated
+        
         def _restore() -> None:
+            # Restore the selected system profile and rebuild AutoPipette's
+            # derived pipette/liquid/gantry settings before restoring the
+            # deck and its operational state.
+            config_manager.restore_runtime_state(config_snapshot)
+            autopipette.apply_config()
+
+            location_manager.restore_membership(membership_snapshot)
             # Restoring membership first means every name in
             # tip_presence_snapshot/cursor_snapshot maps back onto the exact
             # object it was captured from -- shape mismatches from a
@@ -3776,6 +3790,9 @@ class AutoPipetteService:
             autopipette.plunger, autopipette.gantry_accel = motion_snapshot
             if active_liquid != autopipette.active_liquid:
                 autopipette.switch_liquid(active_liquid)
+
+            self._homing_invalidated = homing_invalidated_snapshot
+
             # Discard any G-code comment (e.g. from the switch_liquid call
             # just above, or from a prior line in the now-aborted batch,
             # such as its own switch_liquid) that accumulated in the domain
