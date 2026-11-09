@@ -1888,7 +1888,7 @@ class AutoPipetteService:
             data={"name": name},
         )
 
-    @refuse_while_running
+   
 
     def select_setup(self, filename: str) -> CommandResult:
         """Select a pipette setup during protocol replay.
@@ -1935,7 +1935,7 @@ class AutoPipetteService:
             message=f"Selected setup: {filename}. Run 'init' before moving.",
             data={"filename": filename, "pipette": ap.pipette_model.name},
         )
-    
+    @refuse_while_running
     def switch_system(self, filename: str) -> CommandResult:
         """Switch the active local system profile live, without restarting.
 
