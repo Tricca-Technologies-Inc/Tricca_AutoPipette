@@ -1,9 +1,7 @@
 # A protocol for making prime panel A 10mL, by column (like a 96-well plate).
 #
-# System profile selection is daemon-level, not a protocol command. Start tapd
-# with: tapd --config Tyson100_system.json
-# The profile is resolved from the machine's local system/ config directory.
-# Home/init the machine after selecting the profile and before running this file.
+select_setup Tyson100_system.json
+init
 #
 # This protocol uses the Tyson100 liquid profile's air gaps explicitly:
 # pre-air 30 µL, post-air 5 µL. Each prewet cycle uses the transfer volume.
