@@ -1,0 +1,110 @@
+#Adding 300uL of extraction solvent to the wells of the filter plate
+#
+select_setup Tyson1000_system.json
+init
+#
+
+
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox --prewet 5
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 --tip_end keep SOLV 96wellplate --tipbox tipbox
+pipette 300.0 SOLV 96wellplate --tipbox tipbox
