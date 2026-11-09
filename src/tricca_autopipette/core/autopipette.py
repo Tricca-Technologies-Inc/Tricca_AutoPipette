@@ -1725,7 +1725,7 @@ class AutoPipette:
                 pre_air_gap_ul=pre_air_gap_ul,
                 post_air_gap_ul=post_air_gap_ul,
                 prewet_cycles=prewet_cycles,
-                prewet_vol_ul=chunk_prewet_vol_ul,,
+                prewet_vol_ul=chunk_prewet_vol_ul,
             )
 
             # Only dispense the passed in amount if present
