@@ -8,6 +8,7 @@
   "network": {
     "hostname": "tyson.local",
     "ip": "192.168.0.100"
+    "port": "7125"
   },
   "trigger_pins": {}
 }
