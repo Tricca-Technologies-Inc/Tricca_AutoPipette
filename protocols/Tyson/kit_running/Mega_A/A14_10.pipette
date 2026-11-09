@@ -1,0 +1,207 @@
+# adding 10uL to each well of the DFI plate for Fia for Mega Panel A. No tip prewetting... 
+#
+select_setup Tyson100_system.json
+init
+#
+# This protocol uses the Tyson100 liquid profile's air gaps explicitly:
+# pre-air 30 µL, post-air 5 µL. Each prewet cycle uses the transfer volume.
+
+
+pipette 10.0 --src_row 0 --src_col 0 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 0 --src_col 1 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 0 --src_col 2 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 0 --src_col 3 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 0 --src_col 4 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 0 --src_col 5 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 0 --src_col 6 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 0 --src_col 7 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 0 --src_col 8 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 0 --src_col 9 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 0 --src_col 10 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 0 --src_col 11 COLPLATE DFIPLATE --tipbox tipbox 
+
+
+pipette 10.0 --src_row 1 --src_col 0 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 1 --src_col 1 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 1 --src_col 2 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 1 --src_col 3 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 1 --src_col 4 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 1 --src_col 5 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 1 --src_col 6 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 1 --src_col 7 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 1 --src_col 8 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 1 --src_col 9 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 1 --src_col 10 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 1 --src_col 11 COLPLATE DFIPLATE --tipbox tipbox 
+
+
+pipette 10.0 --src_row 2 --src_col 0 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 2 --src_col 1 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 2 --src_col 2 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 2 --src_col 3 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 2 --src_col 4 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 2 --src_col 5 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 2 --src_col 6 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 2 --src_col 7 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 2 --src_col 8 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 2 --src_col 9 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 2 --src_col 10 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 2 --src_col 11 COLPLATE DFIPLATE --tipbox tipbox 
+
+
+pipette 10.0 --src_row 3 --src_col 0 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 3 --src_col 1 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 3 --src_col 2 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 3 --src_col 3 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 3 --src_col 4 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 3 --src_col 5 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 3 --src_col 6 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 3 --src_col 7 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 3 --src_col 8 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 3 --src_col 9 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 3 --src_col 10 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 3 --src_col 11 COLPLATE DFIPLATE --tipbox tipbox 
+
+
+pipette 10.0 --src_row 4 --src_col 0 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 4 --src_col 1 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 4 --src_col 2 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 4 --src_col 3 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 4 --src_col 4 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 4 --src_col 5 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 4 --src_col 6 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 4 --src_col 7 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 4 --src_col 8 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 4 --src_col 9 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 4 --src_col 10 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 4 --src_col 11 COLPLATE DFIPLATE --tipbox tipbox 
+
+
+pipette 10.0 --src_row 5 --src_col 0 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 5 --src_col 1 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 5 --src_col 2 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 5 --src_col 3 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 5 --src_col 4 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 5 --src_col 5 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 5 --src_col 6 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 5 --src_col 7 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 5 --src_col 8 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 5 --src_col 9 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 5 --src_col 10 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 5 --src_col 11 COLPLATE DFIPLATE --tipbox tipbox 
+
+
+pipette 10.0 --src_row 6 --src_col 0 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 6 --src_col 1 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 6 --src_col 2 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 6 --src_col 3 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 6 --src_col 4 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 6 --src_col 5 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 6 --src_col 6 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 6 --src_col 7 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 6 --src_col 8 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 6 --src_col 9 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 6 --src_col 10 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 6 --src_col 11 COLPLATE DFIPLATE --tipbox tipbox 
+
+
+pipette 10.0 --src_row 7 --src_col 0 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 7 --src_col 1 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 7 --src_col 2 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 7 --src_col 3 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 7 --src_col 4 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 7 --src_col 5 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 7 --src_col 6 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 7 --src_col 7 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 7 --src_col 8 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 7 --src_col 9 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 7 --src_col 10 COLPLATE DFIPLATE --tipbox tipbox 
+
+pipette 10.0 --src_row 7 --src_col 11 COLPLATE DFIPLATE --tipbox tipbox 
