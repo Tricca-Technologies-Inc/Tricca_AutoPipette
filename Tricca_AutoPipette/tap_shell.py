@@ -261,7 +261,7 @@ class TriccaAutoPipetteShell(Cmd):
             try:
                 response = self.client.send_jsonrpc(payload)
                 with self.terminal_lock:
-                    self.async_alert(f"Response: {response}")
+                    self.add_alert(msg=f"Response: {response}")
                 logger.debug(f"RPC response: {response}")
             except json.JSONDecodeError as jde:
                 error_msg = f"JSON decode error in params: {jde}"
@@ -295,7 +295,7 @@ class TriccaAutoPipetteShell(Cmd):
             try:
                 server_path = future.result()
                 with self.terminal_lock:
-                    self.async_alert(f"Upload successful. Server path: {server_path}")
+                    self.add_alert(msg=f"Upload successful. Server path: {server_path}")
                 self.poutput(f"Upload successful. Server path: {server_path}")
                 logger.info(f"Uploaded {filename} to {server_path}")
             except Exception as e:
@@ -328,7 +328,7 @@ class TriccaAutoPipetteShell(Cmd):
             try:
                 server_path = future.result()
                 with self.terminal_lock:
-                    self.async_alert(f"Upload successful. Server path: {server_path}")
+                    self.add_alert(msg=f"Upload successful. Server path: {server_path}")
 
                 self.send_rpc(self.mrr.printer_print_start(filename))
                 logger.info(f"Started execution of {filename}")
