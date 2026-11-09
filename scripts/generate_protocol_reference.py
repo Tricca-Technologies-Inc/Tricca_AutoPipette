@@ -171,6 +171,14 @@ _COMMANDS: list[_CommandDoc] = [
     ),
     # -- Configuration & locations --------------------------------------------
     _CommandDoc("set", parser=TAPCmdParsers.parser_set),
+    _CommandDoc(
++        "select_setup",
++        manual_usage=(
++            "Usage: select_setup <filename>\n\n"
++            "Select a local system setup for this protocol. The setup replaces "
++            "the deck and requires 'init' before movement."
++        ),
++    ),
     _CommandDoc("coor", parser=TAPCmdParsers.parser_coor),
     _CommandDoc("plate", parser=TAPCmdParsers.parser_plate),
     _CommandDoc("reset_plate", parser=TAPCmdParsers.parser_reset_plate),
