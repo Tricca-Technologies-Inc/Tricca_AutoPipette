@@ -90,7 +90,9 @@ class TriccaAutoPipetteShell(Cmd):
             startup_script=startup_script,
             auto_load_commands=False,
         )
-
+        
+        self.terminal_lock = threading.RLock()
+        
         # Prompt configuration
         self.intro = ""
         self.prompt: str = "autopipette >> "
