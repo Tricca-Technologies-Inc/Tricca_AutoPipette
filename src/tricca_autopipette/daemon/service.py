@@ -4772,4 +4772,5 @@ _STR_ARG_DISPATCH: dict[str, Callable[[AutoPipetteService, str], CommandResult]]
     "switch_liquid": AutoPipetteService.switch_liquid,
     "load_liquid": AutoPipetteService.load_liquid,
     "save_locations": AutoPipetteService.save_locations,
+    "select_setup": AutoPipetteService.select_setup,
 }
