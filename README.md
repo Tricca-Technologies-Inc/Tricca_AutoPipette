@@ -43,12 +43,14 @@ address.
 - [`CLAUDE.md`](CLAUDE.md) — architecture deep-dive: components, the `tapd`
   daemon, domain model, config system, and code style.
 - [`CONTEXT.md`](CONTEXT.md) — glossary of domain terms.
-- [`docs/protocol-authoring.md`](docs/protocol-authoring.md) — how to write
-  a `.pipette` protocol file, with runnable examples.
+- [`docs/protocol-authoring.md`](docs/protocol-authoring.md) — how to write a
+  `.pipette` protocol file, with runnable examples.
 - [`config/README.md`](config/README.md) — the layered JSON config system.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — dev setup, checks, and how to open a PR.
 - [`systemd/README.md`](systemd/README.md) — production deployment as
-  systemd services, and the network-exposure decisions behind it.
+  systemd services and network-exposure decisions.
+- [`systemd/ubuntu-touchscreen.md`](systemd/ubuntu-touchscreen.md) — Ubuntu/Debian
+  touchscreen installation, boot launch, and safe commissioning checklist.
 
 ## License
 
