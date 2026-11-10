@@ -200,6 +200,27 @@ class GantryKinematics(BaseModel):
         default=5000.0, gt=0, description="Maximum gantry acceleration in mm/s²"
     )
 
+    # Optional machine limits (mm). Unset keeps the default 0-based, unbounded
+    # behavior; set all six on rigs whose switches allow negative positions.
+    x_min: float | None = Field(default=None, le=0)
+    x_max: float | None = None
+    y_min: float | None = Field(default=None, le=0)
+    y_max: float | None = None
+    z_min: float | None = Field(default=None, le=0)
+    z_max: float | None = None
+
+    @model_validator(mode="after")
+    def _limits_all_or_none(self) -> GantryKinematics:
+        vals = [self.x_min, self.x_max, self.y_min, self.y_max, self.z_min, self.z_max]
+        if any(v is not None for v in vals) and any(v is None for v in vals):
+            raise ValueError("gantry limits must set all of x/y/z _min and _max")
+        return self
+
+    @property
+    def has_limits(self) -> bool:
+        """Whether machine limits are configured."""
+        return self.x_min is not None
+
     # Coordinate limits (mm)
     # x_min: float = Field(default=0.0, description="Minimum X coordinate")
     # x_max: float = Field(default=300.0, gt=0, description="Maximum X coordinate")

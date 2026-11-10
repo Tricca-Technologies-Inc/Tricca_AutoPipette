@@ -5,13 +5,22 @@ from __future__ import annotations
 import math
 from typing import Self
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+
+# Per-axis minimums; 0 unless a rig's gantry declares lower limits.
+_floor: tuple[float, float, float] = (0.0, 0.0, 0.0)
+
+
+def set_coordinate_floor(x: float = 0.0, y: float = 0.0, z: float = 0.0) -> None:
+    """Set the lowest allowed X/Y/Z (rigs with limit switches below zero)."""
+    global _floor
+    _floor = (min(x, 0.0), min(y, 0.0), min(z, 0.0))
 
 
 class Coordinate(BaseModel):
     """Represent a 3D position on the pipette bed.
 
-    Coordinates use a Cartesian system where all values must be non-negative,
+    Coordinates use a Cartesian system where all values must be non-negative unless the gantry declares lower limits,
     representing physical positions on the pipette apparatus.
 
     Attributes:
@@ -27,19 +36,26 @@ class Coordinate(BaseModel):
 
     x: float = Field(
         ...,
-        ge=0,
         description="Position along the X-axis in millimeters",
     )
     y: float = Field(
         ...,
-        ge=0,
         description="Position along the Y-axis in millimeters",
     )
     z: float = Field(
         ...,
-        ge=0,
         description="Position along the Z-axis (height) in millimeters",
     )
+
+    @model_validator(mode="after")
+    def _check_floor(self) -> Self:
+        """Reject values below the active per-axis minimum (default 0)."""
+        for axis, floor in zip("xyz", _floor, strict=True):
+            if getattr(self, axis) < floor:
+                raise ValueError(
+                    f"{axis} must be >= {floor}, got {getattr(self, axis)}"
+                )
+        return self
 
     def __repr__(self) -> str:
         """Return string representation of the coordinate.
@@ -113,7 +129,7 @@ class Coordinate(BaseModel):
         new_y = self.y + dy
         new_z = self.z + dz
 
-        if new_x < 0 or new_y < 0 or new_z < 0:
+        if any(v < f for v, f in zip((new_x, new_y, new_z), _floor, strict=True)):
             raise ValueError(
                 f"Resulting coordinate ({new_x}, {new_y}, {new_z}) has negative values"
             )

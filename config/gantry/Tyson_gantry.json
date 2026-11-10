@@ -4,5 +4,11 @@
   "speed_max": 99999.0,
   "accel_xy": 40000.0,
   "accel_z": 40000.0,
-  "accel_max": 40000.0
+  "accel_max": 40000.0,
+  "x_min": -3.25,
+  "x_max": 327.0,
+  "y_min": -3.0,
+  "y_max": 358.0,
+  "z_min": -5.0,
+  "z_max": 150.0
 }

@@ -146,6 +146,7 @@ class AutoPipette:
         """
         # Logging
         self.logger = logging.getLogger(__name__)
+        self._coor_sys = CoordinateSystem.ABSOLUTE
 
         self.config_manager = json_config_manager
         self.system_config: SystemConfig = self.config_manager.get_system_config()
@@ -462,9 +463,11 @@ class AutoPipette:
 
         if mode_str == CoordinateSystem.ABSOLUTE.value:
             self.logger.debug("Coordinate system: absolute")
+            self._coor_sys = CoordinateSystem.ABSOLUTE
             self.gcode_buffers.add(self.gcode_commands.absolute_mode())
         elif mode_str == CoordinateSystem.RELATIVE.value:
             self.logger.debug("Coordinate system: relative")
+            self._coor_sys = CoordinateSystem.RELATIVE
             self.gcode_buffers.add(self.gcode_commands.relative_mode())
         else:
             raise ValueError(
@@ -743,12 +746,29 @@ class AutoPipette:
         )
         self.gcode_buffers.add(gc.manual_stepper(stepper, set_position=0))
 
+    def _check_limits(self, coordinate: Coordinate, axes: str = "xyz") -> None:
+        """Refuse absolute moves outside the gantry's configured limits."""
+        g = self.gantry
+        if not g.has_limits or self._coor_sys != CoordinateSystem.ABSOLUTE:
+            return
+        for a in axes:
+            lo, hi = getattr(g, f"{a}_min"), getattr(g, f"{a}_max")
+            v = getattr(coordinate, a)
+            if not lo <= v <= hi:
+                raise ValueError(
+                    f"{a.upper()}={v} is outside machine limits [{lo}, {hi}]"
+                )
+
     def move_to(self, coordinate: Coordinate) -> None:
         """Move the pipette to the specified coordinate.
 
         Args:
             coordinate: Target position in 3D space.
+
+        Raises:
+            ValueError: If an absolute target is outside configured limits.
         """
+        self._check_limits(coordinate)
         speed_xy = self.gantry.speed_xy
         speed_z = self.gantry.speed_z
         self.logger.debug(
@@ -770,6 +790,7 @@ class AutoPipette:
 
     def move_to_z(self, coordinate: Coordinate) -> None:
         """Move only in Z direction."""
+        self._check_limits(coordinate, "z")
         speed = self.gantry.speed_z
         self.logger.debug("G-code move: Z=%s (speed=%s)", coordinate.z, speed)
         self.gcode_buffers.add(

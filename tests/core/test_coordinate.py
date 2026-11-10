@@ -198,3 +198,26 @@ class TestToFromTuple:
     def test_round_trips(self) -> None:
         original = Coordinate(x=7.5, y=8.5, z=9.5)
         assert Coordinate.from_tuple(original.to_tuple()) == original
+
+
+class TestCoordinateFloor:
+    """Per-rig lower limits (e.g. Tyson hall-effect switches)."""
+
+    def teardown_method(self) -> None:
+        from tricca_autopipette.core.coordinate import set_coordinate_floor
+
+        set_coordinate_floor()
+
+    def test_default_rejects_negative(self) -> None:
+        with pytest.raises(ValueError):
+            Coordinate(x=-0.1, y=0, z=0)
+
+    def test_floor_allows_negative_within_limit(self) -> None:
+        from tricca_autopipette.core.coordinate import set_coordinate_floor
+
+        set_coordinate_floor(-3.25, -3.0, -5.0)
+        Coordinate(x=-3.25, y=-3.0, z=-5.0)
+        with pytest.raises(ValueError):
+            Coordinate(x=-3.3, y=0, z=0)
+        with pytest.raises(ValueError):
+            Coordinate(x=0, y=0, z=-5.1)

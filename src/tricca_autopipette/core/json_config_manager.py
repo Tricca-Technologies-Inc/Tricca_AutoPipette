@@ -16,6 +16,7 @@ from typing import Any, Literal, cast
 import copy
 from dataclasses import dataclass
 
+from tricca_autopipette.core.coordinate import set_coordinate_floor
 from tricca_autopipette.core.pipette_constants import (
     DefaultFilenames,
     DefaultPaths,
@@ -48,6 +49,7 @@ DEFAULT_PIPETTE_REF = "p100_vertical"
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass(frozen=True)
 class ConfigManagerSnapshot:
     """Runtime config state to restore after protocol rollback."""
@@ -57,7 +59,8 @@ class ConfigManagerSnapshot:
     gantry_file: str | None
     pipette_file: str | None
     unloaded_liquids: frozenset[str]
-    
+
+
 class JsonConfigManager:
     """Manages JSON-based configuration loading and merging.
 
@@ -116,12 +119,12 @@ class JsonConfigManager:
         if self.system_config is None:
             raise RuntimeError("No system configuration loaded.")
         return self.system_config
-        
+
     def snapshot_runtime_state(self) -> ConfigManagerSnapshot:
         """Capture active config and runtime membership for protocol rollback."""
         if self.system_config is None:
             raise RuntimeError("No system configuration loaded.")
-    
+
         return ConfigManagerSnapshot(
             system_config=copy.deepcopy(self.system_config),
             system_file=self._system_file,
@@ -273,6 +276,14 @@ class JsonConfigManager:
         # 3. Merge gantry config (user overrides defaults)
         gantry_data = {**default_gantry.model_dump(), **user_data.get("gantry", {})}
         merged_gantry = GantryKinematics(**gantry_data)
+        if merged_gantry.has_limits:
+            set_coordinate_floor(
+                merged_gantry.x_min or 0.0,
+                merged_gantry.y_min or 0.0,
+                merged_gantry.z_min or 0.0,
+            )
+        else:
+            set_coordinate_floor()
 
         # 4. Resolve pipette (reference or full config)
         pipette_ref = user_data.get("pipette", DEFAULT_PIPETTE_REF)
