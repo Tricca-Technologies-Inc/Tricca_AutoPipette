@@ -66,6 +66,9 @@ class TriccaAutoPipetteShell(Cmd):
         self.register_precmd_hook(self._precommand_hook)
         self.register_postcmd_hook(self._postcommand_hook)
 
+        self.terminal_lock = threading.RLock()
+        
+
     def _preloop_hook(self) -> None:
         """Print the banner."""
         # self.screen_printer = TAPScreenPrinter(self,
@@ -85,6 +88,8 @@ class TriccaAutoPipetteShell(Cmd):
         self.console.print("[green]Loading commands...[/]")
         # Example of how to load other commands
         # self.register_command_set(CommandSetPipette())
+
+    
 
     def _postloop_hook(self) -> None:
         """Stop other threads."""
