@@ -50,6 +50,68 @@ class TestConnectionLifecycle:
 
 
 class TestProtocolListing:
+    def test_lists_nested_protocols_by_relative_path(
+        self, kiosk_client: TestClient, protocols_dir: Path
+    ) -> None:
+        (protocols_dir / "examples").mkdir()
+        (protocols_dir / "examples" / "transfer.pipette").write_text("wait 1\n")
+
+        response = kiosk_client.get("/protocols")
+
+        assert response.json() == [
+            {"name": "transfer", "filename": "examples/transfer.pipette"}
+        ]
+
+    def test_nested_local_override_is_validated_instead_of_shared(
+        self,
+        kiosk_client: TestClient,
+        protocols_dir: Path,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        shared = protocols_dir / "examples"
+        shared.mkdir()
+        (shared / "transfer.pipette").write_text("wait 1\n")
+        local = tmp_path / "local-protocols"
+        (local / "examples").mkdir(parents=True)
+        (local / "examples" / "transfer.pipette").write_text("move_loc missing\n")
+        monkeypatch.setattr(DefaultPaths, "DIR_LOCAL_PROTOCOL", local)
+
+        assert kiosk_client.get("/protocols").json() == [
+            {"name": "transfer", "filename": "examples/transfer.pipette"}
+        ]
+        result = kiosk_client.post(
+            "/validate", json={"filename": "examples/transfer.pipette"}
+        ).json()
+        assert any(f["severity"] == "error" for f in result["data"]["findings"])
+
+    def test_symlink_override_outside_root_is_not_listed_or_executable(
+        self,
+        kiosk_client: TestClient,
+        protocols_dir: Path,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        shared = protocols_dir / "shared"
+        shared.mkdir()
+        (shared / "a.pipette").write_text("wait 1\n")
+        monkeypatch.setattr(kiosk_main, "PROTOCOLS_DIR", shared)
+        monkeypatch.setattr(DefaultPaths, "DIR_PROTOCOL", shared)
+        outside = tmp_path / "outside.pipette"
+        outside.write_text("wait 1\n")
+        local = tmp_path / "local-protocols"
+        local.mkdir()
+        (local / "a.pipette").symlink_to(outside)
+        monkeypatch.setattr(DefaultPaths, "DIR_LOCAL_PROTOCOL", local)
+        assert kiosk_client.get("/protocols").json() == []
+        assert (
+            kiosk_client.post("/run", json={"filename": "a.pipette"}).status_code == 404
+        )
+        response = kiosk_client.post(
+            "/validate", json={"filename": "../outside.pipette"}
+        )
+        assert response.status_code == 404
+
     def test_empty_dir_returns_empty_list(
         self, kiosk_client: TestClient, protocols_dir: Path
     ) -> None:
@@ -126,6 +188,17 @@ class TestProtocolListing:
 
 
 class TestRunEndpoint:
+    def test_starts_nested_protocol(
+        self, kiosk_client: TestClient, protocols_dir: Path
+    ) -> None:
+        (protocols_dir / "examples").mkdir()
+        (protocols_dir / "examples" / "a.pipette").write_text('gcode_print "hi"\n')
+
+        response = kiosk_client.post("/run", json={"filename": "examples/a.pipette"})
+
+        assert response.status_code == 200
+        assert response.json()["status"] == "running"
+
     def test_starts_a_run_and_returns_the_real_daemon_reply(
         self, kiosk_client: TestClient, protocols_dir: Path
     ) -> None:

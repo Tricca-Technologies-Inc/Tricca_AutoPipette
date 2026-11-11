@@ -280,9 +280,43 @@ header {
   transition: background 0.12s;
   user-select: none;
   border: 1px solid transparent;
+  width: 100%;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
 }
 
 .protocol-item:hover { background: var(--surface2); }
+
+.protocol-folder {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface2);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  margin-bottom: 6px;
+}
+
+.protocol-current-folder {
+  padding: 8px 12px;
+  color: var(--muted);
+  font-family: var(--mono);
+  overflow-wrap: anywhere;
+}
+
+.protocol-legacy-warning {
+  padding: 8px 12px;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.4;
+  border-left: 3px solid var(--accent);
+  margin-bottom: 8px;
+}
 
 .protocol-item.selected {
   background: color-mix(in srgb, var(--accent) 12%, transparent);
@@ -358,6 +392,7 @@ header {
   font-family: var(--mono);
   color: var(--text);
   min-height: 40px;
+  overflow-wrap: anywhere;
 }
 
 .selection-name.placeholder { color: var(--muted); font-weight: 400; font-size: 18px; }
