@@ -306,7 +306,7 @@ def index() -> FileResponse:
     return FileResponse(STATIC_DIR / "index.html")
 
 
-def _list_protocol_files() -> list[Path]:
+def _list_protocol_files() -> dict[str, Path]:
     """Union `PROTOCOLS_DIR` with the per-machine local config root's protocols/.
 
     `PROTOCOLS_DIR` (not `DefaultPaths.DIR_PROTOCOL` directly) so this keeps
@@ -315,16 +315,27 @@ def _list_protocol_files() -> list[Path]:
     config category's shared/local union (see `config/README.md`).
 
     Returns:
-        Sorted list of resolved `.pipette` paths.
+        Relative protocol paths mapped to their resolved files.
     """
     found: dict[str, Path] = {}
-    if PROTOCOLS_DIR.exists():
-        for path in sorted(PROTOCOLS_DIR.glob("*.pipette")):
-            found[path.name] = path
-    if DefaultPaths.DIR_LOCAL_PROTOCOL.exists():
-        for path in sorted(DefaultPaths.DIR_LOCAL_PROTOCOL.glob("*.pipette")):
-            found[path.name] = path
-    return sorted(found.values())
+    roots = (PROTOCOLS_DIR, DefaultPaths.DIR_LOCAL_PROTOCOL)
+    for root in roots:
+        if root.exists():
+            for path in root.rglob("*.pipette"):
+                if path.is_file() and not (
+                    root == roots[0] and path.is_relative_to(roots[1])
+                ):
+                    found[path.relative_to(root).as_posix()] = path
+    # Check the file the daemon will actually resolve, including local
+    # overrides reached through symlinks, rather than only the listed path.
+    safe: dict[str, Path] = {}
+    for name in sorted(found):
+        local = roots[1] / name
+        root = roots[1] if local.exists() else roots[0]
+        path = root / name
+        if path.is_file() and path.resolve().is_relative_to(root.resolve()):
+            safe[name] = path
+    return safe
 
 
 @app.get("/protocols", response_model=list[Protocol])
@@ -344,7 +355,10 @@ def list_protocols() -> list[Protocol]:
             ),
         )
 
-    return [Protocol(name=f.stem, filename=f.name) for f in _list_protocol_files()]
+    return [
+        Protocol(name=path.stem, filename=name)
+        for name, path in _list_protocol_files().items()
+    ]
 
 
 @app.post("/run", response_model=RunStatus)
@@ -367,7 +381,7 @@ async def run_protocol(req: RunRequest) -> RunStatus:
     # missing from *both* roots the kiosk itself can see -- a file that
     # exists only in the local root still passes this and reaches the
     # daemon, which resolves the same shared/local union for real.
-    known_names = {path.name for path in _list_protocol_files()}
+    known_names = _list_protocol_files()
     if req.filename not in known_names:
         raise HTTPException(
             status_code=404, detail=f"Protocol not found: {req.filename}"
@@ -424,7 +438,7 @@ async def validate_protocol(req: ValidateRequest) -> CommandResultResponse:
             protocols root, 503 if the control daemon isn't connected, or
             500 for any other dispatch failure.
     """
-    known_names = {path.name for path in _list_protocol_files()}
+    known_names = _list_protocol_files()
     if req.filename not in known_names:
         raise HTTPException(
             status_code=404, detail=f"Protocol not found: {req.filename}"

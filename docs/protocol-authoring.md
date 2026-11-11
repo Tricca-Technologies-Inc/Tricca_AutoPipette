@@ -24,9 +24,9 @@ from the same parsers the shell itself uses.
   Home button, before running any protocol. `homed_axes` then stays true
   for the rest of the daemon's uptime, so you don't need to repeat it
   between runs.
-- **Five runnable examples live under `protocols/examples/`.** They aren't
-  reachable from the kiosk's protocol picker (its `/protocols` listing is
-  non-recursive) — run them from `tap` with `run examples/<name>.pipette`.
+- **Five runnable examples live under `protocols/examples/`.** Browse the
+  `examples` folder in the kiosk, or run them from `tap` with
+  `run examples/<name>.pipette`.
   Every example below is one of them, referenced by name so you can open it
   alongside this guide.
 
