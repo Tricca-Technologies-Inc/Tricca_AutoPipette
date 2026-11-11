@@ -58,6 +58,12 @@ Two merge mechanisms, by category shape:
   shared repo is a **copy-from template only**, never consulted live once a
   local file exists -- see the next section.
 
+  System profiles may name a gantry file or a liquid file using its filename
+  or stem (for example, `"gantry": "Tyson_gantry"` and
+  `"liquids": "Tyson100_liquids"`). The named liquid overrides the default
+  profile with the same liquid name. A locations filename without an extension
+  also resolves to its `.json` file if the exact name does not exist.
+
 This split is deliberately provisional for all six union categories except
 `locations/`/`protocols/` -- real per-rig divergence in `gantry/`/`pipettes/`/
 `plates/` is not yet well understood, and a future pass may cull those back

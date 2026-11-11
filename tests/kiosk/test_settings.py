@@ -6,6 +6,8 @@ control plane. Writes go to a per-test scratch local root.
 
 from __future__ import annotations
 
+import json
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -13,7 +15,9 @@ import pytest
 from fastapi.testclient import TestClient
 from support.live_control_plane import LiveControlPlane
 
+from tricca_autopipette.core.coordinate import Coordinate
 from tricca_autopipette.core.pipette_constants import DefaultPaths
+from tricca_autopipette.core.pipette_models import GantryKinematics, LiquidProfile
 from tricca_autopipette.daemon.service import RunStatus
 
 
@@ -52,6 +56,105 @@ def _set(client: TestClient, field: dict[str, Any], value: object) -> dict[str, 
 
 
 class TestSettingsRoutes:
+    def test_failed_switch_restores_active_configuration_and_deck(
+        self, kiosk_client: TestClient, local: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        system = local / "system"
+        system.mkdir(parents=True)
+        shutil.copy2(DefaultPaths.DIR_LOCAL_SYSTEM / "default_system.json", system)
+        (system / "broken.json").write_text(
+            json.dumps({
+                "gantry": "Tyson_gantry",
+                "pipette": "TysonP100",
+                "liquids": "Tyson100_liquids",
+                "locations": "missing_deck",
+            })
+        )
+        monkeypatch.setattr(DefaultPaths, "DIR_LOCAL_SYSTEM", system)
+        before = kiosk_client.get("/settings").json()["data"]
+        before_deck = kiosk_client.get("/locations").json()
+        with pytest.raises(ValueError):
+            Coordinate(x=-1, y=0, z=0)
+
+        result = kiosk_client.post(
+            "/settings/switch_system", json={"filename": "broken.json"}
+        ).json()
+
+        assert not result["ok"]
+        assert "missing_deck" in result["message"]
+        after = kiosk_client.get("/settings").json()["data"]
+        assert after["system_profile"] == before["system_profile"]
+        assert after["pipette"] == before["pipette"]
+        assert after["gantry"] == before["gantry"]
+        assert kiosk_client.get("/locations").json() == before_deck
+        with pytest.raises(ValueError):
+            Coordinate(x=-1, y=0, z=0)
+
+    @pytest.mark.parametrize(
+        ("size", "profile"),
+        [
+            ("100", "Tyson100_system.json"),
+            ("1000", "Tyson1000_system.json"),
+            ("100", "Tyson_main.json"),
+        ],
+    )
+    def test_switch_to_tyson_profile_loads_its_components(
+        self,
+        kiosk_client: TestClient,
+        live_control_plane: LiveControlPlane,
+        local: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        size: str,
+        profile: str,
+    ) -> None:
+        system = local / "system"
+        system.mkdir(parents=True)
+        for name in {"Tyson_main.json", profile}:
+            shutil.copy2(DefaultPaths.DIR_CONFIG_SYSTEM / name, system / name)
+        shutil.copy2(
+            DefaultPaths.DIR_CONFIG_LOCATIONS / f"Tyson{size}_locations.json",
+            local.parent,
+        )
+        monkeypatch.setattr(DefaultPaths, "DIR_LOCAL_SYSTEM", system)
+
+        result = kiosk_client.post(
+            "/settings/switch_system", json={"filename": profile}
+        )
+
+        assert result.status_code == 200
+        assert result.json()["ok"], result.json()
+        settings = kiosk_client.get("/settings").json()["data"]
+        assert settings["pipette"]["name"] == f"TysonP{size}"
+        gantry = json.loads(
+            (DefaultPaths.DIR_CONFIG_GANTRY / "Tyson_gantry.json").read_text()
+        )
+        service = live_control_plane.service
+        assert service._autopipette.gantry == GantryKinematics.model_validate(gantry)
+        field = next(f for f in settings["gantry"]["fields"] if f["key"] == "speed_xy")
+        assert field["value"] == gantry["speed_xy"]
+        assert field["category"] == "gantry"
+        assert field["filename"] == "Tyson_gantry.json"
+        liquid = json.loads(
+            (DefaultPaths.DIR_CONFIG_LIQUIDS / f"Tyson{size}_liquids.json").read_text()
+        )
+        assert service._autopipette.system_config.liquids["water"] == (
+            LiquidProfile.model_validate(liquid)
+        )
+        water = next(x for x in settings["liquids"]["loaded"] if x["name"] == "water")
+        speed = next(f for f in water["fields"] if f["key"] == "speed_aspirate")
+        assert speed["value"] == liquid["speed_aspirate"]
+        assert speed["filename"] == f"Tyson{size}_liquids.json"
+        locations = kiosk_client.get("/locations").json()
+        assert locations["ok"]
+        assert any(loc["name"] == "tipbox" for loc in locations["data"]["locations"])
+        assert _set(kiosk_client, speed, 25)["ok"]
+        updated = _liquid_field(
+            kiosk_client.get("/settings").json(), "water", "speed_aspirate"
+        )
+        assert updated["value"] == 25
+        assert updated["filename"] == f"Tyson{size}_liquids.json"
+        assert (local / "liquids" / f"Tyson{size}_liquids.json").exists()
+
     def test_get_reports_the_sections(self, kiosk_client: TestClient) -> None:
         body = kiosk_client.get("/settings").json()
 

@@ -10,11 +10,12 @@ Supports both batch loading (for initialization) and dynamic loading
 from __future__ import annotations
 
 import contextlib
+import copy
 import json
 import logging
-from typing import Any, Literal, cast
-import copy
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Literal, cast
 
 from tricca_autopipette.core.coordinate import set_coordinate_floor
 from tricca_autopipette.core.pipette_constants import (
@@ -59,6 +60,7 @@ class ConfigManagerSnapshot:
     gantry_file: str | None
     pipette_file: str | None
     unloaded_liquids: frozenset[str]
+    loaded_liquid_files: dict[str, str]
 
 
 class JsonConfigManager:
@@ -94,6 +96,7 @@ class JsonConfigManager:
         self._gantry_file: str | None = None
         self._pipette_file: str | None = None
         self._unloaded_liquids: set[str] = set()
+        self._loaded_liquid_files: dict[str, str] = {}
 
     @property
     def system_file(self) -> str:
@@ -121,7 +124,14 @@ class JsonConfigManager:
         return self.system_config
 
     def snapshot_runtime_state(self) -> ConfigManagerSnapshot:
-        """Capture active config and runtime membership for protocol rollback."""
+        """Capture active config and runtime membership for protocol rollback.
+
+        Returns:
+            A snapshot of the current configuration.
+
+        Raises:
+            RuntimeError: If no system configuration is loaded.
+        """
         if self.system_config is None:
             raise RuntimeError("No system configuration loaded.")
 
@@ -131,15 +141,18 @@ class JsonConfigManager:
             gantry_file=self._gantry_file,
             pipette_file=self._pipette_file,
             unloaded_liquids=frozenset(self._unloaded_liquids),
+            loaded_liquid_files=dict(self._loaded_liquid_files),
         )
 
     def restore_runtime_state(self, snapshot: ConfigManagerSnapshot) -> None:
         """Restore a snapshot made by snapshot_runtime_state()."""
         self.system_config = copy.deepcopy(snapshot.system_config)
+        self._apply_coordinate_floor(self.system_config.gantry)
         self._system_file = snapshot.system_file
         self._gantry_file = snapshot.gantry_file
         self._pipette_file = snapshot.pipette_file
         self._unloaded_liquids = set(snapshot.unloaded_liquids)
+        self._loaded_liquid_files = dict(snapshot.loaded_liquid_files)
 
     # ========================================================================
     # BATCH LOADING - For initialization
@@ -211,11 +224,13 @@ class JsonConfigManager:
             )
 
         self.system_config = self._build_system_config(self._load_system_data(filename))
+        self._apply_coordinate_floor(self.system_config.gantry)
         # A fresh profile starts from its own file alone, as at startup.
         self._system_file = filename
         self._gantry_file = None
         self._pipette_file = None
         self._unloaded_liquids = set()
+        self._loaded_liquid_files = {}
 
         logger.info("Loaded system config from %s", path_system)
         logger.info("  System: %s", self.system_config.system_name)
@@ -274,16 +289,13 @@ class JsonConfigManager:
         default_liquids = self._load_default_liquids()
 
         # 3. Merge gantry config (user overrides defaults)
-        gantry_data = {**default_gantry.model_dump(), **user_data.get("gantry", {})}
+        gantry_override = user_data.get("gantry", {})
+        if isinstance(gantry_override, str):
+            gantry_override = self._read_named_config("gantry", gantry_override)
+        if not isinstance(gantry_override, dict):
+            raise ValueError("'gantry' must be an object or a config filename")
+        gantry_data = {**default_gantry.model_dump(), **gantry_override}
         merged_gantry = GantryKinematics(**gantry_data)
-        if merged_gantry.has_limits:
-            set_coordinate_floor(
-                merged_gantry.x_min or 0.0,
-                merged_gantry.y_min or 0.0,
-                merged_gantry.z_min or 0.0,
-            )
-        else:
-            set_coordinate_floor()
 
         # 4. Resolve pipette (reference or full config)
         pipette_ref = user_data.get("pipette", DEFAULT_PIPETTE_REF)
@@ -308,20 +320,35 @@ class JsonConfigManager:
 
         # 5. Merge liquid profiles (user overrides defaults)
         merged_liquids: dict[str, LiquidProfile] = {}
+        liquid_config: object = user_data.get("liquids", {})
+        if isinstance(liquid_config, str):
+            liquid = LiquidProfile(**self._read_named_config("liquids", liquid_config))
+            user_liquids: dict[str, Any] = {liquid.name: liquid.model_dump()}
+        elif isinstance(liquid_config, dict):
+            user_liquids = cast("dict[str, Any]", liquid_config)
+        else:
+            raise ValueError("'liquids' must be an object or a config filename")
 
         # Start with all default liquids
         for liquid_name, default_liquid in default_liquids.items():
-            user_override = user_data.get("liquids", {}).get(liquid_name, {})
+            user_override = user_liquids.get(liquid_name, {})
 
             # Merge default with user override
             liquid_data = {**default_liquid.model_dump(), **user_override}
             merged_liquids[liquid_name] = LiquidProfile(**liquid_data)
 
         # Add any user-only liquids (not in defaults)
-        user_liquids = user_data.get("liquids", {})
         for liquid_name, liquid_data in user_liquids.items():
             if liquid_name not in merged_liquids:
                 merged_liquids[liquid_name] = LiquidProfile(**liquid_data)
+
+        locations = LocationsConfig.model_validate(user_data.get("locations"))
+        for index, source in enumerate(locations.sources):
+            if isinstance(source, str) and not Path(source).suffix:
+                try:
+                    LocalConfigRoots.resolve("locations", source)
+                except FileNotFoundError:
+                    locations.sources[index] = f"{source}.json"
 
         # 6. Build final SystemConfig
         return SystemConfig(
@@ -330,10 +357,45 @@ class JsonConfigManager:
             gantry=merged_gantry,
             pipette=merged_pipette,
             liquids=merged_liquids,
-            locations=LocationsConfig.model_validate(user_data.get("locations")),
+            locations=locations,
             network=user_data.get("network", {"hostname": "localhost", "port": "7125"}),
             trigger_pins=user_data.get("trigger_pins", {}),
         )
+
+    @staticmethod
+    def _apply_coordinate_floor(gantry: GantryKinematics) -> None:
+        """Set coordinate minima for the active gantry."""
+        if gantry.has_limits:
+            set_coordinate_floor(
+                gantry.x_min or 0.0, gantry.y_min or 0.0, gantry.z_min or 0.0
+            )
+        else:
+            set_coordinate_floor()
+
+    @staticmethod
+    def _read_named_config(category: str, name: str) -> dict[str, Any]:
+        """Read a named JSON config, accepting either a stem or filename.
+
+        Args:
+            category: The shared/local configuration category.
+            name: A filename or stem.
+
+        Returns:
+            The configuration object.
+
+        Raises:
+            FileNotFoundError: If the file does not exist.
+            ValueError: If the file is invalid JSON or not an object.
+        """  # ruff: ignore[docstring-extraneous-exception]
+        filename = name if Path(name).suffix else f"{name}.json"
+        path = LocalConfigRoots.resolve(category, filename)
+        try:
+            data: Any = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"Invalid JSON in {path}: {exc}") from exc
+        if not isinstance(data, dict):
+            raise ValueError(f"Config {path} must contain a JSON object")
+        return cast("dict[str, Any]", data)
 
     def _load_system_data(self, filename: str) -> dict[str, Any]:
         """Read a system config file, applying any ``extends`` chain.
@@ -506,6 +568,7 @@ class JsonConfigManager:
         try:
             gantry = GantryKinematics(**data)
             self.system_config.gantry = gantry
+            self._apply_coordinate_floor(gantry)
             self._gantry_file = filename
             logger.info("Switched to gantry config: %s", filename)
             return gantry
@@ -610,6 +673,7 @@ class JsonConfigManager:
         try:
             liquid = LiquidProfile(**data)
             self.system_config.liquids[liquid.name] = liquid
+            self._loaded_liquid_files[liquid.name] = filename
             self._unloaded_liquids.discard(liquid.name)
             logger.info("Loaded liquid profile: %s", liquid.name)
             return liquid
@@ -644,6 +708,7 @@ class JsonConfigManager:
             raise ValueError(f"Liquid '{liquid_name}' is not loaded")
         del self.system_config.liquids[liquid_name]
         self._unloaded_liquids.add(liquid_name)
+        self._loaded_liquid_files.pop(liquid_name, None)
         logger.info("Unloaded liquid profile: %s", liquid_name)
 
     def setting_source(
@@ -676,6 +741,9 @@ class JsonConfigManager:
                 return "gantry", self._gantry_file, ""
             found = self._system_chain_source("gantry")
             if found is not None:
+                if isinstance(found[1], str):
+                    name = found[1]
+                    return "gantry", name if Path(name).suffix else f"{name}.json", ""
                 return "system", found[0], "gantry."
             return "gantry", CONFIG_GANTRY, ""
         if section == "pipette":
@@ -686,7 +754,14 @@ class JsonConfigManager:
                 return "system", found[0], "pipette."
             ref = found[1] if found is not None else DEFAULT_PIPETTE_REF
             return "pipettes", f"{ref}.json", ""
+        if liquid in self._loaded_liquid_files:
+            return "liquids", self._loaded_liquid_files[liquid], ""
         found = self._system_chain_source("liquids")
+        if found is not None and isinstance(found[1], str):
+            filename = found[1] if Path(found[1]).suffix else f"{found[1]}.json"
+            profile = LiquidProfile(**self._read_named_config("liquids", filename))
+            if profile.name == liquid:
+                return "liquids", filename, ""
         if found is not None and isinstance(found[1], dict) and liquid in found[1]:
             return "system", found[0], f"liquids.{liquid}."
         source = None
@@ -749,16 +824,23 @@ class JsonConfigManager:
             'AutoPipette'
         """  # ruff: ignore[docstring-extraneous-exception]
         previous = self.system_config
+        previous_liquid_files = dict(self._loaded_liquid_files)
         try:
             self.system_config = self._build_system_config(
                 self._load_system_data(self._system_file)
             )
+            self._apply_coordinate_floor(self.system_config.gantry)
             if self._gantry_file is not None:
                 self.load_gantry(self._gantry_file)
             if self._pipette_file is not None:
                 self.load_pipette(self._pipette_file)
+            for filename in list(self._loaded_liquid_files.values()):
+                self.load_liquid(filename)
         except Exception:
             self.system_config = previous
+            if previous is not None:
+                self._apply_coordinate_floor(previous.gantry)
+            self._loaded_liquid_files = previous_liquid_files
             raise
         for name in self._unloaded_liquids:
             self.system_config.liquids.pop(name, None)

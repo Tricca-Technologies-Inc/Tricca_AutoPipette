@@ -1959,7 +1959,8 @@ class AutoPipetteService:
             )
         manager = self._autopipette.config_manager
         try:
-            self._apply_config_change(lambda: manager.load_system_config(filename))
+            with self.domain_state_snapshot(persist_on_success=False):
+                self._apply_config_change(lambda: manager.load_system_config(filename))
         except (FileNotFoundError, ValueError) as e:
             return CommandResult(ok=False, message=str(e))
         LocalConfigRoots.set_active_system(profiles[filename])
@@ -3685,7 +3686,10 @@ class AutoPipetteService:
 
     @contextmanager
     def domain_state_snapshot(
-        self, *, restore: Literal["on_error", "always"] = "on_error"
+        self,
+        *,
+        restore: Literal["on_error", "always"] = "on_error",
+        persist_on_success: bool = True,
     ) -> Generator[None]:
         """Snapshot deck/pipette state, restoring it depending on the outcome.
 
@@ -3733,6 +3737,7 @@ class AutoPipetteService:
                 body raises, discarding the snapshot on normal completion.
                 ``"always"`` restores unconditionally on exit, regardless of
                 outcome.
+            persist_on_success: Flush tip state after a successful operation.
 
         Yields:
             Nothing; used purely for its enter/exit side effects.
@@ -3826,7 +3831,7 @@ class AutoPipetteService:
         else:
             if restore == "always":
                 _restore()
-            else:
+            elif persist_on_success:
                 _flush()
 
     def _read_protocol_lines(self, filename: str) -> list[str]:

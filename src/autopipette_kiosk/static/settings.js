@@ -25,7 +25,7 @@
   // banner, anything else its own message.
   function resultMessage(result) {
     if (result.data && result.data.reason === 'run_active') return LOCK_REASON;
-    return result.message || 'Failed';
+    return result.message || result.detail || 'Failed';
   }
 
   function showMsg(el, text, isError) {

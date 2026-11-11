@@ -55,6 +55,24 @@ def _open_settings(page: Page, server: LiveKioskServer) -> None:
     expect(page.locator("#settingsGantry")).to_be_visible()
 
 
+def test_switch_error_shows_http_failure_detail(
+    page: Page, live_kiosk_server: LiveKioskServer
+) -> None:
+    _open_settings(page, live_kiosk_server)
+    page.route(
+        "**/settings/switch_system",
+        lambda route: route.fulfill(
+            status=500, json={"detail": "Gantry configuration is invalid"}
+        ),
+    )
+
+    page.locator("#settingsSystem").get_by_role("button", name="Switch").click()
+
+    expect(page.locator("#settingsSystem .move-feedback")).to_have_text(
+        "Gantry configuration is invalid"
+    )
+
+
 @pytest.mark.usefixtures("local")
 def test_fields_disable_with_the_reason_while_a_run_is_active(
     page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path

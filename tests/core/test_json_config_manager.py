@@ -148,6 +148,36 @@ class TestExtends:
         assert config.gantry.speed_xy == 1234.0  # ruff:ignore[float-equality-comparison]
         assert config.network["hostname"] == "bench.local"  # inherited
 
+    def test_explicit_liquid_load_survives_reload_and_snapshot_restore(
+        self, write_system_config: Any, write_liquid_config: Any
+    ) -> None:
+        water = json.loads((DefaultPaths.DIR_CONFIG_LIQUIDS / "water.json").read_text())
+        water["speed_aspirate"] = 17
+        initial = write_liquid_config("initial.json", water)
+        water["speed_aspirate"] = 23
+        override = write_liquid_config("override.json", water)
+        system = write_system_config("named.json", {"liquids": initial})
+        manager = JsonConfigManager()
+        manager.load_system_config(system)
+        assert manager.setting_source("liquid", "water") == ("liquids", initial, "")
+        manager.load_liquid(override)
+        snapshot = manager.snapshot_runtime_state()
+        manager.unload_liquid("water")
+
+        manager.restore_runtime_state(snapshot)
+        manager.reload()
+
+        assert manager.get_system_config().liquids["water"].speed_aspirate == 23
+        assert manager.setting_source("liquid", "water") == ("liquids", override, "")
+
+    @pytest.mark.parametrize("section", ["gantry", "liquids"])
+    def test_missing_named_component_is_not_silently_replaced(
+        self, write_system_config: Any, section: str
+    ) -> None:
+        filename = write_system_config("missing.json", {section: "no_such_component"})
+        with pytest.raises(FileNotFoundError, match=r"no_such_component\.json"):
+            JsonConfigManager().load_system_config(filename)
+
     def test_child_overrides_parent(self, write_system_config: Any) -> None:
         write_system_config(
             "parent.json", {"gantry": {"speed_xy": 1000.0}, "pipette": "p100_vertical"}
