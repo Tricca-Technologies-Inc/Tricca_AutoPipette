@@ -12,6 +12,7 @@
 // mid-run, which is unacceptable (see CLAUDE.md).
 const App = (() => {
   let ws = null;
+  let socketReady = false;
   let status = { status: 'idle', message: '', breakpoint: null };
   const statusListeners = [];
 
@@ -26,6 +27,7 @@ const App = (() => {
     statusListeners.forEach(fn => fn(status));
     renderStatusPill();
     renderBreakpointBanner();
+    if (socketReady) renderConnIndicator(data.daemon_connected ? 'open' : 'offline');
   }
 
   function getStatus() {
@@ -57,9 +59,8 @@ const App = (() => {
   // label and whether it counts as "live" -- the one thing onopen/onclose
   // (below) agree on, instead of each writing the DOM its own way.
   function wsState(eventType) {
-    return eventType === 'open'
-      ? { label: 'live', live: true }
-      : { label: 'reconnecting', live: false };
+    if (eventType === 'open') return { label: 'live', live: true };
+    return { label: eventType === 'offline' ? 'daemon offline' : 'reconnecting', live: false };
   }
 
   function renderConnIndicator(eventType) {
@@ -74,9 +75,14 @@ const App = (() => {
 
     ws.onopen = () => renderConnIndicator('open');
 
-    ws.onmessage = e => setStatus(JSON.parse(e.data));
+    ws.onmessage = e => {
+      socketReady = true;
+      setStatus(JSON.parse(e.data));
+    };
 
     ws.onclose = () => {
+      socketReady = false;
+      statusListeners.forEach(fn => fn(status));
       renderConnIndicator('close');
       setTimeout(connectWS, 2000);
     };
@@ -88,14 +94,15 @@ const App = (() => {
     const label = document.getElementById('statusPillLabel');
     const s = status.status || 'idle';
     pill.className = `status-pill ${s}`;
-    label.textContent = describeStatus(s).label;
+    label.textContent = status.phase === 'paused' ? 'Paused' : describeStatus(s).label;
   }
 
   // ── global breakpoint banner ────────────────────────────────────────────
   function renderBreakpointBanner() {
     const banner = document.getElementById('breakpointBanner');
     const msg = document.getElementById('breakpointMsg');
-    const bp = status.breakpoint;
+    const bp = status.status === 'running' &&
+      status.breakpoint?.run_id === status.run_id ? status.breakpoint : null;
     banner.classList.toggle('active', !!bp);
     if (bp) {
       msg.textContent = bp.filename ? `Protocol: ${bp.filename}` : '';
@@ -193,5 +200,8 @@ const App = (() => {
 
   document.addEventListener('DOMContentLoaded', init);
 
-  return { onStatus, getStatus, registerPage, switchTo, describeStatus, isRunActive };
+  return {
+    onStatus, getStatus, registerPage, switchTo, describeStatus, isRunActive,
+    isConnected: () => socketReady && status.daemon_connected === true,
+  };
 })();

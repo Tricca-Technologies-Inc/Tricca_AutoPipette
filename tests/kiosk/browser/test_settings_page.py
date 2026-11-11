@@ -77,7 +77,7 @@ def test_switch_error_shows_http_failure_detail(
 def test_fields_disable_with_the_reason_while_a_run_is_active(
     page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
 ) -> None:
-    (protocols_dir / "a.pipette").write_text('gcode_print "hi"\n')
+    (protocols_dir / "a.pipette").write_text("break\n")
     _open_settings(page, live_kiosk_server)
     field = page.locator('#settingsGantry [data-key="speed_xy"] input')
     expect(field).to_be_enabled()
@@ -89,12 +89,16 @@ def test_fields_disable_with_the_reason_while_a_run_is_active(
     )
     urllib.request.urlopen(request, timeout=5).close()
 
-    expect(page.locator("#settingsLockBanner")).to_be_visible()
-    expect(page.locator("#settingsLockBanner")).to_contain_text(
-        "Locked while a protocol is running"
-    )
-    expect(field).to_be_disabled()
-    expect(page.locator("#page-settings button:enabled")).to_have_count(0)
+    try:
+        expect(page.locator("#settingsLockBanner")).to_be_visible()
+        expect(page.locator("#settingsLockBanner")).to_contain_text(
+            "Locked while a protocol is running"
+        )
+        expect(field).to_be_disabled()
+        expect(page.locator("#page-settings button:enabled")).to_have_count(0)
+    finally:
+        expect(page.locator("#bpAbortBtn")).to_be_visible()
+        page.click("#bpAbortBtn")
 
 
 def test_an_out_of_bounds_high_risk_value_is_refused(

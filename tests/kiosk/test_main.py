@@ -19,15 +19,38 @@ singleton in production) -- the `kiosk_client`/`protocols_dir` fixtures
 
 from __future__ import annotations
 
+import asyncio
+from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
+from threading import Event
+from typing import Any
 
 import pytest
+from fakes.fake_moonraker_state import FakeMoonrakerState
+from fakes.fake_websocket_client import FakeWebSocketClient
 from fastapi.testclient import TestClient
 from support.live_control_plane import LiveControlPlane
 from support.polling import poll_until
 
 from autopipette_kiosk import main as kiosk_main
 from tricca_autopipette.core.pipette_constants import DefaultPaths
+
+
+class JobClient(FakeWebSocketClient):
+    """Moonraker fake with a controllable job-status snapshot."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.job: dict[str, Any] = {}
+
+    def send_jsonrpc(
+        self, payload: dict[str, Any], timeout: float = 5.0
+    ) -> dict[str, Any]:
+        if payload["method"] == "printer.objects.query":
+            if not self.is_connected():
+                raise RuntimeError("Disconnected")
+            return {"result": {"status": self.job}}
+        return super().send_jsonrpc(payload, timeout)
 
 
 class TestConnectionLifecycle:
@@ -300,13 +323,15 @@ class TestRunEndpoint:
     def test_second_run_while_one_is_active_returns_409(
         self, kiosk_client: TestClient, protocols_dir: Path
     ) -> None:
-        (protocols_dir / "a.pipette").write_text('gcode_print "hi"\n')
+        (protocols_dir / "a.pipette").write_text("break\n")
         first = kiosk_client.post("/run", json={"filename": "a.pipette"})
         assert first.status_code == 200
-
-        second = kiosk_client.post("/run", json={"filename": "a.pipette"})
-
-        assert second.status_code == 409
+        try:
+            assert poll_until(lambda: kiosk_main._current_breakpoint is not None)
+            second = kiosk_client.post("/run", json={"filename": "a.pipette"})
+            assert second.status_code == 409
+        finally:
+            kiosk_client.post("/breakpoint/respond", json={"proceed": False})
 
     def test_returns_503_when_the_daemon_is_not_connected(
         self, protocols_dir: Path, monkeypatch: pytest.MonkeyPatch
@@ -523,7 +548,7 @@ class TestBreakpointRespond:
     def test_returns_503_when_the_daemon_is_not_connected(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setattr(kiosk_main, "_control_client", None)
+        monkeypatch.setattr(kiosk_main, "_run_control_client", None)
 
         client = TestClient(kiosk_main.app)  # no lifespan, see TestRunEndpoint above
         response = client.post("/breakpoint/respond", json={"proceed": True})
@@ -565,22 +590,356 @@ class TestBreakpointRespond:
         # ever move status off "running" on its own).
         assert poll_until(lambda: not live_control_plane.service._lock.locked())
 
+    def test_cancel_during_breakpoint_aborts_preparation(
+        self,
+        kiosk_client: TestClient,
+        protocols_dir: Path,
+        live_control_plane: LiveControlPlane,
+    ) -> None:
+        (protocols_dir / "bp.pipette").write_text(
+            'gcode_print "before"\nbreak\ngcode_print "after"\n'
+        )
+        kiosk_client.post("/run", json={"filename": "bp.pipette"})
+        assert poll_until(lambda: kiosk_main._current_breakpoint is not None)
+        try:
+            run_id = live_control_plane.service.get_status().run_id
+            assert run_id is not None
+            response = kiosk_client.post("/run/cancel", json={"run_id": run_id})
+            assert response.status_code == 200
+            assert poll_until(
+                lambda: live_control_plane.service.get_status().status == "error"
+            )
+            assert "cancel" in live_control_plane.service.get_status().message.lower()
+            assert poll_until(lambda: kiosk_main._current_breakpoint is None)
+        finally:
+            kiosk_client.post("/breakpoint/respond", json={"proceed": False})
+
+    def test_cancel_during_upload_does_not_start_the_job(
+        self,
+        kiosk_client: TestClient,
+        protocols_dir: Path,
+        live_control_plane: LiveControlPlane,
+    ) -> None:
+        class DelayedUpload(FakeWebSocketClient):
+            def __init__(self) -> None:
+                super().__init__()
+                self.upload: Future[str] = Future()
+
+            def upload_gcode_file(
+                self, file_name: str, file_path: str | Path
+            ) -> Future[str]:
+                self.uploaded_files.append((file_name, str(file_path)))
+                return self.upload
+
+        fake = DelayedUpload()
+        live_control_plane.service.client = fake  # type: ignore[assignment]
+        (protocols_dir / "upload.pipette").write_text('gcode_print "hello"\n')
+        kiosk_client.post("/run", json={"filename": "upload.pipette"})
+        try:
+            assert poll_until(lambda: bool(fake.uploaded_files))
+            client = kiosk_main._control_client
+            assert client is not None
+            client.send_jsonrpc(
+                kiosk_main._control_requests.run_cancel()
+            )
+        finally:
+            fake.upload.set_result("gcodes/upload.gcode")
+        assert poll_until(
+            lambda: live_control_plane.service.get_status().status == "error"
+        )
+        assert "cancel" in live_control_plane.service.get_status().message.lower()
+        assert not any(r["method"] == "printer.print.start" for r in fake.sent_requests)
+
+    def test_cancel_is_not_blocked_by_a_queued_validation(
+        self,
+        kiosk_client: TestClient,
+        protocols_dir: Path,
+        live_control_plane: LiveControlPlane,
+    ) -> None:
+        (protocols_dir / "bp.pipette").write_text("break\n")
+        (protocols_dir / "check.pipette").write_text("wait 1\n")
+        kiosk_client.post("/run", json={"filename": "bp.pipette"})
+        assert poll_until(lambda: kiosk_main._current_breakpoint is not None)
+        run_id = live_control_plane.service.get_status().run_id
+        assert run_id is not None
+        client = kiosk_main._control_client
+        assert client is not None
+        with ThreadPoolExecutor() as pool:
+            validation = pool.submit(
+                kiosk_client.post, "/validate", json={"filename": "check.pipette"}
+            )
+            try:
+                assert poll_until(lambda: client.pending_count > 0)
+                response = kiosk_client.post("/run/cancel", json={"run_id": run_id})
+                assert response.status_code == 200
+            finally:
+                asyncio.run_coroutine_threadsafe(
+                    live_control_plane.service.confirm_breakpoint(False),
+                    live_control_plane._loop,
+                ).result(timeout=5)
+            assert validation.result(timeout=5).status_code == 200
+
+    def test_cancel_during_preparation_persistence_does_not_start_the_job(
+        self,
+        kiosk_client: TestClient,
+        protocols_dir: Path,
+        live_control_plane: LiveControlPlane,
+    ) -> None:
+        class DelayedPersistence(FakeMoonrakerState):
+            def __init__(self) -> None:
+                super().__init__()
+                self.entered = Event()
+                self.release = Event()
+
+            def save_tip_liquid_state(
+                self, tip_state: str, has_liquid: bool, current_liquid: str | None
+            ) -> None:
+                self.entered.set()
+                assert self.release.wait(10)
+                super().save_tip_liquid_state(tip_state, has_liquid, current_liquid)
+
+        fake = FakeWebSocketClient()
+        state = DelayedPersistence()
+        service = live_control_plane.service
+        service.client = fake  # type: ignore[assignment]
+        service.moonraker_state = state  # type: ignore[assignment]
+        service._last_persisted_state = None
+        (protocols_dir / "persist.pipette").write_text('gcode_print "hello"\n')
+        kiosk_client.post("/run", json={"filename": "persist.pipette"})
+        try:
+            assert state.entered.wait(5)
+            run_id = service.get_status().run_id
+            assert run_id is not None
+            response = kiosk_client.post("/run/cancel", json={"run_id": run_id})
+            assert response.status_code == 200
+            assert not any(
+                request["method"] == "printer.print.start"
+                for request in fake.sent_requests
+            )
+        finally:
+            state.release.set()
+        assert poll_until(lambda: service.get_status().status == "error")
+        assert "cancel" in service.get_status().message.lower()
+        assert not any(r["method"] == "printer.print.start" for r in fake.sent_requests)
+
 
 class TestStatusEndpoint:
+    def test_progress_belongs_to_the_current_job(
+        self,
+        kiosk_client: TestClient,
+        protocols_dir: Path,
+        live_control_plane: LiveControlPlane,
+    ) -> None:
+        fake = JobClient()
+        live_control_plane.service.client = fake  # type: ignore[assignment]
+        (protocols_dir / "progress.pipette").write_text('gcode_print "hello"\n')
+        kiosk_client.post("/run", json={"filename": "progress.pipette"})
+        assert poll_until(lambda: bool(fake.uploaded_files))
+        name = fake.uploaded_files[0][0]
+        fake.job = {
+            "print_stats": {"filename": name, "state": "printing"},
+            "virtual_sdcard": {"progress": 0.41},
+        }
+        assert poll_until(
+            lambda: (
+                live_control_plane.service.get_status().progress == pytest.approx(0.41)
+            )
+        )
+        fake.job = {
+            "print_stats": {"filename": "different.gcode", "state": "printing"},
+            "virtual_sdcard": {"progress": 0.9},
+        }
+        assert poll_until(
+            lambda: (
+                live_control_plane.service.get_status().to_dict().get("phase")
+                == "unknown"
+            )
+        )
+        assert live_control_plane.service.get_status().to_dict().get("progress") is None
+        fake.job = {
+            "print_stats": {"filename": name, "state": "paused"},
+            "virtual_sdcard": {},
+        }
+        assert poll_until(
+            lambda: live_control_plane.service.get_status().phase == "paused"
+        )
+        assert live_control_plane.service.get_status().progress is None
+        fake.set_connected(False)
+        assert poll_until(
+            lambda: live_control_plane.service.get_status().phase == "unknown"
+        )
+        assert live_control_plane.service.get_status().config_locked
+        fake.set_connected(True)
+        fake.job = {
+            "print_stats": {"filename": name, "state": "complete"},
+            "virtual_sdcard": {"progress": 1.0},
+        }
+        assert poll_until(
+            lambda: live_control_plane.service.get_status().status == "done"
+        )
+
+    def test_controls_require_the_current_confirmed_job_state(
+        self,
+        kiosk_client: TestClient,
+        protocols_dir: Path,
+        live_control_plane: LiveControlPlane,
+    ) -> None:
+        fake = JobClient()
+        live_control_plane.service.client = fake  # type: ignore[assignment]
+        (protocols_dir / "controls.pipette").write_text('gcode_print "hello"\n')
+        started = kiosk_client.post("/run", json={"filename": "controls.pipette"})
+        run_id = live_control_plane.service.get_status().run_id
+        assert started.status_code == 200 and run_id is not None
+        assert poll_until(lambda: bool(fake.uploaded_files))
+        fake.job = {
+            "print_stats": {"filename": fake.uploaded_files[0][0], "state": "printing"},
+            "virtual_sdcard": {"progress": 0.25},
+        }
+        assert poll_until(
+            lambda: live_control_plane.service.get_status().phase == "printing"
+        )
+        response = kiosk_client.post("/run/pause", json={"run_id": run_id})
+        assert response.status_code == 200
+        assert any(r["method"] == "printer.print.pause" for r in fake.sent_requests)
+        assert live_control_plane.service.get_status().phase == "printing"
+        fake.job["print_stats"]["state"] = "paused"
+        assert poll_until(
+            lambda: live_control_plane.service.get_status().phase == "paused"
+        )
+        fake.queue_response({
+            "error": {
+                "code": 400,
+                "message": "Move refused by interlock: plate1 mid-travel (120.0)",
+            }
+        })
+        refused = kiosk_client.post("/run/resume", json={"run_id": run_id})
+        assert refused.status_code == 200
+        assert "resume refused" in refused.json()["message"]
+        assert live_control_plane.service.get_status().phase == "paused"
+        assert live_control_plane.service.get_status().config_locked
+        response = kiosk_client.post("/run/resume", json={"run_id": run_id})
+        assert response.status_code == 200
+        assert any(r["method"] == "printer.print.resume" for r in fake.sent_requests)
+        assert (
+            kiosk_client.post("/run/pause", json={"run_id": "old-run"}).status_code
+            != 200
+        )
+        fake.job["print_stats"]["filename"] = "other.gcode"
+        response = kiosk_client.post("/run/cancel", json={"run_id": run_id})
+        assert response.status_code != 200
+        assert not any(
+            r["method"] == "printer.print.cancel" for r in fake.sent_requests
+        )
+
+    def test_uncertain_start_stays_locked_until_job_is_confirmed(
+        self,
+        kiosk_client: TestClient,
+        protocols_dir: Path,
+        live_control_plane: LiveControlPlane,
+    ) -> None:
+        class StartTimeout(JobClient):
+            def send_jsonrpc(
+                self, payload: dict[str, Any], timeout: float = 5.0
+            ) -> dict[str, Any]:
+                if payload["method"] == "printer.print.start":
+                    raise TimeoutError("Start response lost")
+                return super().send_jsonrpc(payload, timeout)
+
+        fake = StartTimeout()
+        live_control_plane.service.client = fake  # type: ignore[assignment]
+        (protocols_dir / "timeout.pipette").write_text('gcode_print "hello"\n')
+        kiosk_client.post("/run", json={"filename": "timeout.pipette"})
+        assert poll_until(lambda: bool(fake.uploaded_files))
+        assert poll_until(
+            lambda: live_control_plane.service.get_status().phase == "unknown"
+        )
+        assert live_control_plane.service.get_status().config_locked
+        fake.job = {
+            "print_stats": {
+                "filename": fake.uploaded_files[0][0],
+                "state": "printing",
+            },
+            "virtual_sdcard": {"progress": 0.1},
+        }
+        assert poll_until(
+            lambda: live_control_plane.service.get_status().phase == "printing"
+        )
+
+    def test_new_run_waits_for_previous_control_and_cancelled_wait_releases_gate(
+        self,
+        kiosk_client: TestClient,
+        protocols_dir: Path,
+        live_control_plane: LiveControlPlane,
+    ) -> None:
+        class DelayedPause(JobClient):
+            def __init__(self) -> None:
+                super().__init__()
+                self.pause_started = Event()
+                self.release_pause = Event()
+
+            def send_jsonrpc(
+                self, payload: dict[str, Any], timeout: float = 5.0
+            ) -> dict[str, Any]:
+                if payload["method"] == "printer.print.pause":
+                    self.pause_started.set()
+                    assert self.release_pause.wait(timeout=5)
+                return super().send_jsonrpc(payload, timeout)
+
+        fake = DelayedPause()
+        live_control_plane.service.client = fake  # type: ignore[assignment]
+        (protocols_dir / "a.pipette").write_text('gcode_print "hello"\n')
+        kiosk_client.post("/run", json={"filename": "a.pipette"})
+        run_id = live_control_plane.service.get_status().run_id
+        assert run_id is not None
+        assert poll_until(lambda: bool(fake.uploaded_files))
+        fake.job = {
+            "print_stats": {"filename": fake.uploaded_files[0][0], "state": "printing"}
+        }
+        assert poll_until(
+            lambda: live_control_plane.service.get_status().phase == "printing"
+        )
+        with ThreadPoolExecutor() as pool:
+            pause = pool.submit(
+                kiosk_client.post, "/run/pause", json={"run_id": run_id}
+            )
+            try:
+                assert fake.pause_started.wait(timeout=5)
+                fake.job["print_stats"]["state"] = "complete"
+                assert poll_until(
+                    lambda: live_control_plane.service.get_status().status == "done"
+                )
+                waiting = asyncio.run_coroutine_threadsafe(
+                    live_control_plane.service.start_run("a.pipette"),
+                    live_control_plane._loop,
+                )
+                with pytest.raises(TimeoutError):
+                    waiting.result(timeout=0.2)
+                assert waiting.cancel()
+            finally:
+                fake.release_pause.set()
+            assert pause.result(timeout=5).status_code == 200
+        next_run = asyncio.run_coroutine_threadsafe(
+            live_control_plane.service.start_run("a.pipette"), live_control_plane._loop
+        ).result(timeout=5)
+        assert next_run.run_id != run_id
+
     def test_idle_by_default(self, kiosk_client: TestClient) -> None:
         response = kiosk_client.get("/status")
 
-        assert response.json() == {"status": "idle", "message": ""}
+        assert response.json()["status"] == "idle"
+        assert response.json()["message"] == ""
 
     def test_reflects_the_real_status_after_a_run_starts(
         self, kiosk_client: TestClient, protocols_dir: Path
     ) -> None:
-        (protocols_dir / "a.pipette").write_text('gcode_print "hi"\n')
+        (protocols_dir / "a.pipette").write_text("break\n")
 
         kiosk_client.post("/run", json={"filename": "a.pipette"})
-        response = kiosk_client.get("/status")
-
-        assert response.json()["status"] == "running"
+        try:
+            assert poll_until(lambda: kiosk_main._current_breakpoint is not None)
+            assert kiosk_client.get("/status").json()["status"] == "running"
+        finally:
+            kiosk_client.post("/breakpoint/respond", json={"proceed": False})
 
 
 class TestWebSocketStatusBroadcast:
@@ -590,41 +949,43 @@ class TestWebSocketStatusBroadcast:
         with kiosk_client.websocket_connect("/ws/status") as ws:
             payload = ws.receive_json()
 
-        assert payload == {
-            "status": "idle",
-            "message": "",
-            "breakpoint": None,
-            "toolhead": {"position": None, "homed_axes": None},
-            "config_locked": False,
-        }
+        assert payload["status"] == "idle"
+        assert payload["message"] == ""
+        assert payload["breakpoint"] is None
+        assert payload["toolhead"] == {"position": None, "homed_axes": None}
+        assert payload["config_locked"] is False
+        assert payload["daemon_connected"] is True
 
     def test_receives_a_push_when_a_run_starts(
         self, kiosk_client: TestClient, protocols_dir: Path
     ) -> None:
-        (protocols_dir / "a.pipette").write_text('gcode_print "hi"\n')
+        (protocols_dir / "a.pipette").write_text("break\n")
 
-        with kiosk_client.websocket_connect("/ws/status") as ws:
-            assert ws.receive_json()["status"] == "idle"
-
-            kiosk_client.post("/run", json={"filename": "a.pipette"})
-
-            pushed = ws.receive_json()
-            assert pushed["status"] == "running"
-            assert pushed["breakpoint"] is None
+        try:
+            with kiosk_client.websocket_connect("/ws/status") as ws:
+                assert ws.receive_json()["status"] == "idle"
+                kiosk_client.post("/run", json={"filename": "a.pipette"})
+                pushed = ws.receive_json()
+                assert pushed["status"] == "running"
+        finally:
+            assert poll_until(lambda: kiosk_main._current_breakpoint is not None)
+            kiosk_client.post("/breakpoint/respond", json={"proceed": False})
 
     def test_fans_out_to_every_connected_client(
         self, kiosk_client: TestClient, protocols_dir: Path
     ) -> None:
-        (protocols_dir / "a.pipette").write_text('gcode_print "hi"\n')
+        (protocols_dir / "a.pipette").write_text("break\n")
 
-        with (
-            kiosk_client.websocket_connect("/ws/status") as ws1,
-            kiosk_client.websocket_connect("/ws/status") as ws2,
-        ):
-            ws1.receive_json()
-            ws2.receive_json()
-
-            kiosk_client.post("/run", json={"filename": "a.pipette"})
-
-            assert ws1.receive_json()["status"] == "running"
-            assert ws2.receive_json()["status"] == "running"
+        try:
+            with (
+                kiosk_client.websocket_connect("/ws/status") as ws1,
+                kiosk_client.websocket_connect("/ws/status") as ws2,
+            ):
+                ws1.receive_json()
+                ws2.receive_json()
+                kiosk_client.post("/run", json={"filename": "a.pipette"})
+                assert ws1.receive_json()["status"] == "running"
+                assert ws2.receive_json()["status"] == "running"
+        finally:
+            assert poll_until(lambda: kiosk_main._current_breakpoint is not None)
+            kiosk_client.post("/breakpoint/respond", json={"proceed": False})

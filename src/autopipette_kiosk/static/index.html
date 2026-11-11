@@ -85,6 +85,14 @@
           <button class="check-btn" id="checkBtn" disabled>Check</button>
         </div>
 
+        <div class="run-controls" aria-label="Protocol controls">
+          <button id="pauseBtn" disabled>Pause</button>
+          <button id="resumeBtn" disabled>Resume</button>
+          <button id="cancelBtn" disabled>Cancel</button>
+        </div>
+        <div class="run-control-note">Cancel is not an emergency stop.</div>
+        <div class="run-control-feedback" id="runControlFeedback" role="status"></div>
+
         <div class="findings-list" id="findingsList"></div>
 
         <div class="status-card">
@@ -92,9 +100,8 @@
           <div class="status-body">
             <div class="status-state idle" id="statusState">Idle</div>
             <div class="status-msg" id="statusMsg">No protocol running</div>
-            <div class="progress-bar-wrap">
-              <div class="progress-bar" id="progressBar"></div>
-            </div>
+            <div class="progress-label" id="progressLabel"></div>
+            <progress id="progressBar" max="100" aria-label="Estimated G-code file progress" hidden></progress>
           </div>
         </div>
       </div>

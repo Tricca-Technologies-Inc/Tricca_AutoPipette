@@ -534,30 +534,24 @@ header {
 @keyframes spin { to { transform: rotate(360deg); } }
 .spinning { animation: spin 1s linear infinite; }
 
-/* ── progress bar ── */
-.progress-bar-wrap {
-  height: 3px;
-  background: var(--border);
-  border-radius: 2px;
-  overflow: hidden;
-  margin-top: 12px;
+.run-controls { display: flex; flex-wrap: wrap; gap: 10px; }
+.run-controls button {
+  min-width: 90px;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface2);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
 }
-
-@keyframes indeterminate {
-  0%   { transform: translateX(-100%); }
-  100% { transform: translateX(400%); }
-}
-
-.progress-bar {
-  height: 100%;
-  width: 25%;
-  border-radius: 2px;
-  background: var(--accent);
-  animation: indeterminate 1.4s ease-in-out infinite;
-  display: none;
-}
-
-.progress-bar.active { display: block; }
+.run-controls button:disabled { opacity: 0.4; cursor: not-allowed; }
+.run-control-note, .run-control-feedback { color: var(--muted); font-size: 13px; }
+.run-control-feedback:empty { display: none; }
+.progress-label { margin-top: 12px; color: var(--muted); font-size: 13px; }
+#progressBar { width: 100%; height: 10px; accent-color: var(--accent); }
 
 /* ── Tips page (issue #17) ── */
 #page-tips.active {

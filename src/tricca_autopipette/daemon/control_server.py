@@ -453,11 +453,17 @@ class ControlServer:
         if method == "run.status":
             return _run_status_to_dict(self.service.get_status())
         if method == "run.cancel":
-            return _run_status_to_dict(await self.service.cancel_run())
+            return _run_status_to_dict(
+                await self.service.cancel_run(params.get("run_id"))
+            )
         if method == "run.pause":
-            return _run_status_to_dict(await self.service.pause_run())
+            return _run_status_to_dict(
+                await self.service.pause_run(params.get("run_id"))
+            )
         if method == "run.resume":
-            return _run_status_to_dict(await self.service.resume_run())
+            return _run_status_to_dict(
+                await self.service.resume_run(params.get("run_id"))
+            )
         if method == "run.confirm_breakpoint":
             await self.service.confirm_breakpoint(bool(params["proceed"]))
             return {}

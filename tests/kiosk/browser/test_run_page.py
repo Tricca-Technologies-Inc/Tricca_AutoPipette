@@ -16,13 +16,17 @@ reachable here yet.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import pytest
+from fakes.fake_websocket_client import FakeWebSocketClient
 
 pytest.importorskip("playwright")
 
 from playwright.sync_api import Page, expect
+from support.live_control_plane import LiveControlPlane
 from support.live_kiosk_server import LiveKioskServer
+from support.polling import poll_until
 
 
 def test_empty_protocol_list_shows_a_placeholder(
@@ -96,18 +100,105 @@ def test_legacy_folder_warns_that_protocols_are_unverified(
 def test_running_a_protocol_updates_the_shared_pill_and_the_run_page_card(
     page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
 ) -> None:
-    (protocols_dir / "a.pipette").write_text('gcode_print "hi"\n')
+    (protocols_dir / "a.pipette").write_text("break\n")
     page.goto(live_kiosk_server.url)
     page.click(".protocol-item")
 
-    page.click("#runBtn")
+    try:
+        page.click("#runBtn")
+        expect(page.locator("#statusPillLabel")).to_have_text("Running")
+        expect(page.locator("#statusState")).to_have_text("Running")
+        expect(page.locator("#runBtn")).to_be_disabled()
+        expect(page.locator("#bpAbortBtn")).to_be_visible()
+    finally:
+        page.click("#bpAbortBtn")
 
-    # app.js's shared status pill (visible regardless of active tab)...
-    expect(page.locator("#statusPillLabel")).to_have_text("Running")
-    # ...and run.js's own detailed status card -- both driven by the same
-    # real notify_run_status push, relayed over the real /ws/status socket.
-    expect(page.locator("#statusState")).to_have_text("Running")
-    expect(page.locator("#runBtn")).to_be_disabled()
+
+def test_cancel_can_abort_a_protocol_at_a_breakpoint(
+    page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
+) -> None:
+    (protocols_dir / "a.pipette").write_text("break\n")
+    page.goto(live_kiosk_server.url)
+    page.click(".protocol-item")
+    page.click("#runBtn")
+    expect(page.locator("#bpAbortBtn")).to_be_visible()
+    expect(page.locator("#cancelBtn")).to_be_enabled()
+    page.once("dialog", lambda dialog: dialog.accept())
+    page.click("#cancelBtn")
+    expect(page.locator("#statusMsg")).to_contain_text("canceled")
+    expect(page.locator("#bpAbortBtn")).to_be_hidden()
+
+
+def test_run_controls_and_estimated_progress(
+    page: Page,
+    live_kiosk_server_with_moonraker: LiveKioskServer,
+    live_control_plane: LiveControlPlane,
+    protocols_dir: Path,
+) -> None:
+    class JobClient(FakeWebSocketClient):
+        def __init__(self) -> None:
+            super().__init__()
+            self.job: dict[str, Any] = {}
+
+        def send_jsonrpc(
+            self, payload: dict[str, Any], timeout: float = 5.0
+        ) -> dict[str, Any]:
+            if payload["method"] == "printer.objects.query":
+                if not self.is_connected():
+                    raise RuntimeError("Disconnected")
+                return {"result": {"status": self.job}}
+            return super().send_jsonrpc(payload, timeout)
+
+    fake = JobClient()
+    live_control_plane.service.client = fake  # type: ignore[assignment]
+    (protocols_dir / "a.pipette").write_text('gcode_print "hi"\n')
+    page.goto(live_kiosk_server_with_moonraker.url)
+    page.click(".protocol-item")
+    page.click("#runBtn")
+    assert poll_until(lambda: bool(fake.uploaded_files))
+    name = fake.uploaded_files[0][0]
+    fake.job = {
+        "print_stats": {"filename": name, "state": "printing"},
+        "virtual_sdcard": {"progress": 0.41},
+    }
+    expect(page.locator("#progressLabel")).to_have_text(
+        "Estimated G-code file progress: 41%"
+    )
+    expect(page.locator("#pauseBtn")).to_be_enabled()
+    expect(page.locator("#resumeBtn")).to_be_disabled()
+    fake.set_connected(False)
+    expect(page.locator("#progressLabel")).to_have_text("Progress unavailable")
+    expect(page.locator("#pauseBtn")).to_be_disabled()
+    expect(page.locator("#cancelBtn")).to_be_disabled()
+    fake.set_connected(True)
+    expect(page.locator("#pauseBtn")).to_be_enabled()
+    page.click("#pauseBtn")
+    expect(page.locator("#runControlFeedback")).to_contain_text(
+        "waiting for confirmation"
+    )
+    fake.job = {
+        "print_stats": {"filename": name, "state": "paused"},
+        "virtual_sdcard": {"progress": 0.41},
+    }
+    expect(page.locator("#statusState")).to_have_text("Paused")
+    expect(page.locator("#resumeBtn")).to_be_enabled()
+    page.click("#resumeBtn")
+    expect(page.locator("#runControlFeedback")).to_contain_text(
+        "waiting for confirmation"
+    )
+    fake.job = {
+        "print_stats": {"filename": name, "state": "printing"},
+        "virtual_sdcard": {"progress": 0.5},
+    }
+    expect(page.locator("#pauseBtn")).to_be_enabled()
+    page.once("dialog", lambda dialog: dialog.accept())
+    page.click("#cancelBtn")
+    expect(page.locator("#runControlFeedback")).to_contain_text(
+        "waiting for confirmation"
+    )
+    fake.job = {"print_stats": {"filename": name, "state": "cancelled"}}
+    expect(page.locator("#statusState")).to_have_text("Error")
+    expect(page.locator("#cancelBtn")).to_be_disabled()
 
 
 def test_a_failed_run_shows_the_error_label_and_icon_on_both_widgets(
@@ -128,6 +219,23 @@ def test_a_failed_run_shows_the_error_label_and_icon_on_both_widgets(
     expect(page.locator("#statusPillLabel")).to_have_text("Error")
     expect(page.locator("#statusState")).to_have_text("Error")
     expect(page.locator("#statusIcon")).to_have_text("✕")
+
+
+def test_rejected_run_shows_feedback_without_replacing_current_status(
+    page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
+) -> None:
+    (protocols_dir / "a.pipette").write_text("wait 1\n")
+    page.route("**/run", lambda route: route.fulfill(
+        status=409, json={"detail": "Another run is active"}
+    ))
+    page.goto(live_kiosk_server.url)
+    page.click(".protocol-item")
+    page.click("#runBtn")
+
+    expect(page.locator("#runControlFeedback")).to_have_text(
+        "Run failed: Another run is active"
+    )
+    expect(page.locator("#statusState")).to_have_text("Idle")
 
 
 def test_check_button_reports_no_issues_for_a_clean_protocol(

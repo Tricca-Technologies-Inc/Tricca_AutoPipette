@@ -94,7 +94,7 @@ def test_a_refused_start_shows_the_reason_and_stays_on_setup(
 def test_the_wizard_is_locked_while_a_run_is_active(
     page: Page, live_kiosk_server_with_plates: LiveKioskServer, protocols_dir: Path
 ) -> None:
-    (protocols_dir / "a.pipette").write_text('gcode_print "hi"\n')
+    (protocols_dir / "a.pipette").write_text("break\n")
     _open(page, live_kiosk_server_with_plates)
     expect(page.locator("#calStartBtn")).to_be_enabled()
 
@@ -105,6 +105,10 @@ def test_the_wizard_is_locked_while_a_run_is_active(
     )
     urllib.request.urlopen(request, timeout=5).close()
 
-    expect(page.locator("#calLockBanner")).to_be_visible()
-    expect(page.locator("#calStartBtn")).to_be_disabled()
-    expect(page.locator("#page-calibrate button:enabled")).to_have_count(0)
+    try:
+        expect(page.locator("#calLockBanner")).to_be_visible()
+        expect(page.locator("#calStartBtn")).to_be_disabled()
+        expect(page.locator("#page-calibrate button:enabled")).to_have_count(0)
+    finally:
+        expect(page.locator("#bpAbortBtn")).to_be_visible()
+        page.click("#bpAbortBtn")

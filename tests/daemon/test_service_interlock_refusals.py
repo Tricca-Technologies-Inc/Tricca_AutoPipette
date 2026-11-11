@@ -125,7 +125,7 @@ class TestRefusedResume:
             "printer.print.resume",
         ]
         assert status.status == "running"
-        assert status.message == "Running a.pipette"
+        assert status.message == "Resume requested; waiting for confirmation."
         assert status.refusal is None
         assert pushes[-1]["refusal"] is None
 

@@ -604,29 +604,29 @@ class ControlRequests(JsonRpcRequestBuilder):
         """
         return self.gen_request("run.status")
 
-    def run_cancel(self) -> dict[str, Any]:
+    def run_cancel(self, run_id: str | None = None) -> dict[str, Any]:
         """Build a request to cancel the active run.
 
         Returns:
             Request to cancel the run.
         """
-        return self.gen_request("run.cancel")
+        return self.gen_request("run.cancel", {"run_id": run_id} if run_id else None)
 
-    def run_pause(self) -> dict[str, Any]:
+    def run_pause(self, run_id: str | None = None) -> dict[str, Any]:
         """Build a request to pause the active run.
 
         Returns:
             Request to pause the run.
         """
-        return self.gen_request("run.pause")
+        return self.gen_request("run.pause", {"run_id": run_id} if run_id else None)
 
-    def run_resume(self) -> dict[str, Any]:
+    def run_resume(self, run_id: str | None = None) -> dict[str, Any]:
         """Build a request to resume the active run.
 
         Returns:
             Request to resume the run.
         """
-        return self.gen_request("run.resume")
+        return self.gen_request("run.resume", {"run_id": run_id} if run_id else None)
 
     def run_confirm_breakpoint(self, proceed: bool) -> dict[str, Any]:
         """Build a request answering a pending protocol breakpoint.

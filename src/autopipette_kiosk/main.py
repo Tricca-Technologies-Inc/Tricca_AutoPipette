@@ -19,6 +19,7 @@ See systemd/README.md before exposing it.
 import asyncio
 import logging
 import os
+import threading
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -27,7 +28,7 @@ from typing import Any, Literal, cast
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from tricca_autopipette.commands.tap_cmd_parsers import (
     CalibrateStartArgs,
@@ -89,6 +90,17 @@ class RunStatus(BaseModel):
 
     status: Literal["idle", "running", "done", "error"]
     message: str = ""
+    run_id: str | None = None
+    phase: str | None = None
+    progress: float | None = None
+    revision: int = 0
+    epoch: str = ""
+
+
+class RunControlRequest(BaseModel):
+    """Identify the run the operator intends to control."""
+
+    run_id: str = Field(min_length=1)
 
 
 class BreakpointResponse(BaseModel):
@@ -210,11 +222,14 @@ class MoveResult(BaseModel):
 
 # ── daemon control-plane connection ────────────────────────────────────────────
 _control_client: WebSocketClient | None = None
+_run_control_client: WebSocketClient | None = None
 _control_requests = ControlRequests()
 _main_loop: asyncio.AbstractEventLoop | None = None
 
 # ── in-memory run state, mirrored from the daemon's notify_run_status pushes ──
 _current_run: RunStatus = RunStatus(status="idle")
+_run_status_lock = threading.Lock()
+_daemon_connected = False
 # Pending breakpoint, mirrored from notify_breakpoint pushes: {"run_id",
 # "filename", "pending"} while one is awaiting a response, None otherwise.
 _current_breakpoint: dict[str, Any] | None = None
@@ -243,12 +258,10 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
     Yields:
         None. Control-plane connection teardown happens after the yield.
     """
-    global _control_client, _main_loop
+    global _control_client, _run_control_client, _main_loop, _daemon_connected
     _main_loop = asyncio.get_running_loop()
 
     client = WebSocketClient(TAPD_CONTROL_URI)
-    client.register_handler("notify_run_status", _on_run_status_notification)
-    client.register_handler("notify_breakpoint", _on_breakpoint_notification)
     client.register_handler("notify_raw_event", _on_raw_event_notification)
     client.start()
     connected = await asyncio.to_thread(
@@ -283,12 +296,65 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
         except RuntimeError:
             logger.warning("Failed to subscribe to live toolhead updates.")
     _control_client = client
+    run_client = WebSocketClient(TAPD_CONTROL_URI)
+    run_client.register_handler("notify_run_status", _on_run_status_notification)
+    run_client.register_handler("notify_breakpoint", _on_breakpoint_notification)
+    run_client.start()
+    run_connected = await asyncio.to_thread(
+        run_client.wait_for_connection, TAPD_CONNECT_TIMEOUT_SECONDS
+    )
+    if run_connected:
+        try:
+            await asyncio.to_thread(
+                run_client.send_jsonrpc, _control_requests.identify("kiosk")
+            )
+        except RuntimeError:
+            logger.warning("Failed to identify the run-control connection to tapd.")
+    else:
+        logger.error("Failed to connect run controls to tapd at %s", TAPD_CONTROL_URI)
+    _run_control_client = run_client
+    _daemon_connected = False
+    if run_connected:
+        try:
+            response = await asyncio.to_thread(
+                run_client.send_jsonrpc, _control_requests.run_status()
+            )
+            _on_run_status_notification(response["result"], broadcast=False)
+            _daemon_connected = True
+        except (RuntimeError, TimeoutError, KeyError) as exc:
+            logger.warning("Unable to refresh daemon status: %s", exc)
+    monitor = asyncio.create_task(_monitor_daemon(run_client))
 
     try:
         yield
     finally:
+        monitor.cancel()
+        await asyncio.gather(monitor, return_exceptions=True)
+        _daemon_connected = False
         _control_client = None
+        _run_control_client = None
+        await asyncio.to_thread(run_client.stop)
         await asyncio.to_thread(client.stop)
+
+
+async def _monitor_daemon(client: WebSocketClient) -> None:
+    """Refresh state on connection and reconnect; disable controls on loss."""
+    global _daemon_connected
+    while True:
+        connected = False
+        if client.is_connected():
+            try:
+                response = await asyncio.to_thread(
+                    client.send_jsonrpc, _control_requests.run_status()
+                )
+                _on_run_status_notification(response["result"])
+                connected = True
+            except (RuntimeError, TimeoutError, KeyError) as exc:
+                logger.warning("Unable to refresh daemon status: %s", exc)
+        if connected != _daemon_connected:
+            _daemon_connected = connected
+            await _broadcast_status()
+        await asyncio.sleep(1)
 
 
 app = FastAPI(title="AutoPipette Kiosk", lifespan=lifespan)
@@ -412,7 +478,54 @@ async def run_protocol(req: RunRequest) -> RunStatus:
     return RunStatus(
         status=result.get("status", "running"),
         message=result.get("message", ""),
+        run_id=result.get("run_id"),
+        phase=result.get("phase"),
+        progress=result.get("progress"),
+        revision=result.get("revision", 0),
+        epoch=result.get("epoch", ""),
     )
+
+
+async def _control_run(request: dict[str, Any]) -> RunStatus:
+    if _run_control_client is None or not _run_control_client.is_connected():
+        raise HTTPException(status_code=503, detail="Control daemon not connected")
+    try:
+        response = await asyncio.to_thread(_run_control_client.send_jsonrpc, request)
+    except JsonRpcError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except (RuntimeError, TimeoutError) as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    return RunStatus.model_validate(response["result"])
+
+
+@app.post("/run/pause", response_model=RunStatus)
+async def pause_run(req: RunControlRequest) -> RunStatus:
+    """Request a pause; status changes when Moonraker confirms it.
+
+    Returns:
+        The daemon's current run status.
+    """
+    return await _control_run(_control_requests.run_pause(req.run_id))
+
+
+@app.post("/run/resume", response_model=RunStatus)
+async def resume_run(req: RunControlRequest) -> RunStatus:
+    """Request a resume; status changes when Moonraker confirms it.
+
+    Returns:
+        The daemon's current run status.
+    """
+    return await _control_run(_control_requests.run_resume(req.run_id))
+
+
+@app.post("/run/cancel", response_model=RunStatus)
+async def cancel_run(req: RunControlRequest) -> RunStatus:
+    """Request cancellation of the identified run.
+
+    Returns:
+        The daemon's current run status.
+    """
+    return await _control_run(_control_requests.run_cancel(req.run_id))
 
 
 @app.post("/validate", response_model=CommandResultResponse)
@@ -614,11 +727,11 @@ async def respond_to_breakpoint(req: BreakpointResponse) -> dict[str, bool]:
     Raises:
         HTTPException: 503 if the control daemon isn't connected.
     """
-    if _control_client is None:
+    if _run_control_client is None:
         raise HTTPException(status_code=503, detail="Control daemon not connected")
 
     await asyncio.to_thread(
-        _control_client.send_jsonrpc,
+        _run_control_client.send_jsonrpc,
         _control_requests.run_confirm_breakpoint(req.proceed),
     )
     return {"ok": True}
@@ -910,13 +1023,18 @@ async def status_ws(websocket: WebSocket) -> None:
 
 
 # ── internal ───────────────────────────────────────────────────────────────────
-def _on_run_status_notification(params: Any) -> None:  # ruff:ignore[any-type]
+def _on_run_status_notification(
+    params: Any,  # ruff:ignore[any-type]
+    *,
+    broadcast: bool = True,
+) -> None:
     """Handle a `notify_run_status` push from the tapd control daemon.
 
     Args:
         params: Notification params, `{"status", "message", "run_id",
             "filename", "config_locked"}` as sent by
             `AutoPipetteService._broadcast_status`.
+        broadcast: Whether to forward a changed status to browsers.
 
     Note:
         Invoked from the control-plane WebSocketClient's background thread;
@@ -926,17 +1044,23 @@ def _on_run_status_notification(params: Any) -> None:  # ruff:ignore[any-type]
     if not isinstance(params, dict):
         return
     notification = as_dict(params)
-    _config_locked = bool(notification.get("config_locked"))
-    _current_run = RunStatus(
-        status=notification.get("status", "idle"),
-        message=notification.get("message", ""),
-    )
-    if _current_run.status != "running":
-        # A run that's no longer active can't have a pending breakpoint;
-        # clear any stale one (e.g. an aborted run) rather than waiting for
-        # the matching notify_breakpoint(pending=False).
-        _current_breakpoint = None
-    if _main_loop is not None:
+    incoming = RunStatus.model_validate(notification)
+    with _run_status_lock:
+        if (
+            incoming.epoch == _current_run.epoch
+            and incoming.revision < _current_run.revision
+        ):
+            return
+        changed = incoming != _current_run or _config_locked != bool(
+            notification.get("config_locked")
+        )
+        _config_locked = bool(notification.get("config_locked"))
+        _current_run = incoming
+        if _current_run.status != "running":
+            _current_breakpoint = None
+    if not changed:
+        return
+    if broadcast and _main_loop is not None:
         asyncio.run_coroutine_threadsafe(_broadcast_status(), _main_loop)
 
 
@@ -1067,6 +1191,7 @@ def _status_payload() -> dict[str, Any]:
         "breakpoint": _current_breakpoint,
         "toolhead": dict(_current_toolhead),
         "config_locked": _config_locked,
+        "daemon_connected": _daemon_connected,
     }
 
 

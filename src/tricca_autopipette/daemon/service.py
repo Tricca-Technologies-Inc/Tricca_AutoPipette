@@ -125,7 +125,11 @@ from tricca_autopipette.daemon.moonraker_state import (
     PlateAxis,
 )
 from tricca_autopipette.moonraker.moonraker_requests import MoonrakerRequests
-from tricca_autopipette.moonraker.websocket_client import JsonRpcError, WebSocketClient
+from tricca_autopipette.moonraker.websocket_client import (
+    JsonRpcError,
+    WebSocketClient,
+    as_dict,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -154,6 +158,15 @@ class RunAlreadyActiveError(Exception):
 
 
 @dataclass
+class _RunControl:
+    run_id: str
+    gate: threading.Lock
+    canceled: threading.Event
+    phase: str = "preparing"
+    job_filename: str | None = None
+
+
+@dataclass
 class RunStatus:
     """Status of the daemon's current (or most recent) protocol run.
 
@@ -171,6 +184,10 @@ class RunStatus:
     run_id: str | None = None
     filename: str | None = None
     refusal: InterlockRefusal | None = None
+    phase: str | None = None
+    progress: float | None = None
+    revision: int = 0
+    epoch: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         """The JSON shape of ``run.status`` and ``notify_run_status``.
@@ -610,11 +627,15 @@ class AutoPipetteService:
         self._persisted_tip_presence: dict[str, Any] | None = None
 
         self._lock = asyncio.Lock()
-        self._current = RunStatus(status="idle")
+        self._status_epoch = str(uuid.uuid4())
+        self._status_revision = 0
+        self._current: RunStatus = RunStatus(status="idle", epoch=self._status_epoch)
         self._loop: asyncio.AbstractEventLoop | None = None
         self._broadcast_callback: Callable[[str, dict[str, Any]], None] | None = None
         self._breakpoint_event: threading.Event | None = None
         self._breakpoint_proceed = False
+        self._run_control: _RunControl | None = None
+        self._run_monitor: asyncio.Task[None] | None = None
         self._background_tasks: set[asyncio.Task[None]] = set()
         self._raw_subscriptions: set[str] = set()
         # method -> whatever handler (if any) was already registered on
@@ -749,6 +770,9 @@ class AutoPipetteService:
 
     async def stop(self) -> None:
         """Disconnect from Moonraker without blocking the daemon's event loop."""
+        if self._run_monitor is not None:
+            self._run_monitor.cancel()
+            await asyncio.gather(self._run_monitor, return_exceptions=True)
         await asyncio.to_thread(self.disconnect)
 
     def _apply_persisted_state(self, values: dict[str, Any]) -> None:
@@ -3620,6 +3644,10 @@ class AutoPipetteService:
             RunAlreadyActiveError: If a run is already in progress.
             FileNotFoundError: If the protocol file does not exist.
         """
+        if self.get_status().status == "running":
+            raise RunAlreadyActiveError(
+                f"A protocol is already running: {self._current.filename}"
+            )
         async with self._lock:
             if self._current.status == "running":
                 raise RunAlreadyActiveError(
@@ -3631,14 +3659,26 @@ class AutoPipetteService:
             except FileNotFoundError as e:
                 raise FileNotFoundError(f"Protocol not found: {e}") from e
 
-            run_id = str(uuid.uuid4())
-            self._current = RunStatus(
-                status="running",
-                message=f"Running {filename}",
-                run_id=run_id,
-                filename=filename,
-            )
-            self._broadcast_status()
+            previous = self._run_control
+            if previous is not None:
+                while not previous.gate.acquire(blocking=False):
+                    await asyncio.sleep(0.05)
+            try:
+                run_id = str(uuid.uuid4())
+                self._run_control = _RunControl(
+                    run_id, threading.Lock(), threading.Event()
+                )
+                self._current = RunStatus(
+                    status="running",
+                    message=f"Running {filename}",
+                    run_id=run_id,
+                    filename=filename,
+                    phase="preparing",
+                )
+                self._broadcast_status()
+            finally:
+                if previous is not None:
+                    previous.gate.release()
 
         task = asyncio.create_task(self._run_protocol(filename, run_id))
         self._background_tasks.add(task)
@@ -3661,18 +3701,28 @@ class AutoPipetteService:
             :meth:`dispatch`). ``cancel_run``/``pause_run``/``resume_run``
             deliberately bypass this lock — see their docstrings.
 
-            Does not set ``self._current`` to "done" on success: real
-            completion is detected later, asynchronously, via Moonraker's
-            ``print_stats`` transition (see ``_apply_print_state_change``),
-            not by this method returning -- ``upload_and_execute_gcode``
-            only starts the print job.
+            A successful start is monitored until Moonraker confirms a
+            terminal state for this run's unique G-code file.
         """
         async with self._lock:
             try:
-                await asyncio.to_thread(self._run_protocol_sync, filename)
+                await asyncio.to_thread(
+                    self._run_protocol_sync, filename, self._run_control
+                )
             except ProtocolAbortedError as exc:
+                canceled = (
+                    self._run_control is not None
+                    and self._run_control.canceled.is_set()
+                )
                 self._current = RunStatus(
-                    status="error", message=str(exc), run_id=run_id, filename=filename
+                    status="error",
+                    message=(
+                        "Protocol canceled during preparation."
+                        if canceled
+                        else str(exc)
+                    ),
+                    run_id=run_id,
+                    filename=filename,
                 )
                 self._broadcast_status()
             except Exception as exc:
@@ -3683,6 +3733,120 @@ class AutoPipetteService:
                     filename=filename,
                 )
                 self._broadcast_status()
+            else:
+                control = self._run_control
+                if control is not None and control.phase == "executing":
+                    self._current = replace(
+                        self._current,
+                        phase="unknown",
+                        message="Waiting for job status.",
+                    )
+                    self._broadcast_status()
+                    self._run_monitor = asyncio.create_task(self._monitor_run(control))
+                else:
+                    canceled = control is not None and control.canceled.is_set()
+                    self._current = replace(
+                        self._current,
+                        status="error",
+                        phase=None,
+                        message=(
+                            "Protocol canceled during preparation."
+                            if canceled
+                            else "Protocol did not start: no job was sent to Moonraker."
+                        ),
+                    )
+                    self._broadcast_status()
+
+    def _announce_starting(self, control: _RunControl) -> None:
+        if self._run_control is control and self._current.status == "running":
+            self._current = replace(
+                self._current, phase="starting", message="Starting protocol."
+            )
+            self._broadcast_status()
+
+    async def _monitor_run(self, control: _RunControl) -> None:
+        """Poll complete snapshots so progress cannot be attributed to another job."""  # ruff: ignore[docstring-missing-exception]
+        while self._run_control is control and self._current.status == "running":
+            try:
+                if self.client is None:
+                    raise RuntimeError(_NOT_CONNECTED_MSG)
+                response = await asyncio.to_thread(
+                    self.client.send_jsonrpc,
+                    self.mrr.printer_objects_query({
+                        "print_stats": ["filename", "state", "message"],
+                        "virtual_sdcard": ["progress"],
+                    }),
+                )
+                if (
+                    self._run_control is not control
+                    or self._current.status != "running"
+                ):
+                    return
+                status = as_dict(as_dict(response.get("result")).get("status"))
+                stats = as_dict(status.get("print_stats"))
+                sdcard = as_dict(status.get("virtual_sdcard"))
+                state = stats.get("state")
+                same_job = stats.get("filename") == control.job_filename
+                progress = sdcard.get("progress")
+                if (
+                    isinstance(progress, bool)
+                    or not isinstance(progress, (int, float))
+                    or not math.isfinite(progress)
+                    or not 0 <= progress <= 1
+                ):
+                    progress = None
+                if not same_job:
+                    state, progress = None, None
+                if state in ("complete", "cancelled", "error"):
+                    refusal = (
+                        parse_interlock_refusal(str(stats.get("message", "")))
+                        if state == "error"
+                        else None
+                    )
+                    self._current = replace(
+                        self._current,
+                        status="done" if state == "complete" else "error",
+                        phase=None,
+                        progress=progress if state == "complete" else None,
+                        message=(
+                            "Protocol completed successfully"
+                            if state == "complete"
+                            else f"Print job {state}"
+                            + (f": {refusal.text}" if refusal else "")
+                        ),
+                        refusal=refusal,
+                    )
+                    self._broadcast_status()
+                    return
+                phase = state if state in ("printing", "paused") else "unknown"
+                if phase == "unknown":
+                    progress = None
+                message = (
+                    self._current.message
+                    if phase == "paused" and self._current.refusal is not None
+                    else {
+                        "printing": "Protocol running.",
+                        "paused": "Protocol paused.",
+                        "unknown": "Job status unavailable.",
+                    }[phase]
+                )
+                updated = replace(
+                    self._current, phase=phase, progress=progress, message=message
+                )
+            except (RuntimeError, TimeoutError) as exc:
+                logger.warning("Unable to read current job status: %s", exc)
+                updated = replace(
+                    self._current,
+                    phase="unknown",
+                    progress=None,
+                    message="Job status unavailable.",
+                )
+            if self._run_control is not control or self._current.status != "running":
+                return
+            if updated != self._current:
+                self._current = updated
+                self._broadcast_status()
+            await asyncio.sleep(0.5)
 
     @contextmanager
     def domain_state_snapshot(
@@ -3690,6 +3854,7 @@ class AutoPipetteService:
         *,
         restore: Literal["on_error", "always"] = "on_error",
         persist_on_success: bool = True,
+        before_commit: Callable[[], None] | None = None,
     ) -> Generator[None]:
         """Snapshot deck/pipette state, restoring it depending on the outcome.
 
@@ -3738,9 +3903,14 @@ class AutoPipetteService:
                 ``"always"`` restores unconditionally on exit, regardless of
                 outcome.
             persist_on_success: Flush tip state after a successful operation.
+            before_commit: Final guard after persistence; failures restore the
+                snapshot and persisted state before propagating.
 
         Yields:
             Nothing; used purely for its enter/exit side effects.
+
+        Raises:
+            RuntimeError: If a rejected handoff cannot restore persisted state.
         """
         autopipette = self._autopipette
         location_manager = autopipette.location_manager
@@ -3807,15 +3977,14 @@ class AutoPipetteService:
             # (persist_tip_presence/persist_tip_liquid_state defer while
             # is_batch_mode is true), so there's nothing to undo there.
 
-        def _flush() -> None:
+        def _flush(*, strict: bool = False) -> None:
             try:
                 self._flush_tip_presence()
                 self._flush_tip_liquid_state()
             except Exception:
-                logger.exception(
-                    "Failed to persist domain state after a successful "
-                    "protocol run; the run itself still succeeded"
-                )
+                logger.exception("Failed to persist domain state.")
+                if strict:
+                    raise
 
         try:
             yield
@@ -3831,8 +4000,26 @@ class AutoPipetteService:
         else:
             if restore == "always":
                 _restore()
-            elif persist_on_success:
-                _flush()
+            else:
+                if persist_on_success:
+                    _flush()
+                if before_commit is not None:
+                    try:
+                        before_commit()
+                    except BaseException:
+                        try:
+                            _restore()
+                            if persist_on_success:
+                                _flush(strict=True)
+                        except Exception as exc:
+                            logger.exception(
+                                "Failed to restore state after a rejected run handoff"
+                            )
+                            raise RuntimeError(
+                                "Run canceled, but state restoration failed; "
+                                "check the tip and configuration state."
+                            ) from exc
+                        raise
 
     def _read_protocol_lines(self, filename: str) -> list[str]:
         """Resolve and read a protocol file's raw lines.
@@ -3864,7 +4051,9 @@ class AutoPipetteService:
                 f"Error reading protocol file (encoding issue): {exc}"
             ) from exc
 
-    def _run_protocol_sync(self, filename: str) -> None:
+    def _run_protocol_sync(
+        self, filename: str, control: _RunControl | None = None
+    ) -> None:
         """Synchronous half of :meth:`_run_protocol`; runs in a worker thread.
 
         Replaces the old ``_execute_line_sync(f"run {filename}")`` (text
@@ -3878,24 +4067,32 @@ class AutoPipetteService:
         is the one unambiguous "this line failed" signal, rather than
         inferring it from cmd2's overloaded ``bool`` return value.
 
-        The per-line dispatch loop is wrapped in :meth:`domain_state_snapshot`
-        (issue #35) -- see that method's docstring for the compile-time-vs
-        -runtime-failure distinction this relies on.
+        For daemon runs, compilation and upload are wrapped in a state
+        snapshot; a guarded handoff happens before starting the job. Direct
+        synchronous callers retain their existing upload behavior.
 
         Args:
             filename: Bare filename under ``protocols/``.
+            control: Run-specific cancellation and handoff state, if managed
+                by the daemon.
 
         Raises:
             ValueError: If the file can't be decoded as UTF-8.
             ProtocolAbortedError: If a ``break`` line's breakpoint is
                 answered "abort" (a compile-time failure -- rolled back).
+            JsonRpcError: If Moonraker rejects the print-start request.
             Exception: Whatever a dispatched line's service method itself
                 raises (e.g. ``NotALocationError``, a not-homed
                 ``RuntimeError``) -- propagates uncaught, aborting the rest
                 of the protocol (and rolled back, same as above). An
-                exception raised by the upload itself is a runtime failure
-                and is not rolled back.
+                for direct synchronous callers, upload errors are not rolled
+                back; daemon-managed uploads happen before the handoff.
         """  # ruff: ignore[docstring-extraneous-exception]
+        def check_canceled() -> None:
+            if control is not None and control.canceled.is_set():
+                raise ProtocolAbortedError("Protocol canceled during preparation.")
+
+        check_canceled()
         lines = self._read_protocol_lines(filename)
 
         commands = [
@@ -3904,20 +4101,70 @@ class AutoPipetteService:
             if line.strip() and not line.strip().startswith("#")
         ]
         if not commands:
+            check_canceled()
             return
 
         gcode_manager = self.gcode_manager
+        gate_locked = False
+        file_path: Path | None = None
+
+        def handoff() -> None:
+            nonlocal gate_locked
+            if control is None:
+                return
+            control.gate.acquire()
+            gate_locked = True
+            check_canceled()
+            if file_path is not None:
+                control.phase = "starting"
+                if self._loop is not None:
+                    self._loop.call_soon_threadsafe(self._announce_starting, control)
+
         try:
-            # domain_state_snapshot wraps exactly the dispatch loop, not the
-            # upload below it -- see its docstring for why that boundary is
-            # the compile-time/runtime-failure line.
-            with self.domain_state_snapshot(), gcode_manager.batch_mode():
+            with (
+                self.domain_state_snapshot(before_commit=handoff),
+                gcode_manager.batch_mode(),
+            ):
                 # Seed the stage-2 plunger model once, at protocol start.
                 self._sync_plunger()
                 self._seed_drawer_model()
                 for line in commands:
+                    check_canceled()
                     self._dispatch_protocol_line(line)
+                check_canceled()
+                if control is not None and self.client is not None:
+                    gcode_buffer = gcode_manager.get_buffer()
+                    if gcode_buffer:
+                        output_filename = (
+                            f"{Path(filename).stem}-{control.run_id}.gcode"
+                        )
+                        file_path = gcode_manager.write_gcode_file(
+                            gcode_buffer, output_filename, append_header=True
+                        )
+                        self.upload_gcode(output_filename, file_path)
+                        control.job_filename = output_filename
+                        check_canceled()
 
+            if file_path is not None and control is not None:
+                assert self.client is not None
+                try:
+                    self.client.send_jsonrpc(
+                        self.mrr.printer_print_start(file_path.name)
+                    )
+                except JsonRpcError:
+                    raise
+                except (RuntimeError, TimeoutError):
+                    logger.exception(
+                        "Print start outcome is unknown; monitoring the job."
+                    )
+                    control.phase = "executing"
+                    return
+                control.phase = "executing"
+                try:
+                    file_path.unlink()
+                except OSError:
+                    logger.exception("Could not remove the local G-code file.")
+                return
             gcode_buffer = gcode_manager.get_buffer()
             if not gcode_buffer:
                 return
@@ -3937,6 +4184,19 @@ class AutoPipetteService:
                 return
             self.upload_and_execute_gcode(output_filename, file_path, delete_file=True)
         finally:
+            if (
+                file_path is not None
+                and control is not None
+                and control.phase != "executing"
+            ):
+                try:
+                    file_path.unlink(missing_ok=True)
+                except OSError:
+                    logger.exception("Could not remove the local G-code file.")
+            if gate_locked and control is not None:
+                if control.phase == "starting":
+                    control.phase = "unknown"
+                control.gate.release()
             gcode_manager.clear_buffer()
 
     @staticmethod
@@ -4356,7 +4616,36 @@ class AutoPipetteService:
             raise RuntimeError(_NOT_CONNECTED_MSG)
         return self.client.send_jsonrpc(request)
 
-    async def cancel_run(self) -> RunStatus:
+    def _send_owned_job_control(
+        self,
+        control: _RunControl,
+        allowed: tuple[str, ...],
+        action: Callable[[], CommandResult],
+    ) -> None:
+        if self.client is None or not self.client.is_connected():
+            raise RuntimeError(_NOT_CONNECTED_MSG)
+        response = self.client.send_jsonrpc(
+            self.mrr.printer_objects_query({"print_stats": ["filename", "state"]})
+        )
+        status = as_dict(as_dict(response.get("result")).get("status"))
+        stats = as_dict(status.get("print_stats"))
+        if (
+            stats.get("filename") != control.job_filename
+            or stats.get("state") not in allowed
+        ):
+            raise RuntimeError("The current job state does not allow this action.")
+        self._check_run_id(control.run_id)
+        if self._run_control is not control:
+            raise RuntimeError("The protocol run has changed.")
+        action()
+
+    def _check_run_id(self, run_id: str | None) -> None:
+        if run_id is not None and (
+            self._current.status != "running" or self._current.run_id != run_id
+        ):
+            raise RuntimeError("The protocol run has changed or is no longer active.")
+
+    async def cancel_run(self, run_id: str | None = None) -> RunStatus:
         """Cancel the active run.
 
         Deliberately bypasses ``self._lock``: that lock can be held for a
@@ -4371,10 +4660,54 @@ class AutoPipetteService:
             cancellation — real state updates happen later via Moonraker's
             print_stats transition).
         """
-        await asyncio.to_thread(self.send_cancel)
+        self._check_run_id(run_id)
+        control = self._run_control
+
+        def cancel() -> bool:
+            if control is None or self._current.status != "running":
+                self._check_run_id(run_id)
+                self.send_cancel()
+                return False
+            with control.gate:
+                self._check_run_id(run_id)
+                if control is not self._run_control:
+                    raise RuntimeError("The protocol run has changed.")
+                if control.phase == "preparing":
+                    control.canceled.set()
+                    self._breakpoint_proceed = False
+                    event, self._breakpoint_event = self._breakpoint_event, None
+                    if event is not None:
+                        event.set()
+                    if self._broadcast_callback is not None:
+                        self._broadcast_callback(
+                            "notify_breakpoint",
+                            {
+                                "run_id": control.run_id,
+                                "filename": self._current.filename,
+                                "pending": False,
+                            },
+                        )
+                    return True
+                if control.phase == "executing":
+                    self._send_owned_job_control(
+                        control, ("printing", "paused"), self.send_cancel
+                    )
+                    return False
+                raise RuntimeError("Run state is unknown; cannot safely cancel.")
+
+        preparing = await asyncio.to_thread(cancel)
+        if (
+            preparing
+            and control is self._run_control
+            and self._current.status == "running"
+        ):
+            self._current = replace(
+                self._current, phase="cancelling", message="Canceling preparation."
+            )
+            self._broadcast_status()
         return self._current
 
-    async def pause_run(self) -> RunStatus:
+    async def pause_run(self, run_id: str | None = None) -> RunStatus:
         """Pause the active run.
 
         See :meth:`cancel_run` for why this bypasses ``self._lock``.
@@ -4382,10 +4715,24 @@ class AutoPipetteService:
         Returns:
             The current run status.
         """
-        await asyncio.to_thread(self.send_pause)
+        self._check_run_id(run_id)
+        control = self._run_control
+
+        def pause() -> None:
+            if control is None or self._current.status != "running":
+                self._check_run_id(run_id)
+                self.send_pause()
+                return
+            with control.gate:
+                self._check_run_id(run_id)
+                if control is not self._run_control or control.phase != "executing":
+                    raise RuntimeError("The protocol is not executing.")
+                self._send_owned_job_control(control, ("printing",), self.send_pause)
+
+        await asyncio.to_thread(pause)
         return self._current
 
-    async def resume_run(self) -> RunStatus:
+    async def resume_run(self, run_id: str | None = None) -> RunStatus:
         """Resume the active run.
 
         See :meth:`cancel_run` for why this bypasses ``self._lock``.
@@ -4403,12 +4750,31 @@ class AutoPipetteService:
             JsonRpcError: If Moonraker refuses the resume for any reason
                 other than the interlock (today's handling).
         """
+        self._check_run_id(run_id)
+        control = self._run_control
+
+        def resume() -> None:
+            if control is None or self._current.status != "running":
+                self._check_run_id(run_id)
+                self.send_resume()
+                return
+            with control.gate:
+                self._check_run_id(run_id)
+                if control is not self._run_control or control.phase != "executing":
+                    raise RuntimeError("The protocol is not executing.")
+                self._send_owned_job_control(control, ("paused",), self.send_resume)
+
         try:
-            await asyncio.to_thread(self.send_resume)
+            await asyncio.to_thread(resume)
         except JsonRpcError as exc:
             refusal = parse_interlock_refusal(str(exc.error.get("message", "")))
             if refusal is None:
                 raise
+            if control is not None and (
+                self._run_control is not control
+                or self._current.status != "running"
+            ):
+                return self._current
             self._current = replace(
                 self._current,
                 message=f"Paused: resume refused. {refusal.text}. "
@@ -4417,10 +4783,14 @@ class AutoPipetteService:
             )
             self._broadcast_status()
         else:
-            if self._current.refusal is not None:
+            if (
+                self._current.refusal is not None
+                and (control is None or self._run_control is control)
+                and self._current.status == "running"
+            ):
                 self._current = replace(
                     self._current,
-                    message=f"Running {self._current.filename}",
+                    message="Resume requested; waiting for confirmation.",
                     refusal=None,
                 )
                 self._broadcast_status()
@@ -4468,16 +4838,32 @@ class AutoPipetteService:
             client passed to `confirm_breakpoint`.
         """
         event = threading.Event()
-        self._breakpoint_event = event
-        if self._broadcast_callback is not None:
-            self._broadcast_callback(
-                "notify_breakpoint",
-                {
-                    "run_id": self._current.run_id,
-                    "filename": self._current.filename,
-                    "pending": True,
-                },
-            )
+        control = self._run_control if self._current.status == "running" else None
+        if control is not None:
+            with control.gate:
+                if control.canceled.is_set():
+                    return False
+                self._breakpoint_event = event
+                if self._broadcast_callback is not None:
+                    self._broadcast_callback(
+                        "notify_breakpoint",
+                        {
+                            "run_id": self._current.run_id,
+                            "filename": self._current.filename,
+                            "pending": True,
+                        },
+                    )
+        else:
+            self._breakpoint_event = event
+            if self._broadcast_callback is not None:
+                self._broadcast_callback(
+                    "notify_breakpoint",
+                    {
+                        "run_id": self._current.run_id,
+                        "filename": self._current.filename,
+                        "pending": True,
+                    },
+                )
         event.wait()
         return self._breakpoint_proceed
 
@@ -4524,6 +4910,8 @@ class AutoPipetteService:
         """
         if self._loop is None or self.moonraker_state is None:
             return
+        if self._run_control is not None and self._current.status == "running":
+            return
         # Read now, on this thread: Klipper sets the message with the state.
         message = self.moonraker_state.print_message
         asyncio.run_coroutine_threadsafe(
@@ -4569,6 +4957,10 @@ class AutoPipetteService:
 
     def _broadcast_status(self) -> None:
         """Push the current run status to control-plane clients, if wired up."""
+        self._status_revision += 1
+        self._current = replace(
+            self._current, revision=self._status_revision, epoch=self._status_epoch
+        )
         if self._broadcast_callback is None:
             return
         self._broadcast_callback("notify_run_status", self._current.to_dict())

@@ -8,6 +8,8 @@
   let selected = null;
   let protocols = [];
   let folder = '';
+  let pendingAction = null;
+  let pendingTimer = null;
 
   // ── protocol list ──────────────────────────────────────────────────────
   async function loadProtocols() {
@@ -97,7 +99,8 @@
     const nameEl = document.getElementById('selectionName');
     nameEl.textContent = filename.slice(0, -'.pipette'.length);
     nameEl.classList.remove('placeholder');
-    document.getElementById('runBtn').disabled = App.isRunActive(App.getStatus().status);
+    document.getElementById('runBtn').disabled =
+      !App.isConnected() || App.isRunActive(App.getStatus().status);
     document.getElementById('checkBtn').disabled = false;
     document.getElementById('findingsList').innerHTML = '';
   }
@@ -105,6 +108,8 @@
   // ── run ────────────────────────────────────────────────────────────────
   document.getElementById('runBtn').addEventListener('click', async () => {
     if (!selected) return;
+    const feedback = document.getElementById('runControlFeedback');
+    feedback.textContent = '';
     try {
       const res = await fetch('/run', {
         method: 'POST',
@@ -113,11 +118,55 @@
       });
       if (!res.ok) {
         const err = await res.json();
-        renderStatusCard({ status: 'error', message: err.detail });
+        feedback.textContent = `Run failed: ${err.detail}`;
       }
     } catch (e) {
-      renderStatusCard({ status: 'error', message: e.message });
+      feedback.textContent = `Run failed: ${e.message}`;
     }
+  });
+
+  async function sendRunControl(action) {
+    const data = App.getStatus();
+    if (!App.isConnected() || !data.run_id || pendingAction) return;
+    if (action === 'cancel' && !window.confirm(
+      'Cancel this protocol? Cancel is not an emergency stop.'
+    )) return;
+    const request = { action, runId: data.run_id };
+    pendingAction = request;
+    const feedback = document.getElementById('runControlFeedback');
+    feedback.textContent = `Sending ${action} request…`;
+    renderStatusCard(data);
+    try {
+      const res = await fetch(`/run/${action}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ run_id: data.run_id }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.detail || `HTTP ${res.status}`);
+      if (result.refusal || (action === 'resume' && result.message?.includes('resume refused'))) {
+        throw new Error(result.message);
+      }
+      if (pendingAction === request) {
+        feedback.textContent = `${action} requested; waiting for confirmation.`;
+        pendingTimer = setTimeout(() => {
+          if (pendingAction !== request) return;
+          pendingAction = null;
+          feedback.textContent = `${action} was not confirmed. Check the machine state.`;
+          renderStatusCard(App.getStatus());
+        }, 5000);
+      }
+    } catch (e) {
+      if (pendingAction === request) {
+        pendingAction = null;
+        feedback.textContent = `${action} failed: ${e.message}`;
+        renderStatusCard(App.getStatus());
+      }
+    }
+  }
+
+  ['pause', 'resume', 'cancel'].forEach(action => {
+    document.getElementById(`${action}Btn`).addEventListener('click', () => sendRunControl(action));
   });
 
   // ── check (pre-flight validation, issue #88) ──────────────────────────
@@ -167,6 +216,7 @@
     const state = document.getElementById('statusState');
     const msg   = document.getElementById('statusMsg');
     const bar   = document.getElementById('progressBar');
+    const progressLabel = document.getElementById('progressLabel');
     const btn   = document.getElementById('runBtn');
 
     const s = data.status;
@@ -175,12 +225,38 @@
     icon.className  = `status-icon ${s}`;
     state.className = `status-state ${s}`;
     icon.textContent  = iconChar;
-    state.textContent = label;
+    state.textContent = data.phase === 'paused' ? 'Paused' : label;
     msg.textContent   = data.message || '';
 
-    icon.classList.toggle('spinning', App.isRunActive(s));
-    bar.classList.toggle('active', App.isRunActive(s));
-    btn.disabled = App.isRunActive(s) || !selected;
+    if (pendingAction && (
+      data.run_id !== pendingAction.runId ||
+      s !== 'running' ||
+      (pendingAction.action === 'pause' && data.phase === 'paused') ||
+      (pendingAction.action === 'resume' && data.phase === 'printing')
+    )) {
+      clearTimeout(pendingTimer);
+      pendingAction = null;
+      document.getElementById('runControlFeedback').textContent = '';
+    }
+    const active = App.isRunActive(s);
+    const available = active && App.isConnected() && !!data.run_id && !pendingAction;
+    document.getElementById('pauseBtn').disabled = !available || data.phase !== 'printing';
+    document.getElementById('resumeBtn').disabled = !available || data.phase !== 'paused';
+    document.getElementById('cancelBtn').disabled =
+      !available || !['preparing', 'printing', 'paused'].includes(data.phase);
+    icon.classList.toggle('spinning', active && data.phase !== 'paused');
+    const progress = data.progress;
+    const known = typeof progress === 'number' && Number.isFinite(progress) && progress >= 0 && progress <= 1;
+    bar.hidden = !active && !known;
+    if (known) {
+      const percent = Math.floor(progress * 100);
+      bar.value = percent;
+      progressLabel.textContent = `Estimated G-code file progress: ${percent}%`;
+    } else {
+      bar.removeAttribute('value');
+      progressLabel.textContent = active ? 'Progress unavailable' : '';
+    }
+    btn.disabled = !App.isConnected() || active || !selected;
   }
 
   App.onStatus(renderStatusCard);
