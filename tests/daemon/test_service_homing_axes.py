@@ -49,7 +49,7 @@ def _configure(service: AutoPipetteService, axes: AxisConfig = AXES) -> None:
 _SETUP = [
     "G90\n",
     "M220 S100\n",
-    "SET_VELOCITY_LIMIT VELOCITY=99999.0\n",
+    "SET_VELOCITY_LIMIT VELOCITY=1666.65\n",
     "SET_VELOCITY_LIMIT ACCEL=40000.0\n",
 ]
 #: The servo's known position: retracted, then a wait for it to get there.

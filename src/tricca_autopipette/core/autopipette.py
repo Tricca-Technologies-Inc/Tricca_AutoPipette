@@ -441,7 +441,7 @@ class AutoPipette:
             >>> pipette.init_speed()  # doctest: +SKIP
         """
         self.set_speed_factor(100)  # Default speed factor
-        self.set_max_velocity(self.gantry.speed_max)
+        self.set_max_velocity(self.gantry.speed_max / 60)
         self.set_max_accel(self.gantry.accel_max)
 
     def set_coor_sys(self, mode: str | CoordinateSystem) -> None:

@@ -22,6 +22,9 @@ the homing/``clear_syringe`` distance moved from the volume-derived
 ``vol_to_steps(2 * max_volume_ul)`` (``499.034...``) to
 ``2 * max_travel_mm`` (``120.0`` for the shared 60 mm configs).
 
+The configured ``speed_max`` is converted from mm/min to Klipper's mm/s
+for the initial velocity limit; the direct velocity setter remains in mm/s.
+
 Also in #29, every syringe-stepper quantity moved from ``rotation_distance:
 8`` units (each Klipper "mm" was 1/4 of a real mm) to real millimetres, for
 use with ``rotation_distance: 2``. The golden was derived from the pre-#29
@@ -77,6 +80,25 @@ def _split_numbers(text: str) -> tuple[str, list[float]]:
     """
     skeleton = _NUMBER.sub(lambda m: "<dec>" if m.group(1) else "<int>", text)
     return skeleton, [float(m.group(0)) for m in _NUMBER.finditer(text)]
+
+
+@pytest.mark.parametrize(
+    ("speed_max", "velocity"),
+    [(30000.0, 500.0), (12345.0, 205.75), (500.0, 500.0 / 60)],
+)
+def test_init_speed_converts_configured_feed_rate_to_velocity(
+    autopipette: AutoPipette, speed_max: float, velocity: float
+) -> None:
+    autopipette.get_gcode()
+    autopipette.gantry.speed_max = speed_max
+
+    autopipette.init_speed()
+
+    assert autopipette.get_gcode() == [
+        "M220 S100\n",
+        f"SET_VELOCITY_LIMIT VELOCITY={velocity}\n",
+        f"SET_VELOCITY_LIMIT ACCEL={autopipette.gantry.accel_max}\n",
+    ]
 
 
 def test_every_emission_site_emits_unchanged_gcode(

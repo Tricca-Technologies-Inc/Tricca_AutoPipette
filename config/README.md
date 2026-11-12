@@ -69,6 +69,26 @@ This split is deliberately provisional for all six union categories except
 `plates/` is not yet well understood, and a future pass may cull those back
 to shared-only. Don't read the current scope as a permanent shape.
 
+### Gantry motion limits
+
+Gantry `speed_xy`, `speed_z`, and `speed_max` are in **mm/min**;
+accelerations are in **mm/s²**. On `init` or `home all`, `speed_max` is
+converted to mm/s and sent to Klipper as `SET_VELOCITY_LIMIT VELOCITY`;
+`accel_max` is sent as `ACCEL`. These commands can override Klipper's
+configured global limits, so review both values for the actual machine.
+`accel_xy` and `accel_z` do not currently set separate axis limits.
+
+**Upgrade warning:** older versions sent `speed_max` directly as mm/s
+instead of converting it. Review every active gantry profile before using
+the updated version. A value chosen to compensate for the old behavior must
+be multiplied by 60 to retain the same Klipper limit (for example, `500`
+becomes `30000` for 500 mm/s). Do this only after confirming the intended
+limit for the machine; no local files are migrated automatically. The shared
+templates' `99999` corresponds to 1666.65 mm/s, which may exceed the rig's
+safe limit. Previously generated G-code retains its old limits and should be
+regenerated and reviewed. The direct `set VELOCITY_MAX` command remains in
+mm/s.
+
 ### Runtime writes always land in the local root
 
 `tap`'s `set_config <category> <file> <key.path> <value>` (RPC
