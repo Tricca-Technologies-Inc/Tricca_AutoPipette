@@ -14,6 +14,7 @@ from fakes.fake_moonraker_state import FakeMoonrakerState
 
 from tricca_autopipette.commands.tap_cmd_parsers import HomeArgs
 from tricca_autopipette.core.gcode_commands import GCode
+from tricca_autopipette.core.pipette_constants import DefaultFilenames, DefaultPaths
 from tricca_autopipette.daemon.moonraker_state import (
     AxisConfig,
     PipetteAxis,
@@ -94,6 +95,40 @@ class TestFullHomeEmissions:
             "SPEED=50.0 ACCEL=200.0 STOP_ON_ENDSTOP=inverted_home\n",
             "MANUAL_STEPPER STEPPER=pipette_stepper SET_POSITION=0\n",
         ]
+
+    def test_legacy_endstops_apply_to_homing_and_plunger_moves(
+        self,
+    ) -> None:
+        service = AutoPipetteService(
+            config_system=(
+                DefaultPaths.DIR_CONFIG_SYSTEM / DefaultFilenames.CONFIG_SYSTEM
+            ),
+            config_gantry=None,
+            config_pipette=None,
+            config_locations=None,
+            config_liquids=None,
+            connect_websocket=False,
+            legacy_endstops=True,
+        )
+        home = _emitted(service, lambda: service.home(HomeArgs("all")))
+        assert "STOP_ON_ENDSTOP=1" in home[-3]
+        assert "STOP_ON_ENDSTOP=-1" in home[-2]
+
+        ap = service._autopipette
+        ap.move_pipette_stepper(-1)
+        assert "STOP_ON_ENDSTOP=2" in ap.get_gcode()[0]
+        ap.clear_syringe()
+        assert "STOP_ON_ENDSTOP=1" in ap.get_gcode()[0]
+
+    def test_legacy_endstops_refuse_plunger_axis_wrapper(
+        self, service: AutoPipetteService
+    ) -> None:
+        _configure(service)
+        service._autopipette.gcode_commands.legacy_endstops = True
+        with pytest.raises(RuntimeError, match=r"incompatible.*plunger-axis"):
+            service.output_gcode([
+                GCode("MANUAL_STEPPER STEPPER=pipette_stepper MOVE=1\n")
+            ])
 
 
 class TestHomeAxisRemoved:

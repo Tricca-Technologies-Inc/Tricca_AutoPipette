@@ -124,6 +124,8 @@ class AutoPipette:
         self,
         json_config_manager: JsonConfigManager,
         location_manager: LocationManager,
+        *,
+        legacy_endstops: bool = False,
     ) -> None:
         """Initialize pipette controller with JSON configuration.
 
@@ -134,6 +136,7 @@ class AutoPipette:
         Args:
             json_config_manager: Config manager instance that loads JSON configuration.
             location_manager: Location manager instance that loads locations and plates.
+            legacy_endstops: Emit numeric manual-stepper endstop values.
 
         Example:
             >>> from tricca_autopipette.core.json_config_manager import (
@@ -175,7 +178,7 @@ class AutoPipette:
 
         # G-code management
         self.gcode_buffers = GCodeBuffer()
-        self.gcode_commands = GCodeCommands()
+        self.gcode_commands = GCodeCommands(legacy_endstops=legacy_endstops)
 
         # Initialize from loaded config
         self._initialize_from_config()

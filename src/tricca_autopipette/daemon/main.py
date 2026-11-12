@@ -172,6 +172,11 @@ def parse_arguments() -> argparse.Namespace:
         help="Start without connecting to Moonraker (for local testing)",
     )
     parser.add_argument(
+        "--legacy-endstops",
+        action="store_true",
+        help="Use numeric manual-stepper endstop values for older Klipper",
+    )
+    parser.add_argument(
         "--local-connect",
         default=False,
         action="store_true",
@@ -472,6 +477,7 @@ async def _serve(args: argparse.Namespace, system_filename: str) -> None:
         config_liquids=config_liquids,
         connect_websocket=not args.no_connect,
         connect_local_websocket=args.local_connect,
+        legacy_endstops=args.legacy_endstops,
     )
     server = ControlServer(service, host=args.host, port=args.port)
 

@@ -53,6 +53,7 @@ def _base_args(**overrides: Any) -> argparse.Namespace:
         "log_level": "INFO",
         "no_connect": True,
         "local_connect": False,
+        "legacy_endstops": False,
         "host": DEFAULT_HOST,
         "port": DEFAULT_PORT,
         "allow_insecure_bind": False,
@@ -77,6 +78,7 @@ class TestParseArguments:
         assert args.log_level == "INFO"
         assert args.no_connect is False
         assert args.local_connect is False
+        assert args.legacy_endstops is False
         assert args.host == DEFAULT_HOST
         assert args.port == DEFAULT_PORT
         assert args.allow_insecure_bind is False
@@ -87,6 +89,11 @@ class TestParseArguments:
         args = main_module.parse_arguments()
 
         assert args.allow_insecure_bind is True
+
+    def test_legacy_endstops_flag(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr("sys.argv", ["tapd", "--legacy-endstops"])
+
+        assert main_module.parse_arguments().legacy_endstops is True
 
     def test_config_flags(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
@@ -351,6 +358,13 @@ class TestServe:
         created = self._drive(monkeypatch, _base_args(local_connect=True))
 
         assert created["service"].kwargs["connect_local_websocket"] is True
+
+    def test_legacy_endstops_flag_is_forwarded(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        created = self._drive(monkeypatch, _base_args(legacy_endstops=True))
+
+        assert created["service"].kwargs["legacy_endstops"] is True
 
 
 class TestMain:

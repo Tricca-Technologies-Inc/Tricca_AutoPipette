@@ -565,6 +565,7 @@ class AutoPipetteService:
         config_liquids: Path | None,
         connect_websocket: bool = True,
         connect_local_websocket: bool = False,
+        legacy_endstops: bool = False,
     ) -> None:
         """Build the domain layer and Moonraker connection.
 
@@ -579,6 +580,7 @@ class AutoPipetteService:
             connect_websocket: Whether to connect to Moonraker on startup.
             connect_local_websocket: Whether to connect to a local Moonraker
                 for testing.
+            legacy_endstops: Emit numeric manual-stepper endstop values.
         """
         json_config_manager = JsonConfigManager()
         fn_system = (
@@ -598,7 +600,9 @@ class AutoPipetteService:
         )
         location_manager = LocationManager()
         self._load_locations(location_manager, system_config, config_locations)
-        self._autopipette = AutoPipette(json_config_manager, location_manager)
+        self._autopipette = AutoPipette(
+            json_config_manager, location_manager, legacy_endstops=legacy_endstops
+        )
 
         self.hostname = self._get_hostname()
         self.mrr = MoonrakerRequests()
@@ -2777,6 +2781,7 @@ class AutoPipetteService:
 
         Raises:
             OSError: If the G-code file can't be written.
+            RuntimeError: If legacy endstops conflict with plunger-axis macros.
             Exception: Whatever the upload-and-execute call raises, once
                 actually connected (see the "no client at all" note below).
 
@@ -2793,6 +2798,15 @@ class AutoPipetteService:
             (e.g. the ``upload``/``ws.upload`` diagnostic command), where a
             silent no-op would be a confusing surprise instead.
         """  # ruff: ignore[docstring-extraneous-exception]
+        if (
+            self._autopipette.gcode_commands.legacy_endstops
+            and self.axis_config.pipette is not None
+            and any(line.startswith("MANUAL_STEPPER ") for line in gcode)
+        ):
+            raise RuntimeError(
+                "Legacy endstop mode is incompatible with the configured "
+                "plunger-axis macros; disable it or use a pre-expansion rig."
+            )
         if self.gcode_manager.is_batch_mode:
             self.gcode_manager.add_gcode(gcode)
             return

@@ -25,12 +25,7 @@ from typing import Literal, NewType
 #: cast, visible at the call site.
 GCode = NewType("GCode", str)
 
-#: ``MANUAL_STEPPER``'s documented ``STOP_ON_ENDSTOP`` values. Klipper's
-#: numeric aliases (``1`` = ``home``, ``-1`` = ``inverted_home``, ``2`` =
-#: ``try_home``, ``-2`` = ``try_inverted_home``) are deliberately not
-#: accepted: Klipper logs a deprecation warning on every numeric call
-#: (``klippy/extras/manual_stepper.py``), and issue #29 moved every caller off
-#: them.
+#: ``MANUAL_STEPPER``'s named ``STOP_ON_ENDSTOP`` values.
 StopOnEndstop = Literal[
     "probe",
     "home",
@@ -161,6 +156,10 @@ class GCodeCommands:
         >>> gc.dwell(100)
         'G4 P100\n'
     """
+
+    def __init__(self, *, legacy_endstops: bool = False) -> None:
+        """Select numeric endstop syntax for older Klipper when requested."""
+        self.legacy_endstops = legacy_endstops
 
     def dwell(self, milliseconds: float) -> GCode:
         r"""Build ``G4``: pause for a fixed time.
@@ -763,10 +762,27 @@ class GCodeCommands:
         Returns:
             The ``MANUAL_STEPPER`` line.
 
+        Raises:
+            ValueError: If a legacy firmware has no equivalent endstop mode.
+
         Example:
             >>> GCodeCommands().manual_stepper("s", set_position=0)
             'MANUAL_STEPPER STEPPER=s SET_POSITION=0\n'
         """
+        endstop: str | None = stop_on_endstop
+        if self.legacy_endstops and stop_on_endstop is not None:
+            aliases = {
+                "home": "1",
+                "inverted_home": "-1",
+                "try_home": "2",
+                "try_inverted_home": "-2",
+            }
+            if stop_on_endstop not in aliases:
+                raise ValueError(
+                    f"STOP_ON_ENDSTOP={stop_on_endstop} is not supported by "
+                    "legacy Klipper"
+                )
+            endstop = aliases[stop_on_endstop]
         return _line(
             "MANUAL_STEPPER",
             STEPPER=_config_name(stepper),
@@ -775,7 +791,7 @@ class GCodeCommands:
             MOVE=move,
             SPEED=speed,
             ACCEL=accel,
-            STOP_ON_ENDSTOP=stop_on_endstop,
+            STOP_ON_ENDSTOP=endstop,
             SYNC=sync,
         )
 

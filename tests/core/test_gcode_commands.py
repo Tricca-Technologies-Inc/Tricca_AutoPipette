@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from tricca_autopipette.core.gcode_commands import GCodeCommands
+from tricca_autopipette.core.gcode_commands import GCodeCommands, StopOnEndstop
 
 gc = GCodeCommands()
 
@@ -20,6 +20,28 @@ class TestStandardGCode:
 
 
 class TestManualStepper:
+    @pytest.mark.parametrize(
+        ("named", "numeric"),
+        [
+            ("home", "1"),
+            ("inverted_home", "-1"),
+            ("try_home", "2"),
+            ("try_inverted_home", "-2"),
+        ],
+    )
+    def test_legacy_endstop_aliases(
+        self, named: StopOnEndstop, numeric: str
+    ) -> None:
+        legacy = GCodeCommands(legacy_endstops=True)
+        line = legacy.manual_stepper("s", move=1, stop_on_endstop=named)
+        assert line == f"MANUAL_STEPPER STEPPER=s MOVE=1 STOP_ON_ENDSTOP={numeric}\n"
+
+    def test_legacy_mode_refuses_probe_semantics(self) -> None:
+        with pytest.raises(ValueError, match="not supported by legacy Klipper"):
+            GCodeCommands(legacy_endstops=True).manual_stepper(
+                "s", move=1, stop_on_endstop="probe"
+            )
+
     def test_homing_move(self) -> None:
         line = gc.manual_stepper(
             "pipette_stepper",

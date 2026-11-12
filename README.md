@@ -22,6 +22,13 @@ nothing useful until it's running:
 uv run tapd                   # connects to Moonraker per the active local system config
 ```
 
+For older Klipper builds that require numeric `STOP_ON_ENDSTOP` values
+(including `v0.13.0-504-g7f822f3a5`), start the daemon with
+`uv run tapd --legacy-endstops` instead. Use this only on a pre-axis-expansion
+rig; the option does not convert Klipper macros. If using systemd, add
+`--legacy-endstops` to `tapd.service`'s `ExecStart`, then reload and restart
+the service. Reassess the option after a Klipper upgrade.
+
 Then, in another terminal, drive it with the interactive shell:
 
 ```bash
