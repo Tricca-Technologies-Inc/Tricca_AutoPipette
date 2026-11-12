@@ -56,6 +56,34 @@ def _set(client: TestClient, field: dict[str, Any], value: object) -> dict[str, 
 
 
 class TestSettingsRoutes:
+    def test_check_tyson_prime_protocol_with_its_setup(
+        self,
+        kiosk_client: TestClient,
+        local: Path,
+        protocols_dir: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        system = local / "system"
+        system.mkdir(parents=True)
+        for name in ("Tyson100_system.json", "Tyson_main.json"):
+            shutil.copy2(DefaultPaths.DIR_CONFIG_SYSTEM / name, system / name)
+        shutil.copy2(
+            DefaultPaths.DIR_CONFIG_LOCATIONS / "Tyson100_locations.json",
+            local.parent,
+        )
+        monkeypatch.setattr(DefaultPaths, "DIR_LOCAL_SYSTEM", system)
+        source = (
+            DefaultPaths.DIR_REPO_ROOT
+            / "protocols/Tyson/kit_making/prime/panel_a/prime_making_a_10.pipette"
+        )
+        shutil.copy2(source, protocols_dir / source.name)
+
+        response = kiosk_client.post("/validate", json={"filename": source.name})
+
+        assert response.status_code == 200
+        result = response.json()
+        assert result["ok"], result["data"]["findings"]
+
     def test_failed_switch_restores_active_configuration_and_deck(
         self, kiosk_client: TestClient, local: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:

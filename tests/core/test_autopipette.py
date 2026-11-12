@@ -162,6 +162,17 @@ class TestGCodeBuffer:
 
 
 class TestTipHandling:
+    def test_tip_pickup_approaches_then_seats_at_the_box_depth(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        pipette_with_plates.next_tip()
+
+        gcode = [str(line) for line in pipette_with_plates.get_gcode()]
+        approach = gcode.index(f"G1 Z3.0 F{pipette_with_plates.gantry.speed_z}\n")
+        seat = gcode.index("G1 Z5.0 F100\n")
+        assert approach < seat
+        assert pipette_with_plates.state.tip_state == TipState.ATTACHED
+
     def test_next_tip_without_tipbox_raises_no_tipbox_error(
         self, autopipette: AutoPipette
     ) -> None:
@@ -218,7 +229,7 @@ class TestTipHandling:
                 plate_type="tipbox",
                 well_template=Well(
                     coor=Coordinate(x=200.0, y=10.0, z=5.0),
-                    dip_top=5.0,
+                    dip_top=25.0,
                     strategy_type=StrategyType.SIMPLE,
                 ),
                 num_row=1,
@@ -233,9 +244,68 @@ class TestTipHandling:
         tipbox_manager = location_manager.tipbox_manager
         assert tipbox_manager.boxes["tipbox2"].remaining == 1
         assert tipbox_manager.boxes["tipbox"].remaining == 2
+        gcode = pipette_with_plates.get_gcode()
+        assert f"G1 Z23.0 F{pipette_with_plates.gantry.speed_z}\n" in gcode
+        assert "G1 Z25.0 F100\n" in gcode
 
 
 class TestAspirateDispenseVolume:
+    @pytest.mark.parametrize(("dip_z", "raise_z"), [(5.0, 0.0), (73.5, 43.5)])
+    def test_prewet_returns_30mm_above_dip_before_aspirating_liquid(
+        self,
+        pipette_with_plates: AutoPipette,
+        dip_z: float,
+        raise_z: float,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        pipette_with_plates.location_manager.set_plate(
+            "deep",
+            PlateParams(
+                plate_type="array",
+                well_template=Well(
+                    coor=Coordinate(x=100.0, y=100.0, z=0.0),
+                    dip_top=dip_z,
+                    strategy_type=StrategyType.SIMPLE,
+                ),
+                num_row=1,
+                num_col=1,
+                spacing_row=0.0,
+                spacing_col=0.0,
+            ),
+        )
+        pipette_with_plates.aspirate_volume(
+            50,
+            "deep",
+            pre_air_gap_ul=30,
+            post_air_gap_ul=5,
+            prewet_cycles=1,
+            prewet_vol_ul=50,
+        )
+
+        gcode = pipette_with_plates.get_gcode()
+        z_moves = [line for line in gcode if line.startswith("G1 Z")]
+        assert z_moves == [
+            f"G1 Z0.0 F{pipette_with_plates.gantry.speed_z}\n",
+            f"G1 Z{dip_z} F{pipette_with_plates.gantry.speed_z}\n",
+            f"G1 Z{raise_z} F{pipette_with_plates.gantry.speed_z}\n",
+            f"G1 Z{dip_z} F{pipette_with_plates.gantry.speed_z}\n",
+            f"G1 Z0.0 F{pipette_with_plates.gantry.speed_z}\n",
+        ]
+        raise_index = gcode.index(z_moves[2], gcode.index(z_moves[1]) + 1)
+        next_dip = gcode.index(z_moves[3], raise_index + 1)
+        gap_moves = [
+            line
+            for line in gcode[raise_index + 1 : next_dip]
+            if "STOP_ON_ENDSTOP=try_home" in line
+        ]
+        travel = pipette_with_plates.volume_converter.vol_to_mm(30)
+        orientation = pipette_with_plates.syringe.motor_orientation
+        assert [
+            float(line.split("MOVE=")[1].split()[0]) for line in gap_moves
+        ] == pytest.approx([-travel * orientation, travel * orientation])
+        assert pipette_with_plates.state.has_liquid
+        assert ("Prewet raise is limited" in caplog.text) == (dip_z < 30)
+
     def test_aspirate_from_plain_coordinate_raises_value_error(
         self, pipette_with_plates: AutoPipette
     ) -> None:
@@ -408,6 +478,43 @@ class TestFitAirVolumes:
         gcode = "\n".join(pipette_with_plates.get_gcode())
         assert "MOVE=" in gcode
         assert pipette_with_plates.state.has_liquid is True
+
+    @pytest.mark.parametrize(
+        ("volume", "cycles", "moves"),
+        [
+            (90.0, 0, [6.0, 90.0, 2.0]),
+            (90.0, 1, [6.0, 92.0, -92.0, -6.0, 6.0, 90.0, 2.0]),
+            (96.0, 1, [98.0, -98.0, 96.0, 2.0]),
+        ],
+    )
+    def test_aspiration_emits_fitted_air_and_prewet_volumes(
+        self,
+        pipette_with_plates: AutoPipette,
+        volume: float,
+        cycles: int,
+        moves: list[float],
+    ) -> None:
+        pipette_with_plates.aspirate_volume(
+            volume,
+            "plate_a",
+            pre_air_gap_ul=30.0,
+            post_air_gap_ul=2.0,
+            prewet_cycles=cycles,
+            prewet_vol_ul=98.0,
+        )
+
+        emitted = [
+            float(line.split("MOVE=")[1].split()[0])
+            for line in pipette_with_plates.get_gcode()
+            if "STOP_ON_ENDSTOP=try_home" in line
+        ]
+        converter = pipette_with_plates.volume_converter
+        orientation = pipette_with_plates.syringe.motor_orientation
+        expected = [
+            converter.vol_to_mm(abs(vol)) * (1 if vol > 0 else -1) * orientation
+            for vol in moves
+        ]
+        assert emitted == pytest.approx(expected)
 
 
 class TestPipetteTransfer:

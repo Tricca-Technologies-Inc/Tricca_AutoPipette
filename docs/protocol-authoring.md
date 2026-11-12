@@ -140,6 +140,12 @@ liquid profile > pipette default**, so e.g. `pipette 20 a b --pre_air_gap
 5` overrides the active liquid's value for just that one call without
 switching liquids.
 
+After prewetting, the Tyson preview raises to 30 mm above the aspiration
+depth before expelling and redrawing the pre-air gap. The raise stops at
+Z=0 and produces a warning if a full 30 mm is unavailable. This height is
+relative to the aspiration depth, not a guarantee of clearance above the
+liquid or the labware; review the configured geometry before using hardware.
+
 ## Multi-dispense: one aspirate, several destinations
 
 [`examples/splits.pipette`](../protocols/examples/splits.pipette):

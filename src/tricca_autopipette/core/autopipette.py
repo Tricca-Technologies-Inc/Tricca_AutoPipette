@@ -958,9 +958,11 @@ class AutoPipette:
         self.note_action(
             f"Picking up tip from '{name}' at (X:{loc_tip.x:.2f}, Y:{loc_tip.y:.2f})"
         )
+        dip_z = box.get_dip_distance(vol=None)
+        self._check_limits(Coordinate(x=loc_tip.x, y=loc_tip.y, z=dip_z), "z")
         self.move_to(loc_tip)
-        self.dip_z_down(loc_tip, box.get_dip_distance(vol=None)-2)
-        self.gcode_buffers.add(f"{GCodeCommand.LINEAR_MOVE} Z{self.location_manager.tipboxes.get_dip_distance(vol=None)} F{100}\n")
+        self.dip_z_down(loc_tip, dip_z - 2)
+        self.gcode_buffers.add(self.gcode_commands.linear_move(z=dip_z, feedrate=100))
         self.gcode_wait(100)
         self.dip_z_return(loc_tip)
         self.state.tip_state = TipState.ATTACHED
@@ -1488,45 +1490,49 @@ class AutoPipette:
 
         self.move_to(coor_source)
         self.home_pipette_stepper()
+        dip_z = loc_source.get_dip_distance(volume)
 
-        # in the case where the total volume of pipetting plus extra air cushions are above the maximum, the extra air before pipetting is reduced.
-        if pre_air_gap_ul:
-            if (pre_air_gap_ul+volume+post_air_gap_ul>= self.max_volume_ul):
-                ext_vol = self.max_volume_ul - (volume+post_air_ul+2)
-                if ext_vol < 0:
-                    ext_vol = 0
-            else:
-                ext_vol = pre_air_gap_ul
-        else:
-            ext_vol = 0
-            
         # Prewetting cycle
         if prewet_cycles and prewet_vol_ul > PhysicalConstants.VOLUME_TOLERANCE_UL:
-            self.operate_syringe(FluidDisplacement.aspiration, ext_vol, speed=self.syringe.speed_dispense)
-            
-            self.dip_z_down(coor_source, loc_source.get_dip_distance(volume))
-            
+            if pre_air_gap_ul:
+                self.operate_syringe(
+                    FluidDisplacement.aspiration, pre_air_gap_ul,
+                    speed=self.syringe.speed_dispense,
+                )
+
+            self.dip_z_down(coor_source, dip_z)
+
             for _ in range(prewet_cycles):
-                self.operate_syringe(FluidDisplacement.aspiration, prewet_vol_ul, speed=self.syringe.speed_dispense)
+                self.operate_syringe(
+                    FluidDisplacement.aspiration, prewet_vol_ul,
+                    speed=self.syringe.speed_dispense,
+                )
                 self.gcode_wait(self.syringe.wait_aspirate_ms)
                 self.operate_syringe(FluidDisplacement.dispense, prewet_vol_ul)
                 self.gcode_wait(self.syringe.wait_aspirate_ms)
-            
-            raise_z = 0 if (dip_z - 30) < 0 else dip_z - 30
-            
-            self.move_to_z(Coordinate(
-                x=coor_source.x,
-                y=coor_source.y,
-                z=raise_z
-            ))    
-            
-            self.operate_syringe(FluidDisplacement.dispense, ext_vol)
-            
-        if pre_air_gap_ul:
-            self.operate_syringe(FluidDisplacement.aspiration, ext_vol, speed=self.syringe.speed_dispense)
 
-        self.dip_z_down(coor_source, loc_source.get_dip_distance(volume))
-        
+            raise_z = max(0, dip_z - 30)
+            if dip_z < 30:
+                self.logger.warning(
+                    "Prewet raise is limited to %g mm above the aspiration depth "
+                    "by the Z=0 boundary, rather than the requested 30 mm.",
+                    dip_z,
+                )
+            self.move_to_z(
+                Coordinate(x=coor_source.x, y=coor_source.y, z=raise_z)
+            )
+
+            if pre_air_gap_ul:
+                self.operate_syringe(FluidDisplacement.dispense, pre_air_gap_ul)
+
+        if pre_air_gap_ul:
+            self.operate_syringe(
+                FluidDisplacement.aspiration, pre_air_gap_ul,
+                speed=self.syringe.speed_dispense,
+            )
+
+        self.dip_z_down(coor_source, dip_z)
+
         # Aspirate liquid
         self.operate_syringe(FluidDisplacement.aspiration, volume)
         self.state.has_liquid = True
@@ -1535,7 +1541,10 @@ class AutoPipette:
         self.dip_z_return(coor_source)
 
         if post_air_gap_ul:
-            self.operate_syringe(FluidDisplacement.aspiration, post_air_gap_ul, speed=self.syringe.speed_dispense)
+            self.operate_syringe(
+                FluidDisplacement.aspiration, post_air_gap_ul,
+                speed=self.syringe.speed_dispense,
+            )
 
     def dispense_volume(
         self,

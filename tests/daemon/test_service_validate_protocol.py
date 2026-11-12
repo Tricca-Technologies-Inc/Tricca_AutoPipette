@@ -148,11 +148,19 @@ class TestWarningLogCapture:
         )
 
         findings = _findings(result)
-        warning_findings = [f for f in findings if f["severity"] == "warning"]
+        warning_findings = [
+            f
+            for f in findings
+            if f["severity"] == "warning" and "pre_air_gap reduced" in f["message"]
+        ]
         assert len(warning_findings) == 1
         assert warning_findings[0]["line_number"] == 8
         assert warning_findings[0]["command"] == "aspirate"
         assert "pre_air_gap reduced from 5.0" in warning_findings[0]["message"]
+        assert any(
+            f["severity"] == "warning" and "Prewet raise is limited" in f["message"]
+            for f in findings
+        )
         # The line itself still dispatched successfully -- a warning isn't
         # an error.
         assert result.ok is True
@@ -191,7 +199,11 @@ class TestWarningLogCapture:
         finally:
             root_logger.setLevel(original_level)
 
-        warning_findings = [f for f in _findings(result) if f["severity"] == "warning"]
+        warning_findings = [
+            f
+            for f in _findings(result)
+            if f["severity"] == "warning" and "pre_air_gap reduced" in f["message"]
+        ]
         assert len(warning_findings) == 1
 
     def test_a_warning_logged_before_a_raised_exception_is_still_recorded(
