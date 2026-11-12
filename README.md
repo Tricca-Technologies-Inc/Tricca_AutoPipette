@@ -49,6 +49,11 @@ G-code files have a unique run ID in their names and remain on the server.
 With `tapd --no-connect`, a protocol can be prepared but cannot execute;
 the kiosk reports that no job was sent.
 
+In Settings, switch the overall system profile to change its pipette and
+gantry; their values are read-only on that page. Loaded liquid parameters
+remain editable. Other clients and protocol commands are not restricted by
+this page.
+
 The Commands tab accepts one listed `tap`-style command at a time; it is not
 an operating-system shell. Commands are refused during a protocol run and use
 the same daemon homing and interlock checks. Motion and pipetting commands

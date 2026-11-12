@@ -1,13 +1,5 @@
-// Settings page (issue #33 slice c): a renderer over `GET /settings`
-// (`config.settings`), which reports every editable field, its bounds, and
-// the `config.set_value` target an edit must be written to. No config logic
-// lives here: a field edit posts that target back to `/settings/set`, and
-// the daemon enforces the same bounds again server-side.
-//
-// Pipette and gantry fields are high-risk: bounds are checked here first and
-// a Save needs an explicit confirm. Liquid fields are low-risk: saved on
-// change, no confirm. While `config_locked` is set on the shared status
-// stream, every control is disabled with the reason shown.
+// System selection and liquid edits use the daemon's settings and run lock.
+// Pipette and gantry values are displayed without independent edit controls.
 (() => {
   const LOCK_REASON = 'Locked while a protocol is running.';
   let locked = false;
@@ -59,8 +51,8 @@
     const columns = document.createElement('div');
     columns.className = 'settings-columns';
     columns.appendChild(renderSystem(data));
-    columns.appendChild(renderPipette(data.pipette));
-    columns.appendChild(renderPanel('Gantry', 'settingsGantry', data.gantry.fields, true));
+    columns.appendChild(renderPanel(`Pipette · ${data.pipette.name}`, 'settingsPipette', data.pipette.fields));
+    columns.appendChild(renderPanel('Gantry', 'settingsGantry', data.gantry.fields));
     root.appendChild(columns);
     root.appendChild(renderLiquids(data.liquids));
     applyLock();
@@ -118,31 +110,34 @@
 
   function renderSystem(data) {
     const el = panel('System profile', 'settingsSystem');
+    const active = document.createElement('div');
+    active.className = 'settings-current';
+    active.textContent = `Active: ${data.system_profile}`;
+    el.appendChild(active);
     el.appendChild(picker('settingsSystemSelect', data.system_profiles, data.system_profile,
       'Switch', (filename, msg) =>
         runAction('/settings/switch_system', { filename }, msg, true)));
     return el;
   }
 
-  function renderPipette(pipette) {
-    const el = panel(`Pipette · ${pipette.name}`, 'settingsPipette');
-    el.appendChild(picker('settingsPipetteSelect', pipette.files, pipette.file,
-      'Load', (filename, msg) =>
-        runAction('/settings/load_pipette', { filename }, msg, true)));
-    pipette.fields.forEach(f => el.appendChild(fieldRow(f, true)));
-    return el;
-  }
-
-  function renderPanel(title, id, fields, highRisk) {
+  function renderPanel(title, id, fields) {
     const el = panel(title, id);
-    fields.forEach(f => el.appendChild(fieldRow(f, highRisk)));
+    fields.forEach(field => {
+      const row = document.createElement('div');
+      row.className = 'settings-field';
+      row.dataset.key = field.key;
+      const label = document.createElement('label');
+      label.textContent = field.key;
+      const value = document.createElement('span');
+      value.textContent = field.value === null ? '—' : field.value;
+      row.append(label, value);
+      el.appendChild(row);
+    });
     return el;
   }
 
   function renderLiquids(liquids) {
     const el = panel('Liquids', 'settingsLiquids');
-    el.appendChild(picker('settingsLiquidSelect', liquids.files, null, 'Load',
-      (filename, msg) => runAction('/settings/load_liquid', { filename }, msg, false)));
     const grid = document.createElement('div');
     grid.className = 'settings-liquids';
     liquids.loaded.forEach(liquid => {
@@ -153,18 +148,8 @@
       head.className = 'settings-liquid-head';
       head.innerHTML = `<span class="tipbox-name">${liquid.name}</span>` +
         (liquid.active ? '<span class="settings-active">active</span>' : '');
-      const msg = document.createElement('div');
-      msg.className = 'move-feedback';
-      if (!liquid.active) { // the active liquid can't be unloaded
-        const unload = document.createElement('button');
-        unload.className = 'settings-btn subtle';
-        unload.textContent = 'Unload';
-        unload.addEventListener('click', () =>
-          runAction('/settings/unload_liquid', { name: liquid.name }, msg, false));
-        head.appendChild(unload);
-      }
-      card.append(head, msg);
-      liquid.fields.forEach(f => card.appendChild(fieldRow(f, false)));
+      card.appendChild(head);
+      liquid.fields.forEach(f => card.appendChild(fieldRow(f)));
       grid.appendChild(card);
     });
     el.appendChild(grid);
@@ -172,7 +157,7 @@
   }
 
   // ── one editable field ───────────────────────────────────────────────
-  function fieldRow(field, highRisk) {
+  function fieldRow(field) {
     const row = document.createElement('div');
     row.className = 'settings-field';
     row.dataset.key = field.key;
@@ -191,64 +176,21 @@
     line.className = 'settings-field-line';
     line.appendChild(input);
 
-    // Any bounded field (high-risk, or a liquid's syringe-speed override,
-    // issue #120) gets the native range hint; the daemon enforces it anyway.
+    // The daemon also enforces bounds for liquid syringe-speed overrides.
     if (field.min !== null) {
       input.min = field.min;
       input.max = field.max;
     }
-    if (highRisk) {
-      const range = document.createElement('span');
-      range.className = 'settings-range';
-      range.textContent = `${field.min}–${field.max}`;
-      const save = document.createElement('button');
-      save.className = 'settings-btn';
-      save.textContent = 'Save';
-      save.addEventListener('click', () => confirmHighRisk(field, input, msg, line));
-      line.append(range, save);
-    } else {
-      input.addEventListener('change', () => {
-        const text = input.value.trim();
-        // Empty means "no override": defer to the pipette's default.
-        write(field, text === '' ? null : Number(text), msg, false);
-      });
-    }
+    input.addEventListener('change', () => {
+      const text = input.value.trim();
+      // Empty means "no override": defer to the pipette's default.
+      write(field, text === '' ? null : Number(text), msg);
+    });
     row.append(label, line, msg);
     return row;
   }
 
-  // Bounds first, then an explicit confirm step, then the write.
-  function confirmHighRisk(field, input, msg, line) {
-    const value = Number(input.value);
-    if (input.value.trim() === '' || !Number.isFinite(value)) {
-      showMsg(msg, 'Enter a number.', true);
-      return;
-    }
-    if (value < field.min || value > field.max) {
-      showMsg(msg, `Out of range: must be ${field.min}–${field.max}.`, true);
-      return;
-    }
-    showMsg(msg, `Change ${field.key} from ${field.value} to ${value}?`, false);
-    const confirmBtn = document.createElement('button');
-    confirmBtn.className = 'settings-btn confirm';
-    confirmBtn.textContent = 'Confirm';
-    const cancelBtn = document.createElement('button');
-    cancelBtn.className = 'settings-btn subtle';
-    cancelBtn.textContent = 'Cancel';
-    const done = () => { confirmBtn.remove(); cancelBtn.remove(); };
-    confirmBtn.addEventListener('click', async () => {
-      done();
-      if (await write(field, value, msg, true)) field.value = value;
-    });
-    cancelBtn.addEventListener('click', () => {
-      done();
-      input.value = field.value;
-      showMsg(msg, '', false);
-    });
-    msg.append(' ', confirmBtn, cancelBtn);
-  }
-
-  async function write(field, value, msg, homeRequired) {
+  async function write(field, value, msg) {
     try {
       const result = await post('/settings/set', {
         category: field.category,
@@ -261,7 +203,6 @@
         return false;
       }
       showMsg(msg, 'Saved.', false);
-      if (homeRequired) showHomeRequired();
       return true;
     } catch (e) {
       showMsg(msg, e.message, true);

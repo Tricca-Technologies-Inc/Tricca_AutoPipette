@@ -79,7 +79,9 @@ def test_fields_disable_with_the_reason_while_a_run_is_active(
 ) -> None:
     (protocols_dir / "a.pipette").write_text("break\n")
     _open_settings(page, live_kiosk_server)
-    field = page.locator('#settingsGantry [data-key="speed_xy"] input')
+    field = page.locator(
+        '.settings-liquid[data-liquid="water"] [data-key="viscosity_cP"] input'
+    )
     expect(field).to_be_enabled()
 
     request = urllib.request.Request(
@@ -101,35 +103,59 @@ def test_fields_disable_with_the_reason_while_a_run_is_active(
         page.click("#bpAbortBtn")
 
 
-def test_an_out_of_bounds_high_risk_value_is_refused(
+def test_system_components_are_visible_but_not_independently_editable(
     page: Page, live_kiosk_server: LiveKioskServer, local: Path
 ) -> None:
     _open_settings(page, live_kiosk_server)
-    row = page.locator('#settingsPipette [data-key="syringe.max_volume_ul"]')
-
-    row.locator("input").fill("5000")
-    row.get_by_role("button", name="Save").click()
-
-    expect(row.locator(".move-feedback")).to_contain_text("Out of range")
-    expect(row.get_by_role("button", name="Confirm")).to_have_count(0)
+    settings = _settings(live_kiosk_server)
+    expect(page.locator("#settingsPipette")).to_contain_text(
+        settings["pipette"]["name"]
+    )
+    max_volume = next(
+        f for f in settings["pipette"]["fields"] if f["key"] == "syringe.max_volume_ul"
+    )
+    expect(
+        page.locator('#settingsPipette [data-key="syringe.max_volume_ul"]')
+    ).to_contain_text(f"{max_volume['value']:g}")
+    expect(page.locator("#settingsGantry")).to_contain_text("speed_xy")
+    expect(
+        page.locator(
+            "#settingsPipette input, #settingsPipette select, #settingsPipette button"
+        )
+    ).to_have_count(0)
+    expect(
+        page.locator(
+            "#settingsGantry input, #settingsGantry select, #settingsGantry button"
+        )
+    ).to_have_count(0)
+    expect(
+        page.locator("#settingsLiquids select, #settingsLiquids button")
+    ).to_have_count(0)
+    expect(page.locator("#settingsLiquidSelect, #settingsPipetteSelect")).to_have_count(
+        0
+    )
+    expect(page.locator("#settingsSystemSelect")).to_be_enabled()
     assert not (local / "pipettes").exists()
 
 
-@pytest.mark.usefixtures("local")
-def test_a_high_risk_edit_needs_confirming_then_asks_for_a_home(
-    page: Page, live_kiosk_server: LiveKioskServer
+def test_switch_system_updates_read_only_components(
+    page: Page, live_kiosk_server: LiveKioskServer, local: Path
 ) -> None:
+    for name in ("Tyson100_system.json", "Tyson_main.json"):
+        shutil.copy2(DefaultPaths.DIR_CONFIG_SYSTEM / name, local / "system" / name)
+    shutil.copy2(
+        DefaultPaths.DIR_CONFIG_LOCATIONS / "Tyson100_locations.json", local.parent
+    )
     _open_settings(page, live_kiosk_server)
-    row = page.locator('#settingsGantry [data-key="speed_z"]')
 
-    row.locator("input").fill("9000")
-    row.get_by_role("button", name="Save").click()
-    row.get_by_role("button", name="Confirm").click()
-
-    expect(row.locator(".move-feedback")).to_have_text("Saved.")
+    page.locator("#settingsSystemSelect").select_option("Tyson100_system.json")
+    page.locator("#settingsSystem").get_by_role("button", name="Switch").click()
+    expect(page.locator("#settingsPipette")).to_contain_text("TysonP100")
+    expect(page.locator('#settingsGantry [data-key="speed_xy"]')).to_contain_text(
+        "39000"
+    )
     expect(page.locator("#settingsHomeBanner")).to_be_visible()
-    gantry = _settings(live_kiosk_server)["gantry"]["fields"]
-    assert next(f for f in gantry if f["key"] == "speed_z")["value"] == 9000.0  # ruff:ignore[float-equality-comparison]
+    assert _settings(live_kiosk_server)["system_profile"] == "Tyson100_system.json"
 
 
 @pytest.mark.usefixtures("local")
