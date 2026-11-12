@@ -187,6 +187,7 @@ _BUILDER_CALLS: list[tuple[str, tuple[Any, ...]]] = [
     ("calibrate_abort", ()),
     ("run_start", ("does_not_exist.pipette",)),
     ("run_validate", ("does_not_exist.pipette",)),
+    ("execute_kiosk_command", ("vol_to_mm 10",)),
     ("run_status", ()),
     ("run_cancel", ()),
     ("run_pause", ()),

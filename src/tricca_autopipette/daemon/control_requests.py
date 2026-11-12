@@ -580,6 +580,14 @@ class ControlRequests(JsonRpcRequestBuilder):
         """
         return self.gen_request("run.start", {"filename": filename})
 
+    def execute_kiosk_command(self, command: str) -> dict[str, Any]:
+        """Build a request for one supported kiosk command.
+
+        Returns:
+            Request for the daemon's restricted command dispatcher.
+        """
+        return self.gen_request("command.execute", {"command": command})
+
     def run_validate(self, filename: str) -> dict[str, Any]:
         """Build a request to dry-run validate a protocol file.
 

@@ -452,6 +452,10 @@ class ControlServer:
             )
         if method == "run.status":
             return _run_status_to_dict(self.service.get_status())
+        if method == "command.execute":
+            return dataclasses.asdict(
+                await self.service.execute_kiosk_command(params["command"])
+            )
         if method == "run.cancel":
             return _run_status_to_dict(
                 await self.service.cancel_run(params.get("run_id"))

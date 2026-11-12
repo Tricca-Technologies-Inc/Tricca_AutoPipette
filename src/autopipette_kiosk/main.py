@@ -104,6 +104,12 @@ class RunControlRequest(BaseModel):
     run_id: str = Field(min_length=1)
 
 
+class KioskCommandRequest(BaseModel):
+    """A single command entered in the kiosk."""
+
+    command: str = Field(min_length=1, max_length=1024)
+
+
 class BreakpointResponse(BaseModel):
     """Request body for `POST /breakpoint/respond`."""
 
@@ -788,6 +794,44 @@ async def _dispatch_control_request(request: dict[str, Any]) -> CommandResultRes
         message=str(result.get("message", "")),
         data=result.get("data"),
     )
+
+
+async def _identify_command_client(client: WebSocketClient) -> None:
+    await asyncio.to_thread(client.send_jsonrpc, _control_requests.identify("kiosk"))
+
+
+@app.post("/command", response_model=CommandResultResponse)
+async def execute_command(req: KioskCommandRequest) -> CommandResultResponse:
+    """Execute a supported command via the daemon.
+
+    Returns:
+        The daemon's result or refusal.
+
+    Raises:
+        HTTPException: If the daemon is unavailable or rejects the command.
+    """  # ruff: ignore[docstring-missing-exception]
+    if _run_control_client is None or not _run_control_client.is_connected():
+        raise HTTPException(status_code=503, detail="Control daemon not connected")
+    client = WebSocketClient(TAPD_CONTROL_URI)
+    client.start()
+    try:
+        if not await asyncio.to_thread(
+            client.wait_for_connection, TAPD_CONNECT_TIMEOUT_SECONDS
+        ):
+            raise HTTPException(status_code=503, detail="Control daemon not connected")
+        try:
+            await _identify_command_client(client)
+            response = await asyncio.to_thread(
+                client.send_jsonrpc,
+                _control_requests.execute_kiosk_command(req.command),
+            )
+        except JsonRpcError as exc:
+            raise _translate_move_error(exc) from exc
+        except (RuntimeError, TimeoutError) as exc:
+            raise HTTPException(status_code=503, detail=str(exc)) from exc
+        return CommandResultResponse.model_validate(response["result"])
+    finally:
+        await asyncio.to_thread(client.stop)
 
 
 @app.get("/tips", response_model=CommandResultResponse)

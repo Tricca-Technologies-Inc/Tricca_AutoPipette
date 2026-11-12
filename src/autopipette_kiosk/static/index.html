@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="dark">
 <style>html { background: #000; }</style>  <!-- inline in <head>, before any linked CSS -->
 <title>AutoPipette</title>
-<link rel="stylesheet" href="/static/style.css?v=2">
+<link rel="stylesheet" href="/static/style.css?v=3">
 </head>
 <body>
 
@@ -44,6 +44,7 @@
     <button class="tab-btn" data-page="deck">Deck</button>
     <button class="tab-btn" data-page="settings">Settings</button>
     <button class="tab-btn" data-page="calibrate">Calibrate</button>
+    <button class="tab-btn" data-page="commands">Commands</button>
   </nav>
 
   <!-- Global breakpoint banner: reachable from any tab, not scoped to the
@@ -102,6 +103,34 @@
             <progress id="progressBar" max="100" aria-label="Estimated G-code file progress" hidden></progress>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="page" id="page-commands">
+      <div class="command-panel">
+        <h2>Commands</h2>
+        <p>Enter one supported tap command. Commands can move the robot when connected.</p>
+        <p>During a protocol run, commands are locked. A successful request does not confirm physical completion.</p>
+        <details>
+          <summary>Supported commands</summary>
+          <p>init, home, move, move_loc, move_rel, plate_move, plates_in,
+            aspirate, dispense, pipette, next_tip, eject_tip, dispose_tip,
+            change_tip, vol_to_mm</p>
+          <p>Examples: <code>home x</code>, <code>move 10 20 30</code>,
+            <code>move_rel --x 1</code>, <code>move_loc source</code>,
+            <code>aspirate 10 source</code>, <code>dispense destination</code>,
+            <code>pipette 10 source destination</code>, <code>vol_to_mm 10</code>.</p>
+        </details>
+        <form id="commandForm">
+          <label for="commandInput">Command</label>
+          <div class="command-entry">
+            <input id="commandInput" type="text" maxlength="1024" autocomplete="off"
+              autocapitalize="off" spellcheck="false" placeholder="e.g. vol_to_mm 10">
+            <button type="submit" id="commandSendBtn" disabled>Send</button>
+          </div>
+        </form>
+        <div id="commandAvailability" role="status"></div>
+        <div class="command-output" id="commandOutput" role="log" aria-live="polite"></div>
       </div>
     </div>
 
@@ -298,12 +327,13 @@
   </main>
 </div>
 
-<script src="/static/app.js?v=2"></script>
-<script src="/static/run.js?v=2"></script>
-<script src="/static/move.js?v=2"></script>
-<script src="/static/tips.js?v=2"></script>
-<script src="/static/deck.js?v=2"></script>
-<script src="/static/settings.js?v=2"></script>
-<script src="/static/calibrate.js?v=2"></script>
+<script src="/static/app.js?v=3"></script>
+<script src="/static/run.js?v=3"></script>
+<script src="/static/move.js?v=3"></script>
+<script src="/static/tips.js?v=3"></script>
+<script src="/static/deck.js?v=3"></script>
+<script src="/static/settings.js?v=3"></script>
+<script src="/static/calibrate.js?v=3"></script>
+<script src="/static/commands.js?v=3"></script>
 </body>
 </html>

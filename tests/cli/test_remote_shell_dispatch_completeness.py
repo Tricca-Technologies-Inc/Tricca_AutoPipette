@@ -28,7 +28,11 @@ from tricca_autopipette.daemon.control_requests import ControlRequests
 # - "run_confirm_breakpoint" is reached via `do_continue`/`do_abort`, which
 #   pick the `proceed` value for the user rather than exposing it as a raw
 #   argument.
-_NO_COMMAND_BY_DESIGN = frozenset({"identify", "run_confirm_breakpoint"})
+# The kiosk text adapter exposes existing typed tap commands, not a new
+# standalone tap capability.
+_NO_COMMAND_BY_DESIGN = frozenset({
+    "identify", "run_confirm_breakpoint", "execute_kiosk_command"
+})
 
 # ControlRequests builder name -> the `do_<name>` command on RemoteTapShell
 # that reaches it. Most are 1:1 (`move` -> `do_move`); the rest are listed
@@ -155,3 +159,13 @@ def test_every_mapped_command_exists_on_remote_tap_shell() -> None:
         f"_BUILDER_TO_COMMAND names commands that don't exist on "
         f"RemoteTapShell: {sorted(missing)}"
     )
+
+
+def test_kiosk_commands_are_also_tap_commands() -> None:
+    """The kiosk adapter must only expose commands already available in tap."""
+    from tricca_autopipette.daemon.service import _KIOSK_COMMANDS
+
+    missing = {
+        name for name in _KIOSK_COMMANDS if not hasattr(RemoteTapShell, f"do_{name}")
+    }
+    assert not missing

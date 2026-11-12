@@ -49,6 +49,13 @@ G-code files have a unique run ID in their names and remain on the server.
 With `tapd --no-connect`, a protocol can be prepared but cannot execute;
 the kiosk reports that no job was sent.
 
+The Commands tab accepts one listed `tap`-style command at a time; it is not
+an operating-system shell. Commands are refused during a protocol run and use
+the same daemon homing and interlock checks. Motion and pipetting commands
+require a robot connection and can operate the machine. A successful command
+request does not confirm physical completion. In `--no-connect` mode, only
+the `vol_to_mm` calculation is available.
+
 Both the daemon's control plane and the kiosk are loopback-only by default,
 with no authentication — see `systemd/README.md` before changing a bind
 address.

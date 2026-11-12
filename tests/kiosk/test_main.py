@@ -557,6 +557,174 @@ class TestIndexRoute:
                 assert cached.headers["cache-control"] == "no-cache"
 
 
+class TestCommandEntry:
+    def test_command_returns_real_daemon_result(self, kiosk_client: TestClient) -> None:
+        response = kiosk_client.post("/command", json={"command": "vol_to_mm 10"})
+        assert response.status_code == 200
+        assert response.json()["ok"] is True
+        assert response.json()["data"] is not None
+
+    @pytest.mark.parametrize(
+        "command",
+        [
+            "unknown",
+            "send raw",
+            "break",
+            "init extra",
+            "move 1 2",
+            "move 1 2 3\ninit",
+            "plate_move plate1 inf",
+        ],
+    )
+    def test_unsupported_or_malformed_commands_are_rejected(
+        self, kiosk_client: TestClient, command: str
+    ) -> None:
+        response = kiosk_client.post("/command", json={"command": command})
+        assert response.status_code in (200, 400, 409)
+        if response.status_code == 200:
+            assert response.json()["ok"] is False
+
+    def test_motion_requires_a_live_robot_connection(
+        self, kiosk_client: TestClient
+    ) -> None:
+        response = kiosk_client.post("/command", json={"command": "init"})
+        assert response.status_code in (200, 409, 503)
+        if response.status_code == 200:
+            assert response.json()["ok"] is False
+        assert "connect" in str(response.json()).lower()
+
+    def test_move_uses_daemon_homing_interlock(
+        self, kiosk_client: TestClient, live_control_plane: LiveControlPlane
+    ) -> None:
+        fake = FakeWebSocketClient()
+        live_control_plane.service.client = fake  # type: ignore[assignment]
+        response = kiosk_client.post("/command", json={"command": "move 1 2 3"})
+        assert response.status_code == 409
+        assert "homed" in response.json()["detail"].lower()
+        assert not fake.uploaded_files
+
+    def test_move_rejects_non_finite_coordinates(
+        self, kiosk_client: TestClient, live_control_plane: LiveControlPlane
+    ) -> None:
+        fake = FakeWebSocketClient()
+        live_control_plane.service.client = fake  # type: ignore[assignment]
+        assert isinstance(
+            live_control_plane.service.moonraker_state, FakeMoonrakerState
+        )
+        live_control_plane.service.moonraker_state.set_homed(True)
+        response = kiosk_client.post("/command", json={"command": "move nan 2 3"})
+        assert response.status_code == 400
+        assert not fake.uploaded_files
+
+    def test_valid_move_reaches_fake_robot(
+        self, kiosk_client: TestClient, live_control_plane: LiveControlPlane
+    ) -> None:
+        fake = FakeWebSocketClient()
+        live_control_plane.service.client = fake  # type: ignore[assignment]
+        assert isinstance(
+            live_control_plane.service.moonraker_state, FakeMoonrakerState
+        )
+        live_control_plane.service.moonraker_state.set_homed(True)
+        response = kiosk_client.post("/command", json={"command": "move 1 2 3"})
+        assert response.status_code == 200
+        assert response.json()["ok"] is True
+        assert fake.uploaded_files
+        assert any(r["method"] == "printer.print.start" for r in fake.sent_requests)
+
+    def test_command_is_refused_during_protocol(
+        self, kiosk_client: TestClient, protocols_dir: Path
+    ) -> None:
+        (protocols_dir / "bp.pipette").write_text("break\n")
+        kiosk_client.post("/run", json={"filename": "bp.pipette"})
+        try:
+            assert poll_until(lambda: kiosk_main._current_breakpoint is not None)
+            response = kiosk_client.post("/command", json={"command": "vol_to_mm 10"})
+            assert response.status_code == 200
+            assert response.json()["ok"] is False
+            assert "locked" in response.json()["message"].lower()
+        finally:
+            kiosk_client.post("/breakpoint/respond", json={"proceed": False})
+
+    def test_command_is_not_queued_behind_a_busy_daemon(
+        self, kiosk_client: TestClient, live_control_plane: LiveControlPlane
+    ) -> None:
+        lock = live_control_plane.service._lock
+        loop = live_control_plane._loop
+        assert asyncio.run_coroutine_threadsafe(lock.acquire(), loop).result(timeout=5)
+        try:
+            response = kiosk_client.post("/command", json={"command": "vol_to_mm 10"})
+            assert response.status_code == 200
+            assert response.json()["ok"] is False
+            assert "busy" in response.json()["message"].lower()
+        finally:
+            loop.call_soon_threadsafe(lock.release)
+
+    def test_second_command_is_not_queued_behind_a_slow_command(
+        self, kiosk_client: TestClient, live_control_plane: LiveControlPlane
+    ) -> None:
+        class DelayedUpload(FakeWebSocketClient):
+            def __init__(self) -> None:
+                super().__init__()
+                self.upload: Future[str] = Future()
+
+            def upload_gcode_file(
+                self, file_name: str, file_path: str | Path
+            ) -> Future[str]:
+                self.uploaded_files.append((file_name, str(file_path)))
+                return self.upload
+
+        fake = DelayedUpload()
+        live_control_plane.service.client = fake  # type: ignore[assignment]
+        state = live_control_plane.service.moonraker_state
+        assert isinstance(state, FakeMoonrakerState)
+        state.set_homed(True)
+        with ThreadPoolExecutor() as pool:
+            first = pool.submit(
+                kiosk_client.post, "/command", json={"command": "move 1 2 3"}
+            )
+            try:
+                assert poll_until(lambda: bool(fake.uploaded_files))
+                second = kiosk_client.post("/command", json={"command": "vol_to_mm 10"})
+                assert second.status_code == 200
+                assert second.json()["ok"] is False
+                assert "busy" in second.json()["message"].lower()
+            finally:
+                fake.upload.set_result("gcodes/move.gcode")
+            assert first.result(timeout=5).json()["ok"] is True
+
+    def test_cancelled_request_keeps_daemon_locked_until_worker_finishes(
+        self, kiosk_client: TestClient, live_control_plane: LiveControlPlane
+    ) -> None:
+        class DelayedUpload(FakeWebSocketClient):
+            def __init__(self) -> None:
+                super().__init__()
+                self.upload: Future[str] = Future()
+
+            def upload_gcode_file(
+                self, file_name: str, file_path: str | Path
+            ) -> Future[str]:
+                self.uploaded_files.append((file_name, str(file_path)))
+                return self.upload
+
+        fake = DelayedUpload()
+        service = live_control_plane.service
+        service.client = fake  # type: ignore[assignment]
+        assert isinstance(service.moonraker_state, FakeMoonrakerState)
+        service.moonraker_state.set_homed(True)
+        pending = asyncio.run_coroutine_threadsafe(
+            service.execute_kiosk_command("move 1 2 3"), live_control_plane._loop
+        )
+        try:
+            assert poll_until(lambda: bool(fake.uploaded_files))
+            assert pending.cancel()
+            response = kiosk_client.post("/command", json={"command": "vol_to_mm 10"})
+            assert response.json()["ok"] is False
+            assert "busy" in response.json()["message"].lower()
+        finally:
+            fake.upload.set_result("gcodes/move.gcode")
+        assert poll_until(lambda: not service._lock.locked())
+
+
 class TestBreakpointRespond:
     def test_returns_503_when_the_daemon_is_not_connected(
         self, monkeypatch: pytest.MonkeyPatch

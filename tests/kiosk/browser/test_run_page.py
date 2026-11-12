@@ -69,6 +69,45 @@ def test_protocol_loading_error_is_visible(
     expect(page.locator("#protocolList")).to_contain_text("Failed to load protocols")
 
 
+def test_command_entry_reports_results_and_rejects_unsupported_input(
+    page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
+) -> None:
+    del protocols_dir
+    page.goto(live_kiosk_server.url)
+    page.get_by_role("button", name="Commands").click()
+    command = page.locator("#commandInput")
+    command.fill("vol_to_mm 10")
+    page.locator("#commandSendBtn").click()
+    expect(page.locator("#commandOutput")).to_contain_text("10")
+    expect(page.locator("#commandOutput")).to_contain_text("travel_mm")
+    command.fill("init")
+    page.locator("#commandSendBtn").click()
+    expect(page.locator("#commandOutput")).to_contain_text(
+        "Robot is not connected; no command was sent."
+    )
+    command.fill("bad<img src=x>")
+    page.locator("#commandSendBtn").click()
+    expect(page.locator("#commandOutput")).to_contain_text("Unsupported command")
+    expect(page.locator("#commandOutput img")).to_have_count(0)
+
+
+def test_command_entry_locked_during_protocol(
+    page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
+) -> None:
+    (protocols_dir / "a.pipette").write_text("break\n")
+    page.goto(live_kiosk_server.url)
+    page.click(".protocol-item")
+    page.click("#runBtn")
+    try:
+        expect(page.locator("#bpAbortBtn")).to_be_visible()
+        page.get_by_role("button", name="Commands").click()
+        page.locator("#commandInput").fill("vol_to_mm 10")
+        expect(page.locator("#commandSendBtn")).to_be_disabled()
+        expect(page.locator("#commandAvailability")).to_contain_text("locked")
+    finally:
+        page.click("#bpAbortBtn")
+
+
 def test_selecting_a_protocol_enables_run_and_shows_its_name(
     page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
 ) -> None:

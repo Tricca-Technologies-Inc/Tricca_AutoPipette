@@ -158,6 +158,7 @@ header {
 .tab-bar {
   display: flex;
   align-items: stretch;
+  overflow-x: auto;
   gap: 4px;
   padding: 0 24px;
   background: var(--surface);
@@ -236,6 +237,54 @@ header {
 /* ── pages ── */
 .page { display: none; overflow: hidden; }
 .page.active { display: grid; }
+
+/* ── Commands page ── */
+#page-commands.active {
+  display: block;
+  overflow-y: auto;
+  padding: 24px;
+}
+.command-panel { max-width: 760px; }
+.command-panel p { color: var(--muted); line-height: 1.5; }
+.command-panel details { margin: 16px 0; }
+.command-panel summary { cursor: pointer; }
+.command-panel label { display: block; margin-bottom: 8px; font-weight: 600; }
+.command-entry { display: flex; gap: 10px; }
+.command-entry input {
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface2);
+  color: var(--text);
+  font: 16px var(--mono);
+}
+.command-entry button {
+  min-height: 48px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.command-entry button:disabled { opacity: 0.4; cursor: not-allowed; }
+#commandAvailability { margin-top: 8px; color: var(--muted); font-size: 13px; }
+.command-output { margin-top: 16px; }
+.command-result {
+  margin-bottom: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow-wrap: anywhere;
+}
+.command-result.error { border-color: var(--error); }
+.command-result pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 
 /* ── Run page ── */
 #page-run.active {

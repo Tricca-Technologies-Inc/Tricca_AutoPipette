@@ -934,6 +934,92 @@ class AutoPipetteService:
         async with self._lock:
             return await asyncio.to_thread(seeded)
 
+    async def execute_kiosk_command(self, line: str) -> CommandResult:
+        """Execute one supported kiosk command without queuing it across a run.
+
+        Returns:
+            The command result, or a refusal when a run is active.
+
+        Raises:
+            ValueError: If the command is malformed or unsupported.
+            asyncio.CancelledError: After an in-flight command worker finishes.
+        """  # ruff: ignore[docstring-extraneous-exception]
+        def execute() -> CommandResult:
+            refusal = self.config_lock_refusal()
+            if refusal is not None:
+                return refusal
+            if len(line) > 1024:
+                raise ValueError("Command is too long.")
+            if "\n" in line or "\r" in line:
+                raise ValueError("Enter one command per request.")
+            tokens = self._tokenize_protocol_line(line)
+            if tokens is None or tokens[0] not in _KIOSK_COMMANDS:
+                raise ValueError("Unsupported command.")
+            name, args = tokens
+            spec = _LINE_DISPATCH[name]
+            if spec.parser is None or spec.args_cls is None:
+                if args:
+                    raise ValueError(f"'{name}' does not take arguments.")
+                namespace = None
+            else:
+                try:
+                    namespace = spec.parser.parse_args(args)
+                except SystemExit as exc:
+                    raise ValueError(f"Invalid arguments for '{name}'.") from exc
+                if any(
+                    isinstance(value, float) and not math.isfinite(value)
+                    for value in vars(namespace).values()
+                ):
+                    raise ValueError("Numeric arguments must be finite.")
+                if name == "plate_move":
+                    try:
+                        target = float(namespace.target)
+                    except ValueError:
+                        pass
+                    else:
+                        if not math.isfinite(target):
+                            raise ValueError("Numeric arguments must be finite.")
+            if name != "vol_to_mm" and (
+                self.client is None or not self.client.is_connected()
+            ):
+                return CommandResult(
+                    ok=False, message="Robot is not connected; no command was sent."
+                )
+            if namespace is None or spec.args_cls is None:
+                return spec.method(self)
+            return spec.method(self, args_from_namespace(spec.args_cls, namespace))
+
+        refusal = self.config_lock_refusal()
+        if refusal is not None:
+            return refusal
+        if self._lock.locked():
+            return CommandResult(
+                ok=False, message="The daemon is busy; no command was sent."
+            )
+        try:
+            await asyncio.wait_for(self._lock.acquire(), timeout=0.05)
+        except TimeoutError:
+            return CommandResult(
+                ok=False, message="The daemon is busy; no command was sent."
+            )
+        try:
+            refusal = self.config_lock_refusal()
+            if refusal is not None:
+                return refusal
+
+            def seeded() -> CommandResult:
+                self._seed_drawer_model()
+                return execute()
+
+            task = asyncio.create_task(asyncio.to_thread(seeded))
+            try:
+                return await asyncio.shield(task)
+            except asyncio.CancelledError:
+                await task
+                raise
+        finally:
+            self._lock.release()
+
     def _seed_drawer_model(self) -> None:
         """Seed the compile-time drawer-position model from live state (#142).
 
@@ -5159,6 +5245,12 @@ _LINE_DISPATCH: dict[str, _LineCommand] = {
         AutoPipetteService.vol_to_mm,
     ),
 }
+
+_KIOSK_COMMANDS = frozenset({
+    "init", "home", "move", "move_loc", "move_rel", "plate_move", "plates_in",
+    "aspirate", "dispense", "pipette", "next_tip", "eject_tip", "dispose_tip",
+    "change_tip", "vol_to_mm",
+})
 
 #: Protocol-file commands that take one bare positional string argument
 #: (no argparse parser/``*Args`` dataclass) -- see :data:`_LINE_DISPATCH`'s
