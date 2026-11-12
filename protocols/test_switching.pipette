@@ -8,7 +8,7 @@ pipette 50.0 --src_row 0 --src_col 0 manu2 KIT1 --tipbox tipbox --prewet 1 --pre
 select_setup Tyson1000_system.json
 init
 
-pipette 150 WATER KIT1 --tipbox tipbox  --prewet5
+pipette 150 WATER KIT1 --tipbox tipbox  --prewet 5
 
 select_setup Tyson100_system.json
 init
