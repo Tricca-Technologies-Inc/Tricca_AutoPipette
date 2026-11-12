@@ -34,10 +34,11 @@ uv run tap
 uv run uvicorn autopipette_kiosk.main:app --host 127.0.0.1 --port 8000
 ```
 
-On the Run page, **Cancel** can stop preparation or request cancellation of
-the current job. **Pause** and **Resume** control a confirmed running or
-paused job; the separate breakpoint Continue/Abort prompt still applies
-during preparation. A request is not confirmation until the status changes.
+On the Run page, the **Run protocol** button changes to **Pause** or **Resume**
+for a confirmed running or paused job. **Cancel** can stop preparation or
+request cancellation of the current job; the separate breakpoint
+Continue/Abort prompt still applies during preparation. A request is not
+confirmation until the status changes.
 Cancel is **not an emergency stop**.
 
 The progress bar estimates the fraction of the G-code file processed, not

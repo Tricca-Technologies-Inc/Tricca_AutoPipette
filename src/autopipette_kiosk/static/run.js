@@ -10,6 +10,8 @@
   let folder = '';
   let pendingAction = null;
   let pendingTimer = null;
+  let pendingStart = null;
+  let startTimer = null;
 
   // ── protocol list ──────────────────────────────────────────────────────
   async function loadProtocols() {
@@ -99,17 +101,26 @@
     const nameEl = document.getElementById('selectionName');
     nameEl.textContent = filename.slice(0, -'.pipette'.length);
     nameEl.classList.remove('placeholder');
-    document.getElementById('runBtn').disabled =
-      !App.isConnected() || App.isRunActive(App.getStatus().status);
+    renderStatusCard(App.getStatus());
     document.getElementById('checkBtn').disabled = false;
     document.getElementById('findingsList').innerHTML = '';
   }
 
   // ── run ────────────────────────────────────────────────────────────────
   document.getElementById('runBtn').addEventListener('click', async () => {
+    const data = App.getStatus();
+    if (!App.isConnected() || pendingStart || pendingAction) return;
+    if (App.isRunActive(data.status)) {
+      if (data.phase === 'printing') sendRunControl('pause');
+      else if (data.phase === 'paused') sendRunControl('resume');
+      return;
+    }
     if (!selected) return;
+    const request = {};
+    pendingStart = request;
     const feedback = document.getElementById('runControlFeedback');
     feedback.textContent = '';
+    renderStatusCard(data);
     try {
       const res = await fetch('/run', {
         method: 'POST',
@@ -118,10 +129,23 @@
       });
       if (!res.ok) {
         const err = await res.json();
-        feedback.textContent = `Run failed: ${err.detail}`;
+        throw new Error(err.detail || `HTTP ${res.status}`);
+      }
+      if (pendingStart === request) {
+        feedback.textContent = 'Run requested; waiting for confirmation.';
+        startTimer = setTimeout(() => {
+          if (pendingStart !== request) return;
+          pendingStart = null;
+          feedback.textContent = 'Run was not confirmed. Check the machine state.';
+          renderStatusCard(App.getStatus());
+        }, 5000);
       }
     } catch (e) {
-      feedback.textContent = `Run failed: ${e.message}`;
+      if (pendingStart === request) {
+        pendingStart = null;
+        feedback.textContent = `Run failed: ${e.message}`;
+        renderStatusCard(App.getStatus());
+      }
     }
   });
 
@@ -165,9 +189,7 @@
     }
   }
 
-  ['pause', 'resume', 'cancel'].forEach(action => {
-    document.getElementById(`${action}Btn`).addEventListener('click', () => sendRunControl(action));
-  });
+  document.getElementById('cancelBtn').addEventListener('click', () => sendRunControl('cancel'));
 
   // ── check (pre-flight validation, issue #88) ──────────────────────────
   // Explicit trigger only (no auto-validate on selection, no bulk
@@ -228,6 +250,11 @@
     state.textContent = data.phase === 'paused' ? 'Paused' : label;
     msg.textContent   = data.message || '';
 
+    if (pendingStart && App.isRunActive(s)) {
+      clearTimeout(startTimer);
+      pendingStart = null;
+      document.getElementById('runControlFeedback').textContent = '';
+    }
     if (pendingAction && (
       data.run_id !== pendingAction.runId ||
       s !== 'running' ||
@@ -240,8 +267,12 @@
     }
     const active = App.isRunActive(s);
     const available = active && App.isConnected() && !!data.run_id && !pendingAction;
-    document.getElementById('pauseBtn').disabled = !available || data.phase !== 'printing';
-    document.getElementById('resumeBtn').disabled = !available || data.phase !== 'paused';
+    const paused = active && data.phase === 'paused';
+    document.getElementById('runBtnLabel').textContent =
+      active ? (paused ? 'Resume' : 'Pause') : 'Run protocol';
+    document.getElementById('runBtnIcon').setAttribute(
+      'd', active && !paused ? 'M6 4h4v16H6zM14 4h4v16h-4z' : 'M8 5v14l11-7z'
+    );
     document.getElementById('cancelBtn').disabled =
       !available || !['preparing', 'printing', 'paused'].includes(data.phase);
     icon.classList.toggle('spinning', active && data.phase !== 'paused');
@@ -256,7 +287,9 @@
       bar.removeAttribute('value');
       progressLabel.textContent = active ? 'Progress unavailable' : '';
     }
-    btn.disabled = !App.isConnected() || active || !selected;
+    btn.disabled = active
+      ? !available || !['printing', 'paused'].includes(data.phase)
+      : !App.isConnected() || !selected || pendingStart;
   }
 
   App.onStatus(renderStatusCard);

@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="dark">
 <style>html { background: #000; }</style>  <!-- inline in <head>, before any linked CSS -->
 <title>AutoPipette</title>
-<link rel="stylesheet" href="/static/style.css">
+<link rel="stylesheet" href="/static/style.css?v=2">
 </head>
 <body>
 
@@ -79,15 +79,13 @@
 
         <div class="run-actions">
           <button class="run-btn" id="runBtn" disabled>
-            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-            Run protocol
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path id="runBtnIcon" d="M8 5v14l11-7z"/></svg>
+            <span id="runBtnLabel">Run protocol</span>
           </button>
           <button class="check-btn" id="checkBtn" disabled>Check</button>
         </div>
 
         <div class="run-controls" aria-label="Protocol controls">
-          <button id="pauseBtn" disabled>Pause</button>
-          <button id="resumeBtn" disabled>Resume</button>
           <button id="cancelBtn" disabled>Cancel</button>
         </div>
         <div class="run-control-note">Cancel is not an emergency stop.</div>
@@ -300,12 +298,12 @@
   </main>
 </div>
 
-<script src="/static/app.js"></script>
-<script src="/static/run.js"></script>
-<script src="/static/move.js"></script>
-<script src="/static/tips.js"></script>
-<script src="/static/deck.js"></script>
-<script src="/static/settings.js"></script>
-<script src="/static/calibrate.js"></script>
+<script src="/static/app.js?v=2"></script>
+<script src="/static/run.js?v=2"></script>
+<script src="/static/move.js?v=2"></script>
+<script src="/static/tips.js?v=2"></script>
+<script src="/static/deck.js?v=2"></script>
+<script src="/static/settings.js?v=2"></script>
+<script src="/static/calibrate.js?v=2"></script>
 </body>
 </html>

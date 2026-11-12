@@ -543,6 +543,19 @@ class TestIndexRoute:
         assert response.status_code == 200
         assert "text/html" in response.headers["content-type"]
 
+    def test_page_and_assets_require_cache_revalidation(
+        self, kiosk_client: TestClient
+    ) -> None:
+        for path in ("/", "/static/app.js", "/static/run.js", "/static/style.css"):
+            response = kiosk_client.get(path)
+            assert response.headers["cache-control"] == "no-cache"
+            if path != "/":
+                cached = kiosk_client.get(
+                    path, headers={"If-None-Match": response.headers["etag"]}
+                )
+                assert cached.status_code == 304
+                assert cached.headers["cache-control"] == "no-cache"
+
 
 class TestBreakpointRespond:
     def test_returns_503_when_the_daemon_is_not_connected(

@@ -26,9 +26,10 @@ from pathlib import Path
 from typing import Any, Literal, cast
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+from starlette.types import Scope
 
 from tricca_autopipette.commands.tap_cmd_parsers import (
     CalibrateStartArgs,
@@ -357,8 +358,18 @@ async def _monitor_daemon(client: WebSocketClient) -> None:
         await asyncio.sleep(1)
 
 
+class RevalidatingStaticFiles(StaticFiles):
+    """Revalidate assets so the browser does not mix kiosk versions."""
+
+    async def get_response(self, path: str, scope: Scope) -> Response:
+        """Return a static asset with mandatory cache revalidation."""
+        response = await super().get_response(path, scope)
+        response.headers["Cache-Control"] = "no-cache"
+        return response
+
+
 app = FastAPI(title="AutoPipette Kiosk", lifespan=lifespan)
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+app.mount("/static", RevalidatingStaticFiles(directory=STATIC_DIR), name="static")
 
 
 # ── routes ─────────────────────────────────────────────────────────────────────
@@ -369,7 +380,9 @@ def index() -> FileResponse:
     Returns:
         The static `index.html` file.
     """
-    return FileResponse(STATIC_DIR / "index.html")
+    return FileResponse(
+        STATIC_DIR / "index.html", headers={"Cache-Control": "no-cache"}
+    )
 
 
 def _list_protocol_files() -> dict[str, Path]:

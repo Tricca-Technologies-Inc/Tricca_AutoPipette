@@ -23,7 +23,7 @@ from fakes.fake_websocket_client import FakeWebSocketClient
 
 pytest.importorskip("playwright")
 
-from playwright.sync_api import Page, expect
+from playwright.sync_api import Page, Route, expect
 from support.live_control_plane import LiveControlPlane
 from support.live_kiosk_server import LiveKioskServer
 from support.polling import poll_until
@@ -38,6 +38,37 @@ def test_empty_protocol_list_shows_a_placeholder(
     expect(page.locator("#protocolList")).to_contain_text("No .pipette files found")
 
 
+def test_new_page_does_not_use_a_stale_unversioned_app_script(
+    page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
+) -> None:
+    (protocols_dir / "a.pipette").write_text("wait 1\n")
+
+    def stale_script(route: Route) -> None:
+        if "?" not in route.request.url:
+            route.fulfill(
+                content_type="application/javascript",
+                body=(
+                    "const App = {onStatus: f => f({status:'idle'}), "
+                    "describeStatus: () => ({}), isRunActive: () => false};"
+                ),
+            )
+        else:
+            route.continue_()
+
+    page.route("**/static/app.js*", stale_script)
+    page.goto(live_kiosk_server.url)
+    expect(page.locator(".protocol-item")).to_have_count(1)
+
+
+def test_protocol_loading_error_is_visible(
+    page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
+) -> None:
+    del protocols_dir
+    page.route("**/protocols", lambda route: route.fulfill(status=500))
+    page.goto(live_kiosk_server.url)
+    expect(page.locator("#protocolList")).to_contain_text("Failed to load protocols")
+
+
 def test_selecting_a_protocol_enables_run_and_shows_its_name(
     page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
 ) -> None:
@@ -49,6 +80,7 @@ def test_selecting_a_protocol_enables_run_and_shows_its_name(
 
     expect(page.locator("#selectionName")).to_have_text("a")
     expect(page.locator("#runBtn")).to_be_enabled()
+    expect(page.locator("#runBtn")).to_have_text("Run protocol")
 
 
 def test_folder_navigation_selects_and_checks_nested_protocol(
@@ -109,6 +141,7 @@ def test_running_a_protocol_updates_the_shared_pill_and_the_run_page_card(
         expect(page.locator("#statusPillLabel")).to_have_text("Running")
         expect(page.locator("#statusState")).to_have_text("Running")
         expect(page.locator("#runBtn")).to_be_disabled()
+        expect(page.locator("#runBtn")).to_have_text("Pause")
         expect(page.locator("#bpAbortBtn")).to_be_visible()
     finally:
         page.click("#bpAbortBtn")
@@ -164,33 +197,39 @@ def test_run_controls_and_estimated_progress(
     expect(page.locator("#progressLabel")).to_have_text(
         "Estimated G-code file progress: 41%"
     )
-    expect(page.locator("#pauseBtn")).to_be_enabled()
-    expect(page.locator("#resumeBtn")).to_be_disabled()
+    expect(page.locator("#runBtn")).to_have_text("Pause")
+    expect(page.locator("#runBtn")).to_be_enabled()
     fake.set_connected(False)
     expect(page.locator("#progressLabel")).to_have_text("Progress unavailable")
-    expect(page.locator("#pauseBtn")).to_be_disabled()
+    expect(page.locator("#runBtn")).to_be_disabled()
     expect(page.locator("#cancelBtn")).to_be_disabled()
     fake.set_connected(True)
-    expect(page.locator("#pauseBtn")).to_be_enabled()
-    page.click("#pauseBtn")
+    expect(page.locator("#runBtn")).to_be_enabled()
+    page.click("#runBtn")
     expect(page.locator("#runControlFeedback")).to_contain_text(
         "waiting for confirmation"
     )
+    expect(page.locator("#runBtn")).to_be_disabled()
+    expect(page.locator("#runBtn")).to_have_text("Pause")
     fake.job = {
         "print_stats": {"filename": name, "state": "paused"},
         "virtual_sdcard": {"progress": 0.41},
     }
     expect(page.locator("#statusState")).to_have_text("Paused")
-    expect(page.locator("#resumeBtn")).to_be_enabled()
-    page.click("#resumeBtn")
+    expect(page.locator("#runBtn")).to_have_text("Resume")
+    expect(page.locator("#runBtn")).to_be_enabled()
+    page.click("#runBtn")
     expect(page.locator("#runControlFeedback")).to_contain_text(
         "waiting for confirmation"
     )
+    expect(page.locator("#runBtn")).to_be_disabled()
+    expect(page.locator("#runBtn")).to_have_text("Resume")
     fake.job = {
         "print_stats": {"filename": name, "state": "printing"},
         "virtual_sdcard": {"progress": 0.5},
     }
-    expect(page.locator("#pauseBtn")).to_be_enabled()
+    expect(page.locator("#runBtn")).to_have_text("Pause")
+    expect(page.locator("#runBtn")).to_be_enabled()
     page.once("dialog", lambda dialog: dialog.accept())
     page.click("#cancelBtn")
     expect(page.locator("#runControlFeedback")).to_contain_text(
@@ -199,6 +238,8 @@ def test_run_controls_and_estimated_progress(
     fake.job = {"print_stats": {"filename": name, "state": "cancelled"}}
     expect(page.locator("#statusState")).to_have_text("Error")
     expect(page.locator("#cancelBtn")).to_be_disabled()
+    expect(page.locator("#runBtn")).to_have_text("Run protocol")
+    expect(page.locator("#runBtn")).to_be_enabled()
 
 
 def test_a_failed_run_shows_the_error_label_and_icon_on_both_widgets(
