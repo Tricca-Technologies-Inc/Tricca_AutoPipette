@@ -48,6 +48,10 @@ Continue/Abort prompt still applies during preparation. A request is not
 confirmation until the status changes.
 Cancel is **not an emergency stop**.
 
+The Move page's homing warning reflects the daemon's gantry movement
+interlock. It reports an unknown state if the connection is unavailable;
+gantry homing status does not confirm that the pipette plunger is homed.
+
 The progress bar estimates the fraction of the G-code file processed, not
 elapsed time or physical completion. It is unavailable during preparation or
 when the current job cannot be verified. Controls are disabled when the

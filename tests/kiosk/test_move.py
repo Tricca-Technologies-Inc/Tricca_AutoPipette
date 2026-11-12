@@ -13,6 +13,7 @@ from fakes.fake_moonraker_state import FakeMoonrakerState
 from fakes.fake_websocket_client import FakeWebSocketClient
 from fastapi.testclient import TestClient
 from support.live_control_plane import LiveControlPlane
+from support.polling import poll_until
 
 from autopipette_kiosk import main as kiosk_main
 from tricca_autopipette.core.coordinate import Coordinate
@@ -178,6 +179,22 @@ class TestLocationsEndpoint:
 
 
 class TestToolheadRelay:
+    def test_homing_snapshot_tracks_interlock_and_connection(
+        self,
+        kiosk_client_with_moonraker: TestClient,
+        live_control_plane: LiveControlPlane,
+    ) -> None:
+        del kiosk_client_with_moonraker
+        client = live_control_plane.service.client
+        assert isinstance(client, FakeWebSocketClient)
+        assert poll_until(lambda: kiosk_main._status_payload()["homed"] is False)
+        _set_homed(live_control_plane)
+        assert poll_until(lambda: kiosk_main._status_payload()["homed"] is True)
+        live_control_plane.service._homing_invalidated = True
+        assert poll_until(lambda: kiosk_main._status_payload()["homed"] is False)
+        client.set_connected(False)
+        assert poll_until(lambda: kiosk_main._status_payload()["homed"] is None)
+
     def test_ws_status_carries_toolhead_position_and_homed_axes(
         self,
         kiosk_client_with_moonraker: TestClient,

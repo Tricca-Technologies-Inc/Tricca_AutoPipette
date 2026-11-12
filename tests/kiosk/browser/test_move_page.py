@@ -17,6 +17,7 @@ import pytest
 
 pytest.importorskip("playwright")
 
+from fakes.fake_moonraker_state import FakeMoonrakerState
 from fakes.fake_websocket_client import FakeWebSocketClient
 from playwright.sync_api import Page, expect
 from support.live_control_plane import LiveControlPlane
@@ -53,12 +54,23 @@ def test_toolhead_update_hides_banner_and_populates_live_position(
         [{"toolhead": {"position": [12.5, 34.0, 5.25, 0.0], "homed_axes": "xyz"}}, 1.0],
     )
 
-    expect(page.locator("#moveNotHomedBanner")).not_to_have_class(ACTIVE)
     expect(page.locator("#moveXLive")).to_have_text("12.500")
+    expect(page.locator("#moveNotHomedBanner")).to_have_class(ACTIVE)
+    assert isinstance(live_control_plane.service.moonraker_state, FakeMoonrakerState)
+    live_control_plane.service.moonraker_state.set_homed(True)
+    expect(page.locator("#moveNotHomedBanner")).not_to_have_class(ACTIVE)
     expect(page.locator("#moveYLive")).to_have_text("34.000")
     expect(page.locator("#moveZLive")).to_have_text("5.250")
     # The (unfocused) editable field is populated from the live push too.
     expect(page.locator("#moveXInput")).to_have_value("12.500")
+    page.reload()
+    page.click('.tab-btn[data-page="move"]')
+    expect(page.locator("#moveNotHomedBanner")).not_to_have_class(ACTIVE)
+    live_control_plane.service._homing_invalidated = True
+    expect(page.locator("#moveNotHomedBanner")).to_have_class(ACTIVE)
+    expect(page.locator("#moveHomingMessage")).to_contain_text("Not homed")
+    live_control_plane.service.client.set_connected(False)
+    expect(page.locator("#moveHomingMessage")).to_contain_text("unknown")
 
 
 def test_editing_a_focused_field_is_not_clobbered_by_a_live_update(

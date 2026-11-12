@@ -1,8 +1,8 @@
 // Move page (issue #86): D-pad jog, absolute-coordinate move, and
 // named-location move -- three thin adapters over the daemon's
 // movement.move/move_loc/move_rel RPCs (via /move, /move_loc, /move_rel),
-// plus the live position/homed banner relayed over the shared /ws/status
-// stream app.js already owns (App.onStatus).
+// plus live position and the daemon's gantry homing interlock state over the
+// shared /ws/status stream app.js already owns (App.onStatus).
 //
 // All three sections act immediately on tap -- no confirmation dialogs
 // (jog/goto aren't destructive; a stray tap is correctable with another
@@ -14,17 +14,11 @@
   // dropdown doesn't need to react to the deck changing live.
   let locationsByName = {};
 
-  // ── homed-axes check: mirrors daemon/moonraker_state.py's
-  // REQUIRED_HOMED_AXES (x/y/z all reported homed) -- client-side only for
-  // display; the daemon's own require_homed decorator is still the real
-  // gate, this banner is just so an operator sees it before tapping Go and
-  // getting a 409 back. ──────────────────────────────────────────────────
-  function isHomed(homedAxes) {
-    return !!homedAxes && ['x', 'y', 'z'].every(axis => homedAxes.includes(axis));
-  }
-
-  function renderNotHomedBanner(homedAxes) {
-    document.getElementById('moveNotHomedBanner').classList.toggle('active', !isHomed(homedAxes));
+  function renderNotHomedBanner(homed) {
+    document.getElementById('moveNotHomedBanner').classList.toggle('active', homed !== true);
+    document.getElementById('moveHomingMessage').textContent = homed === false
+      ? 'Not homed — moves will be rejected until homing completes.'
+      : 'Homing status unknown — check the robot connection.';
   }
 
   // ── live position: skip overwriting a field the operator is actively
@@ -57,7 +51,7 @@
     running = data.status === 'running';
     applyRunningState();
     const toolhead = data.toolhead || {};
-    renderNotHomedBanner(toolhead.homed_axes);
+    renderNotHomedBanner(data.homed);
     renderLivePosition(toolhead.position);
   });
 

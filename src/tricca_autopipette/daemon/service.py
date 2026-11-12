@@ -4911,6 +4911,20 @@ class AutoPipetteService:
         """Return the current (or most recent) run status."""
         return self._current
 
+    def homing_status(self) -> bool | None:
+        """Report whether the movement interlock considers the gantry homed.
+
+        Returns:
+            The effective homing state, or None if Moonraker is offline.
+        """
+        if (
+            self.client is None
+            or not self.client.is_connected()
+            or self.moonraker_state is None
+        ):
+            return None
+        return not self._homing_invalidated and self.moonraker_state.is_homed()
+
     def list_protocols(self) -> list[dict[str, str]]:
         """List available protocol files.
 

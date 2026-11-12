@@ -82,6 +82,7 @@ const App = (() => {
 
     ws.onclose = () => {
       socketReady = false;
+      status = { ...status, homed: null, daemon_connected: false };
       statusListeners.forEach(fn => fn(status));
       renderConnIndicator('close');
       setTimeout(connectWS, 2000);

@@ -237,6 +237,7 @@ _main_loop: asyncio.AbstractEventLoop | None = None
 _current_run: RunStatus = RunStatus(status="idle")
 _run_status_lock = threading.Lock()
 _daemon_connected = False
+_current_homed: bool | None = None
 # Pending breakpoint, mirrored from notify_breakpoint pushes: {"run_id",
 # "filename", "pending"} while one is awaiting a response, None otherwise.
 _current_breakpoint: dict[str, Any] | None = None
@@ -266,7 +267,9 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
         None. Control-plane connection teardown happens after the yield.
     """
     global _control_client, _run_control_client, _main_loop, _daemon_connected
+    global _current_homed
     _main_loop = asyncio.get_running_loop()
+    _current_homed = None
 
     client = WebSocketClient(TAPD_CONTROL_URI)
     client.register_handler("notify_raw_event", _on_raw_event_notification)
@@ -327,6 +330,7 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
                 run_client.send_jsonrpc, _control_requests.run_status()
             )
             _on_run_status_notification(response["result"], broadcast=False)
+            _update_homing_snapshot(response["result"])
             _daemon_connected = True
         except (RuntimeError, TimeoutError, KeyError) as exc:
             logger.warning("Unable to refresh daemon status: %s", exc)
@@ -338,6 +342,7 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
         monitor.cancel()
         await asyncio.gather(monitor, return_exceptions=True)
         _daemon_connected = False
+        _current_homed = None
         _control_client = None
         _run_control_client = None
         await asyncio.to_thread(run_client.stop)
@@ -349,19 +354,39 @@ async def _monitor_daemon(client: WebSocketClient) -> None:
     global _daemon_connected
     while True:
         connected = False
+        homed_changed = False
         if client.is_connected():
             try:
                 response = await asyncio.to_thread(
                     client.send_jsonrpc, _control_requests.run_status()
                 )
                 _on_run_status_notification(response["result"])
+                homed_changed = _update_homing_snapshot(response["result"])
                 connected = True
             except (RuntimeError, TimeoutError, KeyError) as exc:
                 logger.warning("Unable to refresh daemon status: %s", exc)
-        if connected != _daemon_connected:
+        if not connected:
+            homed_changed = _update_homing_snapshot({})
+        connection_changed = connected != _daemon_connected
+        if connection_changed:
             _daemon_connected = connected
+        if connection_changed or homed_changed:
             await _broadcast_status()
         await asyncio.sleep(1)
+
+
+def _update_homing_snapshot(snapshot: dict[str, Any]) -> bool:
+    """Apply the daemon's authoritative homing state from a status poll.
+
+    Returns:
+        Whether the homing state changed.
+    """
+    global _current_homed
+    value = snapshot.get("homed")
+    homed = value if isinstance(value, bool) else None
+    changed = homed != _current_homed
+    _current_homed = homed
+    return changed
 
 
 class RevalidatingStaticFiles(StaticFiles):
@@ -1241,12 +1266,14 @@ def _status_payload() -> dict[str, Any]:
         breakpoint's `{"run_id", "filename", "pending"}` dict, or None) and
         `toolhead` (`{"position", "homed_axes"}`, either possibly still
         None if no live update has arrived yet -- see
-        `_on_raw_event_notification`), and `config_locked`.
+        `_on_raw_event_notification`), the effective gantry `homed` state
+        (None when unknown), and `config_locked`.
     """
     return {
         **_current_run.model_dump(),
         "breakpoint": _current_breakpoint,
         "toolhead": dict(_current_toolhead),
+        "homed": _current_homed if _daemon_connected else None,
         "config_locked": _config_locked,
         "daemon_connected": _daemon_connected,
     }
