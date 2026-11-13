@@ -153,6 +153,15 @@ class TestRefusals:
 
 
 class TestHomingSetsTheModel:
+    def test_return_to_zero_uses_configured_homing_speed(self, ap: AutoPipette) -> None:
+        assert ap.plunger is not None
+        ap.plunger.position_mm = -3.0
+        ap.syringe.speed_home = 30.0
+
+        ap.home_pipette_stepper()
+
+        assert _p_moves(_lines(ap)) == ["G1 P0.0 F1800.0"]
+
     def test_g28_p_zeroes_the_model(self, ap: AutoPipette) -> None:
         assert ap.plunger is not None
         ap.plunger.position_mm = None

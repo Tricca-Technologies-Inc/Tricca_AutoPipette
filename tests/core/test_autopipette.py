@@ -103,6 +103,42 @@ class TestSyringeHomingTravel:
             "MANUAL_STEPPER STEPPER=pipette_stepper SET_POSITION=0\n",
         ]
 
+    def test_configured_homing_speed_survives_liquid_switch(
+        self, autopipette: AutoPipette
+    ) -> None:
+        autopipette.system_config.pipette.syringe.speed_home = 30.0
+        autopipette.switch_liquid("methanol")
+        autopipette.get_gcode()
+
+        autopipette.home_pipette_stepper()
+
+        moves = autopipette.get_gcode()
+        assert all("SPEED=30.0" in line for line in moves[:2])
+        assert autopipette.syringe.speed_dispense == pytest.approx(37.5)
+
+    def test_tyson_p100_config_sets_homing_speed(
+        self, autopipette: AutoPipette
+    ) -> None:
+        autopipette.config_manager.load_pipette("TysonP100.json")
+        autopipette.apply_config()
+        autopipette.get_gcode()
+
+        autopipette.home_pipette_stepper()
+
+        moves = autopipette.get_gcode()
+        assert all("SPEED=30.0" in line for line in moves[:2])
+        assert autopipette.syringe.speed_dispense == pytest.approx(200.0)
+
+    def test_explicit_homing_speed_overrides_config(
+        self, autopipette: AutoPipette
+    ) -> None:
+        autopipette.syringe.speed_home = 30.0
+        autopipette.get_gcode()
+
+        autopipette.home_pipette_stepper(speed=15.0)
+
+        assert all("SPEED=15.0" in line for line in autopipette.get_gcode()[:2])
+
     def test_clear_syringe_overshoots_twice_the_travel(
         self, autopipette: AutoPipette
     ) -> None:

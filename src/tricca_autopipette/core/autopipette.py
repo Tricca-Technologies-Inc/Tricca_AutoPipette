@@ -203,6 +203,7 @@ class AutoPipette:
             calibration_mm=merged["calibration_mm"],
             speed_aspirate=merged["speed_aspirate"],
             speed_dispense=merged["speed_dispense"],
+            speed_home=merged["speed_home"],
             wait_aspirate_ms=merged["wait_aspirate_ms"],
             wait_dispense_ms=merged["wait_dispense_ms"],
             prewet_cycles=merged["prewet_cycles"],
@@ -704,7 +705,7 @@ class AutoPipette:
         if stepper is None:
             stepper = self.syringe.stepper_name
         if speed is None:
-            speed = self.syringe.speed_dispense  # Use dispense speed for homing
+            speed = self.syringe.speed_home or self.syringe.speed_dispense
         if accel is None:
             accel = self.syringe.accel_home
 

@@ -88,6 +88,19 @@ def _write_json(path: Path, data: object) -> None:
 
 
 class TestHotReload:
+    def test_homing_speed_edit_takes_effect_on_active_pipette(
+        self, svc: AutoPipetteService
+    ) -> None:
+        result = svc.set_config_value(
+            "pipettes", "p100_vertical.json", "syringe.speed_home", 30.0
+        )
+
+        assert result.ok, result.message
+        svc._autopipette.get_gcode()
+        svc._autopipette.home_pipette_stepper()
+        moves = svc._autopipette.get_gcode()
+        assert all("SPEED=30.0" in line for line in moves[:2])
+
     def test_liquid_edit_takes_effect_on_the_active_liquid(
         self, svc: AutoPipetteService
     ) -> None:

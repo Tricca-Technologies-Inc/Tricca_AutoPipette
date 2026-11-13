@@ -1037,6 +1037,8 @@ class JsonConfigManager:
             # Speed parameters (liquid overrides syringe)
             "speed_aspirate": liquid.speed_aspirate or syringe.speed_aspirate,
             "speed_dispense": liquid.speed_dispense or syringe.speed_dispense,
+            # Homing speed is a pipette setting, not a liquid override.
+            "speed_home": syringe.speed_home,
             # Timing parameters (liquid overrides syringe)
             "wait_aspirate_ms": liquid.wait_aspirate_ms or syringe.wait_aspirate_ms,
             "wait_dispense_ms": liquid.wait_dispense_ms or syringe.wait_dispense_ms,

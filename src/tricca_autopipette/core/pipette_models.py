@@ -295,6 +295,7 @@ class PipetteSyringeKinematics(BaseModel):
             Klipper's ``MANUAL_STEPPER ... MOVE=``.
         speed_aspirate: Aspiration speed in mm/s.
         speed_dispense: Dispense speed in mm/s.
+        speed_home: Homing speed in mm/s, or None to use dispense speed.
         accel_home: Homing acceleration in mm/s².
         accel_move: Movement acceleration in mm/s².
         wait_aspirate_ms: Wait after aspiration in milliseconds.
@@ -379,6 +380,12 @@ class PipetteSyringeKinematics(BaseModel):
 
     speed_dispense: float = Field(
         default=50.0, gt=0, description="Dispense speed in mm/s"
+    )
+
+    speed_home: float | None = Field(
+        default=None,
+        gt=0,
+        description="Homing speed in mm/s; defaults to dispense speed",
     )
 
     # Acceleration (mm/s²)

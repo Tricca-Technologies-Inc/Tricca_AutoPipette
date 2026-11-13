@@ -69,6 +69,14 @@ This split is deliberately provisional for all six union categories except
 `plates/` is not yet well understood, and a future pass may cull those back
 to shared-only. Don't read the current scope as a permanent shape.
 
+### Pipette homing speed
+
+Set `syringe.speed_home` in a pipette JSON file to set the plunger homing
+speed in mm/s. If omitted or `null`, homing uses the effective dispense speed,
+as before. This setting does not change dispense or syringe-clearing speed.
+For a stage-2 plunger, it controls moves back to zero; physical `G28` homing
+is controlled by the Klipper configuration instead.
+
 ### Gantry motion limits
 
 Gantry `speed_xy`, `speed_z`, and `speed_max` are in **mm/min**;

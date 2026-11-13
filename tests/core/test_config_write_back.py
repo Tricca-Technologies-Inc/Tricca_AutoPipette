@@ -322,6 +322,17 @@ class TestHighRiskBounds:
                 "pipettes", "p100_vertical.json", "syringe.max_travel_mm", 61.0
             )
 
+    def test_homing_speed_is_editable_and_bounded(self, roots: Roots) -> None:
+        path = set_config_value(
+            "pipettes", "p100_vertical.json", "syringe.speed_home", 30.0
+        )
+        assert _read(path)["syringe"]["speed_home"] == 30.0  # ruff:ignore[float-equality-comparison]
+
+        with pytest.raises(ValueError, match=r"speed_home.*allowed range"):
+            set_config_value(
+                "pipettes", "p100_vertical.json", "syringe.speed_home", 500.0
+            )
+
     def test_a_gantry_file_value_is_bounded(self, roots: Roots) -> None:
         with pytest.raises(ValueError, match="accel_z"):
             set_config_value("gantry", "default_gantry.json", "accel_z", 1e9)
