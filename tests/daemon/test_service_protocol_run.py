@@ -88,6 +88,32 @@ class TestDispatchProtocolLine:
 
 
 class TestRunProtocolSync:
+    def test_unknown_tip_is_ejected_and_picked_up_in_protocol_gcode(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        _set_homed(service_with_plates, True)
+        service_with_plates._autopipette.state.tip_state = TipState.UNKNOWN
+        manager = service_with_plates.gcode_manager
+
+        with (
+            patch.object(
+                service_with_plates,
+                "_read_protocol_lines",
+                return_value=["pipette 20 plate_a plate_a --tip_end keep"],
+            ),
+            patch.object(
+                manager, "write_gcode_file", wraps=manager.write_gcode_file
+            ) as write,
+        ):
+            service_with_plates._run_protocol_sync("transfer.pipette")
+
+        gcode = "\n".join(write.call_args.args[0])
+        assert (
+            gcode.index("Disposing tip to waste container")
+            < gcode.index("Picking up tip")
+            < gcode.index("Aspirating")
+        )
+
     def test_successful_run_uploads_combined_gcode(
         self, service: AutoPipetteService
     ) -> None:

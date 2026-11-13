@@ -22,6 +22,7 @@ from tricca_autopipette.core.pipette_exceptions import (
 )
 from tricca_autopipette.core.pipette_models import FluidDisplacement, TipState
 from tricca_autopipette.core.plates import PlateParams
+from tricca_autopipette.core.splits import parse_splits_spec
 from tricca_autopipette.core.volume_converter import VolumeConverter
 from tricca_autopipette.core.well import StrategyType, Well
 
@@ -518,6 +519,63 @@ class TestFitAirVolumes:
 
 
 class TestPipetteTransfer:
+    @staticmethod
+    def _transfer(pipette: AutoPipette, split: bool) -> None:
+        if split:
+            pipette.pipette_splits(
+                vol_ul=20.0,
+                source="plate_a",
+                splits=parse_splits_spec("plate_a:20@A1"),
+                tip_end="keep",
+            )
+        else:
+            pipette.pipette(
+                vol_ul=20.0, source="plate_a", dest="plate_a", tip_end="keep"
+            )
+
+    @pytest.mark.parametrize("split", [False, True])
+    def test_unknown_tip_is_ejected_before_pickup_and_transfer(
+        self, pipette_with_plates: AutoPipette, split: bool
+    ) -> None:
+        pipette_with_plates.state.tip_state = TipState.UNKNOWN
+
+        self._transfer(pipette_with_plates, split)
+
+        gcode = "\n".join(pipette_with_plates.get_gcode())
+        assert (
+            gcode.index("Disposing tip to waste container")
+            < gcode.index("Picking up tip")
+            < gcode.index("Aspirating")
+        )
+        assert pipette_with_plates.state.tip_state == TipState.ATTACHED
+
+    @pytest.mark.parametrize("split", [False, True])
+    def test_unknown_tip_without_waste_stops_before_pickup(
+        self, pipette_with_plates: AutoPipette, split: bool
+    ) -> None:
+        pipette_with_plates.state.tip_state = TipState.UNKNOWN
+        pipette_with_plates.state.tip_origin = ("tipbox", 0)
+        pipette_with_plates.location_manager.remove_location("waste")
+
+        with pytest.raises(NoWasteContainerError):
+            self._transfer(pipette_with_plates, split)
+
+        assert pipette_with_plates.state.tip_state == TipState.UNKNOWN
+        assert "Picking up tip" not in "\n".join(pipette_with_plates.get_gcode())
+
+    @pytest.mark.parametrize("split", [False, True])
+    def test_unknown_tip_with_liquid_stops_before_ejection(
+        self, pipette_with_plates: AutoPipette, split: bool
+    ) -> None:
+        pipette_with_plates.state.tip_state = TipState.UNKNOWN
+        pipette_with_plates.state.has_liquid = True
+
+        with pytest.raises(ValueError, match="liquid may be present"):
+            self._transfer(pipette_with_plates, split)
+
+        assert pipette_with_plates.state.tip_state == TipState.UNKNOWN
+        assert "Disposing tip" not in "\n".join(pipette_with_plates.get_gcode())
+
     def test_negative_volume_raises_value_error(
         self, pipette_with_plates: AutoPipette
     ) -> None:

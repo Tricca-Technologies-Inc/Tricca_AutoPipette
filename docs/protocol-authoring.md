@@ -91,6 +91,10 @@ dispose_tip
 is attached and disposing of it into the waste container when it's done
 (or, if the deck has no waste container, putting it back in the tipbox slot
 it came from — that slot is then marked used and never handed out again).
+If tip state is unknown, it first attempts to eject any tip into a configured
+waste container, then picks up a fresh tip. It stops if no waste container is
+configured or liquid may be present. Neither ejection nor pickup is physically
+verified; inspect the machine if a tip may be stuck or missing.
 That means the minimal version of this protocol is really just
 
 ```

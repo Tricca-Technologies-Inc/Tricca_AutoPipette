@@ -1024,7 +1024,30 @@ class AutoPipette:
         self.dip_z_return(curr_coor)
         self.move_to(Coordinate(x=150, y=150, z=0))
         self.home_z() # home z
-        
+
+    def _ensure_transfer_tip(self, tipbox_name: str | None) -> None:
+        """Prepare a tip for a transfer, ejecting an unknown tip to waste.
+
+        Raises:
+            ValueError: If the tip state is unknown and liquid may be present.
+            NoWasteContainerError: If unknown tip state requires a waste container.
+        """
+        if self.state.tip_state == TipState.UNKNOWN:
+            if self.state.has_liquid:
+                raise ValueError(
+                    "Tip state is unknown and liquid may be present; "
+                    "reconcile the pipette state before transferring."
+                )
+            if self.location_manager.waste_container is None:
+                raise NoWasteContainerError()
+            self.logger.warning(
+                "Tip state is unknown; attempting ejection into waste before pickup. "
+                "Tip ejection and pickup are not physically verified."
+            )
+            self.dispose_tip()
+        if self.state.tip_state == TipState.DETACHED:
+            self.next_tip(tipbox_name=tipbox_name)
+
     def return_tip(self) -> None:
         """Put the current tip back in the tipbox slot it was picked up from.
 
@@ -1667,7 +1690,8 @@ class AutoPipette:
             tip_end: Where the tip goes afterwards -- see `finish_tip`.
 
         Raises:
-            ValueError: If requested volume is negative.
+            ValueError: If requested volume is negative or the tip state is
+                unknown and liquid may be present.
             VolumeCapacityError: If the air gaps leave no room for liquid.
             NotALocationError: If ``source``/``dest`` is not a defined
                 location.
@@ -1675,7 +1699,8 @@ class AutoPipette:
                 configured.
             OutOfTipsError: If a tip pickup is needed and every configured
                 tipbox is exhausted.
-            NoWasteContainerError: If `tip_end` is ``"waste"`` with no waste
+            NoWasteContainerError: If the tip state is unknown and there is no
+                waste container, or `tip_end` is ``"waste"`` with no waste
                 container and no known tip origin to fall back to.
             NoTipOriginError: If `tip_end` is ``"return"`` and the tip's
                 origin is unknown.
@@ -1720,9 +1745,7 @@ class AutoPipette:
             )
         )
 
-        # Pick up tip if needed
-        if self.state.tip_state == TipState.DETACHED:
-            self.next_tip(tipbox_name=tipbox_name)
+        self._ensure_transfer_tip(tipbox_name)
 
         # Calculate transfer chunks based on max pipette capacity. The air
         # gaps ride along inside the same syringe, so they come out of the
@@ -1911,10 +1934,11 @@ class AutoPipette:
                 regardless, rather than being put anywhere with liquid inside.
 
         Raises:
-            ValueError: If `vol_ul` is not positive, or the spec fails
-                validation -- see ``resolve_splits``.
-            NoWasteContainerError: If the leftover must go to waste and no
-                waste container is configured, or see `dispose_tip`.
+            ValueError: If `vol_ul` is not positive, the spec fails
+                validation, or tip state is unknown and liquid may be present.
+            NoWasteContainerError: If the tip state is unknown or the leftover
+                must go to waste and no waste container is configured, or see
+                `dispose_tip`.
             NoTipOriginError: If `tip_end` is ``"return"`` and the tip's
                 origin is unknown.
             VolumeCapacityError: If `vol_ul` exceeds usable syringe capacity.
@@ -1945,8 +1969,7 @@ class AutoPipette:
             )
         )
 
-        if self.state.tip_state == TipState.DETACHED:
-            self.next_tip(tipbox_name=tipbox_name)
+        self._ensure_transfer_tip(tipbox_name)
 
         destinations = ", ".join(f"{s.dest}:{s.vol_ul:g}μL" for s in splits)
         self.note_action(
