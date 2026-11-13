@@ -6,7 +6,7 @@
   "locations": "Tyson100_locations",
   "network": {
     "hostname": "tyson.local",
-    "ip": "192.168.0.100"
+    "ip": "127.0.0.1:7125"
   },
   "trigger_pins": {}
 }
