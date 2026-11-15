@@ -1626,7 +1626,8 @@ class AutoPipette:
             # The post-aspirate cushion sits between the liquid and the tip
             # orifice, so it has to be driven out ahead of the liquid or the
             # well receives `purge_air_gap_ul` less than it was asked for.
-            self.operate_syringe(FluidDisplacement.dispense, volume + purge_air_gap_ul)
+            self.operate_syringe(FluidDisplacement.dispense, volume)
+            self.clear_syringe()
         else:
             self.clear_syringe()
 
