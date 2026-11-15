@@ -1797,10 +1797,15 @@ class AutoPipette:
                     purge_air_gap_ul=post_air_gap_ul,
                 )
                 break
+            
+            #calculate total volume in the pipette for a full dispense (liquid, plus air gaps)
+            tot_vol= vol_ul+ post_air_gap_ul + pre_air_gap_ul
+            
             self.dispense_volume(
                 dest,
                 dest_row=dest_row,
                 dest_col=dest_col,
+                volume=tot_vol
                 wiggle=wiggle,
             )
 
