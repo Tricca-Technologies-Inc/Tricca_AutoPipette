@@ -1,0 +1,24 @@
+#adding the larger volumes for the 10mL prime panel B CAL 7-1kit making procedure
+
+
+select_setup Tyson1000_system.json
+init
+#
+# This protocol uses the Tyson1000 liquid profile's air gaps
+
+# Lactic acid
+pipette 500.0 --tip_end keep --src_row 0 --src_col 0 MANU1 KIT1 --tipbox tipbox --prewet 1
+pipette 500.0 --src_row 0 --src_col 0 MANU1 KIT1 --tipbox tipbox --prewet 1
+
+pipette 441.0 --tip_end keep WATER KIT1 --tipbox tipbox --prewet 5
+pipette 441.0 --tip_end keep WATER KIT1 --tipbox tipbox
+pipette 441.0 --tip_end keep WATER KIT1 --tipbox tipbox
+pipette 441.0 --tip_end keep WATER KIT1 --tipbox tipbox
+pipette 441.0 --tip_end keep WATER KIT1 --tipbox tipbox
+pipette 441.0 --tip_end keep WATER KIT1 --tipbox tipbox
+pipette 441.0 --tip_end keep WATER KIT1 --tipbox tipbox
+pipette 441.0 --tip_end keep WATER KIT1 --tipbox tipbox
+pipette 441.0 --tip_end keep WATER KIT1 --tipbox tipbox
+pipette 441.0 --tip_end keep WATER KIT1 --tipbox tipbox
+pipette 441.0 --tip_end keep WATER KIT1 --tipbox tipbox
+pipette 441.0 WATER KIT1 --tipbox tipbox
