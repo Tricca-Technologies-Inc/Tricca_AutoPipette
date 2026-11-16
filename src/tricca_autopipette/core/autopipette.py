@@ -1748,12 +1748,22 @@ class AutoPipette:
         )
 
         self._ensure_transfer_tip(tipbox_name)
-
+        
+        # in the case where the total volume of pipetting plus extra air cushions are above the maximum, the extra air before pipetting is reduced.
+        if pre_air_gap_ul:
+            if (pre_air_gap_ul+volume+post_air_gap_ul>= self.max_volume_ul):
+                ext_vol = self.max_volume_ul - (volume+post_air_ul+2)
+                if ext_vol < 0:
+                    ext_vol = 0
+            else:
+                ext_vol = pre_air_gap_ul
+        else:
+            ext_vol = 0
         # Calculate transfer chunks based on max pipette capacity. The air
         # gaps ride along inside the same syringe, so they come out of the
         # per-chunk budget -- chunking on max_volume_ul alone would overflow
         # by exactly the air overhead on every full chunk.
-        max_vol = self.usable_capacity_ul() - pre_air_gap_ul - post_air_gap_ul
+        max_vol = self.usable_capacity_ul() - ext_vol - post_air_gap_ul
         if max_vol <= PhysicalConstants.VOLUME_TOLERANCE_UL:
             raise VolumeCapacityError(vol_ul, self.usable_capacity_ul())
 
@@ -1780,7 +1790,7 @@ class AutoPipette:
                 source,
                 src_row=src_row,
                 src_col=src_col,
-                pre_air_gap_ul=pre_air_gap_ul,
+                pre_air_gap_ul=ext_vol,
                 post_air_gap_ul=post_air_gap_ul,
                 prewet_cycles=prewet_cycles,
                 prewet_vol_ul=chunk_prewet_vol_ul,
