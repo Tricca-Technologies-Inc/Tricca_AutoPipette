@@ -1805,7 +1805,7 @@ class AutoPipette:
                 dest,
                 dest_row=dest_row,
                 dest_col=dest_col,
-                volume=tot_vol
+                volume=tot_vol,
                 wiggle=wiggle,
             )
 
