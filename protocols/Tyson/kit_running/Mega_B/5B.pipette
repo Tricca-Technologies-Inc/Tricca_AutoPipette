@@ -1,0 +1,103 @@
+# Final dilution of 215uL of water in the LC/MS-MS plate
+#
+select_setup Tyson1000_system.json
+init
+#
+# This protocol uses the Tyson1000 liquid profile's air gaps
+
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox --prewet 5
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 --tip_end keep WATER MSPLATE --tipbox tipbox
+pipette 215 WATER MSPLATE --tipbox tipbox
