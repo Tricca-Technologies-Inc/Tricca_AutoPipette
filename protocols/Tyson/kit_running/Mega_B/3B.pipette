@@ -1,1 +1,114 @@
 #Adds 10uL of L-RA to each well of the LC-MS/MS plate except the first.
+
+select_setup Tyson100_system.json
+init
+#
+# This protocol uses the Tyson100 liquid profile's air gaps explicitly:
+# pre-air 30 µL, post-air 5 µL. Each prewet cycle uses the transfer volume.
+
+pipette 10.0 --tip_end keep --dest_row 1 --dest_col 0 LRA COLPLATE --tipbox tipbox --prewet 5
+pipette 10.0 --tip_end keep --dest_row 2 --dest_col 0 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 3 --dest_col 0 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 4 --dest_col 0 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 5 --dest_col 0 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 6 --dest_col 0 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 7 --dest_col 0 LRA COLPLATE --tipbox tipbox
+
+pipette 10.0 --tip_end keep --dest_row 0 --dest_col 1 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 1 --dest_col 1 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 2 --dest_col 1 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 3 --dest_col 1 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 4 --dest_col 1 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 5 --dest_col 1 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 6 --dest_col 1 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 7 --dest_col 1 LRA COLPLATE --tipbox tipbox
+
+pipette 10.0 --tip_end keep --dest_row 0 --dest_col 2 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 1 --dest_col 2 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 2 --dest_col 2 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 3 --dest_col 2 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 4 --dest_col 2 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 5 --dest_col 2 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 6 --dest_col 2 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 7 --dest_col 2 LRA COLPLATE --tipbox tipbox
+
+pipette 10.0 --tip_end keep --dest_row 0 --dest_col 3 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 1 --dest_col 3 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 2 --dest_col 3 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 3 --dest_col 3 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 4 --dest_col 3 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 5 --dest_col 3 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 6 --dest_col 3 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 7 --dest_col 3 LRA COLPLATE --tipbox tipbox
+
+pipette 10.0 --tip_end keep --dest_row 0 --dest_col 4 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 1 --dest_col 4 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 2 --dest_col 4 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 3 --dest_col 4 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 4 --dest_col 4 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 5 --dest_col 4 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 6 --dest_col 4 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 7 --dest_col 4 LRA COLPLATE --tipbox tipbox
+
+pipette 10.0 --tip_end keep --dest_row 0 --dest_col 5 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 1 --dest_col 5 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 2 --dest_col 5 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 3 --dest_col 5 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 4 --dest_col 5 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 5 --dest_col 5 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 6 --dest_col 5 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 7 --dest_col 5 LRA COLPLATE --tipbox tipbox
+
+pipette 10.0 --tip_end keep --dest_row 0 --dest_col 6 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 1 --dest_col 6 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 2 --dest_col 6 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 3 --dest_col 6 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 4 --dest_col 6 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 5 --dest_col 6 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 6 --dest_col 6 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 7 --dest_col 6 LRA COLPLATE --tipbox tipbox
+
+pipette 10.0 --tip_end keep --dest_row 0 --dest_col 7 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 1 --dest_col 7 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 2 --dest_col 7 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 3 --dest_col 7 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 4 --dest_col 7 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 5 --dest_col 7 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 6 --dest_col 7 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 7 --dest_col 7 LRA COLPLATE --tipbox tipbox
+
+pipette 10.0 --tip_end keep --dest_row 0 --dest_col 8 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 1 --dest_col 8 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 2 --dest_col 8 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 3 --dest_col 8 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 4 --dest_col 8 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 5 --dest_col 8 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 6 --dest_col 8 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 7 --dest_col 8 LRA COLPLATE --tipbox tipbox
+
+pipette 10.0 --tip_end keep --dest_row 0 --dest_col 9 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 1 --dest_col 9 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 2 --dest_col 9 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 3 --dest_col 9 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 4 --dest_col 9 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 5 --dest_col 9 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 6 --dest_col 9 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 7 --dest_col 9 LRA COLPLATE --tipbox tipbox
+
+pipette 10.0 --tip_end keep --dest_row 0 --dest_col 10 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 1 --dest_col 10 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 2 --dest_col 10 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 3 --dest_col 10 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 4 --dest_col 10 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 5 --dest_col 10 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 6 --dest_col 10 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 7 --dest_col 10 LRA COLPLATE --tipbox tipbox
+
+pipette 10.0 --tip_end keep --dest_row 0 --dest_col 11 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 1 --dest_col 11 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 2 --dest_col 11 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 3 --dest_col 11 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 4 --dest_col 11 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 5 --dest_col 11 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --tip_end keep --dest_row 6 --dest_col 11 LRA COLPLATE --tipbox tipbox
+pipette 10.0 --dest_row 7 --dest_col 11 LRA COLPLATE --tipbox tipbox
