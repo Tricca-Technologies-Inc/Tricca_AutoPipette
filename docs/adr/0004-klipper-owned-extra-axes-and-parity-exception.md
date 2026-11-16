@@ -30,9 +30,9 @@ list (D39). So the positions exist in both configs on purpose: Klipper's copy
 is the safety authority, and `tapd` validates its copy against it.
 
 **2. `tapd`'s checks are early refusals; Klipper's interlock is the
-authority** (umbrella §6.2; WP4 TAP-3). `tapd` will gate plate and plunger
+authority** (umbrella §6.2; WP4 TAP-3). `tapd` gates plate and plunger
 commands on live Moonraker state in the same style as `require_homed`, and
-protocol validation will report likely refusals before upload (R17, TAP-8).
+protocol validation reports likely refusals before upload (R17, TAP-8).
 Those checks exist to give the operator a clear, early message. They are not
 what keeps the tip off a moving drawer: Klipper's macros enforce the interlock
 (I1–I6) on every motion path, whatever sent the G-code. A `tapd` check must

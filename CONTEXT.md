@@ -45,11 +45,10 @@ describing this as a boolean "present/absent" — that conflates
 "never used" with "used but returned," which is the exact gap #15 exists to
 close.
 
-### Axis expansion (planned)
+### Axis expansion
 
 These terms come from the axis-expansion plan (`docs/plans/axis-expansion/`;
-the 2026-10-26 addendum wins over Rev L). The plate and P-axis code doesn't
-exist yet (TAP-1…TAP-9); see ADR-0004.
+the 2026-10-26 addendum wins over Rev L); see ADR-0004.
 
 **Plate / drawer**:
 One of six belt-driven drawers that carry a plate in and out of the rig, each
