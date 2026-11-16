@@ -1,0 +1,104 @@
+#Adding 350uL of water to each well of the sample plate
+
+select_setup Tyson1000_system.json
+init
+#
+# This protocol uses the Tyson1000 liquid profile's air gaps
+
+
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox --prewet 5
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 --tip_end keep WATER SAMPLEPLATE --tipbox tipbox
+pipette 350 WATER SAMPLEPLATE --tipbox tipbox
