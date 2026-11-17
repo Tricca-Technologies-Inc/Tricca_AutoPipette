@@ -1809,7 +1809,7 @@ class AutoPipette:
                 break
             
             #calculate total volume in the pipette for a full dispense (liquid, plus air gaps)
-            tot_vol= vol_ul+ post_air_gap_ul + pre_air_gap_ul
+            tot_vol= pip_vol+ post_air_gap_ul + ext_vol
             
             self.dispense_volume(
                 dest,
