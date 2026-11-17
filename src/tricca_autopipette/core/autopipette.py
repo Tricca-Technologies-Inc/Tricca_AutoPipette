@@ -1753,8 +1753,8 @@ class AutoPipette:
         if pre_air_gap_ul:
             if (pre_air_gap_ul+vol_ul+post_air_gap_ul>= self.usable_capacity_ul()):
                 ext_vol = self.usable_capacity_ul() - (vol_ul+post_air_gap_ul+2)
-                if ext_vol < 0:
-                    ext_vol = 0
+                if ext_vol < 5:
+                    ext_vol = 5
             else:
                 ext_vol = pre_air_gap_ul
         else:
