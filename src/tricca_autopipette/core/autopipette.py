@@ -1751,8 +1751,8 @@ class AutoPipette:
         
         # in the case where the total volume of pipetting plus extra air cushions are above the maximum, the extra air before pipetting is reduced.
         if pre_air_gap_ul:
-            if (pre_air_gap_ul+vol_ul+post_air_gap_ul>= self.max_volume_ul):
-                ext_vol = self.max_volume_ul - (vol_ul+post_air_ul+2)
+            if (pre_air_gap_ul+vol_ul+post_air_gap_ul>= self.usable_capacity_ul()):
+                ext_vol = self.usable_capacity_ul() - (vol_ul+post_air_ul+2)
                 if ext_vol < 0:
                     ext_vol = 0
             else:
