@@ -7,7 +7,7 @@
     "syringe_model": "Hamilton 1000µL",
     "stepper_name": "pipette_stepper",
     "motor_orientation": -1,
-    "max_volume_ul": 510.0,
+    "max_volume_ul": 620.0,
     "min_volume_ul": 0.5,
     "capacity_margin_ul": 2.0,
     "max_travel_mm": 77.0,
