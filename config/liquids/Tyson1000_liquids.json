@@ -9,8 +9,8 @@
   "wait_dispense_ms": null,
   "prewet_cycles": null,
   "prewet_vol_ul": null,
-  "pre_air_gap_ul": 100,
-  "post_air_gap_ul": 50,
+  "pre_air_gap_ul": 50,
+  "post_air_gap_ul": 10,
   "calibration_volumes": null,
   "calibration_mm": null
 }
