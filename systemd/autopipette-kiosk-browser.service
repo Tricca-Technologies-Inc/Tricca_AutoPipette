@@ -1,0 +1,42 @@
+[Unit]
+Description=AutoPipette kiosk browser, fullscreen on the touchscreen (tty1)
+# Optional third unit, only for a host with a local touchscreen. Runs the
+# browser inside cage, a single-app Wayland compositor, so there's no desktop
+# environment and no display manager to configure. See
+# systemd/touchscreen-kiosk.md.
+Wants=autopipette-kiosk.service
+After=autopipette-kiosk.service systemd-user-sessions.service plymouth-quit-wait.service
+Wants=dbus.socket systemd-logind.service
+After=dbus.socket systemd-logind.service
+# Take tty1 over from the text login.
+Conflicts=getty@tty1.service
+After=getty@tty1.service
+ConditionPathExists=/dev/tty0
+
+[Service]
+Type=simple
+# A dedicated account with no sudo rights. Anyone at the screen can use the
+# kiosk, so that's all this account should be able to do.
+User=kiosk
+# A real logind session on tty1, so cage gets the display and touch input.
+# `login` is a PAM service every distro ships.
+PAMName=login
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
+StandardInput=tty-fail
+UtmpIdentifier=tty1
+UtmpMode=user
+# Wait for the kiosk backend rather than showing a connection error.
+TimeoutStartSec=5min
+ExecStartPre=/bin/sh -c 'until curl -fsS -o /dev/null http://127.0.0.1:8000/; do sleep 2; done'
+# Use whichever Chromium build is installed; the command name differs
+# between distros. Loopback only: the kiosk has no authentication
+# (systemd/README.md, "Network exposure").
+ExecStart=/bin/sh -c 'b=$$(command -v chromium || command -v chromium-browser || command -v google-chrome-stable || command -v google-chrome) || { echo "no Chromium found" >&2; exit 1; }; exec cage -d -- "$$b" --kiosk --ozone-platform=wayland --no-first-run --noerrdialogs --disable-session-crashed-bubble http://127.0.0.1:8000/'
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
