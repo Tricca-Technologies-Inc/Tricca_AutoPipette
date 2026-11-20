@@ -146,6 +146,9 @@ class AutoPipette:
         """
         # Logging
         self.logger = logging.getLogger(__name__)
+        # Mirrors the last G90/G91 emitted: only absolute targets are
+        # checked against the gantry's travel limits.
+        self._coor_sys = CoordinateSystem.ABSOLUTE
 
         self.config_manager = json_config_manager
         self.system_config: SystemConfig = self.config_manager.get_system_config()
@@ -462,9 +465,11 @@ class AutoPipette:
 
         if mode_str == CoordinateSystem.ABSOLUTE.value:
             self.logger.debug("Coordinate system: absolute")
+            self._coor_sys = CoordinateSystem.ABSOLUTE
             self.gcode_buffers.add(self.gcode_commands.absolute_mode())
         elif mode_str == CoordinateSystem.RELATIVE.value:
             self.logger.debug("Coordinate system: relative")
+            self._coor_sys = CoordinateSystem.RELATIVE
             self.gcode_buffers.add(self.gcode_commands.relative_mode())
         else:
             raise ValueError(
@@ -743,12 +748,39 @@ class AutoPipette:
         )
         self.gcode_buffers.add(gc.manual_stepper(stepper, set_position=0))
 
+    def _check_limits(self, coordinate: Coordinate, axes: str = "xyz") -> None:
+        """Refuse an absolute target outside the gantry's travel limits.
+
+        Relative offsets aren't checked: they carry no position on their own.
+
+        Args:
+            coordinate: The target about to be emitted.
+            axes: Which of its axes the move uses.
+
+        Raises:
+            ValueError: If an absolute target is outside the limits.
+        """
+        if self._coor_sys is not CoordinateSystem.ABSOLUTE:
+            return
+        for axis in axes:
+            lo, hi = self.gantry.limits(axis)
+            value: float = getattr(coordinate, axis)
+            if value < lo or (hi is not None and value > hi):
+                bound = f"[{lo}, {'inf' if hi is None else hi}]"
+                raise ValueError(
+                    f"{axis.upper()}={value} is outside the gantry's limits {bound}"
+                )
+
     def move_to(self, coordinate: Coordinate) -> None:
         """Move the pipette to the specified coordinate.
 
         Args:
             coordinate: Target position in 3D space.
-        """
+
+        Raises:
+            ValueError: If an absolute target is outside the gantry's limits.
+        """  # ruff: ignore[docstring-extraneous-exception]
+        self._check_limits(coordinate)
         speed_xy = self.gantry.speed_xy
         speed_z = self.gantry.speed_z
         self.logger.debug(
@@ -769,7 +801,15 @@ class AutoPipette:
         )
 
     def move_to_z(self, coordinate: Coordinate) -> None:
-        """Move only in Z direction."""
+        """Move only in Z direction.
+
+        Args:
+            coordinate: Target position; only its Z is used.
+
+        Raises:
+            ValueError: If an absolute Z target is outside the gantry's limits.
+        """  # ruff: ignore[docstring-extraneous-exception]
+        self._check_limits(coordinate, "z")
         speed = self.gantry.speed_z
         self.logger.debug("G-code move: Z=%s (speed=%s)", coordinate.z, speed)
         self.gcode_buffers.add(

@@ -326,6 +326,21 @@ class TestHighRiskBounds:
         with pytest.raises(ValueError, match="accel_z"):
             set_config_value("gantry", "default_gantry.json", "accel_z", 1e9)
 
+    def test_a_travel_limit_far_past_zero_is_refused(self, roots: Roots) -> None:
+        # A typo'd minimum would let every absolute move drive into the frame.
+        with pytest.raises(ValueError, match="x_min"):
+            set_config_value("gantry", "default_gantry.json", "x_min", -300.0)
+
+    def test_a_small_negative_travel_limit_and_an_unbounded_max_are_written(
+        self, roots: Roots
+    ) -> None:
+        set_config_value("gantry", "default_gantry.json", "x_min", -3.25)
+        path = set_config_value("gantry", "default_gantry.json", "z_max", None)
+
+        written = _read(path)
+        assert written["x_min"] == -3.25  # ruff:ignore[float-equality-comparison]
+        assert written["z_max"] is None
+
     @pytest.mark.usefixtures("system")
     def test_gantry_bounds_apply_through_a_system_file_too(self) -> None:
         with pytest.raises(ValueError, match="speed_xy"):

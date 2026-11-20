@@ -134,12 +134,6 @@ class TestMoveRel:
             service.move_rel(MoveRelArgs(x=5.0, y=0.0, z=0.0))
 
     def test_succeeds_when_homed(self, service: AutoPipetteService) -> None:
-        # NOTE: a genuinely negative offset (e.g. z=-2.0) currently raises a
-        # pydantic ValidationError from `Coordinate` (which requires all
-        # fields >= 0, being meant for absolute positions) -- this is a
-        # pre-existing bug inherited verbatim from the original
-        # `do_move_rel`, not something introduced by this migration, and out
-        # of scope to fix here.
         assert isinstance(service.moonraker_state, FakeMoonrakerState)
         service.moonraker_state.set_homed(True)
 
@@ -148,3 +142,12 @@ class TestMoveRel:
         assert result.ok is True
         assert "X+5.00" in result.message
         assert "Z+2.00" in result.message
+
+    def test_negative_offset_moves_back(self, service: AutoPipetteService) -> None:
+        assert isinstance(service.moonraker_state, FakeMoonrakerState)
+        service.moonraker_state.set_homed(True)
+
+        result = service.move_rel(MoveRelArgs(x=0.0, y=0.0, z=-2.0))
+
+        assert result.ok is True
+        assert "Z-2.00" in result.message
