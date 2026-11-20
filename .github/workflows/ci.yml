@@ -45,6 +45,8 @@ jobs:
       # files, JSON that doesn't parse), for commits made without hooks.
       - run: uv run --frozen pre-commit run --all-files forbid-junk-files
       - run: uv run --frozen pre-commit run --all-files check-json
+      # One copy of the agent rules: CLAUDE.md must stay a symlink to AGENTS.md.
+      - run: test "$(readlink CLAUDE.md)" = AGENTS.md
 
   typecheck:
     name: typecheck${{ matrix.suffix }}

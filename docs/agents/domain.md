@@ -28,7 +28,8 @@ This is a **single-context** repo:
 
 ```
 /
-├── AGENTS.md          ← CLAUDE.md just imports this
+├── AGENTS.md
+├── CLAUDE.md -> AGENTS.md   (symlink)
 ├── CONTEXT.md
 ├── docs/
 │   ├── adr/

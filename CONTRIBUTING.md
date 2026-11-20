@@ -97,7 +97,7 @@ locally.
 
 Any AI coding tool is fine. The rules are the same for all of them, and
 they live in `AGENTS.md`, which Codex, Copilot, Cursor, Gemini and most
-other agents load automatically (`CLAUDE.md` just imports it). If your tool
+other agents load automatically (`CLAUDE.md` is a symlink to it). If your tool
 doesn't read `AGENTS.md` by itself, point it there first. Hooks and CI
 check the result, not which tool produced it.
 

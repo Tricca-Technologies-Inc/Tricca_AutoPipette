@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Guidance for anyone changing this repository: people, and AI coding agents of any make (Codex, Claude Code, Copilot, Cursor, Gemini, Aider, ...). Agents that read `AGENTS.md` load this file directly. `CLAUDE.md` only imports it, so there is exactly one copy of the rules.
+Guidance for anyone changing this repository: people, and AI coding agents of any make (Codex, Claude Code, Copilot, Cursor, Gemini, Aider, ...). `CLAUDE.md` is a symlink to this file, so every agent (whichever filename it looks for) reads exactly the same rules.
 
 ## Workflow (mandatory, whichever AI you use)
 
