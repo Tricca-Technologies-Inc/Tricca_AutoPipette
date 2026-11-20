@@ -6,48 +6,101 @@
 // tab is active -- see issue #25).
 (() => {
   let selected = null;
+  let protocols = [];
+  let folder = '';
 
   // ── protocol list ──────────────────────────────────────────────────────
   async function loadProtocols() {
     try {
       const res = await fetch('/protocols');
-      const protocols = await res.json();
-      renderList(protocols);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      protocols = await res.json();
+      renderList();
     } catch (e) {
       document.getElementById('protocolList').innerHTML =
         '<div class="empty-state">Failed to load protocols</div>';
     }
   }
 
-  function renderList(protocols) {
+  function renderList() {
     const list = document.getElementById('protocolList');
+    list.replaceChildren();
     if (!protocols.length) {
       list.innerHTML = '<div class="empty-state">No .pipette files found</div>';
       return;
     }
-    list.innerHTML = protocols.map(p => `
-      <div class="protocol-item" data-filename="${p.filename}" onclick="selectProtocol(this, '${p.filename}', '${p.name}')">
-        <div class="protocol-icon">${p.name.slice(0, 2)}</div>
-        <span class="protocol-name">${p.name}</span>
-        <span class="protocol-ext">.pipette</span>
-      </div>
-    `).join('');
+    if (folder) {
+      const back = document.createElement('button');
+      back.className = 'protocol-folder';
+      back.textContent = '← Back';
+      back.addEventListener('click', () => {
+        folder = folder.split('/').slice(0, -1).join('/');
+        renderList();
+      });
+      list.appendChild(back);
+      const current = document.createElement('div');
+      current.className = 'protocol-current-folder';
+      current.textContent = folder;
+      list.appendChild(current);
+      if (folder === 'legacy' || folder.startsWith('legacy/')) {
+        const warning = document.createElement('div');
+        warning.className = 'protocol-legacy-warning';
+        warning.textContent = 'Legacy protocols are unverified on hardware. Review the protocol and rig configuration before use.';
+        list.appendChild(warning);
+      }
+    }
+
+    const prefix = folder ? `${folder}/` : '';
+    const folders = new Set();
+    const files = [];
+    protocols.forEach(protocol => {
+      if (!protocol.filename.startsWith(prefix)) return;
+      const remainder = protocol.filename.slice(prefix.length);
+      if (remainder.includes('/')) folders.add(remainder.split('/')[0]);
+      else files.push(protocol);
+    });
+    [...folders].sort().forEach(name => {
+      const button = document.createElement('button');
+      button.className = 'protocol-folder';
+      button.textContent = `${name} /`;
+      button.addEventListener('click', () => {
+        folder = prefix + name;
+        renderList();
+      });
+      list.appendChild(button);
+    });
+    files.forEach(protocol => {
+      const item = document.createElement('button');
+      item.className = 'protocol-item';
+      item.dataset.filename = protocol.filename;
+      item.classList.toggle('selected', selected === protocol.filename);
+      const icon = document.createElement('span');
+      icon.className = 'protocol-icon';
+      icon.textContent = protocol.name.slice(0, 2);
+      const name = document.createElement('span');
+      name.className = 'protocol-name';
+      name.textContent = protocol.name;
+      const ext = document.createElement('span');
+      ext.className = 'protocol-ext';
+      ext.textContent = '.pipette';
+      item.append(icon, name, ext);
+      item.addEventListener('click', () => selectProtocol(item, protocol.filename));
+      list.appendChild(item);
+    });
   }
 
-  // Exposed on window: renderList's markup calls this via an inline
-  // onclick, same as the kiosk's original single-page script did.
-  window.selectProtocol = function selectProtocol(el, filename, name) {
+  function selectProtocol(el, filename) {
     document.querySelectorAll('.protocol-item').forEach(i => i.classList.remove('selected'));
     el.classList.add('selected');
     selected = filename;
 
     const nameEl = document.getElementById('selectionName');
-    nameEl.textContent = name;
+    nameEl.textContent = filename.slice(0, -'.pipette'.length);
     nameEl.classList.remove('placeholder');
     document.getElementById('runBtn').disabled = App.isRunActive(App.getStatus().status);
     document.getElementById('checkBtn').disabled = false;
     document.getElementById('findingsList').innerHTML = '';
-  };
+  }
 
   // ── run ────────────────────────────────────────────────────────────────
   document.getElementById('runBtn').addEventListener('click', async () => {
