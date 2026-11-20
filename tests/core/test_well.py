@@ -138,6 +138,57 @@ class TestCylinderDipStrategy:
         strategy.validate_well_config(8.0, 50.0)  # must not raise
 
 
+class TestFStubeDipStrategy:
+    """0.5 mL screw-top tube: depth follows the tube's measured cone profile."""
+
+    def _tube(self, dip_btm: float = 30.0) -> Well:
+        return Well(
+            coor=_coord(),
+            dip_top=10.0,
+            dip_btm=dip_btm,
+            strategy_type=StrategyType.FSTUBE,
+        )
+
+    def test_drawing_liquid_lowers_the_tip_along_the_cone(self) -> None:
+        well = self._tube()
+
+        # Pinned from the rig-measured fit: the cone narrows toward the
+        # bottom, so the second 50 uL drops the level further than the first.
+        assert well.get_dip_distance(50.0) == pytest.approx(11.867, abs=1e-3)
+        assert well.get_dip_distance(50.0) == pytest.approx(15.820, abs=1e-3)
+
+    def test_result_is_clamped_to_dip_btm(self) -> None:
+        well = self._tube(dip_btm=12.0)
+
+        assert well.get_dip_distance(500.0) == 12.0  # ruff:ignore[float-equality-comparison]
+
+    def test_over_draw_never_raises_the_tip(self) -> None:
+        well = self._tube()
+
+        # More than the tube holds: past empty the height fit turns back up,
+        # which once sent the tip *above* the tube (Z -53). It must stop at
+        # the empty-tube level instead.
+        depth = well.get_dip_distance(500.0)
+
+        assert depth == pytest.approx(10.0 + 11.17 - 2.61)
+
+    def test_needs_no_well_diameter(self) -> None:
+        params = WellParams(
+            coor=_coord(),
+            dip_top=10.0,
+            dip_btm=30.0,
+            strategy_type=StrategyType.FSTUBE,
+        )
+        assert params.well_diameter is None
+
+    def test_missing_dip_btm_rejected(self) -> None:
+        with pytest.raises(ValidationError, match="FStube strategy requires dip_btm"):
+            WellParams(coor=_coord(), dip_top=10.0, strategy_type=StrategyType.FSTUBE)
+
+    def test_config_name_is_fstube(self) -> None:
+        assert StrategyType("fstube") is StrategyType.FSTUBE
+
+
 class TestStrategyRegistry:
     def test_get_strategy_returns_singleton_per_type(self) -> None:
         assert isinstance(
