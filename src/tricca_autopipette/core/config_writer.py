@@ -271,6 +271,7 @@ HIGH_RISK_BOUNDS: dict[tuple[type[BaseModel], str], tuple[float, float]] = {
     # Travel limits (mm): a minimum may sit a little past the origin for a
     # rig whose endstops trigger below zero, never far enough to reach the
     # frame. A null maximum (unbounded) isn't a number and passes untouched.
+    (GantryKinematics, "wait_dip_ms"): (0, 5000),
     (GantryKinematics, "x_min"): (-20, 0),
     (GantryKinematics, "y_min"): (-20, 0),
     (GantryKinematics, "z_min"): (-20, 0),
@@ -289,6 +290,10 @@ HIGH_RISK_BOUNDS: dict[tuple[type[BaseModel], str], tuple[float, float]] = {
     (PipetteSyringeKinematics, "accel_move"): (2.5, 200),  # mm/s²
     (PipetteSyringeKinematics, "wait_aspirate_ms"): (0, 10000),
     (PipetteSyringeKinematics, "wait_dispense_ms"): (0, 10000),
+    # Tip pickup press: past ~10 mm the "slow press" is the whole descent.
+    (PipetteModel, "tip_press_mm"): (0, 10),
+    (PipetteModel, "tip_press_feedrate"): (10, 12000),  # mm/min
+    (PipetteModel, "tip_press_wait_ms"): (0, 5000),
     (ServoConfig, "angle_retract"): (0, 180),  # degrees
     (ServoConfig, "angle_eject"): (0, 180),  # degrees
     (ServoConfig, "wait_ms"): (0, 5000),

@@ -978,7 +978,15 @@ class AutoPipette:
             f"Picking up tip from '{name}' at (X:{loc_tip.x:.2f}, Y:{loc_tip.y:.2f})"
         )
         self.move_to(loc_tip)
-        self.dip_z_down(loc_tip, box.get_dip_distance(vol=None))
+        depth = box.get_dip_distance(vol=None)
+        model = self.pipette_model
+        # A shallow box can't be approached from further up than Z's travel.
+        self.dip_z_down(loc_tip, max(self.gantry.z_min, depth - model.tip_press_mm))
+        self._check_limits(Coordinate(x=loc_tip.x, y=loc_tip.y, z=depth), "z")
+        self.gcode_buffers.add(
+            self.gcode_commands.linear_move(z=depth, feedrate=model.tip_press_feedrate)
+        )
+        self.gcode_wait(model.tip_press_wait_ms)
         self.dip_z_return(loc_tip)
         self.state.tip_state = TipState.ATTACHED
         self.state.tip_origin = (name, index)
@@ -1113,7 +1121,7 @@ class AutoPipette:
         self.logger.debug("Dipping down to Z=%s", distance)
         coor_dip = Coordinate(x=curr_coor.x, y=curr_coor.y, z=distance)
         self.move_to_z(coor_dip)
-        self.gcode_wait(100)  # Default wait
+        self.gcode_wait(self.gantry.wait_dip_ms)
 
     def dip_z_return(self, curr_coor: Coordinate) -> None:
         """Return the pipette to the original Z height.
@@ -1123,7 +1131,7 @@ class AutoPipette:
         """
         self.logger.debug("Returning to Z=%s", curr_coor.z)
         self.move_to_z(curr_coor)
-        self.gcode_wait(100)  # Default wait
+        self.gcode_wait(self.gantry.wait_dip_ms)
 
     def operate_syringe(
         self,
