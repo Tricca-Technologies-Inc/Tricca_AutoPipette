@@ -2,11 +2,29 @@
 
 Policy, not just a reference: for any new feature or bug fix that has a
 concrete input and an observable output — business logic, a control-plane RPC,
-a transformation, validation, a new domain method — run the
-`mattpocock-skills:tdd` skill (`/tdd`) rather than writing the implementation
-and tests together afterward. Red before green, one seam at a time, and the
-seams under test are named and confirmed before any test file exists. Full
-rules live in the skill itself; this file only records how it applies here.
+a transformation, validation, a new domain method — follow the loop below
+rather than writing the implementation and tests together afterward. It
+applies to every contributor and every AI tool. Claude Code users get the
+same loop from the `mattpocock-skills:tdd` skill (`/tdd`). Everyone else
+follows the steps here.
+
+## The loop
+
+1. **Name the seam.** Say which public interface the test drives (a service
+   method, a control-plane RPC, a kiosk route, a G-code golden file; see
+   "Seams" below) and what behavior it pins. Agree it with the reviewer
+   before writing a test file when it isn't obvious.
+2. **Red.** Write one test for one behavior, run it, and see it fail for the
+   reason you expect. A test that passes before the change proves nothing.
+3. **Green.** Write the least code that makes that test pass. Don't build
+   ahead of the tests.
+4. **Repeat** one behavior at a time (a vertical slice), not every test
+   first and then every implementation.
+5. **Refactor** only while green, then run the full check:
+   `uv run ruff check . && uv run ruff format --check . && uv run pyright && uv run pytest`.
+
+Test behavior through public interfaces, not implementation details. Mock
+only at the Moonraker boundary (`tests/fakes/`).
 
 ## Scope
 

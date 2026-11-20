@@ -2,7 +2,7 @@
 
 Controls a single automated liquid-handling rig (Voron/Klipper-based gantry,
 syringe pump, tip-ejection servo) through one long-running daemon per rig. See
-`CLAUDE.md` for the system as it currently is; this file is the glossary of
+`AGENTS.md` for the system as it currently is; this file is the glossary of
 domain terms, kept separate from that implementation description.
 
 ## Language

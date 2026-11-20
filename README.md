@@ -40,7 +40,7 @@ address.
 
 ## Further documentation
 
-- [`CLAUDE.md`](CLAUDE.md) — architecture deep-dive: components, the `tapd`
+- [`AGENTS.md`](AGENTS.md) — architecture deep-dive: components, the `tapd`
   daemon, domain model, config system, and code style.
 - [`CONTEXT.md`](CONTEXT.md) — glossary of domain terms.
 - [`docs/protocol-authoring.md`](docs/protocol-authoring.md) — how to write

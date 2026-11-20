@@ -1,0 +1,64 @@
+# Local hooks for every contributor and every AI agent (AGENTS.md "Workflow").
+# Install once: uv run pre-commit install --install-hooks -t pre-commit -t pre-push -t commit-msg
+#
+# Every hook runs the tool from the uv-locked .venv (`uv run`), so versions
+# come from uv.lock and never drift from CI. CI repeats these checks, which
+# covers commits made where hooks can't run (e.g. the GitHub web editor).
+default_install_hook_types: [pre-commit, pre-push, commit-msg]
+default_stages: [pre-commit]
+
+repos:
+  - repo: local
+    hooks:
+      - id: forbid-junk-files
+        name: no editor backups, logs or merge leftovers
+        language: fail
+        entry: "Remove these files; they never belong in the repo (backup/log/merge leftovers):"
+        files: '(^|/)~[^/]*$|~$|\.(orig|rej|bak|log|swp)$'
+        # The converted legacy archive keeps its original `~name` files on
+        # purpose (see protocols/legacy/README.md).
+        exclude: ^protocols/legacy/
+
+      - id: check-json
+        name: JSON files parse
+        language: system
+        entry: uv run python -I -c "import json,sys; [json.load(open(f, encoding='utf-8')) for f in sys.argv[1:]]"
+        types: [json]
+
+      - id: ruff-check
+        name: ruff check
+        language: system
+        entry: uv run ruff check --force-exclude
+        types_or: [python, pyi]
+
+      - id: ruff-format
+        name: ruff format --check
+        language: system
+        entry: uv run ruff format --check --force-exclude
+        types_or: [python, pyi]
+
+      - id: pyright
+        name: pyright
+        language: system
+        # browser-test too, as CI does: pyright checks tests/kiosk/browser,
+        # and without playwright on the path those imports go unresolved.
+        # (It adds the Python package only, not the ~300MB browser.)
+        entry: uv run --extra dev --extra browser-test pyright
+        pass_filenames: false
+        stages: [pre-push]
+
+      - id: pytest
+        name: pytest
+        language: system
+        entry: uv run pytest -x -q
+        pass_filenames: false
+        stages: [pre-push]
+
+      - id: conventional-commit
+        name: commit message is a Conventional Commit
+        language: pygrep
+        # Fails unless the subject line matches `type(scope)!: summary`.
+        # Merge/revert subjects that git writes itself are allowed through.
+        entry: '\A(Merge |Revert "|fixup! |squash! |(feat|fix|docs|chore|refactor|test|ci|build|perf|style|revert)(\([\w./, -]+\))?!?: \S)'
+        args: [--multiline, --negate]
+        stages: [commit-msg]

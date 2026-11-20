@@ -5,7 +5,7 @@ exploring the codebase.
 
 ## Before exploring, read these
 
-- **`CLAUDE.md`** at the repo root — the authoritative description of the system
+- **`AGENTS.md`** at the repo root — the authoritative description of the system
   as it *is*. It is unusually detailed for this repo and supersedes `README.md`,
   which is explicitly marked `(OUTDATED!!!)`.
 - **`CONTEXT.md`** at the repo root, if it exists.
@@ -17,10 +17,10 @@ absence; don't suggest creating them upfront. The `/domain-modeling` skill
 them lazily when terms or decisions actually get resolved.
 
 `CONTEXT.md` and `docs/adr/` were created 2026-07-30 in a `/grill-with-docs`
-domain-modeling session — read both. `CLAUDE.md` still carries glossary-shaped
+domain-modeling session — read both. `AGENTS.md` still carries glossary-shaped
 content not yet migrated (the naming rules: air gap vs `aspirate_air`, `_ul`
 suffixes, the client parity rule, the "steps means millimetres" correction) —
-treat `CLAUDE.md` and `CONTEXT.md` as complementary until that content moves.
+treat `AGENTS.md` and `CONTEXT.md` as complementary until that content moves.
 
 ## File structure
 
@@ -28,7 +28,8 @@ This is a **single-context** repo:
 
 ```
 /
-├── CLAUDE.md
+├── AGENTS.md
+├── CLAUDE.md -> AGENTS.md   (symlink)
 ├── CONTEXT.md
 ├── docs/
 │   ├── adr/
@@ -45,7 +46,7 @@ into `CONTEXT-MAP.md` on the strength of the package count alone.
 ## Use the glossary's vocabulary
 
 When your output names a domain concept (in an issue title, a refactor proposal,
-a hypothesis, a test name), use the term as defined in `CLAUDE.md` / `CONTEXT.md`.
+a hypothesis, a test name), use the term as defined in `AGENTS.md` / `CONTEXT.md`.
 Don't drift to synonyms the project explicitly avoids. Live examples in this
 repo:
 
