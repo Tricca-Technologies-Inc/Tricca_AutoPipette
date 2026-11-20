@@ -1,10 +1,18 @@
 name: CI
 
+# Every branch, not just main: work that merges into a side branch (or is
+# pushed straight from the GitHub web editor, where local hooks can't run)
+# must still go through the same checks before it reaches main.
 on:
   pull_request:
-    branches: [main]
   push:
-    branches: [main]
+    branches: ["**"]
+
+# A push to a PR branch triggers both events; keep only the newest run per
+# branch/PR so the duplicate doesn't double the queue.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
 
 # Every tool version (ruff, pyright, pytest-playwright, ...) comes from
 # pyproject.toml's exact-pinned extras via the committed uv.lock (issue #24);
@@ -33,6 +41,10 @@ jobs:
       - run: uv sync --frozen --extra dev
       - run: uv run --frozen ruff check .
       - run: uv run --frozen ruff format --check .
+      # The repo-hygiene hooks from .pre-commit-config.yaml (backup/log
+      # files, JSON that doesn't parse), for commits made without hooks.
+      - run: uv run --frozen pre-commit run --all-files forbid-junk-files
+      - run: uv run --frozen pre-commit run --all-files check-json
 
   typecheck:
     name: typecheck${{ matrix.suffix }}

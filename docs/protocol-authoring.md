@@ -218,5 +218,5 @@ lines already executed are not undone).
 - [`config/README.md`](../config/README.md) — the full deck/locations JSON
   schema (traversal order, well masks, tip inventory) for building a real
   deck beyond the example one here.
-- `CLAUDE.md` at the repo root — architecture, the daemon's dispatch model,
+- `AGENTS.md` at the repo root — architecture, the daemon's dispatch model,
   and the pipetting-technique resolution rules in more depth.

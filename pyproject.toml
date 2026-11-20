@@ -53,6 +53,7 @@ license-files = ["LICENSE"]
 dev = [
     "coverage==7.17.1",
     "httpx2==2.16.0",  # starlette.testclient.TestClient's transport, for kiosk tests
+    "pre-commit==4.7.0",  # local hooks, see .pre-commit-config.yaml
     "pyright==1.1.414",
     "pytest==9.2.0",
     "ruff==0.17.3",
