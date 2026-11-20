@@ -268,6 +268,15 @@ HIGH_RISK_BOUNDS: dict[tuple[type[BaseModel], str], tuple[float, float]] = {
     (GantryKinematics, "accel_xy"): (100, 40000),  # mm/s²
     (GantryKinematics, "accel_z"): (100, 40000),  # mm/s²
     (GantryKinematics, "accel_max"): (100, 40000),  # mm/s²
+    # Travel limits (mm): a minimum may sit a little past the origin for a
+    # rig whose endstops trigger below zero, never far enough to reach the
+    # frame. A null maximum (unbounded) isn't a number and passes untouched.
+    (GantryKinematics, "x_min"): (-20, 0),
+    (GantryKinematics, "y_min"): (-20, 0),
+    (GantryKinematics, "z_min"): (-20, 0),
+    (GantryKinematics, "x_max"): (0, 1000),
+    (GantryKinematics, "y_max"): (0, 1000),
+    (GantryKinematics, "z_max"): (0, 1000),
     (PipetteSyringeKinematics, "max_volume_ul"): (1, 1000),
     (PipetteSyringeKinematics, "min_volume_ul"): (0.1, 100),
     (PipetteSyringeKinematics, "capacity_margin_ul"): (0, 50),

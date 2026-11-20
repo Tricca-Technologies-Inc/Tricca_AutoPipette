@@ -8,7 +8,7 @@ configuration.
 from __future__ import annotations
 
 from enum import IntEnum, StrEnum
-from typing import Any, Literal, cast
+from typing import Any, Literal, Self, cast
 
 from pydantic import BaseModel, Field, model_validator
 from pydantic.dataclasses import dataclass
@@ -200,13 +200,48 @@ class GantryKinematics(BaseModel):
         default=5000.0, gt=0, description="Maximum gantry acceleration in mm/s²"
     )
 
-    # Coordinate limits (mm)
-    # x_min: float = Field(default=0.0, description="Minimum X coordinate")
-    # x_max: float = Field(default=300.0, gt=0, description="Maximum X coordinate")
-    # y_min: float = Field(default=0.0, description="Minimum Y coordinate")
-    # y_max: float = Field(default=200.0, gt=0, description="Maximum Y coordinate")
-    # z_min: float = Field(default=0.0, description="Minimum Z coordinate")
-    # z_max: float = Field(default=100.0, gt=0, description="Maximum Z coordinate")
+    # Travel limits (mm) for absolute moves. The minimums default to 0, the
+    # machine origin; a rig whose endstops sit past zero sets them negative.
+    # A maximum of None leaves that axis unbounded here (Klipper's own
+    # position_max still applies).
+    x_min: float = Field(default=0.0, description="Lowest allowed X target in mm")
+    x_max: float | None = Field(default=None, description="Highest allowed X target")
+    y_min: float = Field(default=0.0, description="Lowest allowed Y target in mm")
+    y_max: float | None = Field(default=None, description="Highest allowed Y target")
+    z_min: float = Field(default=0.0, description="Lowest allowed Z target in mm")
+    z_max: float | None = Field(default=None, description="Highest allowed Z target")
+
+    @model_validator(mode="after")
+    def _min_below_max(self) -> Self:
+        """Reject an axis whose minimum isn't below its maximum.
+
+        Returns:
+            The validated model.
+
+        Raises:
+            ValueError: If an axis's ``_min`` is at or above its ``_max``.
+        """
+        for axis in "xyz":
+            lo, hi = self.limits(axis)
+            if hi is not None and lo >= hi:
+                raise ValueError(f"{axis}_min ({lo}) must be below {axis}_max ({hi})")
+        return self
+
+    def limits(self, axis: str) -> tuple[float, float | None]:
+        """Return ``(minimum, maximum)`` for ``axis`` (``"x"``, ``"y"`` or ``"z"``).
+
+        Args:
+            axis: The axis letter, lowercase.
+
+        Returns:
+            The axis's lowest and highest allowed absolute target; a
+            maximum of None means unbounded.
+        """
+        return {
+            "x": (self.x_min, self.x_max),
+            "y": (self.y_min, self.y_max),
+            "z": (self.z_min, self.z_max),
+        }[axis]
 
     # Homing configuration
     # home_z_first: bool = Field(
