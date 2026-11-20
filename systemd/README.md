@@ -9,6 +9,10 @@ Two services, run in this order:
   of spawning its own subprocess per run. `Requires=`/`After=tapd.service`,
   so it won't start (or will stop) without the daemon.
 
+A host with its own touchscreen adds a third, optional unit,
+`autopipette-kiosk-browser.service`, which boots straight into the kiosk
+fullscreen with no desktop. See [touchscreen-kiosk.md](touchscreen-kiosk.md).
+
 Both `ExecStart` lines point at a placeholder path
 (`/opt/tricca-autopipette/venv/bin/...`) — edit them to match your host's
 actual virtualenv location and, if needed, add a `User=`/`WorkingDirectory=`
