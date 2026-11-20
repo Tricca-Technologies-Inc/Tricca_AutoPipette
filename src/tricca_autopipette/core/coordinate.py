@@ -11,8 +11,10 @@ from pydantic import BaseModel, Field
 class Coordinate(BaseModel):
     """Represent a 3D position on the pipette bed.
 
-    Coordinates use a Cartesian system where all values must be non-negative,
-    representing physical positions on the pipette apparatus.
+    Coordinates use a Cartesian system in millimetres. A coordinate is
+    either an absolute position or a relative offset, so any finite value
+    is allowed here. `AutoPipette` checks absolute targets against the
+    gantry's configured travel (`GantryKinematics.x_min` ...) at move time.
 
     Attributes:
         x: Position along the X-axis in millimeters.
@@ -27,17 +29,17 @@ class Coordinate(BaseModel):
 
     x: float = Field(
         ...,
-        ge=0,
+        allow_inf_nan=False,
         description="Position along the X-axis in millimeters",
     )
     y: float = Field(
         ...,
-        ge=0,
+        allow_inf_nan=False,
         description="Position along the Y-axis in millimeters",
     )
     z: float = Field(
         ...,
-        ge=0,
+        allow_inf_nan=False,
         description="Position along the Z-axis (height) in millimeters",
     )
 
@@ -100,9 +102,6 @@ class Coordinate(BaseModel):
         Returns:
         New Coordinate instance at the offset position.
 
-        Raises:
-        ValueError: If the resulting coordinate has negative values.
-
         Example:
         >>> coord = Coordinate(x=10.0, y=20.0, z=5.0)
         >>> new_coord = coord.generate_offset(dx=5.0, dz=2.0)
@@ -112,11 +111,6 @@ class Coordinate(BaseModel):
         new_x = self.x + dx
         new_y = self.y + dy
         new_z = self.z + dz
-
-        if new_x < 0 or new_y < 0 or new_z < 0:
-            raise ValueError(
-                f"Resulting coordinate ({new_x}, {new_y}, {new_z}) has negative values"
-            )
 
         return self.__class__(x=new_x, y=new_y, z=new_z)
 

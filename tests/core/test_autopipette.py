@@ -11,6 +11,7 @@ import logging
 from unittest.mock import patch
 
 import pytest
+from pydantic import ValidationError
 
 from tricca_autopipette.core.autopipette import AutoPipette
 from tricca_autopipette.core.coordinate import Coordinate
@@ -20,7 +21,11 @@ from tricca_autopipette.core.pipette_exceptions import (
     TipAlreadyOnError,
     VolumeCapacityError,
 )
-from tricca_autopipette.core.pipette_models import FluidDisplacement, TipState
+from tricca_autopipette.core.pipette_models import (
+    FluidDisplacement,
+    GantryKinematics,
+    TipState,
+)
 from tricca_autopipette.core.plates import PlateParams
 from tricca_autopipette.core.volume_converter import VolumeConverter
 from tricca_autopipette.core.well import StrategyType, Well
@@ -62,6 +67,52 @@ class TestCoordinateSystem:
     def test_invalid_mode_raises_value_error(self, autopipette: AutoPipette) -> None:
         with pytest.raises(ValueError, match="Invalid coordinate system mode"):
             autopipette.set_coor_sys("diagonal")
+
+
+class TestGantryLimits:
+    """Absolute moves stay inside the gantry's configured travel."""
+
+    def test_default_limits_refuse_a_negative_target(
+        self, autopipette: AutoPipette
+    ) -> None:
+        with pytest.raises(ValueError, match=r"X=-1(\.0)? is outside"):
+            autopipette.move_to(Coordinate(x=-1.0, y=0.0, z=0.0))
+
+    def test_negative_limits_allow_targets_below_zero(
+        self, autopipette: AutoPipette
+    ) -> None:
+        autopipette.gantry = autopipette.gantry.model_copy(
+            update={"x_min": -3.25, "y_min": -3.0, "z_min": -5.0}
+        )
+
+        autopipette.move_to(Coordinate(x=-3.25, y=-3.0, z=-5.0))
+
+        assert any("X-3.25" in line for line in autopipette.get_gcode())
+
+    def test_max_limit_refuses_z_beyond_travel(self, autopipette: AutoPipette) -> None:
+        autopipette.gantry = autopipette.gantry.model_copy(update={"z_max": 120.0})
+
+        with pytest.raises(ValueError, match="Z=121"):
+            autopipette.move_to_z(Coordinate(x=0.0, y=0.0, z=121.0))
+
+    def test_refused_move_emits_nothing(self, autopipette: AutoPipette) -> None:
+        before = list(autopipette.get_gcode())
+
+        with pytest.raises(ValueError):
+            autopipette.move_to(Coordinate(x=10.0, y=-1.0, z=0.0))
+
+        assert autopipette.get_gcode() == before
+
+    def test_relative_offsets_are_not_checked(self, autopipette: AutoPipette) -> None:
+        autopipette.set_coor_sys("relative")
+
+        autopipette.move_to(Coordinate(x=-5.0, y=0.0, z=-2.0))
+
+        assert any("X-5" in line for line in autopipette.get_gcode())
+
+    def test_min_above_max_rejected(self) -> None:
+        with pytest.raises(ValidationError, match="x_min"):
+            GantryKinematics(x_min=10.0, x_max=5.0)
 
 
 class TestInitPipette:
