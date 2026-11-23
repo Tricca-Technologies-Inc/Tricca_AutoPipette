@@ -3,6 +3,8 @@
   "manufacturer": "Tricca",
   "description": "1000µL vertical displacement pipette for TAP-Tyson",
   "design_type": "vertical",
+  "tipbox": "tipbox_p1000",
+  "deck_offset": {"x": 36.7, "y": 3, "z": -42},
   "syringe": {
     "syringe_model": "Hamilton 1000µL",
     "stepper_name": "pipette_stepper",
