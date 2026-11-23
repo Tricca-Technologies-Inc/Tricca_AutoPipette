@@ -9,14 +9,6 @@
             "dip_top": 0
         },
         {
-            "name": "waste_container_p1000",
-            "type": "waste_container",
-            "x": 11.3,
-            "y": 50.5,
-            "z": 0,
-            "dip_top": 92
-        },
-        {
             "name": "tipbox_p100",
             "type": "tipbox",
             "x": 96,
