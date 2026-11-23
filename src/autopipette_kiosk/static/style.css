@@ -182,28 +182,29 @@ header {
   scrollbar-width: none;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
-  /* No gap — tabs fill wall-to-wall for easier tapping */
+  touch-action: pan-x;
+  /* Height: 56px gives a solid tap target while fitting on 5" */
+  height: 56px;
+  flex-shrink: 0;
 }
 .tab-bar::-webkit-scrollbar { display: none; }
 
 .tab-btn {
-  flex: 1;
-  min-width: 0;
+  flex: 0 0 auto;        /* don't shrink — scroll instead */
+  min-width: 80px;       /* minimum tap width */
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 4px;
+  padding: 0 14px;
   border: none;
   background: transparent;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  border-bottom: 2px solid transparent;
+  border-bottom: 3px solid transparent;
   transition: color 0.12s, border-color 0.12s;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .tab-btn:hover { color: var(--text); }
