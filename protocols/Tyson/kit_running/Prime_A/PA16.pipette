@@ -1,6 +1,6 @@
 # for Prime Panel A and the P1000 config. Adds 400uL of running buffer to the FIA plate (collection plate)
 load_pipette TysonP1000.json
-home
+home all
 
 pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000 --prewet 5
 pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
