@@ -1,5 +1,5 @@
 load_pipette TysonP100.json
-home
+home all
 
 #For Prime Panel A. Adds 150uL (75 x 2) from the collection plate to each corresponding well of the LCplate for the P100 config
 
