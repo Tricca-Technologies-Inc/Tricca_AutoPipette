@@ -1,4 +1,6 @@
 #step for Prime panel A using P1000 config. Adds 150uL of water to the LC plate
+load_pipette TysonP1000.json
+home
 
 pipette 150.0 --tip_end keep WATER LCPLATE_p1000 --prewet 5
 pipette 150.0 --tip_end keep WATER LCPLATE_p1000
