@@ -1,13 +1,13 @@
 #adding water for the 5mL prime panel a kit making procedure
 
-select_setup Tyson1000_system.json
-init
+load_pipette TysonP1000.json
+home
 #
 # This protocol uses the Tyson1000 liquid profile's air gaps
 
-pipette 465.0 --tip_end keep WATER KIT1 --tipbox tipbox --prewet 5
-pipette 465.0 --tip_end keep WATER KIT1 --tipbox tipbox
-pipette 465.0 --tip_end keep WATER KIT1 --tipbox tipbox
-pipette 465.0 --tip_end keep WATER KIT1 --tipbox tipbox
-pipette 465.0 --tip_end keep WATER KIT1 --tipbox tipbox
-pipette 465.0 WATER KIT1 --tipbox tipbox
+pipette 465.0 --tip_end keep WATER KIT1_p1000 --prewet 5
+pipette 465.0 --tip_end keep WATER KIT1_p1000
+pipette 465.0 --tip_end keep WATER KIT1_p1000
+pipette 465.0 --tip_end keep WATER KIT1_p1000
+pipette 465.0 --tip_end keep WATER KIT1_p1000
+pipette 465.0 WATER KIT1_p1000
