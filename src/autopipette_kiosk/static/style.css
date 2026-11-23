@@ -46,23 +46,12 @@ html, body {
   touch-action: manipulation;               /* faster tap response */
 }
 
-/* Ensure the HTML hidden attribute always wins over display rules */
-[hidden] { display: none !important; }
-
 /* ── Shell grid: header 48px + tabs 44px = 92px chrome ── */
 .shell {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: 48px 44px auto 1fr;
   height: 100vh;
   overflow: hidden;
-}
-
-/* main takes all remaining height after header + tabs + banner */
-.shell > main {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-  position: relative;
 }
 
 /* ── Header ── */
@@ -185,29 +174,28 @@ header {
   scrollbar-width: none;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
-  touch-action: pan-x;
-  /* Height: 56px gives a solid tap target while fitting on 5" */
-  height: 56px;
-  flex-shrink: 0;
+  /* No gap — tabs fill wall-to-wall for easier tapping */
 }
 .tab-bar::-webkit-scrollbar { display: none; }
 
 .tab-btn {
-  flex: 0 0 auto;        /* don't shrink — scroll instead */
-  min-width: 80px;       /* minimum tap width */
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 14px;
+  padding: 0 4px;
   border: none;
   background: transparent;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  border-bottom: 3px solid transparent;
+  border-bottom: 2px solid transparent;
   transition: color 0.12s, border-color 0.12s;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tab-btn:hover { color: var(--text); }
@@ -271,24 +259,8 @@ header {
 .bp-btn.abort    { background: var(--error); color: #2a0a0a; }
 
 /* ── Pages ── */
-.page { display: none; }
-
-/* Active pages fill main absolutely — position:relative on main
-   bounds them, inset:0 makes them fill it exactly, giving overflow-y
-   a fixed height to scroll within. */
-.page.active {
-  display: block;
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
-  touch-action: pan-y;
-}
-
-/* Run and move pages use grid internally */
-#page-run.active  { display: grid; }
-#page-move.active { display: grid; }
+.page { display: none; overflow: hidden; }
+.page.active { display: grid; }
 
 /* ── Shared panel header ── */
 .panel-header {
@@ -308,22 +280,34 @@ header {
   overflow: hidden;
 }
 
-/* ── Protocol items (used inside drawer) ──────────────────────────────── */
+/* ── Protocols page ── */
+#page-protocols {
+  display: none;
+  flex-direction: column;
+}
+#page-protocols.active {
+  display: flex;
+}
+
+.protocol-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 
 .protocol-list {
   flex: 1;
-  overflow-y: scroll;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
-  touch-action: pan-y;
+  overflow-y: auto;
   padding: 6px;
-  min-height: 0;
 }
 
 .protocol-list::-webkit-scrollbar { width: 4px; }
 .protocol-list::-webkit-scrollbar-track { background: transparent; }
 .protocol-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
+/* Protocol items — big enough to tap reliably */
 .protocol-item {
   display: flex;
   align-items: center;
@@ -423,106 +407,37 @@ header {
   font-size: 13px;
 }
 
-/* ── Protocol picker drawer ──────────────────────────────────────────── */
-
-.protocol-drawer-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 200;
-}
-
-.protocol-drawer {
-  position: fixed;
-  left: 0; right: 0; bottom: 0;
-  height: 85%;
-  background: var(--bg);
-  border-top: 1px solid var(--border);
-  border-radius: 16px 16px 0 0;
-  z-index: 201;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.protocol-drawer-handle {
-  width: 36px; height: 4px;
-  background: var(--border);
-  border-radius: 2px;
-  margin: 10px auto 0;
-  flex-shrink: 0;
-}
-
-.protocol-drawer-header {
+/* Protocol page action bar: selected name + Check + Run button */
+.protocol-action-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 10px 16px 8px;
-  flex-shrink: 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.protocol-drawer-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.protocol-drawer-close {
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  border: none;
-  background: var(--surface2);
-  color: var(--muted);
-  font-size: 14px;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-}
-
-.protocol-drawer-footer {
-  display: flex;
-  gap: 10px;
+  gap: 8px;
   padding: 10px 12px;
   border-top: 1px solid var(--border);
+  background: var(--surface);
   flex-shrink: 0;
 }
 
-/* ── Run page — clean states ─────────────────────────────────────────── */
-
-.run-panel {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 24px 20px;
-  gap: 20px;
+.protocol-action-bar .selection-name {
   flex: 1;
-  overflow-y: auto;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--mono);
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* State A: nothing loaded */
-.run-empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  width: 100%;
-}
-
-.run-empty-icon {
-  font-size: 48px;
+.protocol-action-bar .selection-name.placeholder {
   color: var(--muted);
-  opacity: 0.4;
+  font-weight: 400;
 }
 
-.run-empty-label {
-  font-size: 15px;
-  color: var(--muted);
-}
-
-.load-protocol-btn {
-  height: var(--tap-xl);
-  padding: 0 36px;
+.go-run-btn {
+  height: var(--tap-min);
+  padding: 0 20px;
   border-radius: var(--radius);
   border: none;
   background: var(--accent);
@@ -530,36 +445,61 @@ header {
   font-size: var(--btn-font);
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s, transform 0.1s;
-  width: 100%;
-  max-width: 320px;
+  flex-shrink: 0;
+  transition: background 0.15s, opacity 0.15s;
 }
 
-.load-protocol-btn:active { transform: scale(0.98); }
+.go-run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.go-run-btn:active:not(:disabled) { transform: scale(0.98); }
 
-/* State B: protocol loaded / running */
-.run-active-state {
+/* Cancel button (standalone, not inside .run-controls) */
+.cancel-btn {
+  height: var(--tap-xl);
+  padding: 0 20px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  font-size: var(--btn-font);
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, opacity 0.15s;
+}
+.cancel-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Run panel — scrollable content area */
+.run-panel {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  width: 100%;
-  align-self: stretch;
+  padding: 14px 16px;
+  gap: 14px;
+  overflow-y: auto;
 }
 
-.run-protocol-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+/* Selection display — compact single line */
+.selection-display {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 12px 16px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.run-protocol-name {
-  font-size: 17px;
-  font-weight: 700;
+.selection-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.selection-name {
+  font-size: 15px;
+  font-weight: 600;
   font-family: var(--mono);
   color: var(--text);
   overflow: hidden;
@@ -569,41 +509,9 @@ header {
   min-width: 0;
 }
 
-.run-change-btn {
-  flex-shrink: 0;
-  height: 36px;
-  padding: 0 14px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--surface2);
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
+.selection-name.placeholder { color: var(--muted); font-weight: 400; font-size: 13px; }
 
-/* Progress bar — full width, prominent */
-#progressBar {
-  width: 100%;
-  height: 12px;
-  accent-color: var(--accent);
-  border-radius: 6px;
-}
-
-.progress-label {
-  text-align: center;
-  color: var(--muted);
-  font-size: 13px;
-  margin-top: -8px;
-}
-
-/* Run + Cancel buttons */
-.run-actions {
-  display: flex;
-  gap: 10px;
-  width: 100%;
-}
-
+/* ── Run button — full-width, large ── */
 .run-btn {
   display: flex;
   align-items: center;
@@ -619,7 +527,7 @@ header {
   font-weight: 700;
   cursor: pointer;
   transition: background 0.15s, opacity 0.15s, transform 0.1s;
-  flex: 1;
+  width: 100%;
 }
 
 .run-btn:hover:not(:disabled) { background: var(--accent-dim); }
@@ -627,25 +535,17 @@ header {
 .run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .run-btn svg { width: 20px; height: 20px; fill: currentColor; }
 
-.cancel-btn {
-  height: var(--tap-xl);
-  padding: 0 20px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--surface2);
-  color: var(--text);
-  font-size: var(--btn-font);
-  font-weight: 600;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background 0.15s, opacity 0.15s;
+.run-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
 }
 
-.cancel-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.run-actions .run-btn { flex: 1; }
+.run-actions .cancel-btn { flex-shrink: 0; }
 
-/* Check + Load buttons inside drawer footer */
 .check-btn {
-  height: var(--tap-min);
+  height: var(--tap-xl);
   padding: 0 20px;
   border-radius: var(--radius);
   border: 1px solid var(--border);
@@ -661,30 +561,11 @@ header {
 .check-btn:hover:not(:disabled) { background: var(--surface); }
 .check-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.confirm-protocol-btn {
-  height: var(--tap-min);
-  flex: 1;
-  border-radius: var(--radius);
-  border: none;
-  background: var(--accent);
-  color: #fff;
-  font-size: var(--btn-font);
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s, opacity 0.15s;
-}
-
-.confirm-protocol-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-/* Pre-flight findings (inside drawer) */
+/* Pre-flight findings */
 .findings-list {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 0 12px 12px;
-  overflow-y: auto;
-  flex-shrink: 0;
-  max-height: 140px;
 }
 
 .finding-item {
@@ -728,11 +609,11 @@ header {
 }
 
 .status-icon {
-  width: 36px; height: 36px;
+  width: 32px; height: 32px;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .status-icon.idle    { background: var(--surface2); color: var(--muted); }
@@ -743,11 +624,11 @@ header {
 .status-body { flex: 1; min-width: 0; }
 
 .status-state {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 .status-state.idle    { color: var(--muted); }
@@ -756,7 +637,7 @@ header {
 .status-state.error   { color: var(--error); }
 
 .status-msg {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--muted);
   font-family: var(--mono);
   overflow-wrap: anywhere;
@@ -765,9 +646,27 @@ header {
 @keyframes spin { to { transform: rotate(360deg); } }
 .spinning { animation: spin 1s linear infinite; }
 
-.run-control-note { color: var(--muted); font-size: 12px; text-align: center; }
-.run-control-feedback { color: var(--muted); font-size: 13px; text-align: center; }
+.run-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.run-controls button {
+  min-width: 100px;
+  min-height: var(--tap-min);
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface2);
+  color: var(--text);
+  font-size: var(--btn-font);
+  font-weight: 600;
+  cursor: pointer;
+  flex: 1;
+}
+
+.run-controls button:disabled { opacity: 0.4; cursor: not-allowed; }
+.run-control-note, .run-control-feedback { color: var(--muted); font-size: 12px; }
 .run-control-feedback:empty { display: none; }
+.progress-label { margin-top: 10px; color: var(--muted); font-size: 12px; }
+#progressBar { width: 100%; height: 10px; accent-color: var(--accent); }
 
 /* ── Commands page ── */
 #page-commands.active {
@@ -1065,23 +964,12 @@ header {
 
 /* ── Tips page ── */
 #page-tips.active {
-  display: block;
-  padding: 10px 12px;
+  grid-template-columns: 1fr;
+  grid-auto-rows: min-content;
+  align-content: start;
+  padding: 14px 16px;
+  gap: 16px;
   overflow-y: auto;
-}
-
-/* Legend sits above the cards */
-#page-tips.active .tips-hint,
-#page-tips.active .tips-legend {
-  margin-bottom: 10px;
-}
-
-/* Cards sit side by side, wrapping if needed */
-#tipboxList {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: flex-start;
 }
 
 .tips-hint {
@@ -1093,15 +981,10 @@ header {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 12px 14px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  /* Width is driven by the grid content, not the container —
-     this keeps a 1-col box narrow and a 12-col box wider */
-  width: fit-content;
-  min-width: 160px;
-  max-width: 100%;
+  gap: 12px;
 }
 
 .tipbox-card.disabled { opacity: 0.5; pointer-events: none; }
@@ -1145,16 +1028,13 @@ header {
 .tipbox-grid {
   display: grid;
   gap: 5px;
-  /* Fixed column width: every box gets the same cell size regardless
-     of how many columns it has. JS sets grid-template-columns inline
-     but we override with repeat(auto, 28px) approach via cell sizing. */
-  grid-auto-columns: 28px;
 }
 
-/* Tip cells — fixed square size so a 1-col box isn't enormous */
+/* Tip cells — slightly larger for fat-finger tapping */
 .tip-cell {
-  width: 28px;
-  height: 28px;
+  aspect-ratio: 1;
+  min-width: 26px;
+  min-height: 26px;
   border-radius: 4px;
   border: 1px solid var(--border);
   background: var(--surface2);
@@ -1867,93 +1747,4 @@ html.desktop-mode .layout-toggle-btn {
   height: 32px;
   padding: 0 10px;
   font-size: 12px;
-}
-
-/* ── Pipette indicator pill ── */
-.pipette-pill {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  height: 28px;
-  padding: 0 10px;
-  border-radius: 999px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text);
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background 0.12s, border-color 0.12s;
-  white-space: nowrap;
-}
-
-.pipette-pill:hover { background: var(--border); }
-.pipette-pill.switching { border-color: var(--running); color: var(--running); }
-
-/* Pipette switcher panel — shown as a dropdown below the pill */
-.pipette-switcher {
-  display: none;
-  position: absolute;
-  top: 52px;
-  right: 12px;
-  z-index: 100;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px;
-  gap: 8px;
-  flex-direction: column;
-  min-width: 200px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-}
-
-.pipette-switcher.open { display: flex; }
-
-.pipette-switcher-title {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-  padding: 0 4px;
-}
-
-.pipette-option {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: var(--tap-min);
-  padding: 0 12px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--surface2);
-  color: var(--text);
-  font-size: 14px;
-  font-weight: 500;
-  font-family: monospace;
-  cursor: pointer;
-  transition: background 0.12s;
-  text-align: left;
-  width: 100%;
-}
-
-.pipette-option:hover { background: var(--border); }
-
-.pipette-option.active {
-  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
-  color: var(--accent);
-}
-
-.pipette-option.active::after {
-  content: "✓";
-  margin-left: auto;
-  font-size: 12px;
-}
-
-.pipette-switcher-note {
-  font-size: 11px;
-  color: var(--muted);
-  padding: 0 4px;
-  line-height: 1.4;
 }

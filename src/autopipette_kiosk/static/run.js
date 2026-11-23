@@ -1,10 +1,13 @@
-// Run page: clean run controls + bottom-sheet protocol picker.
+// Protocols page + Run page.
 //
-// Subscribes to App.onStatus rather than owning any WebSocket connection or
-// run-status state itself (app.js owns both).
+// Protocols page (page-protocols): protocol list, Check, pre-flight findings,
+//   "Run ▶" button that selects and jumps to the Run tab.
+// Run page (page-run): selected protocol name, status card, progress bar,
+//   Run/Pause/Resume + Cancel.
+//
+// Subscribes to App.onStatus — app.js owns the WebSocket and status state.
 (() => {
   let selected = null;
-  let drawerSelected = null;   // selection staged inside the drawer (not yet confirmed)
   let protocols = [];
   let folder = '';
   let pendingAction = null;
@@ -12,44 +15,7 @@
   let pendingStart = null;
   let startTimer = null;
 
-  // ── drawer open / close ───────────────────────────────────────────────
-  function openDrawer() {
-    // Sync drawer highlight to current confirmed selection
-    drawerSelected = selected;
-    renderList();
-    document.getElementById('protocolDrawerOverlay').hidden = false;
-    document.getElementById('protocolDrawer').hidden = false;
-    document.getElementById('findingsList').innerHTML = '';
-    updateDrawerConfirmBtn();
-  }
-
-  function closeDrawer() {
-    document.getElementById('protocolDrawerOverlay').hidden = true;
-    document.getElementById('protocolDrawer').hidden = true;
-    // Revert any unstaged drawer selection
-    drawerSelected = selected;
-  }
-
-  document.getElementById('loadProtocolBtn').addEventListener('click', openDrawer);
-  document.getElementById('changeProtocolBtn').addEventListener('click', openDrawer);
-  document.getElementById('protocolDrawerClose').addEventListener('click', closeDrawer);
-  document.getElementById('protocolDrawerOverlay').addEventListener('click', closeDrawer);
-
-  // Load & confirm from drawer
-  document.getElementById('confirmProtocolBtn').addEventListener('click', () => {
-    if (!drawerSelected) return;
-    selected = drawerSelected;
-    // Update the name display on the run page
-    document.getElementById('selectionName').textContent =
-      selected.slice(0, -'.pipette'.length).split('/').pop();
-    // Flip to active state
-    document.getElementById('runEmptyState').hidden = true;
-    document.getElementById('runActiveState').hidden = false;
-    renderStatusCard(App.getStatus());
-    closeDrawer();
-  });
-
-  // ── protocol list (renders inside drawer) ────────────────────────────
+  // ── protocol list ──────────────────────────────────────────────────────
   async function loadProtocols() {
     try {
       const res = await fetch('/protocols');
@@ -114,7 +80,7 @@
       const item = document.createElement('button');
       item.className = 'protocol-item';
       item.dataset.filename = protocol.filename;
-      item.classList.toggle('selected', drawerSelected === protocol.filename);
+      item.classList.toggle('selected', selected === protocol.filename);
       const icon = document.createElement('span');
       icon.className = 'protocol-icon';
       icon.textContent = protocol.name.slice(0, 2);
@@ -125,23 +91,38 @@
       ext.className = 'protocol-ext';
       ext.textContent = '.pipette';
       item.append(icon, name, ext);
-      item.addEventListener('click', () => stageProtocol(item, protocol.filename));
+      item.addEventListener('click', () => selectProtocol(item, protocol.filename));
       list.appendChild(item);
     });
   }
 
-  function stageProtocol(el, filename) {
+  function selectProtocol(el, filename) {
     document.querySelectorAll('.protocol-item').forEach(i => i.classList.remove('selected'));
     el.classList.add('selected');
-    drawerSelected = filename;
+    selected = filename;
+
+    const shortName = filename.slice(0, -'.pipette'.length).split('/').pop();
+    const nameEl = document.getElementById('selectionName');
+    nameEl.textContent = shortName;
+    nameEl.classList.remove('placeholder');
+
     document.getElementById('checkBtn').disabled = false;
+    document.getElementById('goRunBtn').disabled = false;
     document.getElementById('findingsList').innerHTML = '';
-    updateDrawerConfirmBtn();
+
+    // Keep Run page name in sync
+    document.getElementById('runProtocolName').textContent = shortName;
+
+    renderStatusCard(App.getStatus());
   }
 
-  function updateDrawerConfirmBtn() {
-    document.getElementById('confirmProtocolBtn').disabled = !drawerSelected;
-  }
+  // "Run ▶" on the Protocols page — switch to Run tab
+  document.getElementById('goRunBtn').addEventListener('click', () => {
+    if (!selected) return;
+    // Switch to run tab via the tab bar
+    const runTabBtn = document.querySelector('[data-page="run"]');
+    if (runTabBtn) runTabBtn.click();
+  });
 
   // ── run ────────────────────────────────────────────────────────────────
   document.getElementById('runBtn').addEventListener('click', async () => {
@@ -228,16 +209,16 @@
 
   document.getElementById('cancelBtn').addEventListener('click', () => sendRunControl('cancel'));
 
-  // ── check (pre-flight) — lives in the drawer ──────────────────────────
+  // ── check (pre-flight) ─────────────────────────────────────────────────
   document.getElementById('checkBtn').addEventListener('click', async () => {
-    if (!drawerSelected) return;
+    if (!selected) return;
     const list = document.getElementById('findingsList');
     list.innerHTML = '<div class="empty-state">Checking…</div>';
     try {
       const res = await fetch('/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename: drawerSelected }),
+        body: JSON.stringify({ filename: selected }),
       });
       const body = await res.json();
       if (!res.ok) {
@@ -265,7 +246,7 @@
     `).join('');
   }
 
-  // ── status card ───────────────────────────────────────────────────────
+  // ── status card ────────────────────────────────────────────────────────
   function renderStatusCard(data) {
     const icon  = document.getElementById('statusIcon');
     const state = document.getElementById('statusState');
@@ -311,10 +292,6 @@
     document.getElementById('cancelBtn').disabled =
       !available || !['preparing', 'printing', 'paused'].includes(data.phase);
 
-    // Hide "Change" button while running so we don't swap protocols mid-run
-    const changeBtn = document.getElementById('changeProtocolBtn');
-    if (changeBtn) changeBtn.hidden = active;
-
     icon.classList.toggle('spinning', active && data.phase !== 'paused');
 
     const progress = data.progress;
@@ -335,6 +312,7 @@
   }
 
   App.onStatus(renderStatusCard);
+  App.registerPage('protocols', {});
   App.registerPage('run', {});
 
   loadProtocols();

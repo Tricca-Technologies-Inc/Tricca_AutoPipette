@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="dark">
 <style>html { background: #000; }</style>  <!-- inline in <head>, before any linked CSS -->
 <title>AutoPipette</title>
-<link rel="stylesheet" href="/static/style.css?v=13">
+<link rel="stylesheet" href="/static/style.css?v=4">
 <link rel="stylesheet" href="/static/style-desktop.css?v=1">
 </head>
 <body>
@@ -21,9 +21,6 @@
     </div>
     <span class="logo-sub" style="margin-left:4px">/ kiosk</span>
     <div class="header-spacer"></div>
-    <div class="pipette-pill" id="pipettePill" title="Active pipette — tap to switch">
-      <span id="pipettePillLabel">…</span>
-    </div>
     <div class="status-pill idle" id="statusPill">
       <div class="status-pill-dot" id="statusPillDot"></div>
       <span id="statusPillLabel">Idle</span>
@@ -43,17 +40,11 @@
     </div>
   </header>
 
-  <!-- Pipette switcher dropdown — toggled by the pill in the header -->
-  <div class="pipette-switcher" id="pipetteSwitcher">
-    <div class="pipette-switcher-title">Switch pipette</div>
-    <div id="pipetteOptions"><!-- populated by pipette.js --></div>
-    <div class="pipette-switcher-note">Eject tip first, then switch. Home plunger before pipetting.</div>
-  </div>
-
   <!-- Tab bar (issue #25) -- a data-driven registry lives in app.js; this
        markup is the two tabs that registry currently knows about. -->
   <nav class="tab-bar" id="tabBar">
-    <button class="tab-btn active" data-page="run">Run</button>
+    <button class="tab-btn active" data-page="protocols">Protocols</button>
+    <button class="tab-btn" data-page="run">Run</button>
     <button class="tab-btn" data-page="move">Move</button>
     <button class="tab-btn" data-page="tips">Tips</button>
     <button class="tab-btn" data-page="deck">Deck</button>
@@ -79,46 +70,51 @@
 
   <main>
     <!-- Run page -->
-    <div class="page active" id="page-run">
+    <!-- Protocols page: pick + pre-flight check -->
+    <div class="page active" id="page-protocols">
+      <div class="protocol-panel">
+        <div class="panel-header">Protocols</div>
+        <div class="protocol-list" id="protocolList">
+          <div class="empty-state">Loading protocols…</div>
+        </div>
+      </div>
+      <div class="protocol-action-bar">
+        <div class="selection-name placeholder" id="selectionName">Select a protocol</div>
+        <button class="check-btn" id="checkBtn" disabled>Check</button>
+        <button class="go-run-btn" id="goRunBtn" disabled>Run ▶</button>
+      </div>
+      <div class="findings-list" id="findingsList"></div>
+    </div>
+
+    <!-- Run page: status + controls only -->
+    <div class="page" id="page-run">
       <div class="run-panel">
-
-        <!-- State A: no protocol loaded -->
-        <div class="run-empty-state" id="runEmptyState">
-          <div class="run-empty-icon">▶</div>
-          <div class="run-empty-label">No protocol loaded</div>
-          <button class="load-protocol-btn" id="loadProtocolBtn">Load Protocol</button>
+        <div class="selection-display">
+          <div class="selection-label">Protocol</div>
+          <div class="selection-name" id="runProtocolName">—</div>
         </div>
 
-        <!-- State B: protocol loaded / running -->
-        <div class="run-active-state" id="runActiveState" hidden>
-          <div class="run-protocol-header">
-            <div class="run-protocol-name" id="selectionName">—</div>
-            <button class="run-change-btn" id="changeProtocolBtn">Change</button>
+        <div class="status-card">
+          <div class="status-icon idle" id="statusIcon">○</div>
+          <div class="status-body">
+            <div class="status-state idle" id="statusState">Idle</div>
+            <div class="status-msg" id="statusMsg">No protocol running</div>
           </div>
-
-          <div class="status-card">
-            <div class="status-icon idle" id="statusIcon">○</div>
-            <div class="status-body">
-              <div class="status-state idle" id="statusState">Idle</div>
-              <div class="status-msg" id="statusMsg">Ready to run</div>
-            </div>
-          </div>
-
-          <progress id="progressBar" max="100" aria-label="Estimated G-code file progress" hidden></progress>
-          <div class="progress-label" id="progressLabel"></div>
-
-          <div class="run-control-feedback" id="runControlFeedback" role="status"></div>
-
-          <div class="run-actions">
-            <button class="run-btn" id="runBtn" disabled>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path id="runBtnIcon" d="M8 5v14l11-7z"/></svg>
-              <span id="runBtnLabel">Run</span>
-            </button>
-            <button class="cancel-btn" id="cancelBtn" disabled>Cancel</button>
-          </div>
-          <div class="run-control-note">Cancel is not an emergency stop.</div>
         </div>
 
+        <progress id="progressBar" max="100" aria-label="Estimated G-code file progress" hidden></progress>
+        <div class="progress-label" id="progressLabel"></div>
+
+        <div class="run-control-feedback" id="runControlFeedback" role="status"></div>
+
+        <div class="run-actions">
+          <button class="run-btn" id="runBtn" disabled>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path id="runBtnIcon" d="M8 5v14l11-7z"/></svg>
+            <span id="runBtnLabel">Run</span>
+          </button>
+          <button class="cancel-btn" id="cancelBtn" disabled>Cancel</button>
+        </div>
+        <div class="run-control-note">Cancel is not an emergency stop.</div>
       </div>
     </div>
 
@@ -343,28 +339,9 @@
   </main>
 </div>
 
-<!-- Protocol picker drawer — outside .shell so position:fixed works correctly -->
-<div class="protocol-drawer-overlay" id="protocolDrawerOverlay" hidden></div>
-<div class="protocol-drawer" id="protocolDrawer" aria-label="Pick a protocol" hidden>
-  <div class="protocol-drawer-handle"></div>
-  <div class="protocol-drawer-header">
-    <span class="protocol-drawer-title">Pick a Protocol</span>
-    <button class="protocol-drawer-close" id="protocolDrawerClose" aria-label="Close">✕</button>
-  </div>
-  <div class="protocol-list" id="protocolList">
-    <div class="empty-state">Loading protocols…</div>
-  </div>
-  <div class="protocol-drawer-footer">
-    <button class="check-btn" id="checkBtn" disabled>Check</button>
-    <button class="confirm-protocol-btn" id="confirmProtocolBtn" disabled>Load</button>
-  </div>
-  <div class="findings-list" id="findingsList"></div>
-</div>
-
 <script src="/static/layout.js?v=1"></script>
-<script src="/static/pipette.js?v=1"></script>
 <script src="/static/app.js?v=3"></script>
-<script src="/static/run.js?v=4"></script>
+<script src="/static/run.js?v=5"></script>
 <script src="/static/move.js?v=3"></script>
 <script src="/static/tips.js?v=3"></script>
 <script src="/static/deck.js?v=3"></script>
