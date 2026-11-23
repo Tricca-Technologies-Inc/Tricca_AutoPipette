@@ -42,12 +42,6 @@
       current.className = 'protocol-current-folder';
       current.textContent = folder;
       list.appendChild(current);
-      if (folder === 'legacy' || folder.startsWith('legacy/')) {
-        const warning = document.createElement('div');
-        warning.className = 'protocol-legacy-warning';
-        warning.textContent = 'Legacy protocols are unverified on hardware. Review the protocol and rig configuration before use.';
-        list.appendChild(warning);
-      }
     }
 
     const prefix = folder ? `${folder}/` : '';

@@ -315,8 +315,14 @@ class LocalConfigRoots:
         Returns:
             The local path if it exists, else the shared path.
 
+        `filename` may name a file in a subfolder (``examples/a.pipette``),
+        but never one outside its root: a ``..`` path, or a symlink pointing
+        elsewhere, counts as missing. A local symlink that escapes doesn't
+        fall back to the shared file either, since local is what wins.
+
         Raises:
-            FileNotFoundError: If `filename` exists in neither root.
+            FileNotFoundError: If `filename` exists in neither root, or the
+                file that would win lies outside its root.
 
         Example:
             >>> LocalConfigRoots.resolve("liquids", "water.json").name
@@ -324,17 +330,62 @@ class LocalConfigRoots:
         """
         shared_dir, local_dir = cls.roots(category)
 
-        local_path = local_dir / filename
-        if local_path.exists():
-            return local_path
-
-        shared_path = shared_dir / filename
-        if shared_path.exists():
-            return shared_path
+        for root in (local_dir, shared_dir):
+            path = root / filename
+            if path.exists():
+                if not path.resolve().is_relative_to(root.resolve()):
+                    raise FileNotFoundError(f"{filename!r} lies outside {root}")
+                return path
 
         raise FileNotFoundError(
             f"{filename!r} not found in {local_dir} or {shared_dir}"
         )
+
+    @classmethod
+    def list_tree(cls, category: str, pattern: str) -> dict[str, Path]:
+        """List a union category's files in every subfolder, by relative path.
+
+        Like `list_files`, but recursive and keyed by POSIX relative path
+        (``examples/a.pipette``), so a local file overrides only the shared
+        file at the same path. Each entry is what `resolve` returns for that
+        path, and a path `resolve` refuses (a symlink escaping its root) is
+        left out.
+
+        Args:
+            category: One of `CATEGORY_NAMES`.
+            pattern: Glob pattern matched in every subfolder of each root.
+
+        Returns:
+            Mapping of relative path to resolved file, sorted by path.
+
+        Example:
+            >>> "examples/breakpoint.pipette" in LocalConfigRoots.list_tree(
+            ...     "protocols", "*.pipette"
+            ... )
+            True
+        """
+        shared_dir, local_dir = cls.roots(category)
+
+        names: set[str] = set()
+        for root in (shared_dir, local_dir):
+            if root.is_dir():
+                names.update(
+                    path.relative_to(root).as_posix()
+                    for path in root.rglob(pattern)
+                    # A local root nested inside the shared one is listed
+                    # once, from its own root.
+                    if root == local_dir or not path.is_relative_to(local_dir)
+                )
+
+        found: dict[str, Path] = {}
+        for name in sorted(names):
+            try:
+                path = cls.resolve(category, name)
+            except FileNotFoundError:
+                continue
+            if path.is_file():
+                found[name] = path
+        return found
 
     @classmethod
     def list_files(cls, category: str, pattern: str = "*.json") -> dict[str, Path]:

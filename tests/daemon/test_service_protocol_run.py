@@ -542,3 +542,85 @@ class TestProtocolsAreASharedLocalUnion:
 
         gcode_arg = spy_write.call_args.args[0]
         assert not any("G1" in line for line in gcode_arg)  # no move emitted
+
+
+class TestProtocolsInSubfolders:
+    """Protocols in subfolders are listed and run by relative path (#182).
+
+    The daemon is the one place that decides what a protocol name means, so
+    `tap` and the kiosk see the same list and the same files.
+    """
+
+    @pytest.fixture
+    def local(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+        """Point the shared root at ``top`` and ``examples/transfer``.
+
+        Returns:
+            The empty local root.
+        """
+        shared, local = tmp_path / "shared", tmp_path / "local"
+        (shared / "examples").mkdir(parents=True)
+        local.mkdir()
+        (shared / "examples" / "transfer.pipette").write_text("move 10 20 5\n")
+        (shared / "top.pipette").write_text("wait 1\n")
+        monkeypatch.setattr(DefaultPaths, "DIR_PROTOCOL", shared)
+        monkeypatch.setattr(DefaultPaths, "DIR_LOCAL_PROTOCOL", local)
+        return local
+
+    def test_nested_protocols_are_listed_by_relative_path(
+        self, service: AutoPipetteService, local: Path
+    ) -> None:
+        del local
+        assert service.list_protocols() == [
+            {"name": "transfer", "filename": "examples/transfer.pipette"},
+            {"name": "top", "filename": "top.pipette"},
+        ]
+
+    def test_nested_protocol_is_runnable(
+        self, service: AutoPipetteService, local: Path
+    ) -> None:
+        del local
+        _set_homed(service, True)
+
+        result = service.run_protocol_blocking("examples/transfer.pipette")
+
+        assert result.ok is True
+
+    def test_local_override_is_matched_by_relative_path(
+        self, service: AutoPipetteService, local: Path
+    ) -> None:
+        (local / "examples").mkdir()
+        (local / "examples" / "transfer.pipette").write_text("wait 2\n")
+        (local / "transfer.pipette").write_text("wait 3\n")
+
+        listed = {p["filename"] for p in service.list_protocols()}
+
+        # A local file overrides only the shared file at the same path.
+        assert listed == {
+            "examples/transfer.pipette",
+            "top.pipette",
+            "transfer.pipette",
+        }
+        assert service._read_protocol_lines("examples/transfer.pipette") == ["wait 2"]
+
+    def test_symlink_escaping_its_root_is_neither_listed_nor_runnable(
+        self, service: AutoPipetteService, local: Path, tmp_path: Path
+    ) -> None:
+        outside = tmp_path / "outside.pipette"
+        outside.write_text("wait 1\n")
+        (local / "top.pipette").symlink_to(outside)
+
+        listed = {p["filename"] for p in service.list_protocols()}
+
+        assert listed == {"examples/transfer.pipette"}
+        with pytest.raises(FileNotFoundError):
+            service.run_protocol_blocking("top.pipette")
+
+    def test_dot_dot_path_is_refused(
+        self, service: AutoPipetteService, local: Path, tmp_path: Path
+    ) -> None:
+        del local
+        (tmp_path / "outside.pipette").write_text("wait 1\n")
+
+        with pytest.raises(FileNotFoundError):
+            service.run_protocol_blocking("../outside.pipette")

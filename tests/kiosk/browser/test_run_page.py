@@ -79,20 +79,6 @@ def test_protocol_names_are_rendered_as_text(
     expect(page.locator("#findingsList")).to_contain_text("No issues found")
 
 
-def test_legacy_folder_warns_that_protocols_are_unverified(
-    page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
-) -> None:
-    (protocols_dir / "legacy").mkdir()
-    (protocols_dir / "legacy" / "a.pipette").write_text("wait 1\n")
-    page.goto(live_kiosk_server.url)
-
-    page.get_by_role("button", name="legacy /").click()
-
-    expect(page.locator(".protocol-legacy-warning")).to_contain_text(
-        "unverified on hardware"
-    )
-
-
 def test_running_a_protocol_updates_the_shared_pill_and_the_run_page_card(
     page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
 ) -> None:

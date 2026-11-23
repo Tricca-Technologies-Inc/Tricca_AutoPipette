@@ -21,7 +21,7 @@ import logging
 import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Literal, cast
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
@@ -38,7 +38,6 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     SetTipsArgs,
     TipsArgs,
 )
-from tricca_autopipette.core.pipette_constants import DefaultPaths
 from tricca_autopipette.daemon.control_requests import ControlRequests
 from tricca_autopipette.moonraker.websocket_client import (
     JsonRpcError,
@@ -49,15 +48,8 @@ from tricca_autopipette.moonraker.websocket_client import (
 logger = logging.getLogger(__name__)
 
 # ── paths ──────────────────────────────────────────────────────────────────────
-# Reuse the core's repo-root resolution rather than recomputing it from
-# __file__ here: this package sits next to tricca_autopipette in the same
-# install, and a second copy of the logic silently diverged once already
-# (it missed the AUTOPIPETTE_REPO_ROOT override added for installed
-# layouts, where __file__-relative walking lands a directory too high).
-REPO_ROOT = DefaultPaths.DIR_REPO_ROOT
-PROTOCOLS_DIR = Path(
-    os.environ.get("AUTOPIPETTE_PROTOCOLS_DIR", REPO_ROOT / "protocols")
-)
+# No protocol or config paths here: the kiosk asks tapd for everything it
+# lists, so there is no second path resolution to drift from the daemon's.
 STATIC_DIR = Path(__file__).parent / "static"
 
 TAPD_CONTROL_URI = os.environ.get("TAPD_CONTROL_URI", "ws://127.0.0.1:8765/control")
@@ -69,7 +61,7 @@ class Protocol(BaseModel):
     """A protocol file available to run, as listed under `protocols/`."""
 
     name: str  # display name, e.g. "A1"
-    filename: str  # bare filename, e.g. "A1.pipette"
+    filename: str  # path under protocols/, e.g. "examples/A1.pipette"
 
 
 class RunRequest(BaseModel):
@@ -306,59 +298,74 @@ def index() -> FileResponse:
     return FileResponse(STATIC_DIR / "index.html")
 
 
-def _list_protocol_files() -> dict[str, Path]:
-    """Union `PROTOCOLS_DIR` with the per-machine local config root's protocols/.
+# Folders the kiosk never offers. The converted Murphy protocols are
+# unverified on hardware and each needs a specific Murphy system profile, so
+# they stay reachable from `tap` only (see protocols/legacy/README.md).
+_KIOSK_HIDDEN_FOLDERS = frozenset({"legacy"})
 
-    `PROTOCOLS_DIR` (not `DefaultPaths.DIR_PROTOCOL` directly) so this keeps
-    honoring `AUTOPIPETTE_PROTOCOLS_DIR`, which `LocalConfigRoots` doesn't
-    know about. Local wins on a filename collision, matching every other
-    config category's shared/local union (see `config/README.md`).
+
+def _kiosk_may_offer(filename: str) -> bool:
+    """Whether the kiosk lists, checks and runs this protocol path.
+
+    The daemon already refuses a path outside the protocol roots; this
+    only stops a spelling such as ``examples/../legacy/a.pipette`` from
+    reaching a hidden folder.
+
+    Args:
+        filename: A protocol path relative to the protocol roots.
 
     Returns:
-        Relative protocol paths mapped to their resolved files.
+        False for an absolute or ``..`` path, or one in a hidden folder.
     """
-    found: dict[str, Path] = {}
-    roots = (PROTOCOLS_DIR, DefaultPaths.DIR_LOCAL_PROTOCOL)
-    for root in roots:
-        if root.exists():
-            for path in root.rglob("*.pipette"):
-                if path.is_file() and not (
-                    root == roots[0] and path.is_relative_to(roots[1])
-                ):
-                    found[path.relative_to(root).as_posix()] = path
-    # Check the file the daemon will actually resolve, including local
-    # overrides reached through symlinks, rather than only the listed path.
-    safe: dict[str, Path] = {}
-    for name in sorted(found):
-        local = roots[1] / name
-        root = roots[1] if local.exists() else roots[0]
-        path = root / name
-        if path.is_file() and path.resolve().is_relative_to(root.resolve()):
-            safe[name] = path
-    return safe
+    path = PurePosixPath(filename)
+    return bool(path.parts) and not (
+        path.is_absolute()
+        or ".." in path.parts
+        or path.parts[0] in _KIOSK_HIDDEN_FOLDERS
+    )
+
+
+def _require_kiosk_protocol(filename: str) -> None:
+    """Refuse a protocol path the kiosk doesn't offer, as if it didn't exist.
+
+    Args:
+        filename: The requested protocol path.
+
+    Raises:
+        HTTPException: 404 if `_kiosk_may_offer` refuses it.
+    """
+    if not _kiosk_may_offer(filename):
+        raise HTTPException(status_code=404, detail=f"Protocol not found: {filename}")
 
 
 @app.get("/protocols", response_model=list[Protocol])
-def list_protocols() -> list[Protocol]:
-    """Return all .pipette files, sorted by name (see `_list_protocol_files`).
+async def list_protocols() -> list[Protocol]:
+    """List protocols via the daemon's `protocols.list`, minus hidden folders.
+
+    The daemon lists every subfolder of the shared and local protocol roots
+    by relative path, the same list `tap`'s `protocols` prints.
+
+    Returns:
+        The protocols the kiosk offers, sorted by path.
 
     Raises:
-        HTTPException: 500 if neither the shared nor the local protocols
-            directory exists.
+        HTTPException: 503 if the control daemon isn't connected, or 500 if
+            dispatch fails.
     """
-    if not PROTOCOLS_DIR.exists() and not DefaultPaths.DIR_LOCAL_PROTOCOL.exists():
-        raise HTTPException(
-            status_code=500,
-            detail=(
-                f"Protocols directory not found: {PROTOCOLS_DIR} or "
-                f"{DefaultPaths.DIR_LOCAL_PROTOCOL}"
-            ),
-        )
+    if _control_client is None:
+        raise HTTPException(status_code=503, detail="Control daemon not connected")
 
-    return [
-        Protocol(name=path.stem, filename=name)
-        for name, path in _list_protocol_files().items()
-    ]
+    try:
+        response = await asyncio.to_thread(
+            _control_client.send_jsonrpc, _control_requests.protocols_list()
+        )
+    except (JsonRpcError, RuntimeError) as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    protocols = cast(
+        list[dict[str, str]], response.get("result", {}).get("protocols", [])
+    )
+    return [Protocol(**p) for p in protocols if _kiosk_may_offer(p["filename"])]
 
 
 @app.post("/run", response_model=RunStatus)
@@ -373,19 +380,12 @@ async def run_protocol(req: RunRequest) -> RunStatus:
         The just-dispatched run's initial status (not its completion).
 
     Raises:
-        HTTPException: 404 if `req.filename` doesn't exist, 409 if a run is
+        HTTPException: 404 if `req.filename` doesn't exist or is in a folder
+            the kiosk hides, 409 if a run is
             already active, 503 if the control daemon isn't connected, or
             500 for any other dispatch failure.
     """
-    # Fails fast without round-tripping to the daemon only when the file is
-    # missing from *both* roots the kiosk itself can see -- a file that
-    # exists only in the local root still passes this and reaches the
-    # daemon, which resolves the same shared/local union for real.
-    known_names = _list_protocol_files()
-    if req.filename not in known_names:
-        raise HTTPException(
-            status_code=404, detail=f"Protocol not found: {req.filename}"
-        )
+    _require_kiosk_protocol(req.filename)
 
     if _control_client is None:
         raise HTTPException(status_code=503, detail="Control daemon not connected")
@@ -435,14 +435,11 @@ async def validate_protocol(req: ValidateRequest) -> CommandResultResponse:
 
     Raises:
         HTTPException: 404 if `req.filename` doesn't exist in either
-            protocols root, 503 if the control daemon isn't connected, or
-            500 for any other dispatch failure.
-    """
-    known_names = _list_protocol_files()
-    if req.filename not in known_names:
-        raise HTTPException(
-            status_code=404, detail=f"Protocol not found: {req.filename}"
-        )
+            protocols root or is in a folder the kiosk hides, 503 if the
+            control daemon isn't connected, or 500 for any other dispatch
+            failure.
+    """  # ruff: ignore[docstring-extraneous-exception]
+    _require_kiosk_protocol(req.filename)
 
     return await _dispatch_control_request(_control_requests.run_validate(req.filename))
 
@@ -501,7 +498,7 @@ def _translate_move_error(exc: JsonRpcError) -> HTTPException:
     """
     if exc.error_type == "NotHomedError":
         return HTTPException(status_code=409, detail=str(exc))
-    if exc.error_type == "NotALocationError":
+    if exc.error_type in {"NotALocationError", "FileNotFoundError"}:
         return HTTPException(status_code=404, detail=str(exc))
     if exc.error_type == "ValueError":
         return HTTPException(status_code=400, detail=str(exc))

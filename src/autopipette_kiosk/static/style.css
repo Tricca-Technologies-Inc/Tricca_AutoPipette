@@ -309,15 +309,6 @@ header {
   overflow-wrap: anywhere;
 }
 
-.protocol-legacy-warning {
-  padding: 8px 12px;
-  color: var(--text);
-  font-size: 13px;
-  line-height: 1.4;
-  border-left: 3px solid var(--accent);
-  margin-bottom: 8px;
-}
-
 .protocol-item.selected {
   background: color-mix(in srgb, var(--accent) 12%, transparent);
   border-color: color-mix(in srgb, var(--accent) 40%, transparent);

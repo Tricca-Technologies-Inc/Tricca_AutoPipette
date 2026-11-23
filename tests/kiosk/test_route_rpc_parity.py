@@ -28,13 +28,11 @@ from fastapi.routing import APIRoute
 from autopipette_kiosk.main import app
 
 # "/": serves the static shell, no RPC involved.
-# "/protocols": the one documented kiosk-only capability (a directory glob),
-#   see CLAUDE.md's "Client parity rule" paragraph -- not a gap to close.
 # "/status": serves locally-cached state that arrived via a Moonraker
 #   notification push; no RPC round-trip needed to re-fetch it.
 # The `/ws/status` websocket route is excluded separately below, since it's
 # an `APIWebSocketRoute`, not an `APIRoute` -- it never matches this filter.
-_EXEMPT_PATHS = frozenset({"/", "/protocols", "/status"})
+_EXEMPT_PATHS = frozenset({"/", "/status"})
 
 
 def _checked_routes() -> list[APIRoute]:

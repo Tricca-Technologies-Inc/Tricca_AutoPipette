@@ -46,10 +46,9 @@ startup with a clear error rather than being resolved against the process's
 working directory (systemd starts services with `cwd=/`). An empty value is
 treated as unset.
 
-`AUTOPIPETTE_PROTOCOLS_DIR` separately overrides just the protocols
-directory, if it lives somewhere other than `$AUTOPIPETTE_REPO_ROOT/protocols`.
-Note the kiosk resolves it once at import time, so changing it needs a
-service restart.
+Protocols live in `$AUTOPIPETTE_REPO_ROOT/protocols` (plus the local root's
+`protocols/`, below). The kiosk asks `tapd` for them, so it needs no
+protocol path of its own; the old `AUTOPIPETTE_PROTOCOLS_DIR` is ignored.
 
 ## `AUTOPIPETTE_LOCAL_DIR`
 
