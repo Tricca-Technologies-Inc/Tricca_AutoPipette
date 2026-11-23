@@ -260,6 +260,20 @@ header {
 
 /* ── Pages ── */
 .page { display: none; overflow: hidden; }
+
+/* Touch-scroll fix: pages that stack vertically need explicit scroll
+   on touch screens. overflow-y: auto can be ignored by some WebKit
+   builds on small touch displays; scroll + momentum scrolling is safer. */
+#page-move.active,
+#page-tips.active,
+#page-deck.active,
+#page-settings.active,
+#page-calibrate.active,
+#page-commands.active {
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
 .page.active { display: grid; }
 
 /* ── Shared panel header ── */
@@ -289,7 +303,9 @@ header {
 
 .protocol-list {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
   padding: 6px;
 }
 
