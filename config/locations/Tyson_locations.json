@@ -411,10 +411,10 @@
         {
             "name": "tipbox_p1000",
             "type": "tipbox",
-            "x": 48,
-            "y": 53.5,
+            "x": 32.75,
+            "y": 93.5,
             "z": 0,
-            "dip_top": 50,
+            "dip_top": 82.5,
             "num_row": 7,
             "num_col": 1,
             "spacing_row": 11.5,
@@ -447,7 +447,7 @@
         {
             "name": "SOLV",
             "type": "singleton",
-            "x": 19.80000000000001,
+            "x": 19.8,
             "y": 144,
             "z": 0,
             "dip_top": 69,
@@ -458,7 +458,7 @@
         {
             "name": "WATER",
             "type": "singleton",
-            "x": 19.80000000000001,
+            "x": 19.8,
             "y": 145,
             "z": 0,
             "dip_top": 69,
@@ -469,7 +469,7 @@
         {
             "name": "DFIBUF",
             "type": "singleton",
-            "x": 19.80000000000001,
+            "x": 19.8,
             "y": 108,
             "z": 0,
             "dip_top": 69,
@@ -480,7 +480,7 @@
         {
             "name": "ICEM",
             "type": "singleton",
-            "x": 88.80000000000001,
+            "x": 88.8,
             "y": 146,
             "z": 0,
             "dip_top": 71,
