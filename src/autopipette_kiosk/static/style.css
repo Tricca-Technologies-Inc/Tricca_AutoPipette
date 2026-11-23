@@ -920,12 +920,23 @@ header {
 
 /* ── Tips page ── */
 #page-tips.active {
-  grid-template-columns: 1fr;
-  grid-auto-rows: min-content;
-  align-content: start;
-  padding: 14px 16px;
-  gap: 16px;
+  display: block;
+  padding: 10px 12px;
   overflow-y: auto;
+}
+
+/* Legend sits above the cards */
+#page-tips.active .tips-hint,
+#page-tips.active .tips-legend {
+  margin-bottom: 10px;
+}
+
+/* Cards sit side by side, wrapping if needed */
+#tipboxList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-start;
 }
 
 .tips-hint {
@@ -937,10 +948,15 @@ header {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 14px 16px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  /* Width is driven by the grid content, not the container —
+     this keeps a 1-col box narrow and a 12-col box wider */
+  width: fit-content;
+  min-width: 160px;
+  max-width: 100%;
 }
 
 .tipbox-card.disabled { opacity: 0.5; pointer-events: none; }
@@ -984,13 +1000,16 @@ header {
 .tipbox-grid {
   display: grid;
   gap: 5px;
+  /* Fixed column width: every box gets the same cell size regardless
+     of how many columns it has. JS sets grid-template-columns inline
+     but we override with repeat(auto, 28px) approach via cell sizing. */
+  grid-auto-columns: 28px;
 }
 
-/* Tip cells — slightly larger for fat-finger tapping */
+/* Tip cells — fixed square size so a 1-col box isn't enormous */
 .tip-cell {
-  aspect-ratio: 1;
-  min-width: 26px;
-  min-height: 26px;
+  width: 28px;
+  height: 28px;
   border-radius: 4px;
   border: 1px solid var(--border);
   background: var(--surface2);

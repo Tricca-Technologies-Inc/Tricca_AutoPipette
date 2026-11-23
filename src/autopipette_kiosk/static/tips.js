@@ -61,8 +61,10 @@
 
     const grid = document.createElement('div');
     grid.className = 'tipbox-grid';
-    grid.style.gridTemplateColumns = `repeat(${box.num_col}, 1fr)`;
-    grid.style.gridTemplateRows = `repeat(${box.num_row}, 1fr)`;
+    // Fixed cell size so a 1-col box stays narrow and a 12-col box
+    // stays proportional — 28px matches the .tip-cell CSS sizing.
+    grid.style.gridTemplateColumns = `repeat(${box.num_col}, 28px)`;
+    grid.style.gridTemplateRows = `repeat(${box.num_row}, 28px)`;
 
     const eligible = new Set(box.eligible || []);
     for (let row = 0; row < box.num_row; row++) {
