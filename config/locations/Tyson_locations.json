@@ -419,10 +419,10 @@
         {
             "name": "tipbox_p1000",
             "type": "tipbox",
-            "x": -3.9499999999999886,
-            "y": 90.5,
+            "x": 48,
+            "y": 53.5,
             "z": 0,
-            "dip_top": 124.5,
+            "dip_top": 50,
             "num_row": 7,
             "num_col": 1,
             "spacing_row": 11.5,
