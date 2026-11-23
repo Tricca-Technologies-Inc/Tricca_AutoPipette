@@ -468,7 +468,11 @@ class PipetteSyringeKinematics(BaseModel):
             if len(self.calibration_volumes) < 2:  # type: ignore
                 raise ValueError("calibration_volumes must have at least 2 points")
 
-
+class DeckOffset(BaseModel):
+    x: float = Field(default=0.0, description="X-axis shift in mm")
+    y: float = Field(default=0.0, description="Y-axis shift in mm")
+    z: float = Field(default=0.0, description="Z-axis shift in mm")
+    
 class PipetteModel(BaseModel):
     """Complete pipette hardware model definition.
 
@@ -519,6 +523,23 @@ class PipetteModel(BaseModel):
         default_factory=list, description="List of compatible tip types"
     )
 
+
+    deck_offset: DeckOffset = Field(
+        default_factory=DeckOffset,
+        description=(
+            "Fixed XYZ offset applied to every deck coordinate lookup "
+            "(aspirate source, dispense destination, move_loc) when this "
+            "pipette is active."
+        ),
+    )
+
+    tipbox: str | None = Field(
+        default=None,
+        description=(
+            "Name of the tipbox location this pipette draws from. "
+            "When set, AutoPipette.next_tip() routes to this specific box."
+        ),
+    )
 
 # ============================================================================
 # LIQUID PROFILES

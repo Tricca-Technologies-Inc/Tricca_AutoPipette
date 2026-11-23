@@ -749,7 +749,18 @@ class AutoPipette:
             )
         )
         self.gcode_buffers.add(gc.manual_stepper(stepper, set_position=0))
-
+    def get_deck_coordinate(
+        self,
+        name: str,
+        row: int | None = None,
+        col: int | None = None,
+    ) -> Coordinate:
+        coor = self.location_manager.get_coordinate(name, row, col)
+        off = self.pipette_model.deck_offset
+        if off.x == 0.0 and off.y == 0.0 and off.z == 0.0:
+            return coor
+        return coor.generate_offset(dx=off.x, dy=off.y, dz=off.z)
+    
     def _check_limits(self, coordinate: Coordinate, axes: str = "xyz") -> None:
         """Refuse absolute moves outside the gantry's configured limits."""
         g = self.gantry
@@ -949,15 +960,23 @@ class AutoPipette:
         if self.state.tip_state == TipState.ATTACHED:
             raise TipAlreadyOnError()
         # Checked on the box that will supply the tip, before a slot is taken.
-        peeked = self.location_manager.tipbox_manager.peek_tip()
-        supplier = tipbox_name or (peeked[0] if peeked else None)
+        resolved_name: str | None = (
+            tipbox_name
+            or self.pipette_model.tipbox
+        )
+
+        if resolved_name is not None:
+            supplier = resolved_name
+        else:
+            peeked = self.location_manager.tipbox_manager.peek_tip()
+            supplier = peeked[0] if peeked else None
         if supplier is not None:
             self.location_manager.check_drawer(supplier)
 
         # The supplying box comes back with the coordinate: boxes may sit at
         # different heights, so the dip distance must come from *that* box.
         name, box, loc_tip, index = self.location_manager.tipbox_manager.next_tip(
-            name=tipbox_name
+            name=resolved_name
         )
         self.note_action(
             f"Picking up tip from '{name}' at (X:{loc_tip.x:.2f}, Y:{loc_tip.y:.2f})"
@@ -1478,7 +1497,7 @@ class AutoPipette:
         )
         if rise < 0:
             raise ValueError(f"air_gap_rise must be >= 0 mm, got {rise:g}")
-        coor_source = self.location_manager.get_coordinate(source, src_row, src_col)
+        coor_source = self.get_deck_coordinate(source, src_row, src_col)
         loc_source = self.location_manager.locations[source]
 
         if isinstance(loc_source, Coordinate):
@@ -1602,7 +1621,7 @@ class AutoPipette:
             ValueError: If destination is not a plate with dipping strategy.
             NotALocationError: If ``dest`` is not a defined location.
         """  # ruff: ignore[docstring-extraneous-exception]
-        coor_dest = self.location_manager.get_coordinate(dest, dest_row, dest_col)
+        coor_dest = self.get_deck_coordinate(dest, dest_row, dest_col)
         loc_dest = self.location_manager.locations[dest]
 
         if isinstance(loc_dest, Coordinate):
