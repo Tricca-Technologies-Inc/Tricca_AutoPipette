@@ -409,14 +409,6 @@
             "well_diameter": 16.6
         },
         {
-            "name": "waste_container_p1000",
-            "type": "waste_container",
-            "x": 11.300000000000011,
-            "y": 50.5,
-            "z": 0,
-            "dip_top": 92
-        },
-        {
             "name": "tipbox_p1000",
             "type": "tipbox",
             "x": 48,
