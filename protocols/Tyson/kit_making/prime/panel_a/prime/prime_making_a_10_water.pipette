@@ -6,15 +6,15 @@ home
 # This protocol uses the Tyson1000 liquid profile's air gaps
 
 
-pipette 465.2 --tip_end keep WATER KIT1 --tipbox tipbox --prewet 5
-pipette 465.2 --tip_end keep WATER KIT1 --tipbox tipbox
-pipette 465.2 --tip_end keep WATER KIT1 --tipbox tipbox
-pipette 465.2 --tip_end keep WATER KIT1 --tipbox tipbox
-pipette 465.2 --tip_end keep WATER KIT1 --tipbox tipbox
-pipette 465.2 --tip_end keep WATER KIT1 --tipbox tipbox
-pipette 465.2 --tip_end keep WATER KIT1 --tipbox tipbox
-pipette 465.2 --tip_end keep WATER KIT1 --tipbox tipbox
-pipette 465.2 --tip_end keep WATER KIT1 --tipbox tipbox
-pipette 465.2 --tip_end keep WATER KIT1 --tipbox tipbox
-pipette 465.2 --tip_end keep WATER KIT1 --tipbox tipbox
-pipette 465.2 WATER KIT1 --tipbox tipbox
+pipette 465.2 --tip_end keep WATER KIT1 --prewet 5
+pipette 465.2 --tip_end keep WATER KIT1 
+pipette 465.2 --tip_end keep WATER KIT1 
+pipette 465.2 --tip_end keep WATER KIT1 
+pipette 465.2 --tip_end keep WATER KIT1 
+pipette 465.2 --tip_end keep WATER KIT1 
+pipette 465.2 --tip_end keep WATER KIT1 
+pipette 465.2 --tip_end keep WATER KIT1 
+pipette 465.2 --tip_end keep WATER KIT1 
+pipette 465.2 --tip_end keep WATER KIT1 
+pipette 465.2 --tip_end keep WATER KIT1 
+pipette 465.2 WATER KIT1 
