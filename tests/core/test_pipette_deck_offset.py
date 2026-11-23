@@ -173,6 +173,30 @@ class TestGetDeckCoordinate:
         assert shifted.y == pytest.approx(raw.y + 2.0)
         assert shifted.z == pytest.approx(raw.z + 1.0)
 
+    def test_negative_z_offset_clamps_to_zero(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        """A negative z offset on a z=0 safe-travel coordinate stays at 0."""
+        ap = pipette_with_plates
+        _set_offset(ap, z=-42.0)
+
+        # plate_a fixture has z=5.0 on its wells; z=5 - 42 would be negative
+        # but a safe-travel coord of z=0 should clamp to 0, not error
+        shifted = ap.get_deck_coordinate("plate_a", row=0, col=0)
+        assert shifted.z == pytest.approx(max(0.0, 5.0 - 42.0))
+        assert shifted.z >= 0.0
+
+    def test_negative_z_offset_partial_clamp(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        """A z offset that only partially reduces z stays above 0."""
+        ap = pipette_with_plates
+        _set_offset(ap, z=-3.0)
+
+        # plate_a wells are at z=5.0; 5.0 - 3.0 = 2.0, no clamping needed
+        shifted = ap.get_deck_coordinate("plate_a", row=0, col=0)
+        assert shifted.z == pytest.approx(2.0)
+
     def test_forwards_row_col_to_location_manager(
         self, pipette_with_plates: AutoPipette
     ) -> None:

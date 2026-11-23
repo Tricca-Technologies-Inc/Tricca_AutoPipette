@@ -759,7 +759,11 @@ class AutoPipette:
         off = self.pipette_model.deck_offset
         if off.x == 0.0 and off.y == 0.0 and off.z == 0.0:
             return coor
-        return coor.generate_offset(dx=off.x, dy=off.y, dz=off.z)
+        # Clamp Z to 0 after applying the offset: a negative z offset on a
+        # safe-travel coordinate (z=0) would go below the floor, but z=0 is
+        # always a valid safe travel height with any tip attached.
+        new_z = max(0.0, coor.z + off.z)
+        return coor.generate_offset(dx=off.x, dy=off.y, dz=new_z - coor.z)
     
     def _check_limits(self, coordinate: Coordinate, axes: str = "xyz") -> None:
         """Refuse absolute moves outside the gantry's configured limits."""
