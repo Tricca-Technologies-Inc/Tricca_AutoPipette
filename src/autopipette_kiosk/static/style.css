@@ -273,11 +273,10 @@ header {
   color: var(--muted);
 }
 
-/* ── Run page — single column, protocol list on top ── */
+/* ── Run page — full page, single column ── */
 #page-run.active {
-  grid-template-columns: 1fr;
-  grid-template-rows: 160px 1fr;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ── Protocols page ── */
@@ -475,6 +474,9 @@ header {
   padding: 14px 16px;
   gap: 14px;
   overflow-y: auto;
+  flex: 1;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Selection display — compact single line */
@@ -665,8 +667,13 @@ header {
 .run-controls button:disabled { opacity: 0.4; cursor: not-allowed; }
 .run-control-note, .run-control-feedback { color: var(--muted); font-size: 12px; }
 .run-control-feedback:empty { display: none; }
-.progress-label { margin-top: 10px; color: var(--muted); font-size: 12px; }
-#progressBar { width: 100%; height: 10px; accent-color: var(--accent); }
+.progress-label { color: var(--muted); font-size: 13px; text-align: center; }
+#progressBar {
+  width: 100%;
+  height: 16px;
+  accent-color: var(--accent);
+  border-radius: 8px;
+}
 
 /* ── Commands page ── */
 #page-commands.active {

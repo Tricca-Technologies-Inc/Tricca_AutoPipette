@@ -66,18 +66,16 @@ html.desktop-mode .bp-btn {
 
 /* ── Run page ── */
 html.desktop-mode #page-run.active {
-  grid-template-columns: 320px 1fr;
-  grid-template-rows: 1fr;
-}
-
-html.desktop-mode .protocol-panel {
-  border-right: 1px solid var(--border);
-  border-bottom: none;
+  display: flex;
+  flex-direction: column;
 }
 
 html.desktop-mode .run-panel {
   padding: 32px 36px;
   gap: 28px;
+  max-width: 720px;
+  align-self: center;
+  width: 100%;
 }
 
 html.desktop-mode .selection-display {
