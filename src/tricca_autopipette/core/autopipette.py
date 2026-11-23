@@ -749,6 +749,24 @@ class AutoPipette:
             )
         )
         self.gcode_buffers.add(gc.manual_stepper(stepper, set_position=0))
+    def _apply_deck_offset(self, coor: Coordinate) -> Coordinate:
+        """Apply the active pipette's deck offset to a coordinate.
+
+        Z is clamped to 0 so a negative offset on a safe-travel coordinate
+        (z=0) never goes below the floor.
+
+        Args:
+            coor: Raw coordinate from the location manager.
+
+        Returns:
+            Coordinate shifted by ``pipette_model.deck_offset``.
+        """
+        off = self.pipette_model.deck_offset
+        if off.x == 0.0 and off.y == 0.0 and off.z == 0.0:
+            return coor
+        new_z = max(0.0, coor.z + off.z)
+        return coor.generate_offset(dx=off.x, dy=off.y, dz=new_z - coor.z)
+
     def get_deck_coordinate(
         self,
         name: str,
@@ -756,14 +774,7 @@ class AutoPipette:
         col: int | None = None,
     ) -> Coordinate:
         coor = self.location_manager.get_coordinate(name, row, col)
-        off = self.pipette_model.deck_offset
-        if off.x == 0.0 and off.y == 0.0 and off.z == 0.0:
-            return coor
-        # Clamp Z to 0 after applying the offset: a negative z offset on a
-        # safe-travel coordinate (z=0) would go below the floor, but z=0 is
-        # always a valid safe travel height with any tip attached.
-        new_z = max(0.0, coor.z + off.z)
-        return coor.generate_offset(dx=off.x, dy=off.y, dz=new_z - coor.z)
+        return self._apply_deck_offset(coor)
     
     def _check_limits(self, coordinate: Coordinate, axes: str = "xyz") -> None:
         """Refuse absolute moves outside the gantry's configured limits."""
@@ -1039,7 +1050,12 @@ class AutoPipette:
 
         self._check_drawer_of(self.location_manager.waste_container)
         self.note_action("Disposing tip to waste container")
-        curr_coor = self.location_manager.waste_container.next()
+        # Apply deck offset: the waste container is shared between pipettes,
+        # so the P1000 ejects into the same physical container as the P100
+        # but from its own nozzle position.
+        curr_coor = self._apply_deck_offset(
+            self.location_manager.waste_container.next()
+        )
         self.move_to(curr_coor)
         self.dip_z_down(
             curr_coor, self.location_manager.waste_container.get_dip_distance(vol=None)

@@ -284,6 +284,40 @@ class TestDispenseDeckOffset:
 # ── Seam 5: tipbox coordinates are NOT offset ─────────────────────────────────
 
 
+class TestWasteContainerOffset:
+    def test_dispose_tip_coordinate_is_shifted(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        """The move to the waste container reflects the deck offset."""
+        ap = pipette_with_plates
+        ap.next_tip()
+        _gcode_lines(ap)  # drain tip-pickup G-code
+
+        # Aspirate so we have a valid tip state for dispose
+        _set_offset(ap, x=0.0)
+        ap.aspirate_volume(10.0, "plate_a", src_row=0, src_col=0)
+        ap.dispense_volume("plate_a", volume=10.0, dest_row=0, dest_col=1)
+        _gcode_lines(ap)  # drain
+
+        # dispose with zero offset — record waste X
+        ap.dispose_tip()
+        x_zero = _first_xy_x(_gcode_lines(ap))
+
+        # Pick up another tip, repeat with offset
+        _set_offset(ap, x=0.0)
+        ap.next_tip()
+        _gcode_lines(ap)
+        ap.aspirate_volume(10.0, "plate_a", src_row=0, src_col=0)
+        ap.dispense_volume("plate_a", volume=10.0, dest_row=0, dest_col=1)
+        _gcode_lines(ap)
+
+        _set_offset(ap, x=20.0)
+        ap.dispose_tip()
+        x_offset = _first_xy_x(_gcode_lines(ap))
+
+        assert x_offset == pytest.approx(x_zero + 20.0, abs=0.01)
+
+
 class TestTipboxNotOffset:
     def test_next_tip_coordinate_is_not_shifted(
         self, pipette_with_plates: AutoPipette
