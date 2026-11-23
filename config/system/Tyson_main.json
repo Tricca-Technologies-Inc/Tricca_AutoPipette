@@ -4,7 +4,7 @@
   "gantry": "Tyson_gantry",
   "pipette": "TysonP100",
   "liquids": "Tyson100_liquids",
-  "locations": "Tyson100_locations",
+  "locations": "Tyson_locations",
   "network": {
     "hostname": "tyson.local",
     "ip": "127.0.0.1:7125",
