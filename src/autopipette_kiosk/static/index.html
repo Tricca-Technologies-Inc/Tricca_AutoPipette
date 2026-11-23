@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="dark">
 <style>html { background: #000; }</style>  <!-- inline in <head>, before any linked CSS -->
 <title>AutoPipette</title>
-<link rel="stylesheet" href="/static/style.css?v=11">
+<link rel="stylesheet" href="/static/style.css?v=12">
 <link rel="stylesheet" href="/static/style-desktop.css?v=1">
 </head>
 <body>
@@ -21,6 +21,9 @@
     </div>
     <span class="logo-sub" style="margin-left:4px">/ kiosk</span>
     <div class="header-spacer"></div>
+    <div class="pipette-pill" id="pipettePill" title="Active pipette — tap to switch">
+      <span id="pipettePillLabel">…</span>
+    </div>
     <div class="status-pill idle" id="statusPill">
       <div class="status-pill-dot" id="statusPillDot"></div>
       <span id="statusPillLabel">Idle</span>
@@ -39,6 +42,13 @@
       <span id="connLabel">connecting</span>
     </div>
   </header>
+
+  <!-- Pipette switcher dropdown — toggled by the pill in the header -->
+  <div class="pipette-switcher" id="pipetteSwitcher">
+    <div class="pipette-switcher-title">Switch pipette</div>
+    <div id="pipetteOptions"><!-- populated by pipette.js --></div>
+    <div class="pipette-switcher-note">Home required after switching.</div>
+  </div>
 
   <!-- Tab bar (issue #25) -- a data-driven registry lives in app.js; this
        markup is the two tabs that registry currently knows about. -->
@@ -333,6 +343,7 @@
 </div>
 
 <script src="/static/layout.js?v=1"></script>
+<script src="/static/pipette.js?v=1"></script>
 <script src="/static/app.js?v=3"></script>
 <script src="/static/run.js?v=3"></script>
 <script src="/static/move.js?v=3"></script>

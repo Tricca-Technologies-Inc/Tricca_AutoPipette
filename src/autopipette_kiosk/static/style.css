@@ -1704,3 +1704,92 @@ html.desktop-mode .layout-toggle-btn {
   padding: 0 10px;
   font-size: 12px;
 }
+
+/* ── Pipette indicator pill ── */
+.pipette-pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s, border-color 0.12s;
+  white-space: nowrap;
+}
+
+.pipette-pill:hover { background: var(--border); }
+.pipette-pill.switching { border-color: var(--running); color: var(--running); }
+
+/* Pipette switcher panel — shown as a dropdown below the pill */
+.pipette-switcher {
+  display: none;
+  position: absolute;
+  top: 52px;
+  right: 12px;
+  z-index: 100;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  gap: 8px;
+  flex-direction: column;
+  min-width: 200px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+
+.pipette-switcher.open { display: flex; }
+
+.pipette-switcher-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0 4px;
+}
+
+.pipette-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: var(--tap-min);
+  padding: 0 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: monospace;
+  cursor: pointer;
+  transition: background 0.12s;
+  text-align: left;
+  width: 100%;
+}
+
+.pipette-option:hover { background: var(--border); }
+
+.pipette-option.active {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+  color: var(--accent);
+}
+
+.pipette-option.active::after {
+  content: "✓";
+  margin-left: auto;
+  font-size: 12px;
+}
+
+.pipette-switcher-note {
+  font-size: 11px;
+  color: var(--muted);
+  padding: 0 4px;
+  line-height: 1.4;
+}
