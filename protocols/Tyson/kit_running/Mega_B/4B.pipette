@@ -1,104 +1,104 @@
 #Adding 25uL of the processed sample to the LC/MS-MS plate
 #
-select_setup Tyson100_system.json
-init
+load_pipette TysonP100.json
+home
 #
 # This protocol uses the Tyson100 liquid profile's air gaps explicitly:
 # pre-air 30 µL, post-air 5 µL. Each prewet cycle uses the transfer volume.
 
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
-pipette 25 SAMPLEPLATE_DIP COLPLATE --tipbox tipbox --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
+pipette 25 SAMPLEPLATE_DIP COLPLATE --prewet 1
