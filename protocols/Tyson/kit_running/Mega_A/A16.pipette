@@ -1,100 +1,100 @@
-select_setup Tyson1000_system.json
-init
+load_pipette TysonP1000.json
+home
 #
 
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox --prewet 5
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
-pipette 490 --tip_end keep DFIBUF DFIPLATE --tipbox tipbox
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000 --prewet 5
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
+pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000
 pipette 490 DFIBUF DFIPLATE --dispense_vol 490
