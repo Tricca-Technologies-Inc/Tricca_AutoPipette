@@ -250,6 +250,87 @@ class CylinderDipStrategy(DipStrategy):
             raise ValueError("Cylinder strategy requires dip_btm")
 
 
+class FStubeDipStrategy(DipStrategy):
+    """Track the liquid level in a 0.5 mL screw-top tube's conical section.
+
+    The tube narrows toward the bottom, so a fixed volume drops the level
+    further as the tube empties. Two cubic fits, measured on the rig, map
+    liquid height above the tube bottom (mm) to volume (uL) and back. They
+    are separate fits rather than exact inverses, so a long run of small
+    draws can drift by a few tenths of a millimetre. The `dip_btm` clamp
+    still bounds the depth.
+
+    The strategy assumes the tube starts filled to `FILL_HEIGHT_MM`, with
+    the liquid surface at the well's `dip_top`.
+    """
+
+    #: Liquid height above the tube bottom when the surface is at `dip_top`.
+    FILL_HEIGHT_MM = 11.17
+    #: Volume (uL) from height h (mm): a0 + a1*h + a2*h^2 + a3*h^3.
+    VOLUME_FIT = (-97.8, 50.8, -6.85, 0.373)
+    #: Height (mm) from volume v (uL): b0 + b1*v + b2*v^2 + b3*v^3.
+    HEIGHT_FIT = (2.61, 0.0836, 1e-4, -1.83e-6)
+
+    @staticmethod
+    def _cubic(coeffs: tuple[float, float, float, float], x: float) -> float:
+        return sum(c * x**i for i, c in enumerate(coeffs))
+
+    def calculate_dip_distance(self, well: Well, volume: float) -> float:
+        """Lower the dip distance by the level drop that `volume` causes.
+
+        Args:
+            well: The tube. Must have `dip_btm` defined.
+            volume: Volume of liquid being aspirated, in microliters.
+
+        Returns:
+            Updated dip distance in millimeters, clamped to `dip_btm`.
+
+        Raises:
+            ValueError: If `well.dip_btm` is None.
+
+        Example:
+            >>> coord = Coordinate(x=10, y=20, z=5)
+            >>> well = Well(coor=coord, dip_top=10.0, dip_btm=30.0)
+            >>> round(FStubeDipStrategy().calculate_dip_distance(well, 50.0), 3)
+            11.867
+        """
+        if well.dip_btm is None:
+            raise ValueError("FStube strategy requires dip_btm")
+
+        height_now = well.dip_top + self.FILL_HEIGHT_MM - well.dip_curr
+        volume_now = self._cubic(self.VOLUME_FIT, height_now)
+        # Past empty the height fit turns back up, which would raise the tip
+        # out of the liquid; an over-draw stops at the empty-tube level.
+        height_new = self._cubic(self.HEIGHT_FIT, max(0.0, volume_now - volume))
+
+        well.dip_curr += height_now - height_new
+        well.dip_curr = min(well.dip_curr, well.dip_btm)
+        return well.dip_curr
+
+    def validate_well_config(
+        self, well_diameter: float | None, dip_btm: float | None
+    ) -> None:
+        """Require `dip_btm`; the tube's shape comes from the fits, not a diameter.
+
+        Args:
+            well_diameter: Unused: the tube profile is fixed.
+            dip_btm: Distance from top to bottom of well in millimeters, or None.
+
+        Raises:
+            ValueError: If dip_btm is None.
+
+        Example:
+            >>> FStubeDipStrategy().validate_well_config(None, 30.0)  # Valid
+            >>> FStubeDipStrategy().validate_well_config(None, None)
+            Traceback (most recent call last):
+                ...
+            ValueError: FStube strategy requires dip_btm
+        """
+        _ = well_diameter
+        if dip_btm is None:
+            raise ValueError("FStube strategy requires dip_btm")
+
+
 class StrategyType(StrEnum):
     """Available dip strategy types.
 
@@ -259,10 +340,12 @@ class StrategyType(StrEnum):
     Attributes:
         SIMPLE: Always returns the initial dip distance without adjustments.
         CYLINDER: Adjusts dip distance based on liquid volume in cylindrical wells.
+        FSTUBE: Follows the liquid level down a 0.5 mL screw-top tube's cone.
     """
 
     SIMPLE = "simple"
     CYLINDER = "cylinder"
+    FSTUBE = "fstube"
 
 
 class StrategyRegistry:
@@ -281,6 +364,7 @@ class StrategyRegistry:
     _strategies: ClassVar[dict[StrategyType, DipStrategy]] = {
         StrategyType.SIMPLE: SimpleDipStrategy(),
         StrategyType.CYLINDER: CylinderDipStrategy(),
+        StrategyType.FSTUBE: FStubeDipStrategy(),
     }
 
     @classmethod
