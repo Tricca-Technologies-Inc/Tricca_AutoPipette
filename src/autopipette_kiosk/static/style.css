@@ -46,6 +46,9 @@ html, body {
   touch-action: manipulation;               /* faster tap response */
 }
 
+/* Ensure the HTML hidden attribute always wins over display rules */
+[hidden] { display: none !important; }
+
 /* ── Shell grid: header 48px + tabs 44px = 92px chrome ── */
 .shell {
   display: flex;
