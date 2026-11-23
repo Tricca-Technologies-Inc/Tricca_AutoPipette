@@ -51,6 +51,7 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     GcodePrintArgs,
     HomeArgs,
     LoadLocationsArgs,
+    LoadPipetteArgs,
     MoveArgs,
     MoveLocArgs,
     MoveRelArgs,
@@ -5246,6 +5247,11 @@ _LINE_DISPATCH: dict[str, _LineCommand] = {
         TAPCmdParsers.parser_load_locations,
         LoadLocationsArgs,
         AutoPipetteService.load_locations,
+    ),
+    "load_pipette": _LineCommand(
+        TAPCmdParsers.parser_load_pipette,
+        LoadPipetteArgs,
+        lambda self, args: AutoPipetteService.load_pipette(self, args.filename),
     ),
     "unload_locations": _LineCommand(
         TAPCmdParsers.parser_unload_locations,

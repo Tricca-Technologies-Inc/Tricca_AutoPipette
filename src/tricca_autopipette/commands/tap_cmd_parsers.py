@@ -373,6 +373,17 @@ class LoadLocationsArgs:
 
 
 @dataclass
+class LoadPipetteArgs:
+    """Arguments for the ``load_pipette`` protocol command.
+
+    Attributes:
+        filename: Pipette config file to load from ``config/pipettes/``.
+    """
+
+    filename: str
+
+
+@dataclass
 class ResetTipsArgs:
     """Arguments for the ``reset_tips`` command.
 
@@ -981,6 +992,16 @@ class TAPCmdParsers:
         "--replace",
         action="store_true",
         help="Clear all existing locations before loading",
+    )
+
+    parser_load_pipette: Cmd2ArgumentParser = Cmd2ArgumentParser(
+        description=(
+            "Swap the active pipette mid-protocol. Invalidates homing — a "
+            "home command must follow before any movement."
+        )
+    )
+    parser_load_pipette.add_argument(
+        "filename", type=str, help="Pipette config file under config/pipettes/"
     )
 
     parser_reset_tips: Cmd2ArgumentParser = Cmd2ArgumentParser(
