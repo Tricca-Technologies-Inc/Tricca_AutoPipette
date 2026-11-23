@@ -6,7 +6,7 @@ below will save you a round-trip.
 
 ## Before you start
 
-- **Read `CLAUDE.md`** at the repo root first. It's the authoritative,
+- **Read `AGENTS.md`** at the repo root first. It's the authoritative,
   up-to-date architecture description (components, the `tapd` daemon, the
   config system, code style) — more detailed and more current than this file.
 - **Check the backlog.** Planned-but-unimplemented work lives as GitHub
@@ -26,7 +26,13 @@ Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then:
 
 ```bash
 uv sync --extra dev    # add --extra browser-test for the kiosk browser tests
+uv run pre-commit install --install-hooks -t pre-commit -t pre-push -t commit-msg
 ```
+
+The hooks run ruff on every commit, pyright and pytest on every push, refuse
+editor backups and logs, and require a Conventional Commit message
+(`type(scope): summary`). CI repeats all of it, so a commit made without
+them (for example in the GitHub web editor) still gets checked.
 
 Dependency versions are locked in the committed `uv.lock`. After changing
 `dependencies` or an extra in `pyproject.toml`, run `uv lock` and commit the
@@ -80,16 +86,27 @@ docs-affecting PR, not the plain build.)
 
 ## Code style
 
-Briefly, since `CLAUDE.md`'s "Code style" section is authoritative: Python
+Briefly, since `AGENTS.md`'s "Code style" section is authoritative: Python
 3.14+, `from __future__ import annotations`, Google-style docstrings
 enforced repo-wide via ruff's `D`/`DOC` rules (only `tests/**` is exempt from
 `D`, none are exempt from `DOC`), pyright strict mode. Match the surrounding
 file's docstring density and naming rather than introducing a new style
 locally.
 
+## Using an AI assistant
+
+Any AI coding tool is fine. The rules are the same for all of them, and
+they live in `AGENTS.md`, which Codex, Copilot, Cursor, Gemini and most
+other agents load automatically (`CLAUDE.md` is a symlink to it). If your tool
+doesn't read `AGENTS.md` by itself, point it there first. Hooks and CI
+check the result, not which tool produced it.
+
 ## Opening a PR
 
-- Branch off `main`; don't push directly to it.
+- Branch off `main` and open the PR against `main`; don't push directly
+  to it. One concern per PR: code, rig config and protocols separately.
+- PR titles are Conventional Commits too (`fix(pipette): ...`), since a
+  squash merge turns the title into the commit on `main`.
 - If the PR closes an issue, say so in the description (`Closes #NN`) so it
   closes automatically on merge.
 - The PR template's verification checklist is the minimum bar — check off

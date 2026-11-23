@@ -1,0 +1,9 @@
+# Reviewers GitHub requests automatically. With the main ruleset's
+# "require code owner review" on, these paths can't merge without one.
+# Hardware control, rig config, deployment and CI/workflow rules:
+/src/        @Meta-James
+/config/     @Meta-James
+/systemd/    @Meta-James
+/.github/    @Meta-James
+/AGENTS.md   @Meta-James
+/.pre-commit-config.yaml @Meta-James

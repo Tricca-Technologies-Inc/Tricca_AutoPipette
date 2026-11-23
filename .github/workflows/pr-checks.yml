@@ -1,0 +1,45 @@
+name: PR checks
+
+# Workflow rules from AGENTS.md that only make sense per PR. Kept apart from
+# ci.yml so editing a title or a label re-runs these, not the whole suite.
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+jobs:
+  # Squash merges make the PR title the commit on main.
+  pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Title is a Conventional Commit
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          re='^(feat|fix|docs|chore|refactor|test|ci|build|perf|style|revert)(\([A-Za-z0-9./, -]+\))?!?: [^ ]'
+          if [[ ! "$TITLE" =~ $re ]]; then
+            echo "::error::PR title must be 'type(scope): summary', e.g. 'fix(pipette): clamp prewet raise'. Got: $TITLE"
+            exit 1
+          fi
+
+  # Test-first (docs/agents/tdd.md): a change under src/ normally brings a
+  # test with it. Config, wiring or docstring-only changes that genuinely
+  # need none get the `no-tests-needed` label from a maintainer.
+  tests-touched:
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'no-tests-needed') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: src/ changes come with tests/ changes
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          changed=$(git diff --name-only "$BASE"...HEAD)
+          if grep -q '^src/' <<<"$changed" && ! grep -q '^tests/' <<<"$changed"; then
+            echo "::error::This PR changes src/ but no tests/. Write the test first (docs/agents/tdd.md), or ask a maintainer for the 'no-tests-needed' label."
+            exit 1
+          fi

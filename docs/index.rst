@@ -9,7 +9,7 @@ interactive shell (``tap``) and a FastAPI "kiosk" touchscreen web UI.
 
 This site is generated API reference, rendered straight from the docstrings
 in ``src/``. For architecture, the command-line workflow, and how the pieces
-fit together, start with the repository's ``CLAUDE.md`` -- it is the
+fit together, start with the repository's ``AGENTS.md`` -- it is the
 authoritative system description and isn't duplicated here.
 
 .. toctree::
