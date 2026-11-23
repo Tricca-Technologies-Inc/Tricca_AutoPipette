@@ -1,114 +1,114 @@
 # Adding 150uL of ice cold methanol to each flip top tube for protein precipitation
-select_setup Tyson1000_system.json
-init
+load_pipette TysonP1000.json
+home
 #
 # This protocol uses the Tyson1000 liquid profile's air gaps
 
 
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox --prewet 5
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000 --prewet 5
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
 
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
 
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
 
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS1_FULL --tipbox tipbox
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
+pipette 150 --tip_end keep ICEM STANS1_FULL_p1000
 
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
 
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
 
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
 
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS2 --tipbox tipbox
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
+pipette 150 --tip_end keep ICEM STANS2_p1000
 
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 --tip_end keep ICEM STANS3_p1000
 
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 --tip_end keep ICEM STANS3_p1000
 
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 --tip_end keep ICEM STANS3_p1000
 
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 --tip_end keep ICEM STANS3 --tipbox tipbox
-pipette 150 ICEM STANS3 --tipbox tipbox
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 --tip_end keep ICEM STANS3_p1000
+pipette 150 ICEM STANS3_p1000
