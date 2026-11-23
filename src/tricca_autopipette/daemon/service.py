@@ -1977,7 +1977,6 @@ class AutoPipetteService:
             return CommandResult(ok=False, message=str(e))
         return CommandResult(ok=True, message=f"Unloaded liquid: {liquid_name}")
 
-    @refuse_while_running
     def load_pipette(self, filename: str) -> CommandResult:
         """Make a pipette profile the active pipette, live.
 
