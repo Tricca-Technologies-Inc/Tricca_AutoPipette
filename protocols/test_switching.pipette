@@ -1,13 +1,16 @@
 # test protocol to test switching between pipettes in a protocol
 
 load_pipette TysonP100.json
+home all
 
-pipette 50.0 --src_row 0 --src_col 0 manu2 KIT1 --prewet 1 --prewet_vol 50.0
+pipette 50.0 --src_row 0 --src_col 0 manu2 KIT1 --prewet 1
 
 load_pipette TysonP1000.json
+home all
 
 pipette 150 WATER KIT1_p1000 --prewet 5
 
 load_pipette TysonP100.json
+home all
 
 pipette 50.0 --src_row 0 --src_col 0 manu2 KIT1 --prewet 1
