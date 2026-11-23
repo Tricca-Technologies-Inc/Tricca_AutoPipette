@@ -52,6 +52,14 @@ html, body {
   grid-template-rows: 48px 44px auto 1fr;
   height: 100vh;
   overflow: hidden;
+  /* Ensure the 1fr page content row is bounded so child pages can scroll */
+  grid-template-columns: 1fr;
+}
+
+/* The 1fr content row must clip, not grow, so inner pages scroll within it */
+.shell > .page {
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* ── Header ── */
@@ -261,15 +269,16 @@ header {
 /* ── Pages ── */
 .page { display: none; overflow: hidden; }
 
-/* Touch-scroll fix: pages that stack vertically need explicit scroll
-   on touch screens. overflow-y: auto can be ignored by some WebKit
-   builds on small touch displays; scroll + momentum scrolling is safer. */
+/* Touch-scroll fix: pages must be height-bounded within the grid cell
+   so overflow-y: scroll actually creates a scrollable region.
+   Without height: 100% the page div grows to fit content and never scrolls. */
 #page-move.active,
 #page-tips.active,
 #page-deck.active,
 #page-settings.active,
 #page-calibrate.active,
 #page-commands.active {
+  height: 100%;
   overflow-y: scroll;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
