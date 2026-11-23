@@ -1,6 +1,6 @@
 #Adding 75uL of Reagent ABC to each well of the plate
 load_pipette TysonP100.json
-home
+home all
 #
 # This protocol uses the Tyson100 liquid profile's air gaps
 
