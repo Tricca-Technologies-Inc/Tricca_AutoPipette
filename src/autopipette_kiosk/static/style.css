@@ -55,6 +55,13 @@ html, body {
   overflow: hidden;
 }
 
+/* main is the 1fr row — it must be bounded so pages inside can scroll */
+.shell > main {
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
 /* ── Header ── */
 header {
   display: flex;
@@ -260,28 +267,24 @@ header {
 .bp-btn.abort    { background: var(--error); color: #2a0a0a; }
 
 /* ── Pages ── */
-.page { display: none; overflow: hidden; }
+.page { display: none; }
 
-/* Grid children ignore overflow unless min-height: 0 is set — without it
-   they grow to fit content and never scroll. This is the standard CSS grid
-   scroll fix. display: grid is kept so each page can use its own grid layout. */
+/* Active pages fill the <main> container absolutely so they are
+   always exactly viewport-height minus chrome — the correct bounded
+   size for overflow-y scroll to work. */
 .page.active {
-  display: grid;
-  min-height: 0;
-}
-
-/* Scrollable pages: overflow-y: auto works on desktop; touch-action: pan-y
-   ensures Chromium passes vertical swipes through as scroll, not zoom. */
-#page-move.active,
-#page-tips.active,
-#page-deck.active,
-#page-settings.active,
-#page-calibrate.active,
-#page-commands.active {
+  display: block;
+  position: absolute;
+  inset: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
   touch-action: pan-y;
+}
+
+/* Run page is a special two-panel layout — override display back to grid */
+#page-run.active {
+  display: grid;
 }
 
 /* ── Shared panel header ── */
