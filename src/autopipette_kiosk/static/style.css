@@ -50,15 +50,8 @@ html, body {
 .shell {
   display: grid;
   grid-template-rows: 48px 44px auto 1fr;
-  height: 100vh;
-  overflow: hidden;
-  /* Ensure the 1fr page content row is bounded so child pages can scroll */
   grid-template-columns: 1fr;
-}
-
-/* The 1fr content row must clip, not grow, so inner pages scroll within it */
-.shell > .page {
-  min-height: 0;
+  height: 100vh;
   overflow: hidden;
 }
 
@@ -269,22 +262,27 @@ header {
 /* ── Pages ── */
 .page { display: none; overflow: hidden; }
 
-/* Touch-scroll fix: pages must be height-bounded within the grid cell
-   so overflow-y: scroll actually creates a scrollable region.
-   Without height: 100% the page div grows to fit content and never scrolls. */
+/* Grid children ignore overflow unless min-height: 0 is set — without it
+   they grow to fit content and never scroll. This is the standard CSS grid
+   scroll fix. display: grid is kept so each page can use its own grid layout. */
+.page.active {
+  display: grid;
+  min-height: 0;
+}
+
+/* Scrollable pages: overflow-y: auto works on desktop; touch-action: pan-y
+   ensures Chromium passes vertical swipes through as scroll, not zoom. */
 #page-move.active,
 #page-tips.active,
 #page-deck.active,
 #page-settings.active,
 #page-calibrate.active,
 #page-commands.active {
-  height: 100%;
-  overflow-y: scroll;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
   touch-action: pan-y;
 }
-.page.active { display: grid; }
 
 /* ── Shared panel header ── */
 .panel-header {
