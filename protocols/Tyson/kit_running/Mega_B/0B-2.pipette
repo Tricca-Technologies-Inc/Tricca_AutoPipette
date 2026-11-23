@@ -1,6 +1,6 @@
 # Adding 150uL of ice cold methanol to each flip top tube for protein precipitation
 load_pipette TysonP1000.json
-home
+home all
 #
 # This protocol uses the Tyson1000 liquid profile's air gaps
 
