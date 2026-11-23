@@ -21,8 +21,6 @@
     document.getElementById('protocolDrawer').hidden = false;
     document.getElementById('findingsList').innerHTML = '';
     updateDrawerConfirmBtn();
-    // Kick off list load if first open
-    if (!protocols.length) loadProtocols();
   }
 
   function closeDrawer() {
@@ -338,4 +336,6 @@
 
   App.onStatus(renderStatusCard);
   App.registerPage('run', {});
+
+  loadProtocols();
 })();
