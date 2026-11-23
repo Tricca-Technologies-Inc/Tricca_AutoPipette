@@ -80,45 +80,64 @@
   <main>
     <!-- Run page -->
     <div class="page active" id="page-run">
-      <div class="protocol-panel">
-        <div class="panel-header">Protocols</div>
-        <div class="protocol-list" id="protocolList">
-          <div class="empty-state">Loading protocols…</div>
-        </div>
-      </div>
-
       <div class="run-panel">
-        <div class="selection-display">
-          <div class="selection-label">Selected protocol</div>
-          <div class="selection-name placeholder" id="selectionName">Select a protocol from the list</div>
+
+        <!-- State A: no protocol loaded -->
+        <div class="run-empty-state" id="runEmptyState">
+          <div class="run-empty-icon">▶</div>
+          <div class="run-empty-label">No protocol loaded</div>
+          <button class="load-protocol-btn" id="loadProtocolBtn">Load Protocol</button>
         </div>
 
-        <div class="run-actions">
-          <button class="run-btn" id="runBtn" disabled>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path id="runBtnIcon" d="M8 5v14l11-7z"/></svg>
-            <span id="runBtnLabel">Run protocol</span>
-          </button>
-          <button class="check-btn" id="checkBtn" disabled>Check</button>
-        </div>
-
-        <div class="run-controls" aria-label="Protocol controls">
-          <button id="cancelBtn" disabled>Cancel</button>
-        </div>
-        <div class="run-control-note">Cancel is not an emergency stop.</div>
-        <div class="run-control-feedback" id="runControlFeedback" role="status"></div>
-
-        <div class="findings-list" id="findingsList"></div>
-
-        <div class="status-card">
-          <div class="status-icon idle" id="statusIcon">○</div>
-          <div class="status-body">
-            <div class="status-state idle" id="statusState">Idle</div>
-            <div class="status-msg" id="statusMsg">No protocol running</div>
-            <div class="progress-label" id="progressLabel"></div>
-            <progress id="progressBar" max="100" aria-label="Estimated G-code file progress" hidden></progress>
+        <!-- State B: protocol loaded / running -->
+        <div class="run-active-state" id="runActiveState" hidden>
+          <div class="run-protocol-header">
+            <div class="run-protocol-name" id="selectionName">—</div>
+            <button class="run-change-btn" id="changeProtocolBtn">Change</button>
           </div>
+
+          <div class="status-card">
+            <div class="status-icon idle" id="statusIcon">○</div>
+            <div class="status-body">
+              <div class="status-state idle" id="statusState">Idle</div>
+              <div class="status-msg" id="statusMsg">Ready to run</div>
+            </div>
+          </div>
+
+          <progress id="progressBar" max="100" aria-label="Estimated G-code file progress" hidden></progress>
+          <div class="progress-label" id="progressLabel"></div>
+
+          <div class="run-control-feedback" id="runControlFeedback" role="status"></div>
+
+          <div class="run-actions">
+            <button class="run-btn" id="runBtn" disabled>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path id="runBtnIcon" d="M8 5v14l11-7z"/></svg>
+              <span id="runBtnLabel">Run</span>
+            </button>
+            <button class="cancel-btn" id="cancelBtn" disabled>Cancel</button>
+          </div>
+          <div class="run-control-note">Cancel is not an emergency stop.</div>
         </div>
+
       </div>
+    </div>
+
+    <!-- Protocol picker drawer (shared, sits outside page flow) -->
+    <div class="protocol-drawer-overlay" id="protocolDrawerOverlay" hidden></div>
+    <div class="protocol-drawer" id="protocolDrawer" aria-label="Pick a protocol" hidden>
+      <div class="protocol-drawer-handle"></div>
+      <div class="protocol-drawer-header">
+        <span class="protocol-drawer-title">Pick a Protocol</span>
+        <button class="protocol-drawer-close" id="protocolDrawerClose" aria-label="Close">✕</button>
+      </div>
+      <div class="protocol-list" id="protocolList">
+        <div class="empty-state">Loading protocols…</div>
+      </div>
+      <div class="protocol-drawer-footer">
+        <button class="check-btn" id="checkBtn" disabled>Check</button>
+        <button class="confirm-protocol-btn" id="confirmProtocolBtn" disabled>Load</button>
+      </div>
+      <div class="findings-list" id="findingsList"></div>
     </div>
 
     <div class="page" id="page-commands">
@@ -345,7 +364,7 @@
 <script src="/static/layout.js?v=1"></script>
 <script src="/static/pipette.js?v=1"></script>
 <script src="/static/app.js?v=3"></script>
-<script src="/static/run.js?v=3"></script>
+<script src="/static/run.js?v=4"></script>
 <script src="/static/move.js?v=3"></script>
 <script src="/static/tips.js?v=3"></script>
 <script src="/static/deck.js?v=3"></script>

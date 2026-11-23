@@ -1,11 +1,10 @@
-// Run page: protocol list, run button, detailed status card.
+// Run page: clean run controls + bottom-sheet protocol picker.
 //
 // Subscribes to App.onStatus rather than owning any WebSocket connection or
-// run-status state itself (app.js owns both, since the header's compact
-// status pill and breakpoint banner need the same data regardless of which
-// tab is active -- see issue #25).
+// run-status state itself (app.js owns both).
 (() => {
   let selected = null;
+  let drawerSelected = null;   // selection staged inside the drawer (not yet confirmed)
   let protocols = [];
   let folder = '';
   let pendingAction = null;
@@ -13,7 +12,46 @@
   let pendingStart = null;
   let startTimer = null;
 
-  // ── protocol list ──────────────────────────────────────────────────────
+  // ── drawer open / close ───────────────────────────────────────────────
+  function openDrawer() {
+    // Sync drawer highlight to current confirmed selection
+    drawerSelected = selected;
+    renderList();
+    document.getElementById('protocolDrawerOverlay').hidden = false;
+    document.getElementById('protocolDrawer').hidden = false;
+    document.getElementById('findingsList').innerHTML = '';
+    updateDrawerConfirmBtn();
+    // Kick off list load if first open
+    if (!protocols.length) loadProtocols();
+  }
+
+  function closeDrawer() {
+    document.getElementById('protocolDrawerOverlay').hidden = true;
+    document.getElementById('protocolDrawer').hidden = true;
+    // Revert any unstaged drawer selection
+    drawerSelected = selected;
+  }
+
+  document.getElementById('loadProtocolBtn').addEventListener('click', openDrawer);
+  document.getElementById('changeProtocolBtn').addEventListener('click', openDrawer);
+  document.getElementById('protocolDrawerClose').addEventListener('click', closeDrawer);
+  document.getElementById('protocolDrawerOverlay').addEventListener('click', closeDrawer);
+
+  // Load & confirm from drawer
+  document.getElementById('confirmProtocolBtn').addEventListener('click', () => {
+    if (!drawerSelected) return;
+    selected = drawerSelected;
+    // Update the name display on the run page
+    document.getElementById('selectionName').textContent =
+      selected.slice(0, -'.pipette'.length).split('/').pop();
+    // Flip to active state
+    document.getElementById('runEmptyState').hidden = true;
+    document.getElementById('runActiveState').hidden = false;
+    renderStatusCard(App.getStatus());
+    closeDrawer();
+  });
+
+  // ── protocol list (renders inside drawer) ────────────────────────────
   async function loadProtocols() {
     try {
       const res = await fetch('/protocols');
@@ -49,7 +87,8 @@
       if (folder === 'legacy' || folder.startsWith('legacy/')) {
         const warning = document.createElement('div');
         warning.className = 'protocol-legacy-warning';
-        warning.textContent = 'Legacy protocols are unverified on hardware. Review the protocol and rig configuration before use.';
+        warning.textContent =
+          'Legacy protocols are unverified on hardware. Review the protocol and rig configuration before use.';
         list.appendChild(warning);
       }
     }
@@ -77,7 +116,7 @@
       const item = document.createElement('button');
       item.className = 'protocol-item';
       item.dataset.filename = protocol.filename;
-      item.classList.toggle('selected', selected === protocol.filename);
+      item.classList.toggle('selected', drawerSelected === protocol.filename);
       const icon = document.createElement('span');
       icon.className = 'protocol-icon';
       icon.textContent = protocol.name.slice(0, 2);
@@ -88,22 +127,22 @@
       ext.className = 'protocol-ext';
       ext.textContent = '.pipette';
       item.append(icon, name, ext);
-      item.addEventListener('click', () => selectProtocol(item, protocol.filename));
+      item.addEventListener('click', () => stageProtocol(item, protocol.filename));
       list.appendChild(item);
     });
   }
 
-  function selectProtocol(el, filename) {
+  function stageProtocol(el, filename) {
     document.querySelectorAll('.protocol-item').forEach(i => i.classList.remove('selected'));
     el.classList.add('selected');
-    selected = filename;
-
-    const nameEl = document.getElementById('selectionName');
-    nameEl.textContent = filename.slice(0, -'.pipette'.length);
-    nameEl.classList.remove('placeholder');
-    renderStatusCard(App.getStatus());
+    drawerSelected = filename;
     document.getElementById('checkBtn').disabled = false;
     document.getElementById('findingsList').innerHTML = '';
+    updateDrawerConfirmBtn();
+  }
+
+  function updateDrawerConfirmBtn() {
+    document.getElementById('confirmProtocolBtn').disabled = !drawerSelected;
   }
 
   // ── run ────────────────────────────────────────────────────────────────
@@ -191,19 +230,16 @@
 
   document.getElementById('cancelBtn').addEventListener('click', () => sendRunControl('cancel'));
 
-  // ── check (pre-flight validation, issue #88) ──────────────────────────
-  // Explicit trigger only (no auto-validate on selection, no bulk
-  // pre-validation of the list) and warn-only: findings are advisory
-  // display, never disable/block the Run button.
+  // ── check (pre-flight) — lives in the drawer ──────────────────────────
   document.getElementById('checkBtn').addEventListener('click', async () => {
-    if (!selected) return;
+    if (!drawerSelected) return;
     const list = document.getElementById('findingsList');
     list.innerHTML = '<div class="empty-state">Checking…</div>';
     try {
       const res = await fetch('/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename: selected }),
+        body: JSON.stringify({ filename: drawerSelected }),
       });
       const body = await res.json();
       if (!res.ok) {
@@ -219,7 +255,7 @@
   function renderFindings(findings) {
     const list = document.getElementById('findingsList');
     if (!findings.length) {
-      list.innerHTML = '<div class="empty-state">No issues found</div>';
+      list.innerHTML = '<div class="empty-state">No issues found ✓</div>';
       return;
     }
     list.innerHTML = findings.map(f => `
@@ -231,8 +267,7 @@
     `).join('');
   }
 
-  // ── detailed status card (Run-page-specific; the compact pill + global
-  // breakpoint banner in the header are app.js's job) ─────────────────────
+  // ── status card ───────────────────────────────────────────────────────
   function renderStatusCard(data) {
     const icon  = document.getElementById('statusIcon');
     const state = document.getElementById('statusState');
@@ -265,35 +300,42 @@
       pendingAction = null;
       document.getElementById('runControlFeedback').textContent = '';
     }
-    const active = App.isRunActive(s);
+
+    const active   = App.isRunActive(s);
     const available = active && App.isConnected() && !!data.run_id && !pendingAction;
-    const paused = active && data.phase === 'paused';
+    const paused   = active && data.phase === 'paused';
+
     document.getElementById('runBtnLabel').textContent =
-      active ? (paused ? 'Resume' : 'Pause') : 'Run protocol';
+      active ? (paused ? 'Resume' : 'Pause') : 'Run';
     document.getElementById('runBtnIcon').setAttribute(
       'd', active && !paused ? 'M6 4h4v16H6zM14 4h4v16h-4z' : 'M8 5v14l11-7z'
     );
     document.getElementById('cancelBtn').disabled =
       !available || !['preparing', 'printing', 'paused'].includes(data.phase);
+
+    // Hide "Change" button while running so we don't swap protocols mid-run
+    const changeBtn = document.getElementById('changeProtocolBtn');
+    if (changeBtn) changeBtn.hidden = active;
+
     icon.classList.toggle('spinning', active && data.phase !== 'paused');
+
     const progress = data.progress;
-    const known = typeof progress === 'number' && Number.isFinite(progress) && progress >= 0 && progress <= 1;
+    const known = typeof progress === 'number' && Number.isFinite(progress) &&
+                  progress >= 0 && progress <= 1;
     bar.hidden = !active && !known;
     if (known) {
       const percent = Math.floor(progress * 100);
       bar.value = percent;
-      progressLabel.textContent = `Estimated G-code file progress: ${percent}%`;
+      progressLabel.textContent = `${percent}%`;
     } else {
       bar.removeAttribute('value');
       progressLabel.textContent = active ? 'Progress unavailable' : '';
     }
     btn.disabled = active
       ? !available || !['printing', 'paused'].includes(data.phase)
-      : !App.isConnected() || !selected || pendingStart;
+      : !App.isConnected() || !selected || !!pendingStart;
   }
 
   App.onStatus(renderStatusCard);
   App.registerPage('run', {});
-
-  loadProtocols();
 })();
