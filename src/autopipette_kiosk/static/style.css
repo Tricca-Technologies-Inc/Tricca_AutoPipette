@@ -48,15 +48,15 @@ html, body {
 
 /* ── Shell grid: header 48px + tabs 44px = 92px chrome ── */
 .shell {
-  display: grid;
-  grid-template-rows: 48px 44px auto 1fr;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column;
   height: 100vh;
   overflow: hidden;
 }
 
-/* main is the 1fr row — it must be bounded so pages inside can scroll */
+/* main takes all remaining height after header + tabs + banner */
 .shell > main {
+  flex: 1;
   min-height: 0;
   overflow: hidden;
   position: relative;
@@ -269,23 +269,22 @@ header {
 /* ── Pages ── */
 .page { display: none; }
 
-/* Active pages fill the <main> container absolutely so they are
-   always exactly viewport-height minus chrome — the correct bounded
-   size for overflow-y scroll to work. */
+/* Active pages fill main absolutely — position:relative on main
+   bounds them, inset:0 makes them fill it exactly, giving overflow-y
+   a fixed height to scroll within. */
 .page.active {
   display: block;
   position: absolute;
-  inset: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
   touch-action: pan-y;
 }
 
-/* Run page is a special two-panel layout — override display back to grid */
-#page-run.active {
-  display: grid;
-}
+/* Run and move pages use grid internally */
+#page-run.active  { display: grid; }
+#page-move.active { display: grid; }
 
 /* ── Shared panel header ── */
 .panel-header {
