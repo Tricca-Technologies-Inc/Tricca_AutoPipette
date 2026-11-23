@@ -1,7 +1,7 @@
 #Adding 50 uL of supernatant from the flip top tubes to the 96 weell plate
 #
 load_pipette TysonP100.json
-home
+home all
 #
 # This protocol uses the Tyson100 liquid profile's air gaps explicitly:
 # pre-air 30 µL, post-air 5 µL. Each prewet cycle uses the transfer volume.
