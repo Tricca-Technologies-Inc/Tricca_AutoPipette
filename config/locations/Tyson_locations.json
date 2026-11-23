@@ -18,7 +18,8 @@
             "num_row": 8,
             "num_col": 12,
             "spacing_row": 9,
-            "spacing_col": 9
+            "spacing_col": 9,
+            "order": "row_from_bottom_right"
         },
         {
             "name": "96wellplate",
