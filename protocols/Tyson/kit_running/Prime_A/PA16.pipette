@@ -1,98 +1,100 @@
 # for Prime Panel A and the P1000 config. Adds 400uL of running buffer to the FIA plate (collection plate)
+load_pipette TysonP1000.json
+home
 
-pipette 381 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 381 --tipbox tipbox --prewet 5
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air --keep_tip DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
-pipette 380.5 --extra_air --after_air DFIBUF MSPLATE --dispense_vol 380.5 --tipbox tipbox
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000 --prewet 5
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 --tip_end keep DFIBUF MSPLATE_p1000
+pipette 400.0 DFIBUF MSPLATE_p1000
