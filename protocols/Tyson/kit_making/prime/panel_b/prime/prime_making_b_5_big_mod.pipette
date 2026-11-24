@@ -1,7 +1,7 @@
 #adding the larger volumes for the 5mL prime panel B CAL 7-1kit making procedure for the modified 5x diluted homovanillic acid so 2630uL of methanol is added
 
 load_pipette TysonP1000.json
-home
+home all
 #
 # This protocol uses the Tyson1000 liquid profile's air gaps
 
