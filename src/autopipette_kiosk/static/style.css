@@ -49,7 +49,7 @@ html, body {
 /* ── Shell grid: header 48px + tabs 44px = 92px chrome ── */
 .shell {
   display: grid;
-  grid-template-rows: 48px auto 44px auto 1fr;
+  grid-template-rows: 48px 44px 1fr;
   height: 100vh;
   overflow: hidden;
 }
@@ -121,6 +121,7 @@ header {
   top: 52px;
   right: 12px;
   z-index: 100;
+  grid-row: 1;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -245,12 +246,16 @@ header {
   border-bottom-color: var(--accent);
 }
 
-/* ── Breakpoint banner ── */
+/* ── Breakpoint banner — fixed overlay, doesn't consume a grid row ── */
 .breakpoint-banner {
   display: none;
+  position: fixed;
+  top: 92px; /* header 48px + tab-bar 44px */
+  left: 12px;
+  right: 12px;
+  z-index: 50;
   align-items: center;
   gap: 10px;
-  margin: 10px 12px 0;
   background: color-mix(in srgb, var(--running) 14%, var(--surface));
   border: 1px solid color-mix(in srgb, var(--running) 45%, var(--border));
   border-radius: 10px;
@@ -299,27 +304,8 @@ header {
 .bp-btn.abort    { background: var(--error); color: #2a0a0a; }
 
 /* ── Pages ── */
-
-/* main is a flex container — the active page stretches to fill it */
-.shell > main {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.page { display: none; }
-
-.page.active {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
-  touch-action: pan-y;
-}
+.page { display: none; overflow: hidden; }
+.page.active { display: grid; }
 
 /* ── Shared panel header ── */
 .panel-header {

@@ -10,7 +10,11 @@
 
 /* ── Shell chrome ── */
 html.desktop-mode .shell {
-  grid-template-rows: 56px auto 48px auto 1fr;
+  grid-template-rows: 56px 48px 1fr;
+}
+
+html.desktop-mode .breakpoint-banner {
+  top: 104px; /* header 56px + tab-bar 48px */
 }
 
 html.desktop-mode header {
