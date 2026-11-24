@@ -301,6 +301,14 @@ header {
 /* ── Pages ── */
 .page { display: none; }
 
+/* main takes all remaining height after header + tabs + banner */
+.shell > main {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
 /* Active pages fill main absolutely — position:relative on main
    bounds them, inset:0 makes them fill it exactly, giving overflow-y
    a fixed height to scroll within. */
