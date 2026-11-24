@@ -161,7 +161,7 @@
     pendingStart = request;
     const feedback = document.getElementById('runControlFeedback');
     feedback.textContent = '';
-    renderStatusCard(data);
+    renderStatusCard(App.getStatus());
     try {
       const res = await fetch('/run', {
         method: 'POST',
