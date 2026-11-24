@@ -313,7 +313,8 @@ header {
    bounds them, inset:0 makes them fill it exactly, giving overflow-y
    a fixed height to scroll within. */
 .page.active {
-  display: block;
+  display: flex;
+  flex-direction: column;
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
   overflow-y: auto;
@@ -334,17 +335,7 @@ header {
 }
 
 /* ── Run page — full page, single column ── */
-#page-run.active {
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-}
-
 /* ── Protocols page ── */
-#page-protocols.active {
-  display: flex;
-  flex-direction: column;
-}
 
 .protocol-panel {
   flex: 1;
