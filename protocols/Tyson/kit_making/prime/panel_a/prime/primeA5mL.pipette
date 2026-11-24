@@ -167,3 +167,16 @@ pipette 25.0 --src_row 0 --src_col 2 manu3 KIT1 --prewet 1
 
 # alpha-Aminoadipicacid *)
 pipette 80.0 --src_row 1 --src_col 2 manu3 KIT1 --prewet 1
+
+#adding water for the 5mL prime panel a kit making procedure
+
+load_pipette TysonP1000.json
+home all
+
+pipette 465.0 --tip_end keep WATER KIT1_p1000 --prewet 5
+pipette 465.0 --tip_end keep WATER KIT1_p1000
+pipette 465.0 --tip_end keep WATER KIT1_p1000
+pipette 465.0 --tip_end keep WATER KIT1_p1000
+pipette 465.0 --tip_end keep WATER KIT1_p1000
+pipette 465.0 WATER KIT1_p1000
+
