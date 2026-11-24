@@ -196,24 +196,24 @@ html.desktop-mode .tipbox-grid { gap: 4px; }
 html.desktop-mode .tip-cell { min-width: 22px; min-height: 22px; }
 
 /* ── Deck page ── */
-html.desktop-mode #page-deck.active {
-  padding: 28px 36px;
-  gap: 20px;
-}
-
-html.desktop-mode .deck-main {
+html.desktop-mode .deck-layout {
   flex-direction: row;
-  flex-wrap: wrap;
+  padding: 20px;
+  gap: 16px;
 }
 
-html.desktop-mode .deck-square {
-  width: min(560px, 100%);
-  max-width: none;
+html.desktop-mode #deckTiles {
+  flex: 1;
+  min-width: 0;
+  max-width: 600px;
 }
 
 html.desktop-mode .deck-info {
-  min-width: 220px;
-  width: auto;
+  width: 240px;
+  flex-shrink: 0;
+  border-top: none;
+  border-left: 1px solid var(--border);
+  align-self: stretch;
 }
 
 /* ── Settings page ── */

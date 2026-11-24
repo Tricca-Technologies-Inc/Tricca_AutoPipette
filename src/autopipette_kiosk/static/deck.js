@@ -1,49 +1,34 @@
-// Deck page (issue #87): a read-only spatial map of the configured deck, for
-// verifying the physical setup (plate/tipbox/waste-container positions, tip
-// occupancy) against config before a run.
+// Deck page: a 4-row × 2-column grid matching Tyson's physical slot layout.
 //
-// Two data sources, both already exposed elsewhere -- no new deck logic
-// lives in daemon/service.py, matching the Client parity rule:
-//   - GET /locations (new, issue #87): a thin proxy over config.list_locations,
-//     the same data cli/report_tables.py's build_locations_table renders as
-//     an ASCII table for `tap`'s `ls locs`. This is a second, spatial
-//     renderer of that data, not a second implementation.
-//   - GET /tips (issue #17, already used by tips.js): TipBoxManager.describe's
-//     per-box payload, reused here as a second, smaller, non-interactive
-//     renderer (no tap-to-toggle -- the Tips page owns editing).
+// Physical layout (operator-confirmed):
+//   - Origin (0,0) is back-right; X increases left, Y increases toward front
+//   - Two columns:  left = high X (~288-294),  right = low X (~20-96)
+//   - Four rows:    front = high Y (~280),  then ~188,  ~107-146,  back ~0-91
+//
+// Locations are grouped into the nearest slot by X/Y thresholds. Multiple
+// logical names at the same physical position are listed together in the slot.
+//
+// Data sources (same as before — no new daemon logic):
+//   GET /locations  — plate/tipbox/waste positions from config
+//   GET /tips       — tip occupancy per tipbox (reused from tips.js)
 (() => {
-  // Coordinate transform — bounds computed dynamically from loaded locations
-  // so the map fills the deck container regardless of machine size.
-  // X increases moving left (origin top-right), Y increases moving down.
-  // A 10% margin is added around the bounds so edge tiles aren't clipped.
-  const MARGIN = 0.10; // 10% padding each side
 
-  let boundsX = { min: 0, max: 300 };
-  let boundsY = { min: 0, max: 300 };
+  // ── slot definition ───────────────────────────────────────────────────────
+  // Thresholds that separate left column from right, and the 4 row bands.
+  // Adjust if a new machine has a different spacing.
+  const COL_THRESHOLD = 190;   // x >= threshold → left column
+  const ROW_THRESHOLDS = [235, 165, 70]; // y boundaries (front→back): >235 row0, >165 row1, >70 row2, else row3
 
-  function computeBounds(locations) {
-    const xs = locations.map(l => l.x).filter(v => v != null);
-    const ys = locations.map(l => l.y).filter(v => v != null);
-    if (!xs.length) return;
-    const spanX = Math.max(1, Math.max(...xs) - Math.min(...xs));
-    const spanY = Math.max(1, Math.max(...ys) - Math.min(...ys));
-    const pad = Math.max(spanX, spanY) * MARGIN;
-    boundsX = { min: Math.min(...xs) - pad, max: Math.max(...xs) + pad };
-    boundsY = { min: Math.min(...ys) - pad, max: Math.max(...ys) + pad };
+  function slotOf(loc) {
+    const col = loc.x >= COL_THRESHOLD ? 0 : 1;   // 0=left, 1=right
+    let row = 3;
+    if (loc.y > ROW_THRESHOLDS[0]) row = 0;
+    else if (loc.y > ROW_THRESHOLDS[1]) row = 1;
+    else if (loc.y > ROW_THRESHOLDS[2]) row = 2;
+    return { row, col };
   }
 
-  // ── coordinate transform (pure) ─────────────────────────────────────────
-  function toPercent(xMm, yMm) {
-    const spanX = boundsX.max - boundsX.min;
-    const spanY = boundsY.max - boundsY.min;
-    // X origin is top-right: higher X = further left
-    return {
-      leftPct: 100 - ((xMm - boundsX.min) / spanX) * 100,
-      topPct: ((yMm - boundsY.min) / spanY) * 100,
-    };
-  }
-
-  // ── data loading ─────────────────────────────────────────────────────────
+  // ── data loading ──────────────────────────────────────────────────────────
   async function loadDeck() {
     const [locationsResult, tipsByName] = await Promise.all([
       loadLocations(),
@@ -52,17 +37,35 @@
 
     const container = document.getElementById('deckTiles');
     if (!locationsResult.ok) {
-      // Covers both a real load failure and a genuinely empty deck (the
-      // daemon reports the latter as ok=false too, e.g. "No locations
-      // defined.") -- either way an operator needs a reason, not a blank
-      // square indistinguishable from "the page is just broken".
       container.innerHTML = `<div class="tips-empty">${locationsResult.message}</div>`;
       return;
     }
+
+    // Group locations into 4×2 grid slots
+    const grid = Array.from({ length: 4 }, () => [[], []]);  // grid[row][col] = [locs]
+    locationsResult.locations
+      .filter(loc => loc.x != null && loc.y != null)
+      .forEach(loc => {
+        const { row, col } = slotOf(loc);
+        grid[row][col].push(loc);
+      });
+
+    // Render the grid
     container.innerHTML = '';
-    const locs = locationsResult.locations.filter(loc => loc.x != null && loc.y != null);
-    computeBounds(locs);
-    locs.forEach(loc => container.appendChild(renderTile(loc, tipsByName[loc.name])));
+    container.style.display = 'grid';
+    container.style.gridTemplateColumns = '1fr 1fr';
+    container.style.gridTemplateRows = 'repeat(4, 1fr)';
+    container.style.gap = '8px';
+    container.style.padding = '8px';
+    container.style.height = '100%';
+    container.style.boxSizing = 'border-box';
+
+    for (let row = 0; row < 4; row++) {
+      for (let col = 0; col < 2; col++) {
+        const locs = grid[row][col];
+        container.appendChild(renderSlot(row, col, locs, tipsByName));
+      }
+    }
   }
 
   async function loadLocations() {
@@ -70,11 +73,7 @@
       const res = await fetch('/locations');
       const result = await res.json();
       if (!res.ok || !result.ok) {
-        return {
-          ok: false,
-          message: result.message || result.detail || 'Failed to load locations',
-          locations: [],
-        };
+        return { ok: false, message: result.message || result.detail || 'Failed to load locations', locations: [] };
       }
       return { ok: true, locations: result.data.locations || [] };
     } catch (e) {
@@ -90,46 +89,76 @@
       if (result.ok) {
         (result.data.boxes || []).forEach(box => { byName[box.name] = box; });
       }
-    } catch (e) {
-      // leave byName empty -- tipbox tiles just render without their grid
-    }
+    } catch (e) {}
     return byName;
   }
 
-  // ── tile rendering ───────────────────────────────────────────────────────
-  function renderTile(loc, tipbox) {
-    const isTipbox = loc.type === 'TipBox';
-    const { leftPct, topPct } = toPercent(loc.x, loc.y);
+  // ── slot rendering ────────────────────────────────────────────────────────
+  function renderSlot(row, col, locs, tipsByName) {
+    const slot = document.createElement('div');
+    slot.className = 'deck-slot';
 
-    const tile = document.createElement('div');
-    tile.className = `deck-tile ${isTipbox ? 'deck-tile-tipbox' : 'deck-tile-dot'}`;
-    tile.style.left = `${leftPct}%`;
-    tile.style.top = `${topPct}%`;
-    tile.dataset.name = loc.name;
-    tile.title = loc.name;
+    // Row label: front=1, back=4
+    const rowLabel = document.createElement('div');
+    rowLabel.className = 'deck-slot-label';
+    rowLabel.textContent = `R${row + 1} ${col === 0 ? 'L' : 'R'}`;
+    slot.appendChild(rowLabel);
 
-    if (isTipbox && tipbox) {
-      tile.appendChild(renderMiniGrid(tipbox));
+    if (!locs.length) {
+      const empty = document.createElement('div');
+      empty.className = 'deck-slot-empty';
+      empty.textContent = '—';
+      slot.appendChild(empty);
+      return slot;
     }
 
-    tile.addEventListener('click', () => selectTile(loc));
-    return tile;
+    // Deduplicate by rounded coordinate — show unique physical positions
+    const seen = new Set();
+    const unique = locs.filter(loc => {
+      const key = `${Math.round(loc.x)},${Math.round(loc.y)}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    // Pick the most informative representative (prefer tipbox/waste, then first)
+    const primary = unique.find(l => l.type === 'TipBox' || l.type === 'waste_container') || unique[0];
+    const tipbox = tipsByName[primary.name];
+    const isTipbox = primary.type === 'TipBox';
+    const isWaste = primary.type === 'waste_container';
+
+    // All logical names at this slot
+    const names = locs.map(l => l.name);
+
+    const content = document.createElement('div');
+    content.className = `deck-slot-content ${isTipbox ? 'is-tipbox' : ''} ${isWaste ? 'is-waste' : ''}`;
+
+    if (isTipbox && tipbox) {
+      content.appendChild(renderMiniGrid(tipbox));
+    }
+
+    // Show the first unique name prominently, count if many
+    const nameEl = document.createElement('div');
+    nameEl.className = 'deck-slot-name';
+    // Find shortest / most distinct name among the group
+    const display = names.reduce((a, b) => a.length <= b.length ? a : b);
+    nameEl.textContent = names.length > 1 ? `${display} +${names.length - 1}` : display;
+    content.appendChild(nameEl);
+
+    content.addEventListener('click', () => selectSlot(primary, names, slot));
+    slot.appendChild(content);
+    return slot;
   }
 
-  // Non-interactive mini occupancy grid -- same present/eligible payload
-  // tips.js's renderBox reads, rendered smaller and with no click handlers
-  // (the Tips page, not this one, owns editing). Color convention matches
-  // tips.js's `.tip-cell.present`/`.used` (green = present, amber = used).
   function renderMiniGrid(box) {
     const grid = document.createElement('div');
     grid.className = 'deck-mini-grid';
     grid.style.gridTemplateColumns = `repeat(${box.num_col}, 1fr)`;
     grid.style.gridTemplateRows = `repeat(${box.num_row}, 1fr)`;
-
     const eligible = new Set(box.eligible || []);
-    for (let row = 0; row < box.num_row; row++) {
-      for (let col = 0; col < box.num_col; col++) {
-        const index = row * box.num_col + col;
+    for (let r = 0; r < box.num_row; r++) {
+      for (let c = 0; c < box.num_col; c++) {
+        const index = r * box.num_col + c;
         const cell = document.createElement('div');
         cell.className = 'deck-mini-cell';
         if (!eligible.has(index)) {
@@ -144,24 +173,21 @@
     return grid;
   }
 
-  // ── tap interaction: info panel + tipbox -> Tips tab shortcut ───────────
-  function selectTile(loc) {
-    document.querySelectorAll('.deck-tile').forEach(t => {
-      t.classList.toggle('selected', t.dataset.name === loc.name);
-    });
+  // ── tap interaction ───────────────────────────────────────────────────────
+  function selectSlot(loc, allNames, slotEl) {
+    document.querySelectorAll('.deck-slot-content').forEach(el => el.classList.remove('selected'));
+    slotEl.querySelector('.deck-slot-content')?.classList.add('selected');
 
     document.getElementById('deckInfo').innerHTML = `
       <div class="deck-info-name">${loc.name}</div>
+      ${allNames.length > 1 ? `<div class="deck-info-row"><span>Also here</span><span>${allNames.filter(n => n !== loc.name).join(', ')}</span></div>` : ''}
       <div class="deck-info-row"><span>Type</span><span>${loc.type}</span></div>
       <div class="deck-info-row"><span>X</span><span>${loc.x}</span></div>
       <div class="deck-info-row"><span>Y</span><span>${loc.y}</span></div>
       <div class="deck-info-row"><span>Z</span><span>${loc.z}</span></div>
-      ${loc.details ? `<div class="deck-info-details">${loc.details}</div>` : ''}
     `;
 
-    if (loc.type === 'TipBox') {
-      App.switchTo('tips');
-    }
+    if (loc.type === 'TipBox') App.switchTo('tips');
   }
 
   App.registerPage('deck', { onShow: loadDeck });
