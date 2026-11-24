@@ -203,9 +203,10 @@ html.desktop-mode .deck-layout {
 }
 
 html.desktop-mode #deckTiles {
-  flex: 1;
-  min-width: 0;
-  max-width: 600px;
+  max-width: 480px;
+  height: 380px;
+  flex-shrink: 0;
+  align-self: flex-start;
 }
 
 html.desktop-mode .deck-info {

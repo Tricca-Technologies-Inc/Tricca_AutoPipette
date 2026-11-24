@@ -57,10 +57,10 @@
     container.style.gridTemplateRows = 'repeat(4, 1fr)';
     container.style.gap = '8px';
     container.style.padding = '8px';
-    container.style.height = '100%';
     container.style.boxSizing = 'border-box';
 
-    for (let row = 0; row < 4; row++) {
+    // Render back→front (row 3 first, row 0 last) so front is at the bottom
+    for (let row = 3; row >= 0; row--) {
       for (let col = 0; col < 2; col++) {
         const locs = grid[row][col];
         container.appendChild(renderSlot(row, col, locs, tipsByName));
@@ -101,7 +101,7 @@
     // Row label: front=1, back=4
     const rowLabel = document.createElement('div');
     rowLabel.className = 'deck-slot-label';
-    rowLabel.textContent = `R${row + 1} ${col === 0 ? 'L' : 'R'}`;
+    rowLabel.textContent = `Row ${row + 1} ${col === 0 ? '· Left' : '· Right'}`;
     slot.appendChild(rowLabel);
 
     if (!locs.length) {

@@ -1137,10 +1137,13 @@ header {
 
 .deck-hint { font-size: 12px; color: var(--muted); padding: 8px 12px 0; flex-shrink: 0; }
 
-/* The 4×2 grid fills available height */
+/* The 4×2 grid: compact fixed size, centered */
 #deckTiles {
-  flex: 1;
-  min-height: 0;
+  width: 100%;
+  max-width: 420px;
+  height: 320px;
+  flex-shrink: 0;
+  align-self: center;
 }
 
 /* Each slot card */
