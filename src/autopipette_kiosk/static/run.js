@@ -190,12 +190,11 @@
     }
   }
 
-  // "Run ▶" on Protocols page: switch to Run tab AND start the run
+  // "Load" on Protocols page: switch to Run tab (run when ready)
   document.getElementById('goRunBtn').addEventListener('click', () => {
     if (!selected) return;
     const runTabBtn = document.querySelector('[data-page="run"]');
     if (runTabBtn) runTabBtn.click();
-    startRun();
   });
 
   // Run/Pause/Resume button on Run tab
