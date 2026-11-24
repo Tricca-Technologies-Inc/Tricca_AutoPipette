@@ -143,7 +143,7 @@ Enforcement is `LocationManager.check_drawer(name)`, which raises `DrawerNotAtSt
 
 Names are the sole identifier: `set_plate` no longer also files a waste container under the literal alias `"waste_container"`, which stored one plate under two names.
 
-Tipboxes are registered with `core/tipbox_manager.py`'s `TipBoxManager` (see below) rather than merged, so `unload`/`del_loc` removes exactly one box and leaves every other box's consumed-tip state intact. `AutoPipette.next_tip` asks the manager for `(name, box, coord, index)`, takes the dip distance from *that* box — boxes may sit at different heights — and records `(name, index)` as `PipetteState.tip_origin` (cleared by `eject_tip`, so by every eject/dispose/return; snapshotted by `domain_state_snapshot` too). It lives in memory only, so a tip already on when `tapd` starts has no origin.
+Tipboxes are registered with `core/tipbox_manager.py`'s `TipBoxManager` (see below) rather than merged, so `unload`/`del_loc` removes exactly one box and leaves every other box's consumed-tip state intact. `AutoPipette.next_tip` asks the manager for `(name, box, coord, index)`, takes the dip distance from *that* box — boxes may sit at different heights — drops fast to `PipetteModel.tip_press_mm` above it (clamped at `z_min`), presses the rest at `tip_press_feedrate` and dwells `tip_press_wait_ms` (defaults 2 mm / F100 / 100 ms, tuned on Tyson), and records `(name, index)` as `PipetteState.tip_origin` (cleared by `eject_tip`, so by every eject/dispose/return; snapshotted by `domain_state_snapshot` too). It lives in memory only, so a tip already on when `tapd` starts has no origin.
 
 Because Klipper has no notion of tip occupancy, the operator reconciles the daemon's record with the physical boxes via `tips` (ASCII map; `--db` diffs it against the persisted state and flags divergent cells), `reset_tips <box>`/`reset_tips_all` (a fresh box was loaded), and `set_tips <box> <ranges> [--available]` (declare exact state — absolute, not additive, so it can restore positions too). A locations entry may also declare a partially-used box up front with `"tips": {"consumed": ["A1:C12"]}`.
 
@@ -226,6 +226,8 @@ Leftover liquid requires an explicit `--leftover keep|waste`; omitting it is an 
 
 #### Auxiliary triggers (`trigger`)
 `trigger <channel> on|off` (issue #16) drives auxiliary hardware (air, shake, lid, …) through a Klipper `[output_pin]`. Channels are per-machine wiring: `SystemConfig.trigger_pins` (`dict[str, str]`, alias → pin name, empty by default) is the only source of valid channels — there is no global channel list. `AutoPipetteService.trigger` validates against that map (`Invalid channel 'lid'. Valid: air, shake`, or `Valid: (none configured)`) and `on`/`off` only, then calls `AutoPipette.set_trigger`, which emits `M400` **then** `SET_PIN PIN=<pin> VALUE=1|0` — `SET_PIN` isn't a motion command, so without the `M400` first the pin can flip while an already-queued move is still running. Deliberately ungated (no `require_homed`: it doesn't move the gantry) and fire-and-forget (no daemon-side record of the last commanded state, so nothing turns a trigger off at protocol end).
+
+Every `dip_z_down`/`dip_z_return` dwells `GantryKinematics.wait_dip_ms` (default 50 ms).
 
 ### Domain model (`core/`)
 - `autopipette.py` — `AutoPipette`: central controller tying config, location manager, G-code buffer, and volume converter together; owns `pipette()`/`aspirate()`/`dispense()`/tip-handling and multi-liquid switching (`switch_liquid`).

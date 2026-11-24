@@ -326,6 +326,20 @@ class TestHighRiskBounds:
         with pytest.raises(ValueError, match="accel_z"):
             set_config_value("gantry", "default_gantry.json", "accel_z", 1e9)
 
+    @pytest.mark.parametrize(
+        ("category", "filename", "key", "value"),
+        [
+            ("pipettes", "p100_vertical.json", "tip_press_mm", 50.0),
+            ("pipettes", "p100_vertical.json", "tip_press_feedrate", 1e6),
+            ("gantry", "default_gantry.json", "wait_dip_ms", 1e6),
+        ],
+    )
+    def test_tip_press_and_dip_dwell_are_bounded(
+        self, roots: Roots, category: str, filename: str, key: str, value: float
+    ) -> None:
+        with pytest.raises(ValueError, match=key):
+            set_config_value(category, filename, key, value)
+
     def test_a_travel_limit_far_past_zero_is_refused(self, roots: Roots) -> None:
         # A typo'd minimum would let every absolute move drive into the frame.
         with pytest.raises(ValueError, match="x_min"):

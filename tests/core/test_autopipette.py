@@ -228,6 +228,47 @@ class TestTipHandling:
         gcode = pipette_with_plates.get_gcode()
         assert any("G0" in line or "G1" in line for line in gcode)
 
+    def test_next_tip_stops_short_then_presses_the_tip_on_slowly(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        model = pipette_with_plates.pipette_model
+        depth = 5.0  # the fixture tipbox's dip_top
+
+        pipette_with_plates.next_tip()
+
+        gcode: list[str] = list(pipette_with_plates.get_gcode())
+        fast_prefix = f"G1 Z{depth - model.tip_press_mm} F"
+        fast = next(i for i, line in enumerate(gcode) if line.startswith(fast_prefix))
+        press = gcode.index(f"G1 Z{depth} F{model.tip_press_feedrate}\n")
+        assert fast < press
+        assert gcode[press + 1] == f"G4 P{model.tip_press_wait_ms}\n"
+
+    def test_a_shallow_tipbox_starts_the_press_from_z_min(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        pipette_with_plates.pipette_model = (
+            pipette_with_plates.pipette_model.model_copy(
+                update={"tip_press_mm": 1000.0}
+            )
+        )
+
+        pipette_with_plates.next_tip()
+
+        assert "G1 Z0.0 F" in "".join(pipette_with_plates.get_gcode())
+
+    def test_tip_press_defaults(self, autopipette: AutoPipette) -> None:
+        model = autopipette.pipette_model
+        assert (model.tip_press_mm, model.tip_press_feedrate) == (2.0, 100.0)
+        assert model.tip_press_wait_ms == 100
+
+    def test_dip_dwell_comes_from_the_gantry(self, autopipette: AutoPipette) -> None:
+        autopipette.gantry = autopipette.gantry.model_copy(update={"wait_dip_ms": 75})
+
+        autopipette.dip_z_down(Coordinate(x=1.0, y=1.0, z=0.0), 5.0)
+        autopipette.dip_z_return(Coordinate(x=1.0, y=1.0, z=0.0))
+
+        assert "".join(autopipette.get_gcode()).count("G4 P75\n") == 2
+
     def test_next_tip_twice_raises_tip_already_on_error(
         self, pipette_with_plates: AutoPipette
     ) -> None:

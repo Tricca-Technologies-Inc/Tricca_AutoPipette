@@ -200,6 +200,10 @@ class GantryKinematics(BaseModel):
         default=5000.0, gt=0, description="Maximum gantry acceleration in mm/s²"
     )
 
+    wait_dip_ms: int = Field(
+        default=50, ge=0, description="Settle time after each dip or return, in ms"
+    )
+
     # Travel limits (mm) for absolute moves. The minimums default to 0, the
     # machine origin; a rig whose endstops sit past zero sets them negative.
     # A maximum of None leaves that axis unbounded here (Klipper's own
@@ -522,6 +526,19 @@ class PipetteModel(BaseModel):
     servo: ServoConfig = Field(description="Tip ejection servo configuration")
 
     # Supported tips (optional)
+    # Tip pickup: the head drops fast to `tip_press_mm` above the tipbox's
+    # dip depth, then presses the last stretch slowly and dwells, which
+    # seats the tip on the cone more reliably than one fast plunge.
+    tip_press_mm: float = Field(
+        default=2.0, ge=0, description="Slow final press distance in mm"
+    )
+    tip_press_feedrate: float = Field(
+        default=100.0, gt=0, description="Feedrate of the final press in mm/min"
+    )
+    tip_press_wait_ms: int = Field(
+        default=100, ge=0, description="Dwell at the bottom of the press in ms"
+    )
+
     compatible_tips: list[str] = Field(
         default_factory=list, description="List of compatible tip types"
     )
