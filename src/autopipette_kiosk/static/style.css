@@ -304,8 +304,22 @@ header {
 .bp-btn.abort    { background: var(--error); color: #2a0a0a; }
 
 /* ── Pages ── */
-.page { display: none; overflow: hidden; }
-.page.active { display: grid; }
+/* main fills the shell's 1fr row; overflow:hidden clips any absolutely
+   positioned children and gives .page.active a bounded height to scroll in */
+.shell > main {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.page { display: none; }
+
+.page.active {
+  display: grid;
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
 
 /* ── Shared panel header ── */
 .panel-header {
