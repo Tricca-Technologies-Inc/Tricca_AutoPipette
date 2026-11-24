@@ -1,7 +1,7 @@
 #adding the larger volumes for the 10mL prime panel A CAL 7-1kit making procedure
 
 load_pipette TysonP1000.json
-home
+home all
 #
 # This protocol uses the Tyson1000 liquid profile's air gaps
 

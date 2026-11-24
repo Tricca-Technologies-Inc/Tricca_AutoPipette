@@ -1,0 +1,8 @@
+#Final step of mega panel A kit manufacturing cal7 adding 1925uL of water to the vial
+load_pipette TysonP1000.json
+home all
+
+pipette 481.0 --tip_end keep WATER KIT1_p1000 --prewet 5
+pipette 481.0 --tip_end keep WATER KIT1_p1000 
+pipette 481.0 --tip_end keep WATER KIT1_p1000
+pipette 482.0 WATER KIT1_p1000
