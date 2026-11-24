@@ -14,6 +14,7 @@
   let pendingTimer = null;
   let pendingStart = null;
   let startTimer = null;
+  let tipBlocked = false;
 
   // ETA estimation — client-side only, based on elapsed time vs progress
   let etaState = null; // { startTime, startProgress, pausedAt, pausedMs }
@@ -146,6 +147,9 @@
     document.getElementById('checkBtn').disabled = false;
     document.getElementById('goRunBtn').disabled = false;
     document.getElementById('findingsList').innerHTML = '';
+    tipBlocked = false;
+    document.getElementById('protocolInfoCard').hidden = true;
+    document.getElementById('protocolInfoError').hidden = true;
 
     // Keep Run page name in sync
     document.getElementById('runProtocolName').textContent = shortName;
@@ -190,12 +194,83 @@
     }
   }
 
-  // "Load" on Protocols page: switch to Run tab (run when ready)
-  document.getElementById('goRunBtn').addEventListener('click', () => {
+  // "Load" on Protocols page: fetch info, check tips, then switch to Run tab
+  document.getElementById('goRunBtn').addEventListener('click', async () => {
     if (!selected) return;
+    await loadProtocolInfo(selected);
     const runTabBtn = document.querySelector('[data-page="run"]');
     if (runTabBtn) runTabBtn.click();
   });
+
+  async function loadProtocolInfo(filename) {
+    const infoCard  = document.getElementById('protocolInfoCard');
+    const infoError = document.getElementById('protocolInfoError');
+    const infoDesc  = document.getElementById('protocolInfoDescription');
+    const infoTips  = document.getElementById('protocolInfoTips');
+    infoCard.hidden  = true;
+    infoError.hidden = true;
+
+    try {
+      const [infoRes, tipsRes] = await Promise.all([
+        fetch(`/protocol_info?filename=${encodeURIComponent(filename)}`),
+        fetch('/tips'),
+      ]);
+
+      if (!infoRes.ok) {
+        const err = await infoRes.json();
+        infoError.textContent = `Could not load protocol info: ${err.detail || infoRes.status}`;
+        infoError.hidden = false;
+        return;
+      }
+
+      const info = await infoRes.json();
+      const tipsData = tipsRes.ok ? await tipsRes.json() : null;
+
+      // Build available tips map: tipbox_name -> remaining count
+      const available = {};
+      if (tipsData?.ok && tipsData?.data?.boxes) {
+        for (const box of tipsData.data.boxes) {
+          available[box.name] = box.remaining ?? 0;
+        }
+      }
+
+      // Check each tipbox the protocol needs
+      const tipNeeds = info.tip_counts || {};
+      const tipRows = [];
+      let blocked = false;
+
+      for (const [box, needed] of Object.entries(tipNeeds)) {
+        const have = available[box] ?? null;
+        const ok = have === null || have >= needed;
+        if (!ok) blocked = true;
+        const haveStr = have === null ? '?' : String(have);
+        tipRows.push(`
+          <div class="protocol-info-tip-row">
+            <span class="${ok ? 'protocol-info-tip-ok' : 'protocol-info-tip-warn'}">${ok ? '✓' : '✗'}</span>
+            <span>${box}</span>
+            <span style="color:var(--muted)">needs ${needed}, have ${haveStr}</span>
+          </div>`);
+      }
+
+      if (blocked) {
+        infoError.textContent = `Not enough tips to run this protocol. Reload the tipbox and reset the tip count in the Tips tab.`;
+        infoError.hidden = false;
+      }
+
+      infoDesc.textContent = info.description || '';
+      infoDesc.hidden = !info.description;
+      infoTips.innerHTML = tipRows.join('');
+      infoCard.hidden = !info.description && !tipRows.length;
+
+      // Block the Run button if tips are insufficient
+      tipBlocked = blocked;
+      renderStatusCard(App.getStatus());
+
+    } catch (e) {
+      infoError.textContent = `Error loading protocol info: ${e.message}`;
+      infoError.hidden = false;
+    }
+  }
 
   // Run/Pause/Resume button on Run tab
   document.getElementById('runBtn').addEventListener('click', async () => {
@@ -354,7 +429,7 @@
     }
     btn.disabled = active
       ? !available || !['printing', 'paused'].includes(data.phase)
-      : !App.isConnected() || !selected || !!pendingStart;
+      : !App.isConnected() || !selected || !!pendingStart || tipBlocked;
   }
 
   App.onStatus(renderStatusCard);

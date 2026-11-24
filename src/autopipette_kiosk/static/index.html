@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="dark">
 <style>html { background: #000; }</style>  <!-- inline in <head>, before any linked CSS -->
 <title>AutoPipette</title>
-<link rel="stylesheet" href="/static/style.css?v=13">
+<link rel="stylesheet" href="/static/style.css?v=14">
 <link rel="stylesheet" href="/static/style-desktop.css?v=7">
 </head>
 <body>
@@ -101,6 +101,12 @@
           <div class="selection-label">Protocol</div>
           <div class="selection-name" id="runProtocolName">—</div>
         </div>
+
+        <div class="protocol-info-card" id="protocolInfoCard" hidden>
+          <div class="protocol-info-description" id="protocolInfoDescription"></div>
+          <div class="protocol-info-tips" id="protocolInfoTips"></div>
+        </div>
+        <div class="protocol-info-error" id="protocolInfoError" hidden></div>
 
         <div class="status-card">
           <div class="status-icon idle" id="statusIcon">○</div>
@@ -325,7 +331,7 @@
 <script src="/static/layout.js?v=1"></script>
 <script src="/static/pipette.js?v=1"></script>
 <script src="/static/app.js?v=3"></script>
-<script src="/static/run.js?v=5"></script>
+<script src="/static/run.js?v=6"></script>
 <script src="/static/move.js?v=3"></script>
 <script src="/static/tips.js?v=3"></script>
 <script src="/static/deck.js?v=3"></script>

@@ -86,6 +86,14 @@ class ValidateRequest(BaseModel):
     filename: str  # e.g. "A1.pipette"
 
 
+class ProtocolInfoResponse(BaseModel):
+    """Response for GET /protocol_info."""
+
+    filename: str
+    description: str  # leading comment block, empty string if none
+    tip_counts: dict[str, int]  # tipbox_name -> number of next_tip calls
+
+
 class RunStatus(BaseModel):
     """Current (or most recent) protocol run status."""
 
@@ -602,6 +610,95 @@ async def validate_protocol(req: ValidateRequest) -> CommandResultResponse:
         )
 
     return await _dispatch_control_request(_control_requests.run_validate(req.filename))
+
+
+@app.get("/protocol_info", response_model=ProtocolInfoResponse)
+def protocol_info(filename: str) -> ProtocolInfoResponse:
+    """Return description and per-tipbox tip counts for a protocol file.
+
+    Parses the file without executing anything:
+    - ``description``: the leading block of ``#`` comment lines (before the
+      first non-blank, non-comment line), joined as a single string.
+    - ``tip_counts``: number of ``next_tip`` calls per tipbox, tracked by
+      following ``load_pipette`` commands to know which pipette (and therefore
+      which tipbox) is active at each point.  Falls back to the system
+      profile's default pipette for lines before any ``load_pipette``.
+
+    Raises:
+        HTTPException: 404 if the file is not found, 500 on read error.
+    """
+    known = _list_protocol_files()
+    if filename not in known:
+        raise HTTPException(status_code=404, detail=f"Protocol not found: {filename}")
+    try:
+        raw = known[filename].read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError) as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    # ── description: leading comment lines ───────────────────────────────
+    desc_lines: list[str] = []
+    for raw_line in raw:
+        line = raw_line.strip()
+        if not line:
+            if desc_lines:  # blank line ends the block only after content starts
+                break
+            continue
+        if line.startswith("#"):
+            text = line.lstrip("#").strip()
+            if text:
+                desc_lines.append(text)
+        else:
+            break  # first real command ends the description block
+    description = " ".join(desc_lines)
+
+    # ── tip counts: scan next_tip / load_pipette ──────────────────────────
+    from tricca_autopipette.core.pipette_constants import LocalConfigRoots
+    import json as _json
+
+    def _tipbox_for_pipette(pipette_filename: str) -> str | None:
+        """Read tipbox field from a pipette JSON config without loading system config."""
+        try:
+            path = LocalConfigRoots.resolve("pipettes", pipette_filename)
+            data = _json.loads(path.read_text(encoding="utf-8"))
+            return data.get("tipbox")
+        except Exception:
+            return None
+
+    # Seed from the system profile's current pipette if reachable
+    try:
+        import json as _j
+        sys_path = LocalConfigRoots.resolve("system", "default_system.json")
+        profile = _j.loads(sys_path.read_text(encoding="utf-8"))
+        default_pipette = profile.get("pipette")
+        default_tipbox: str | None = (
+            _tipbox_for_pipette(default_pipette) if default_pipette else None
+        )
+    except Exception:
+        default_tipbox = None
+
+    active_tipbox: str | None = default_tipbox
+    tip_counts: dict[str, int] = {}
+
+    for raw_line in raw:
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split()
+        cmd = parts[0].lower()
+        if cmd == "next_tip":
+            # next_tip [tipbox_name] — optional explicit tipbox override
+            box = parts[1] if len(parts) > 1 else active_tipbox
+            if box:
+                tip_counts[box] = tip_counts.get(box, 0) + 1
+        elif cmd == "load_pipette" and len(parts) > 1:
+            # load_pipette TysonP1000.json — read tipbox from that pipette's JSON
+            active_tipbox = _tipbox_for_pipette(parts[1])
+
+    return ProtocolInfoResponse(
+        filename=filename,
+        description=description,
+        tip_counts=tip_counts,
+    )
 
 
 @app.post("/home", response_model=RunStatus)
