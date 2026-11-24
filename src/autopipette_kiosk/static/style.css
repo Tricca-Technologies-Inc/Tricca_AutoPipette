@@ -299,24 +299,22 @@ header {
 .bp-btn.abort    { background: var(--error); color: #2a0a0a; }
 
 /* ── Pages ── */
-.page { display: none; }
 
-/* main fills its 1fr grid row; position:relative bounds absolute pages */
+/* main is a flex container — the active page stretches to fill it */
 .shell > main {
-  position: relative;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   min-height: 0;
-  height: 100%;
+  overflow: hidden;
 }
 
-/* Active pages fill main absolutely — position:relative on main
-   bounds them, inset:0 makes them fill it exactly, giving overflow-y
-   a fixed height to scroll within. */
+.page { display: none; }
+
 .page.active {
   display: flex;
   flex-direction: column;
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
