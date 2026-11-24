@@ -49,7 +49,7 @@ html, body {
 /* ── Shell grid: header 48px + tabs 44px = 92px chrome ── */
 .shell {
   display: grid;
-  grid-template-rows: 48px 44px auto 1fr;
+  grid-template-rows: 48px auto 44px auto 1fr;
   height: 100vh;
   overflow: hidden;
 }
