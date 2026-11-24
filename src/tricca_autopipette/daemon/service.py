@@ -4494,6 +4494,7 @@ class AutoPipetteService:
         original_level = autopipette_logger.level
         autopipette_logger.setLevel(logging.WARNING)
         autopipette_logger.addHandler(warning_capture)
+        tip_counts: dict[str, int] = {}
         try:
             with (
                 self.domain_state_snapshot(restore="always"),
@@ -4502,6 +4503,8 @@ class AutoPipetteService:
                 self._sync_plunger()
                 self._seed_drawer_model()
                 interlock = self._interlock_model()
+                tbm = self._autopipette.location_manager.tipbox_manager
+                before = {name: box.remaining for name, box in tbm.boxes.items()}
                 for line_number, raw_line in enumerate(lines, start=1):
                     line = raw_line.strip()
                     if not line or line.startswith("#"):
@@ -4509,6 +4512,12 @@ class AutoPipetteService:
                     self._dispatch_protocol_line_for_validation(
                         line, line_number, findings, warning_capture, interlock
                     )
+                after = {name: box.remaining for name, box in tbm.boxes.items()}
+                tip_counts = {
+                    name: before.get(name, 0) - after.get(name, 0)
+                    for name in before
+                    if before.get(name, 0) - after.get(name, 0) > 0
+                }
         finally:
             autopipette_logger.removeHandler(warning_capture)
             autopipette_logger.setLevel(original_level)
@@ -4526,7 +4535,9 @@ class AutoPipetteService:
                 f"{warning_count} warning(s), {info_count} info."
             )
         return CommandResult(
-            ok=error_count == 0, message=message, data={"findings": findings}
+            ok=error_count == 0,
+            message=message,
+            data={"findings": findings, "tip_counts": tip_counts},
         )
 
     def _interlock_model(self) -> InterlockModel | None:

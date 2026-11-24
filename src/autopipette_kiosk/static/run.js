@@ -209,24 +209,31 @@
     const infoTips  = document.getElementById('protocolInfoTips');
     infoCard.hidden  = true;
     infoError.hidden = true;
+    infoTips.innerHTML = '<span style="color:var(--muted);font-size:12px">Checking tips…</span>';
+    infoCard.hidden = false;
 
     try {
-      const [infoRes, tipsRes] = await Promise.all([
+      const [infoRes, validateRes, tipsRes] = await Promise.all([
         fetch(`/protocol_info?filename=${encodeURIComponent(filename)}`),
+        fetch('/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename }),
+        }),
         fetch('/tips'),
       ]);
 
-      if (!infoRes.ok) {
-        const err = await infoRes.json();
-        infoError.textContent = `Could not load protocol info: ${err.detail || infoRes.status}`;
-        infoError.hidden = false;
-        return;
-      }
+      // Description from /protocol_info
+      const info = infoRes.ok ? await infoRes.json() : null;
+      infoDesc.textContent = info?.description || '';
+      infoDesc.hidden = !info?.description;
 
-      const info = await infoRes.json();
+      // Tip counts from /validate dry-run (most accurate — runs full protocol logic)
+      const validateBody = validateRes.ok ? await validateRes.json() : null;
+      const tipNeeds = validateBody?.data?.tip_counts || {};
+
+      // Available tips from /tips
       const tipsData = tipsRes.ok ? await tipsRes.json() : null;
-
-      // Build available tips map: tipbox_name -> remaining count
       const available = {};
       if (tipsData?.ok && tipsData?.data?.boxes) {
         for (const box of tipsData.data.boxes) {
@@ -234,8 +241,7 @@
         }
       }
 
-      // Check each tipbox the protocol needs
-      const tipNeeds = info.tip_counts || {};
+      // Render tip rows
       const tipRows = [];
       let blocked = false;
 
@@ -252,21 +258,23 @@
           </div>`);
       }
 
+      if (!tipRows.length) {
+        infoTips.innerHTML = '<span style="color:var(--muted);font-size:12px">No tip usage detected</span>';
+      } else {
+        infoTips.innerHTML = tipRows.join('');
+      }
+
       if (blocked) {
-        infoError.textContent = `Not enough tips to run this protocol. Reload the tipbox and reset the tip count in the Tips tab.`;
+        infoError.textContent = 'Not enough tips — reload the tipbox and reset the tip count in the Tips tab.';
         infoError.hidden = false;
       }
 
-      infoDesc.textContent = info.description || '';
-      infoDesc.hidden = !info.description;
-      infoTips.innerHTML = tipRows.join('');
-      infoCard.hidden = !info.description && !tipRows.length;
-
-      // Block the Run button if tips are insufficient
+      infoCard.hidden = !info?.description && !tipRows.length;
       tipBlocked = blocked;
       renderStatusCard(App.getStatus());
 
     } catch (e) {
+      infoCard.hidden = true;
       infoError.textContent = `Error loading protocol info: ${e.message}`;
       infoError.hidden = false;
     }
