@@ -15,6 +15,43 @@
   let pendingStart = null;
   let startTimer = null;
 
+  // ETA estimation — client-side only, based on elapsed time vs progress
+  let etaState = null; // { startTime, startProgress, pausedAt, pausedMs }
+
+  function etaReset() { etaState = null; }
+
+  function etaUpdate(progress, phase) {
+    if (!etaState) {
+      etaState = { startTime: Date.now(), startProgress: progress, pausedAt: null, pausedMs: 0 };
+      return null;
+    }
+    // Accumulate paused time
+    if (phase === 'paused' && !etaState.pausedAt) {
+      etaState.pausedAt = Date.now();
+    } else if (phase !== 'paused' && etaState.pausedAt) {
+      etaState.pausedMs += Date.now() - etaState.pausedAt;
+      etaState.pausedAt = null;
+    }
+    const activeMs = Date.now() - etaState.startTime - etaState.pausedMs -
+                     (etaState.pausedAt ? Date.now() - etaState.pausedAt : 0);
+    const progressDelta = progress - etaState.startProgress;
+    if (progressDelta < 0.005 || activeMs < 5000) return null; // not enough data yet
+    const msPerUnit = activeMs / progressDelta;
+    const remainingMs = msPerUnit * (1 - progress);
+    return remainingMs;
+  }
+
+  function formatDuration(ms) {
+    if (ms < 0) return null;
+    const totalSec = Math.round(ms / 1000);
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    if (h > 0) return `${h}h ${m}m`;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
+  }
+
   // ── protocol list ──────────────────────────────────────────────────────
   async function loadProtocols() {
     try {
@@ -273,6 +310,7 @@
     if (pendingStart && App.isRunActive(s)) {
       clearTimeout(startTimer);
       pendingStart = null;
+      etaReset();
       document.getElementById('runControlFeedback').textContent = '';
     }
     if (pendingAction && (
@@ -304,10 +342,13 @@
     const known = typeof progress === 'number' && Number.isFinite(progress) &&
                   progress >= 0 && progress <= 1;
     bar.hidden = !active && !known;
+    if (!active) etaReset();
     if (known) {
       const percent = Math.floor(progress * 100);
       bar.value = percent;
-      progressLabel.textContent = `${percent}%`;
+      const remainingMs = active ? etaUpdate(progress, data.phase) : null;
+      const eta = remainingMs != null ? formatDuration(remainingMs) : null;
+      progressLabel.textContent = eta ? `${percent}% · ~${eta} left` : `${percent}%`;
     } else {
       bar.removeAttribute('value');
       progressLabel.textContent = active ? 'Progress unavailable' : '';
