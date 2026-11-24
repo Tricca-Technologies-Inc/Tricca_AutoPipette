@@ -4378,13 +4378,14 @@ class AutoPipetteService:
         """List available protocol files.
 
         Returns:
-            List of ``{"name": stem, "filename": name}`` dicts, sorted by
-            filename. The union of the shared repo's ``protocols/`` and the
-            per-machine local config root's -- a filename present in both
-            resolves to the local one.
+            List of ``{"name": stem, "filename": relative path}`` dicts,
+            sorted by path, from every subfolder of the shared repo's
+            ``protocols/`` and the per-machine local config root's. A path
+            present in both resolves to the local one (see
+            `LocalConfigRoots.list_tree`).
         """
-        files = sorted(LocalConfigRoots.list_files("protocols", "*.pipette").values())
-        return [{"name": f.stem, "filename": f.name} for f in files]
+        files = LocalConfigRoots.list_tree("protocols", "*.pipette")
+        return [{"name": path.stem, "filename": name} for name, path in files.items()]
 
     def request_breakpoint(self) -> bool:
         """Pause for operator confirmation, called synchronously for a `break` line.

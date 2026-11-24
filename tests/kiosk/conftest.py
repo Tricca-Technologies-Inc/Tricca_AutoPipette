@@ -17,21 +17,16 @@ from tricca_autopipette.core.pipette_constants import DefaultPaths
 
 @pytest.fixture
 def protocols_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """Redirect both the kiosk's and the daemon's protocol directories.
+    """Redirect the daemon's shared protocol directory to an empty temp dir.
 
-    `autopipette_kiosk.main.PROTOCOLS_DIR` (the kiosk's own existence
-    pre-check/listing) and `DefaultPaths.DIR_PROTOCOL` (what
-    `AutoPipetteService.start_run`, reached over the real control plane,
-    actually reads) normally point at the same physical `protocols/` folder
-    in a single-machine deployment. Both are resolved once, not read fresh
-    per request (see CLAUDE.md), so patching each module constant directly
-    -- not the env vars they were originally read from -- is the only way
-    to redirect them per test.
+    The kiosk has no protocol directory of its own: it lists and checks
+    protocols through `tapd`'s `protocols.list`, and the daemon resolves
+    them against `DefaultPaths.DIR_PROTOCOL`. That is read fresh on every
+    call, so patching it is enough.
 
     Returns:
-        The empty temp dir now patched in as both protocol directories.
+        The empty temp dir now patched in as the shared protocol directory.
     """
-    monkeypatch.setattr(kiosk_main, "PROTOCOLS_DIR", tmp_path)
     monkeypatch.setattr(DefaultPaths, "DIR_PROTOCOL", tmp_path)
     return tmp_path
 

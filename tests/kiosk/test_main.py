@@ -50,6 +50,67 @@ class TestConnectionLifecycle:
 
 
 class TestProtocolListing:
+    def test_lists_nested_protocols_by_relative_path(
+        self, kiosk_client: TestClient, protocols_dir: Path
+    ) -> None:
+        (protocols_dir / "examples").mkdir()
+        (protocols_dir / "examples" / "transfer.pipette").write_text("wait 1\n")
+
+        response = kiosk_client.get("/protocols")
+
+        assert response.json() == [
+            {"name": "transfer", "filename": "examples/transfer.pipette"}
+        ]
+
+    def test_nested_local_override_is_validated_instead_of_shared(
+        self,
+        kiosk_client: TestClient,
+        protocols_dir: Path,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        shared = protocols_dir / "examples"
+        shared.mkdir()
+        (shared / "transfer.pipette").write_text("wait 1\n")
+        local = tmp_path / "local-protocols"
+        (local / "examples").mkdir(parents=True)
+        (local / "examples" / "transfer.pipette").write_text("move_loc missing\n")
+        monkeypatch.setattr(DefaultPaths, "DIR_LOCAL_PROTOCOL", local)
+
+        assert kiosk_client.get("/protocols").json() == [
+            {"name": "transfer", "filename": "examples/transfer.pipette"}
+        ]
+        result = kiosk_client.post(
+            "/validate", json={"filename": "examples/transfer.pipette"}
+        ).json()
+        assert any(f["severity"] == "error" for f in result["data"]["findings"])
+
+    def test_symlink_override_outside_root_is_not_listed_or_executable(
+        self,
+        kiosk_client: TestClient,
+        protocols_dir: Path,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        shared = protocols_dir / "shared"
+        shared.mkdir()
+        (shared / "a.pipette").write_text("wait 1\n")
+        monkeypatch.setattr(DefaultPaths, "DIR_PROTOCOL", shared)
+        outside = tmp_path / "outside.pipette"
+        outside.write_text("wait 1\n")
+        local = tmp_path / "local-protocols"
+        local.mkdir()
+        (local / "a.pipette").symlink_to(outside)
+        monkeypatch.setattr(DefaultPaths, "DIR_LOCAL_PROTOCOL", local)
+        assert kiosk_client.get("/protocols").json() == []
+        assert (
+            kiosk_client.post("/run", json={"filename": "a.pipette"}).status_code == 404
+        )
+        response = kiosk_client.post(
+            "/validate", json={"filename": "../outside.pipette"}
+        )
+        assert response.status_code == 404
+
     def test_empty_dir_returns_empty_list(
         self, kiosk_client: TestClient, protocols_dir: Path
     ) -> None:
@@ -73,17 +134,38 @@ class TestProtocolListing:
             {"name": "b", "filename": "b.pipette"},
         ]
 
-    def test_missing_dir_returns_500(
+    def test_missing_dir_returns_empty_list(
         self,
         kiosk_client: TestClient,
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        monkeypatch.setattr(kiosk_main, "PROTOCOLS_DIR", tmp_path / "does-not-exist")
+        monkeypatch.setattr(DefaultPaths, "DIR_PROTOCOL", tmp_path / "does-not-exist")
 
         response = kiosk_client.get("/protocols")
 
-        assert response.status_code == 500
+        assert response.json() == []
+
+    def test_daemon_not_connected_returns_503(self) -> None:
+        # No `with` block, so the lifespan never connects (see conftest).
+        response = TestClient(kiosk_main.app).get("/protocols")
+
+        assert response.status_code == 503
+
+    def test_legacy_folder_is_hidden(
+        self, kiosk_client: TestClient, protocols_dir: Path
+    ) -> None:
+        """Converted legacy protocols are unverified on hardware and need a
+        specific Murphy profile, so the kiosk never offers them; `tap` still
+        lists and runs them.
+        """
+        (protocols_dir / "legacy" / "murphy_100").mkdir(parents=True)
+        (protocols_dir / "legacy" / "murphy_100" / "a.pipette").write_text("wait 1\n")
+        (protocols_dir / "b.pipette").write_text("wait 1\n")
+
+        response = kiosk_client.get("/protocols")
+
+        assert response.json() == [{"name": "b", "filename": "b.pipette"}]
 
     def test_local_only_protocol_is_listed_alongside_the_shared_ones(
         self,
@@ -126,6 +208,17 @@ class TestProtocolListing:
 
 
 class TestRunEndpoint:
+    def test_starts_nested_protocol(
+        self, kiosk_client: TestClient, protocols_dir: Path
+    ) -> None:
+        (protocols_dir / "examples").mkdir()
+        (protocols_dir / "examples" / "a.pipette").write_text('gcode_print "hi"\n')
+
+        response = kiosk_client.post("/run", json={"filename": "examples/a.pipette"})
+
+        assert response.status_code == 200
+        assert response.json()["status"] == "running"
+
     def test_starts_a_run_and_returns_the_real_daemon_reply(
         self, kiosk_client: TestClient, protocols_dir: Path
     ) -> None:
@@ -157,7 +250,7 @@ class TestRunEndpoint:
         assert response.status_code == 200
         assert response.json()["status"] == "running"
 
-    def test_missing_file_in_the_kiosk_dir_returns_404_without_contacting_daemon(
+    def test_missing_file_returns_404(
         self, kiosk_client: TestClient, protocols_dir: Path
     ) -> None:
         del protocols_dir
@@ -167,30 +260,27 @@ class TestRunEndpoint:
 
         assert response.status_code == 404
 
-    def test_file_missing_only_on_the_daemon_side_returns_a_real_404(
-        self,
-        kiosk_client: TestClient,
-        tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
+    @pytest.mark.parametrize(
+        "filename",
+        [
+            "legacy/murphy_100/a.pipette",
+            "./legacy/murphy_100/a.pipette",
+            "examples/../legacy/murphy_100/a.pipette",
+        ],
+    )
+    @pytest.mark.parametrize("route", ["/run", "/validate"])
+    def test_legacy_protocol_is_refused_however_it_is_spelled(
+        self, kiosk_client: TestClient, protocols_dir: Path, route: str, filename: str
     ) -> None:
-        # Deliberately mismatched dirs: the kiosk's own PROTOCOLS_DIR has the
-        # file (passes its local pre-check) but the daemon's DIR_PROTOCOL --
-        # a genuinely separate system, reached over the real control plane
-        # -- does not. Only a real round trip can surface this; a test that
-        # mocked send_jsonrpc would have no daemon-side file list to be
-        # wrong about.
-        kiosk_dir = tmp_path / "kiosk-protocols"
-        kiosk_dir.mkdir()
-        (kiosk_dir / "a.pipette").write_text('gcode_print "hi"\n')
-        daemon_dir = tmp_path / "daemon-protocols"
-        daemon_dir.mkdir()
-        monkeypatch.setattr(kiosk_main, "PROTOCOLS_DIR", kiosk_dir)
-        monkeypatch.setattr(DefaultPaths, "DIR_PROTOCOL", daemon_dir)
+        (protocols_dir / "examples").mkdir()
+        (protocols_dir / "legacy" / "murphy_100").mkdir(parents=True)
+        (protocols_dir / "legacy" / "murphy_100" / "a.pipette").write_text(
+            'gcode_print "hi"\n'
+        )
 
-        response = kiosk_client.post("/run", json={"filename": "a.pipette"})
+        response = kiosk_client.post(route, json={"filename": filename})
 
         assert response.status_code == 404
-        assert "not found" in response.json()["detail"].lower()
 
     def test_a_status_push_arriving_before_the_run_response_is_not_clobbered(
         self,
@@ -416,7 +506,7 @@ class TestValidateEndpoint:
         assert len(findings) == 1
         assert findings[0]["severity"] == "error"
 
-    def test_missing_file_in_the_kiosk_dir_returns_404_without_contacting_daemon(
+    def test_missing_file_returns_404(
         self, kiosk_client: TestClient, protocols_dir: Path
     ) -> None:
         del protocols_dir
