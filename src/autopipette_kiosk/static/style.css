@@ -1018,12 +1018,20 @@ header {
 
 /* ── Tips page ── */
 #page-tips.active {
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr 1fr;
   grid-auto-rows: min-content;
   align-content: start;
   padding: 14px 16px;
   gap: 16px;
   overflow-y: auto;
+}
+
+/* hint, legend, feedback span both columns */
+#page-tips.active .tips-hint,
+#page-tips.active .tips-legend,
+#page-tips.active .tips-feedback,
+#page-tips.active .tips-empty {
+  grid-column: 1 / -1;
 }
 
 .tips-hint {
