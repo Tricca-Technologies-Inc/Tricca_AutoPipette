@@ -93,6 +93,46 @@ header {
 .header-spacer { flex: 1; min-width: 0; }
 
 /* ── Status pill ── */
+.pipette-pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s, border-color 0.12s;
+  white-space: nowrap;
+}
+
+.pipette-pill:hover { background: var(--border); }
+.pipette-pill.switching { border-color: var(--running); color: var(--running); }
+
+/* Pipette switcher panel — shown as a dropdown below the pill */
+.pipette-switcher {
+  display: none;
+  position: absolute;
+  top: 52px;
+  right: 12px;
+  z-index: 100;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  gap: 8px;
+  flex-direction: column;
+  min-width: 200px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+
+.pipette-switcher.open { display: flex; }
+
 .status-pill {
   display: flex;
   align-items: center;
@@ -259,8 +299,20 @@ header {
 .bp-btn.abort    { background: var(--error); color: #2a0a0a; }
 
 /* ── Pages ── */
-.page { display: none; overflow: hidden; }
-.page.active { display: grid; }
+.page { display: none; }
+
+/* Active pages fill main absolutely — position:relative on main
+   bounds them, inset:0 makes them fill it exactly, giving overflow-y
+   a fixed height to scroll within. */
+.page.active {
+  display: block;
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
+}
 
 /* ── Shared panel header ── */
 .panel-header {
@@ -277,15 +329,13 @@ header {
 #page-run.active {
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
 }
 
 /* ── Protocols page ── */
-#page-protocols {
-  display: none;
-  flex-direction: column;
-}
 #page-protocols.active {
   display: flex;
+  flex-direction: column;
 }
 
 .protocol-panel {

@@ -21,6 +21,9 @@
     </div>
     <span class="logo-sub" style="margin-left:4px">/ kiosk</span>
     <div class="header-spacer"></div>
+    <div class="pipette-pill" id="pipettePill" title="Active pipette — tap to switch">
+      <span id="pipettePillLabel">…</span>
+    </div>
     <div class="status-pill idle" id="statusPill">
       <div class="status-pill-dot" id="statusPillDot"></div>
       <span id="statusPillLabel">Idle</span>
@@ -39,6 +42,11 @@
       <span id="connLabel">connecting</span>
     </div>
   </header>
+  <div class="pipette-switcher" id="pipetteSwitcher">
+    <div class="pipette-switcher-title">Switch pipette</div>
+    <div id="pipetteOptions"><!-- populated by pipette.js --></div>
+    <div class="pipette-switcher-note">Eject tip first, then switch. Home plunger before pipetting.</div>
+  </div>
 
   <!-- Tab bar (issue #25) -- a data-driven registry lives in app.js; this
        markup is the two tabs that registry currently knows about. -->
@@ -340,6 +348,7 @@
 </div>
 
 <script src="/static/layout.js?v=1"></script>
+<script src="/static/pipette.js?v=1"></script>
 <script src="/static/app.js?v=3"></script>
 <script src="/static/run.js?v=5"></script>
 <script src="/static/move.js?v=3"></script>
