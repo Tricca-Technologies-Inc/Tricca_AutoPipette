@@ -11,17 +11,15 @@ from tricca_autopipette.core.coordinate import Coordinate
 
 
 class TestConstruction:
-    def test_negative_x_rejected(self) -> None:
-        with pytest.raises(ValidationError):
-            Coordinate(x=-1.0, y=0.0, z=0.0)
+    def test_negative_values_construct(self) -> None:
+        # A coordinate is also a relative offset, and some rigs' travel goes
+        # below zero; the gantry's limits are checked at move time instead.
+        coord = Coordinate(x=-1.0, y=-2.0, z=-3.0)
+        assert coord.to_tuple() == (-1.0, -2.0, -3.0)
 
-    def test_negative_y_rejected(self) -> None:
+    def test_non_finite_rejected(self) -> None:
         with pytest.raises(ValidationError):
-            Coordinate(x=0.0, y=-1.0, z=0.0)
-
-    def test_negative_z_rejected(self) -> None:
-        with pytest.raises(ValidationError):
-            Coordinate(x=0.0, y=0.0, z=-1.0)
+            Coordinate(x=math.inf, y=0.0, z=0.0)
 
     def test_zero_is_allowed(self) -> None:
         coord = Coordinate(x=0.0, y=0.0, z=0.0)
@@ -76,10 +74,9 @@ class TestGenerateOffset:
         coord = Coordinate(x=10.0, y=20.0, z=5.0)
         assert coord.generate_offset() == coord
 
-    def test_negative_result_raises(self) -> None:
+    def test_negative_result_is_allowed(self) -> None:
         coord = Coordinate(x=1.0, y=1.0, z=1.0)
-        with pytest.raises(ValueError, match="negative values"):
-            coord.generate_offset(dx=-5.0)
+        assert coord.generate_offset(dx=-5.0) == Coordinate(x=-4.0, y=1.0, z=1.0)
 
 
 class TestDistanceTo:
