@@ -2,7 +2,7 @@
 
 
 load_pipette TysonP1000.json
-home
+home all
 #
 # This protocol uses the Tyson1000 liquid profile's air gaps
 
