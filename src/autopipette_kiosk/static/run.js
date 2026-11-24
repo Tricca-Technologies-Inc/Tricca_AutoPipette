@@ -117,23 +117,9 @@
   }
 
   // "Run ▶" on the Protocols page — switch to Run tab
-  document.getElementById('goRunBtn').addEventListener('click', () => {
-    if (!selected) return;
-    // Switch to run tab via the tab bar
-    const runTabBtn = document.querySelector('[data-page="run"]');
-    if (runTabBtn) runTabBtn.click();
-  });
-
   // ── run ────────────────────────────────────────────────────────────────
-  document.getElementById('runBtn').addEventListener('click', async () => {
-    const data = App.getStatus();
-    if (!App.isConnected() || pendingStart || pendingAction) return;
-    if (App.isRunActive(data.status)) {
-      if (data.phase === 'printing') sendRunControl('pause');
-      else if (data.phase === 'paused') sendRunControl('resume');
-      return;
-    }
-    if (!selected) return;
+  async function startRun() {
+    if (!App.isConnected() || pendingStart || pendingAction || !selected) return;
     const request = {};
     pendingStart = request;
     const feedback = document.getElementById('runControlFeedback');
@@ -165,6 +151,26 @@
         renderStatusCard(App.getStatus());
       }
     }
+  }
+
+  // "Run ▶" on Protocols page: switch to Run tab AND start the run
+  document.getElementById('goRunBtn').addEventListener('click', () => {
+    if (!selected) return;
+    const runTabBtn = document.querySelector('[data-page="run"]');
+    if (runTabBtn) runTabBtn.click();
+    startRun();
+  });
+
+  // Run/Pause/Resume button on Run tab
+  document.getElementById('runBtn').addEventListener('click', async () => {
+    const data = App.getStatus();
+    if (!App.isConnected() || pendingStart || pendingAction) return;
+    if (App.isRunActive(data.status)) {
+      if (data.phase === 'printing') sendRunControl('pause');
+      else if (data.phase === 'paused') sendRunControl('resume');
+      return;
+    }
+    startRun();
   });
 
   async function sendRunControl(action) {
