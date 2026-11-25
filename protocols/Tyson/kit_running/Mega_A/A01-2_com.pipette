@@ -1,7 +1,7 @@
 # protocol for adding in FIS1 and FIS2 for panel A if they are combined into two screw cap vials
 
 load_pipette TysonP100.json
-home
+home all
 #
 # This protocol uses the Tyson100 liquid profile's air gaps explicitly:
 # pre-air 30 µL, post-air 5 µL. Each prewet cycle uses the transfer volume.
