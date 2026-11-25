@@ -1668,6 +1668,7 @@ class AutoPipette:
         volume: float | None = None,
         wiggle: bool = False,
         purge_air_gap_ul: float = 0.0,
+        redraw_post_air_gap_ul: float = 0.0,
         empties_tip: bool = True,
     ) -> None:
         """Dispense liquid from the pipette tip into a destination.
@@ -1678,9 +1679,13 @@ class AutoPipette:
             dest_col: Column index for plate wells, or None for next well.
             volume: Volume to dispense, or None for all.
             wiggle: If True, shake tip to dislodge residual droplets.
-            purge_air_gap_ul: Extra plunger travel in μL to push out a
-                post-aspirate air cushion ahead of the liquid. Ignored when
+            purge_air_gap_ul: Air cushion to push out before the liquid (μL),
+                so the well receives exactly `volume` of liquid. Ignored when
                 `volume` is None, since that path empties the tip anyway.
+            redraw_post_air_gap_ul: Air to re-draw after dispensing and
+                returning from the well (μL), to prevent dripping before
+                moving to the next destination. Only meaningful for
+                intermediate split dispenses (empties_tip=False).
             empties_tip: Whether this dispense leaves the tip empty. False
                 for a partial dispense that will be followed by more, so
                 ``state.has_liquid`` stays true.
@@ -1710,9 +1715,10 @@ class AutoPipette:
         self.dip_z_down(coor_dest, loc_dest.get_dip_distance(volume), apply_deck_offset=True)
 
         if volume:
-            # The post-aspirate cushion sits between the liquid and the tip
-            # orifice, so it has to be driven out ahead of the liquid or the
-            # well receives `purge_air_gap_ul` less than it was asked for.
+            # Purge the post-aspirate air cushion first so the well receives
+            # exactly `volume` of liquid, not `volume - purge_air_gap_ul`.
+            if purge_air_gap_ul:
+                self.operate_syringe(FluidDisplacement.dispense, purge_air_gap_ul)
             self.operate_syringe(FluidDisplacement.dispense, volume)
             # Only home the plunger after the final dispense — calling
             # clear_syringe() on a partial split would expel all remaining
@@ -1729,6 +1735,15 @@ class AutoPipette:
 
         self.state.has_liquid = not empties_tip
         self.dip_z_return(coor_dest)
+
+        # Re-draw a post-air-gap after returning from the well, before
+        # moving to the next destination, to prevent dripping in transit.
+        if redraw_post_air_gap_ul:
+            self.operate_syringe(
+                FluidDisplacement.aspiration,
+                redraw_post_air_gap_ul,
+                speed=self.syringe.speed_dispense,
+            )
 
         if not volume:
             self.home_pipette_stepper()
@@ -2101,16 +2116,23 @@ class AutoPipette:
             vol_ul, pre_air_gap_ul, post_air_gap_ul
         )
 
+        n_splits = len(resolved)
         dispensed = 0.0
         for index, (split, dest_row, dest_col) in enumerate(resolved):
             dispensed += split.vol_ul
+            is_last = index == n_splits - 1
             self.dispense_volume(
                 split.dest,
                 dest_row=dest_row,
                 dest_col=dest_col,
                 volume=split.vol_ul,
                 wiggle=wiggle,
-                purge_air_gap_ul=applied_post_air if index == 0 else 0.0,
+                # Each dispense purges the post-air-gap that was drawn (either
+                # from the initial aspirate or re-drawn after the previous split).
+                purge_air_gap_ul=applied_post_air,
+                # Re-draw the post-air-gap after each intermediate dispense to
+                # prevent dripping while moving to the next well.
+                redraw_post_air_gap_ul=0.0 if is_last else applied_post_air,
                 empties_tip=False,
             )
 
