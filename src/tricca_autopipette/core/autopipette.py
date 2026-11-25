@@ -2154,9 +2154,10 @@ class AutoPipette:
                 volume=split.vol_ul,
                 wiggle=wiggle,
                 purge_air_gap_ul=0.0,  # post-air exits naturally with the liquid
-                # Re-draw post-air after each intermediate dispense so the tip
-                # has an anti-drip seal before moving to the next destination.
-                redraw_post_air_gap_ul=0.0 if is_last else applied_post_air,
+                # No post-air redraw between splits: redrawing would pull from
+                # the remaining liquid volume, under-delivering to each well.
+                # The pre-air at the top of the tip prevents dripping in transit.
+                redraw_post_air_gap_ul=0.0,
                 empties_tip=False,
             )
 
