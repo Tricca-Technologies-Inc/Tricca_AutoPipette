@@ -640,3 +640,48 @@ class TestPipetteTransfer:
 
         aspirated_volumes = [call.args[0] for call in spy_aspirate.call_args_list]
         assert aspirated_volumes == pytest.approx([50.0, 50.0])
+
+    def test_min_pre_air_gap_shrinks_the_gap_instead_of_adding_a_chunk(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        # With a 5uL minimum, 90uL + 30uL pre + 2uL post goes in one aspirate
+        # with the pre-gap cut to the 6uL that fits, not two chunks.
+        ap = pipette_with_plates
+        ap.state.tip_state = TipState.ATTACHED
+        ap.pipette_model.syringe.min_pre_air_gap_ul = 5.0
+
+        with patch.object(ap, "aspirate_volume", wraps=ap.aspirate_volume) as spy:
+            ap.pipette(
+                vol_ul=90.0,
+                source="plate_a",
+                dest="plate_a",
+                pre_air_gap_ul=30.0,
+                post_air_gap_ul=2.0,
+                tip_end="keep",
+            )
+
+        assert [c.args[0] for c in spy.call_args_list] == pytest.approx([90.0])
+
+    def test_min_pre_air_gap_is_kept_by_chunking_when_it_cannot_fit(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        # 98uL usable less the 5uL minimum and 2uL post leaves 91uL per chunk,
+        # so 92uL splits in two even chunks, each keeping its full pre-gap.
+        # In one aspirate the pre-gap would shrink to 4uL, under the minimum.
+        ap = pipette_with_plates
+        ap.state.tip_state = TipState.ATTACHED
+        ap.pipette_model.syringe.min_pre_air_gap_ul = 5.0
+
+        with patch.object(ap, "fit_air_volumes", wraps=ap.fit_air_volumes) as spy:
+            ap.pipette(
+                vol_ul=92.0,
+                source="plate_a",
+                dest="plate_a",
+                pre_air_gap_ul=30.0,
+                post_air_gap_ul=2.0,
+                tip_end="keep",
+            )
+
+        fitted = [ap.fit_air_volumes(*c.args) for c in spy.call_args_list]
+        assert [c.args[0] for c in spy.call_args_list] == pytest.approx([46.0, 46.0])
+        assert fitted == [pytest.approx((30.0, 2.0))] * 2

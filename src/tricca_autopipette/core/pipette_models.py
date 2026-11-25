@@ -329,6 +329,10 @@ class PipetteSyringeKinematics(BaseModel):
         prewet_vol_ul: Default volume drawn per prewet cycle in μL.
         pre_air_gap_ul: Default air drawn before the liquid in μL.
         post_air_gap_ul: Default air drawn after the liquid in μL.
+        min_pre_air_gap_ul: Smallest pre-aspirate gap, in μL, that still
+            pushes the last of the liquid out; the gap may shrink to it so a
+            transfer fits in fewer chunks. None never shrinks it for
+            chunking.
         air_gap_rise_mm: Default Z travel above the well's clearance height
             over which the air gaps are drawn, at stage 2 (issue #148); 0
             draws them stationary.
@@ -444,6 +448,16 @@ class PipetteSyringeKinematics(BaseModel):
         default=0.0,
         ge=0,
         description="Air drawn after the liquid, to stop it dripping (μL)",
+    )
+
+    min_pre_air_gap_ul: float | None = Field(
+        default=None,
+        ge=0,
+        description=(
+            "Smallest pre-aspirate gap that still pushes the last liquid out; "
+            "the gap shrinks to it instead of adding a chunk (μL). None keeps "
+            "the full gap and chunks"
+        ),
     )
 
     air_gap_rise_mm: float = Field(
