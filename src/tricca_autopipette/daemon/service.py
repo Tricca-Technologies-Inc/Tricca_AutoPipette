@@ -1874,6 +1874,8 @@ class AutoPipetteService:
 
         The swap invalidates homing until the next ``init``/``home all``,
         since the syringe's mechanical limits may differ (issue #33).
+        Refused while a protocol runs; a protocol's own ``load_pipette``
+        line goes through `swap_pipette_in_protocol` instead.
 
         Args:
             filename: Pipette config filename (shared or local root).
@@ -1882,11 +1884,31 @@ class AutoPipetteService:
             Result naming the new pipette, or ``ok=False`` if the file is
             missing or invalid (nothing changes then).
         """
-        manager = self._autopipette.config_manager
         try:
-            self._apply_config_change(lambda: manager.load_pipette(filename))
+            return self.swap_pipette_in_protocol(filename)
         except (FileNotFoundError, ValueError) as e:
             return CommandResult(ok=False, message=str(e))
+
+    def swap_pipette_in_protocol(self, filename: str) -> CommandResult:
+        """Swap the active pipette from a protocol line (dual-pipette heads).
+
+        Not run-locked: the protocol holds the run. Raises rather than
+        returning ``ok=False``, so a bad filename aborts the protocol
+        instead of carrying on with the wrong pipette. A compile-time
+        failure or a dry run puts the original back (`domain_state_snapshot`).
+
+        Args:
+            filename: Pipette config filename (shared or local root).
+
+        Returns:
+            Result naming the new pipette.
+
+        Raises:
+            FileNotFoundError: If the file is missing.
+            ValueError: If the file is invalid.
+        """  # ruff: ignore[docstring-extraneous-exception]
+        manager = self._autopipette.config_manager
+        self._apply_config_change(lambda: manager.load_pipette(filename))
         name = self._autopipette.pipette_model.name
         return CommandResult(
             ok=True,
@@ -3721,6 +3743,11 @@ class AutoPipetteService:
         # The stage-2 plunger model and the gantry accel its moves restore
         # (issue #147).
         motion_snapshot = (copy.copy(autopipette.plunger), autopipette.gantry_accel)
+        # A protocol's load_pipette line (dual-pipette heads) and the homing
+        # invalidation it brings.
+        config_manager = autopipette.config_manager
+        pipette_snapshot = config_manager.snapshot_pipette()
+        homing_invalidated_snapshot = self._homing_invalidated
 
         def _restore() -> None:
             # Restoring membership first means every name in
@@ -3740,6 +3767,10 @@ class AutoPipetteService:
             state.liquid_ul, state.pre_air_gap_ul, state.post_air_gap_ul = (
                 tip_contents_snapshot
             )
+            if config_manager.snapshot_pipette() != pipette_snapshot:
+                config_manager.restore_pipette(pipette_snapshot)
+                autopipette.apply_config()
+            self._homing_invalidated = homing_invalidated_snapshot
             autopipette.plunger, autopipette.gantry_accel = motion_snapshot
             if active_liquid != autopipette.active_liquid:
                 autopipette.switch_liquid(active_liquid)
@@ -4763,5 +4794,6 @@ _LINE_DISPATCH: dict[str, _LineCommand] = {
 _STR_ARG_DISPATCH: dict[str, Callable[[AutoPipetteService, str], CommandResult]] = {
     "switch_liquid": AutoPipetteService.switch_liquid,
     "load_liquid": AutoPipetteService.load_liquid,
+    "load_pipette": AutoPipetteService.swap_pipette_in_protocol,
     "save_locations": AutoPipetteService.save_locations,
 }

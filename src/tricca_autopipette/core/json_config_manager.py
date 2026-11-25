@@ -522,6 +522,33 @@ class JsonConfigManager:
             logger.error("Failed to validate pipette config: %s", e)
             raise ValueError(f"Pipette config validation failed: {e}") from e
 
+    def snapshot_pipette(self) -> tuple[PipetteModel, str | None]:
+        """Capture the active pipette, for `restore_pipette`.
+
+        Returns:
+            The active pipette model and the file `load_pipette` loaded it
+            from (None if it came from the system file).
+
+        Raises:
+            RuntimeError: If no system config is loaded.
+        """
+        if self.system_config is None:
+            raise RuntimeError("No system config loaded.")
+        return self.system_config.pipette, self._pipette_file
+
+    def restore_pipette(self, snapshot: tuple[PipetteModel, str | None]) -> None:
+        """Put back a pipette captured by `snapshot_pipette`, without disk I/O.
+
+        Args:
+            snapshot: What `snapshot_pipette` returned.
+
+        Raises:
+            RuntimeError: If no system config is loaded.
+        """
+        if self.system_config is None:
+            raise RuntimeError("No system config loaded.")
+        self.system_config.pipette, self._pipette_file = snapshot
+
     def load_liquid(self, filename: str = CONFIG_LIQUIDS) -> LiquidProfile:
         """Load a new liquid profile into the system.
 
