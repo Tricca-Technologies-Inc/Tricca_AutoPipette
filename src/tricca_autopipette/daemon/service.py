@@ -4042,6 +4042,8 @@ class AutoPipetteService:
             exception), "warning" (a soft ``CommandResult(ok=False)``, or a
             WARNING the domain layer logged, e.g. a shrunk air gap), or
             "info" (a ``break`` line, or a skipped ``save_locations``).
+            ``data["tips"]`` maps each tipbox the protocol draws from to
+            ``{"needed", "left"}``: tips taken, and tips it had at the start.
             ``ok`` is True only if no finding is an "error".
 
         Raises:
@@ -4051,6 +4053,7 @@ class AutoPipetteService:
         lines = self._read_protocol_lines(filename)
 
         findings: list[dict[str, Any]] = []
+        tips: dict[str, dict[str, int]] = {}
         gcode_manager = self.gcode_manager
         token = _dry_run.set(True)
         # Captured once for the whole file, not per line: attaching/
@@ -4075,6 +4078,8 @@ class AutoPipetteService:
                 self._sync_plunger()
                 self._seed_drawer_model()
                 interlock = self._interlock_model()
+                boxes = self._autopipette.location_manager.tipbox_manager.boxes
+                left = {name: box.remaining for name, box in boxes.items()}
                 for line_number, raw_line in enumerate(lines, start=1):
                     line = raw_line.strip()
                     if not line or line.startswith("#"):
@@ -4082,6 +4087,13 @@ class AutoPipetteService:
                     self._dispatch_protocol_line_for_validation(
                         line, line_number, findings, warning_capture, interlock
                     )
+                # ponytail: a reset_tips mid-protocol undercounts; count
+                # pickups in next_tip if that ever matters.
+                tips = {
+                    name: {"needed": left[name] - box.remaining, "left": left[name]}
+                    for name, box in boxes.items()
+                    if name in left and left[name] > box.remaining
+                }
         finally:
             autopipette_logger.removeHandler(warning_capture)
             autopipette_logger.setLevel(original_level)
@@ -4099,7 +4111,9 @@ class AutoPipetteService:
                 f"{warning_count} warning(s), {info_count} info."
             )
         return CommandResult(
-            ok=error_count == 0, message=message, data={"findings": findings}
+            ok=error_count == 0,
+            message=message,
+            data={"findings": findings, "tips": tips},
         )
 
     def _interlock_model(self) -> InterlockModel | None:

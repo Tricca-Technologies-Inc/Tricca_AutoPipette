@@ -128,6 +128,18 @@ def test_check_button_reports_no_issues_for_a_clean_protocol(
     expect(page.locator("#findingsList")).to_contain_text("No issues found")
 
 
+def test_check_button_shows_tips_needed_per_box(
+    page: Page, live_kiosk_server_with_plates: LiveKioskServer, protocols_dir: Path
+) -> None:
+    (protocols_dir / "a.pipette").write_text("next_tip\n")
+    page.goto(live_kiosk_server_with_plates.url)
+    page.click(".protocol-item")
+
+    page.click("#checkBtn")
+
+    expect(page.locator(".tip-count")).to_contain_text("tipbox: needs 1 of 2 left")
+
+
 def test_check_button_lists_findings_without_disabling_run(
     page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
 ) -> None:
