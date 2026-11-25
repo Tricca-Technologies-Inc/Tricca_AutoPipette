@@ -1066,15 +1066,28 @@ class JsonConfigManager:
                 if liquid.prewet_vol_ul is not None
                 else syringe.prewet_vol_ul
             ),
+            # Air gap precedence: explicit liquid profile → pipette model
+            # override (e.g. P1000 needs larger gaps than P100) → syringe
+            # default.  PipetteModel.pre/post_air_gap_ul sit between liquid
+            # and syringe so a per-pipette default survives a liquid that
+            # doesn't specify gaps, while still being overrideable per liquid.
             "pre_air_gap_ul": (
                 liquid.pre_air_gap_ul
                 if liquid.pre_air_gap_ul is not None
-                else syringe.pre_air_gap_ul
+                else (
+                    self.system_config.pipette.pre_air_gap_ul
+                    if self.system_config.pipette.pre_air_gap_ul is not None
+                    else syringe.pre_air_gap_ul
+                )
             ),
             "post_air_gap_ul": (
                 liquid.post_air_gap_ul
                 if liquid.post_air_gap_ul is not None
-                else syringe.post_air_gap_ul
+                else (
+                    self.system_config.pipette.post_air_gap_ul
+                    if self.system_config.pipette.post_air_gap_ul is not None
+                    else syringe.post_air_gap_ul
+                )
             ),
             "air_gap_rise_mm": (
                 liquid.air_gap_rise_mm
