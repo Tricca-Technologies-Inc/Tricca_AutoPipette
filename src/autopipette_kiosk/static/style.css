@@ -1136,6 +1136,47 @@ header {
 .tipbox-reset-btn:hover:not(:disabled) { background: var(--border); }
 .tipbox-reset-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* Disabled tipbox card — muted, no grid */
+.tipbox-card.tipbox-disabled {
+  opacity: 0.6;
+  border-style: dashed;
+}
+
+.tipbox-card.tipbox-disabled .tipbox-count {
+  font-style: italic;
+  color: var(--muted);
+}
+
+/* Enable / Disable toggle button */
+.tipbox-toggle-btn {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, opacity 0.12s;
+  flex-shrink: 0;
+}
+
+.tipbox-toggle-disable {
+  background: var(--surface2);
+  color: var(--muted);
+}
+
+.tipbox-toggle-disable:hover { background: var(--border); }
+
+.tipbox-toggle-enable {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+
+.tipbox-toggle-enable:hover {
+  background: color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
 .tipbox-grid {
   display: grid;
   gap: 5px;

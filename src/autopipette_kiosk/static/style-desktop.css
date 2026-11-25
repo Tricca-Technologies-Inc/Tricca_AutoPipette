@@ -192,6 +192,7 @@ html.desktop-mode #page-tips.active {
 
 html.desktop-mode .tipbox-card { padding: 20px 24px; gap: 14px; }
 html.desktop-mode .tipbox-reset-btn { height: 32px; padding: 0 14px; font-size: 12px; }
+html.desktop-mode .tipbox-toggle-btn { height: 32px; padding: 0 12px; font-size: 12px; }
 html.desktop-mode .tipbox-grid { gap: 4px; }
 html.desktop-mode .tip-cell { min-width: 22px; min-height: 22px; }
 

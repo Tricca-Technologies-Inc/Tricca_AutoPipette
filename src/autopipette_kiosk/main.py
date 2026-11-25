@@ -124,6 +124,12 @@ class BreakpointResponse(BaseModel):
     proceed: bool
 
 
+class TipsToggleRequest(BaseModel):
+    """Request body for POST /tips/enable and /tips/disable."""
+
+    name: str  # tipbox location name
+
+
 class TipsResetRequest(BaseModel):
     """Request body for `POST /tips/reset`."""
 
@@ -1005,6 +1011,26 @@ async def set_tips(req: TipsSetRequest) -> CommandResultResponse:
         _control_requests.set_tips(
             SetTipsArgs(name=req.name, ranges=req.ranges, available=req.available)
         )
+    )
+
+
+@app.post("/tips/disable", response_model=CommandResultResponse)
+async def disable_tipbox(req: TipsToggleRequest) -> CommandResultResponse:
+    """Remove a tipbox from the draw pool without discarding its tip state.
+
+    The box is parked and excluded from next_tip() until re-enabled.
+    Use this when a tipbox is not physically present in the deck.
+    """
+    return await _dispatch_control_request(
+        _control_requests.disable_tipbox(req.name)
+    )
+
+
+@app.post("/tips/enable", response_model=CommandResultResponse)
+async def enable_tipbox(req: TipsToggleRequest) -> CommandResultResponse:
+    """Restore a previously disabled tipbox to the draw pool."""
+    return await _dispatch_control_request(
+        _control_requests.enable_tipbox(req.name)
     )
 
 

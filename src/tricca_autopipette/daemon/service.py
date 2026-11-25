@@ -640,6 +640,7 @@ class AutoPipetteService:
         self._broadcast_callback: Callable[[str, dict[str, Any]], None] | None = None
         self._breakpoint_event: threading.Event | None = None
         self._breakpoint_proceed = False
+        self._disabled_tipboxes: dict[str, Any] = {}  # name -> TipBox, parked
         self._run_control: _RunControl | None = None
         self._run_monitor: asyncio.Task[None] | None = None
         self._background_tasks: set[asyncio.Task[None]] = set()
@@ -2542,10 +2543,69 @@ class AutoPipetteService:
                 else {}
             )
 
+        # Include disabled boxes so the kiosk can show them with enabled:False.
+        # Temporarily register each one to reuse describe(), then unregister.
+        disabled_records = []
+        for d_name, d_box in self._disabled_tipboxes.items():
+            if args.name is not None and args.name != d_name:
+                continue
+            manager.register(d_name, d_box)
+            record = manager.describe(d_name)
+            manager.unregister(d_name)
+            record["enabled"] = False
+            disabled_records.append(record)
+        # Mark active boxes as enabled
+        for record in data["boxes"]:
+            record["enabled"] = True
+        data["boxes"] = data["boxes"] + disabled_records
+
         return CommandResult(
             ok=True,
             message=f"{manager.remaining}/{manager.capacity} tip(s) available",
             data=data,
+        )
+
+    def disable_tipbox(self, args: ResetTipsArgs) -> CommandResult:
+        """Remove a tipbox from the draw pool without discarding its state.
+
+        The box is parked in ``_disabled_tipboxes`` and excluded from
+        ``next_tip()`` until ``enable_tipbox`` restores it.
+
+        Args:
+            args: Tipbox name to disable.
+
+        Returns:
+            ok=True on success, ok=False if the box is not registered.
+        """
+        name = args.name
+        manager = self._autopipette.location_manager.tipbox_manager
+        if name in self._disabled_tipboxes:
+            return CommandResult(ok=True, message=f"{name} is already disabled.")
+        box = manager.boxes.get(name)
+        if box is None:
+            return CommandResult(ok=False, message=f"No tipbox named {name!r}.")
+        manager.unregister(name)
+        self._disabled_tipboxes[name] = box
+        return CommandResult(ok=True, message=f"{name} disabled (tip state preserved).")
+
+    def enable_tipbox(self, args: ResetTipsArgs) -> CommandResult:
+        """Restore a previously disabled tipbox to the draw pool.
+
+        Args:
+            args: Tipbox name to re-enable.
+
+        Returns:
+            ok=True on success, ok=False if the box was not disabled.
+        """
+        name = args.name
+        box = self._disabled_tipboxes.pop(name, None)
+        if box is None:
+            return CommandResult(ok=False, message=f"No disabled tipbox named {name!r}.")
+        manager = self._autopipette.location_manager.tipbox_manager
+        manager.register(name, box)
+        return CommandResult(
+            ok=True,
+            message=f"{name} enabled: {box.remaining}/{box.capacity} tips available.",
         )
 
     # ==================== Utility commands ====================
@@ -4025,6 +4085,7 @@ class AutoPipetteService:
         tip_presence_snapshot = tipbox_manager.snapshot()
         cursor_snapshot = location_manager.snapshot_cursors()
         drawer_positions_snapshot = dict(location_manager.drawer_positions)
+        disabled_tipboxes_snapshot = dict(self._disabled_tipboxes)
         state = autopipette.state
         pipette_state_snapshot = (
             state.tip_state,
@@ -4056,6 +4117,7 @@ class AutoPipetteService:
             tipbox_manager.restore(tip_presence_snapshot)
             location_manager.restore_cursors(cursor_snapshot)
             location_manager.drawer_positions = drawer_positions_snapshot
+            self._disabled_tipboxes = dict(disabled_tipboxes_snapshot)
 
             tip_state, tip_origin, has_liquid, active_liquid = pipette_state_snapshot
             state.tip_state = tip_state

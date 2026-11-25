@@ -40,29 +40,42 @@
   }
 
   function renderBox(box) {
+    const enabled = box.enabled !== false; // default true for backward compat
     const card = document.createElement('div');
     card.className = 'tipbox-card';
+    if (!enabled) card.classList.add('tipbox-disabled');
     card.dataset.box = box.name;
 
     const header = document.createElement('div');
     header.className = 'tipbox-header';
     header.innerHTML = `
       <span class="tipbox-name">${box.name}</span>
-      <span class="tipbox-count">${box.remaining}/${box.capacity} available</span>
+      <span class="tipbox-count">${enabled ? `${box.remaining}/${box.capacity} available` : 'disabled'}</span>
       <span class="tipbox-spacer"></span>
     `;
-    const resetBtn = document.createElement('button');
-    resetBtn.className = 'tipbox-reset-btn';
-    resetBtn.textContent = 'Reloaded';
-    resetBtn.title = `Mark ${box.name} as full`;
-    resetBtn.addEventListener('click', () => resetBox(box.name));
-    header.appendChild(resetBtn);
+
+    if (enabled) {
+      const resetBtn = document.createElement('button');
+      resetBtn.className = 'tipbox-reset-btn';
+      resetBtn.textContent = 'Reloaded';
+      resetBtn.title = `Mark ${box.name} as full`;
+      resetBtn.addEventListener('click', () => resetBox(box.name));
+      header.appendChild(resetBtn);
+    }
+
+    const toggleBtn = document.createElement('button');
+    toggleBtn.className = `tipbox-toggle-btn ${enabled ? 'tipbox-toggle-disable' : 'tipbox-toggle-enable'}`;
+    toggleBtn.textContent = enabled ? 'Disable' : 'Enable';
+    toggleBtn.title = enabled ? `Remove ${box.name} from tip draw pool` : `Add ${box.name} to tip draw pool`;
+    toggleBtn.addEventListener('click', () => toggleBox(box.name, enabled));
+    header.appendChild(toggleBtn);
     card.appendChild(header);
+
+    // Hide the grid for disabled boxes — no point showing stale state
+    if (!enabled) return card;
 
     const grid = document.createElement('div');
     grid.className = 'tipbox-grid';
-    // Fixed cell size so a 1-col box stays narrow and a 12-col box
-    // stays proportional — 28px matches the .tip-cell CSS sizing.
     grid.style.gridTemplateColumns = `repeat(${box.num_col}, 28px)`;
     grid.style.gridTemplateRows = `repeat(${box.num_row}, 28px)`;
 
@@ -80,8 +93,6 @@
         } else {
           cell.title = wellId(row, col);
           if (box.present[index]) cell.classList.add('present');
-          // A used tip put back in its slot (#15): not handed out again
-          // until an operator taps it available (or hits "Reloaded").
           if (box.slots && box.slots[index] === 'used') cell.classList.add('used');
           if (index === box.next_index) cell.classList.add('next');
           cell.addEventListener('click', () => toggleCell(box, index, cell));
@@ -91,6 +102,19 @@
     }
     card.appendChild(grid);
     return card;
+  }
+
+  async function toggleBox(name, currentlyEnabled) {
+    const endpoint = currentlyEnabled ? '/tips/disable' : '/tips/enable';
+    try {
+      await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+    } finally {
+      loadTips();
+    }
   }
 
   // ── toggle math: pure, no DOM/fetch -- given a box's current present/

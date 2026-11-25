@@ -417,6 +417,14 @@ class ControlRequests(JsonRpcRequestBuilder):
         """
         return self.gen_request("config.set_tips", dataclasses.asdict(args))
 
+    def disable_tipbox(self, name: str) -> dict[str, Any]:
+        """Build a request to disable a tipbox (remove from draw pool)."""
+        return self.gen_request("config.disable_tipbox", dataclasses.asdict(ResetTipsArgs(name=name)))
+
+    def enable_tipbox(self, name: str) -> dict[str, Any]:
+        """Build a request to re-enable a disabled tipbox."""
+        return self.gen_request("config.enable_tipbox", dataclasses.asdict(ResetTipsArgs(name=name)))
+
     def tips(self, args: TipsArgs) -> dict[str, Any]:
         """Build a request for tip availability per box.
 
