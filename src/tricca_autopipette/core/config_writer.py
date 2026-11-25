@@ -284,7 +284,7 @@ HIGH_RISK_BOUNDS: dict[tuple[type[BaseModel], str], tuple[float, float]] = {
     # The hard mechanical limit (#29): the syringe's physical stroke is 60 mm,
     # and homing drives up to twice this toward the endstop.
     (PipetteSyringeKinematics, "max_travel_mm"): (1, 60),
-    (PipetteSyringeKinematics, "min_pre_air_gap_mm"): (0, 20),
+    (PipetteSyringeKinematics, "min_pre_air_gap_ul"): (0, 100),
     (PipetteSyringeKinematics, "speed_aspirate"): (0.25, 50),  # mm/s
     (PipetteSyringeKinematics, "speed_dispense"): (0.25, 50),  # mm/s
     (PipetteSyringeKinematics, "accel_home"): (2.5, 200),  # mm/s²

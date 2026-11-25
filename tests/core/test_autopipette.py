@@ -583,7 +583,7 @@ class TestPipetteTransfer:
         # with the pre-gap cut to the 6uL that fits, not two chunks.
         ap = pipette_with_plates
         ap.state.tip_state = TipState.ATTACHED
-        ap.pipette_model.syringe.min_pre_air_gap_mm = ap.volume_converter.vol_to_mm(5.0)
+        ap.pipette_model.syringe.min_pre_air_gap_ul = 5.0
 
         with patch.object(ap, "aspirate_volume", wraps=ap.aspirate_volume) as spy:
             ap.pipette(
@@ -603,7 +603,7 @@ class TestPipetteTransfer:
         # 98uL usable less the 5uL minimum and 2uL post leaves 91uL per chunk.
         ap = pipette_with_plates
         ap.state.tip_state = TipState.ATTACHED
-        ap.pipette_model.syringe.min_pre_air_gap_mm = ap.volume_converter.vol_to_mm(5.0)
+        ap.pipette_model.syringe.min_pre_air_gap_ul = 5.0
 
         with patch.object(ap, "fit_air_volumes", wraps=ap.fit_air_volumes) as spy:
             ap.pipette(

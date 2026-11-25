@@ -1726,9 +1726,8 @@ class AutoPipette:
         # by exactly the air overhead on every full chunk. With a minimum
         # pre-gap set, only that minimum is budgeted: fit_air_volumes shrinks
         # the pre-gap toward it rather than adding a chunk.
-        min_pre_mm = self.pipette_model.syringe.min_pre_air_gap_mm
-        if min_pre_mm is not None:
-            min_pre_ul = max(0.0, self.volume_converter.mm_to_vol(min_pre_mm))
+        min_pre_ul = self.pipette_model.syringe.min_pre_air_gap_ul
+        if min_pre_ul is not None:
             pre_air_gap_ul_budget = min(pre_air_gap_ul, min_pre_ul)
         else:
             pre_air_gap_ul_budget = pre_air_gap_ul
