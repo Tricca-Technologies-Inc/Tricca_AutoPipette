@@ -164,6 +164,27 @@ class TestSyringeHomingTravel:
             "MANUAL_STEPPER STEPPER=pipette_stepper SET_POSITION=0\n",
         ]
 
+    def test_homing_uses_speed_home_when_set(self, autopipette: AutoPipette) -> None:
+        autopipette.system_config.pipette.syringe.speed_home = 12.5
+        autopipette._update_syringe_params()
+        autopipette.get_gcode()
+
+        autopipette.home_pipette_stepper()
+
+        assert all("SPEED=12.5 " in line for line in autopipette.get_gcode()[:2])
+
+    def test_pipette_accels_reach_the_syringe(self, autopipette: AutoPipette) -> None:
+        # Pipette-only fields: the merged params used to drop them, so every
+        # plunger move ran at the 200 mm/s² default whatever the file said.
+        syringe = autopipette.system_config.pipette.syringe
+        syringe.accel_home, syringe.accel_move = 150.0, 120.0
+        autopipette._update_syringe_params()
+
+        assert (autopipette.syringe.accel_home, autopipette.syringe.accel_move) == (
+            150.0,
+            120.0,
+        )
+
     def test_clear_syringe_overshoots_twice_the_travel(
         self, autopipette: AutoPipette
     ) -> None:

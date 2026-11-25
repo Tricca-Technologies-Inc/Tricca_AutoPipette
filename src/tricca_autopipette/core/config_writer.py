@@ -292,6 +292,7 @@ HIGH_RISK_BOUNDS: dict[tuple[type[BaseModel], str], tuple[float, float]] = {
     (PipetteSyringeKinematics, "min_pre_air_gap_ul"): (0, 100),
     (PipetteSyringeKinematics, "speed_aspirate"): (0.25, 50),  # mm/s
     (PipetteSyringeKinematics, "speed_dispense"): (0.25, 50),  # mm/s
+    (PipetteSyringeKinematics, "speed_home"): (0.25, 50),  # mm/s
     (PipetteSyringeKinematics, "accel_home"): (2.5, 200),  # mm/s²
     (PipetteSyringeKinematics, "accel_move"): (2.5, 200),  # mm/s²
     (PipetteSyringeKinematics, "wait_aspirate_ms"): (0, 10000),
