@@ -440,7 +440,9 @@ class AutoPipette:
             >>> pipette.init_speed()  # doctest: +SKIP
         """
         self.set_speed_factor(100)  # Default speed factor
-        self.set_max_velocity(self.gantry.speed_max)
+        # speed_max is mm/min like every gantry speed; SET_VELOCITY_LIMIT
+        # takes mm/s.
+        self.set_max_velocity(round(self.gantry.speed_max / 60, 3))
         self.set_max_accel(self.gantry.accel_max)
 
     def set_coor_sys(self, mode: str | CoordinateSystem) -> None:

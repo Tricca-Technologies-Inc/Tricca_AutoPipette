@@ -127,6 +127,17 @@ class TestInitPipette:
         assert any("SET_SERVO" in line for line in gcode)  # home_servo
         assert any("MANUAL_STEPPER" in line for line in gcode)  # home_pipette_stepper
 
+    def test_velocity_limit_is_speed_max_in_mm_per_s(
+        self, autopipette: AutoPipette
+    ) -> None:
+        # speed_max is mm/min like the other gantry speeds; Klipper's
+        # SET_VELOCITY_LIMIT VELOCITY takes mm/s.
+        autopipette.gantry = GantryKinematics(speed_max=30000.0)
+
+        autopipette.init_speed()
+
+        assert "SET_VELOCITY_LIMIT VELOCITY=500.0\n" in autopipette.get_gcode()
+
 
 class TestSyringeHomingTravel:
     """Issue #29: endstop moves use the configured travel, not a volume.
