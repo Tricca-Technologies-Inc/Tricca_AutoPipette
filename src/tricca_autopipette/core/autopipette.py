@@ -1079,7 +1079,9 @@ class AutoPipette:
         )
         self.move_to(curr_coor)
         self.dip_z_down(
-            curr_coor, self.location_manager.waste_container.get_dip_distance(vol=None)
+            curr_coor,
+            self.location_manager.waste_container.get_dip_distance(vol=None),
+            apply_deck_offset=True,
         )
         self.eject_tip()
         self.dip_z_return(curr_coor)
@@ -1177,22 +1179,33 @@ class AutoPipette:
             raise ValueError(f"--keep_tip conflicts with --tip_end {tip_end}")
         return "keep"
 
-    def dip_z_down(self, curr_coor: Coordinate, distance: float) -> None:
+    def dip_z_down(
+        self,
+        curr_coor: Coordinate,
+        distance: float,
+        apply_deck_offset: bool = False,
+    ) -> None:
         """Lower the pipette tip down by a specified distance.
-
-        Applies the active pipette's deck offset Z so that dip depths
-        calibrated for the P100 reference nozzle are automatically adjusted
-        for pipettes with a different nozzle extension (e.g. P1000 with a
-        negative Z offset meaning its nozzle is longer and needs less
-        downward travel to reach the same depth).
 
         Args:
             curr_coor: Current XY position.
             distance: Distance to move down in Z axis (from location config).
+            apply_deck_offset: When True, adjusts the distance by the active
+                pipette's deck_offset.z so that dip depths calibrated for the
+                P100 reference nozzle are correct for a longer/shorter nozzle.
+                Pass True for aspirate/dispense/waste dips; leave False for
+                tipbox dips (tipbox coordinates are absolute and already
+                account for the physical tip height).
         """
-        off = self.pipette_model.deck_offset
-        adjusted = max(0.0, distance + off.z) if off.z != 0.0 else distance
-        self.logger.debug("Dipping down to Z=%s (adjusted from %s, offset=%s)", adjusted, distance, off.z)
+        if apply_deck_offset:
+            off = self.pipette_model.deck_offset
+            adjusted = max(0.0, distance + off.z) if off.z != 0.0 else distance
+            self.logger.debug(
+                "Dipping down to Z=%s (adjusted from %s, deck_offset.z=%s)",
+                adjusted, distance, off.z,
+            )
+        else:
+            adjusted = distance
         coor_dip = Coordinate(x=curr_coor.x, y=curr_coor.y, z=adjusted)
         self.move_to_z(coor_dip)
         self.gcode_wait(50)  # Default wait
@@ -1595,7 +1608,7 @@ class AutoPipette:
                     speed=self.syringe.speed_dispense,
                 )
 
-            self.dip_z_down(coor_source, dip_z)
+            self.dip_z_down(coor_source, dip_z, apply_deck_offset=True)
 
             for _ in range(prewet_cycles):
                 self.operate_syringe(
@@ -1626,7 +1639,7 @@ class AutoPipette:
                 speed=self.syringe.speed_dispense,
             )
 
-        self.dip_z_down(coor_source, dip_z)
+        self.dip_z_down(coor_source, dip_z, apply_deck_offset=True)
 
         # Aspirate liquid
         self.operate_syringe(FluidDisplacement.aspiration, volume)
@@ -1688,7 +1701,7 @@ class AutoPipette:
         self.note_action(f"Dispensing {vol_desc} to '{well}'")
 
         self.move_to(coor_dest)
-        self.dip_z_down(coor_dest, loc_dest.get_dip_distance(volume))
+        self.dip_z_down(coor_dest, loc_dest.get_dip_distance(volume), apply_deck_offset=True)
 
         if volume:
             # The post-aspirate cushion sits between the liquid and the tip
@@ -2132,7 +2145,7 @@ class AutoPipette:
         self.note_action("Emptying leftover tip contents to waste container")
         curr_coor = waste.next()
         self.move_to(curr_coor)
-        self.dip_z_down(curr_coor, waste.get_dip_distance(vol=None))
+        self.dip_z_down(curr_coor, waste.get_dip_distance(vol=None), apply_deck_offset=True)
         self.clear_syringe()
         self.gcode_wait(self.syringe.wait_dispense_ms)
         self.dip_z_return(curr_coor)
