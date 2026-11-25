@@ -1714,7 +1714,11 @@ class AutoPipette:
             # orifice, so it has to be driven out ahead of the liquid or the
             # well receives `purge_air_gap_ul` less than it was asked for.
             self.operate_syringe(FluidDisplacement.dispense, volume)
-            self.clear_syringe()
+            # Only home the plunger after the final dispense — calling
+            # clear_syringe() on a partial split would expel all remaining
+            # liquid into this well instead of saving it for subsequent splits.
+            if empties_tip:
+                self.clear_syringe()
         else:
             self.clear_syringe()
 
