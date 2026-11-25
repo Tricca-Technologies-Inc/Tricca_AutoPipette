@@ -13,7 +13,7 @@ from unittest.mock import patch
 import pytest
 from pydantic import ValidationError
 
-from tricca_autopipette.core.autopipette import AutoPipette
+from tricca_autopipette.core.autopipette import AutoPipette, even_chunks
 from tricca_autopipette.core.coordinate import Coordinate
 from tricca_autopipette.core.pipette_exceptions import (
     NoTipboxError,
@@ -438,6 +438,30 @@ class TestResolveTechnique:
         assert spy_fit.call_args.args == pytest.approx((20.0, 5.0, 2.0))
 
 
+class TestEvenChunks:
+    @pytest.mark.parametrize(
+        ("total", "max_chunk", "expected"),
+        [
+            (1000.0, 490.0, [333.0, 333.0, 334.0]),
+            (50.0, 98.0, [50.0]),
+            (196.0, 98.0, [98.0, 98.0]),
+            (100.5, 98.0, [50.5, 50.0]),
+            (195.0, 97.5, [97.5, 97.5]),
+        ],
+    )
+    def test_splits_into_the_fewest_near_equal_chunks(
+        self, total: float, max_chunk: float, expected: list[float]
+    ) -> None:
+        chunks = even_chunks(total, max_chunk)
+
+        assert chunks == pytest.approx(expected)
+        assert sum(chunks) == pytest.approx(total)
+        assert max(chunks) <= max_chunk
+
+    def test_nothing_gives_no_chunks(self) -> None:
+        assert even_chunks(0.0, 98.0) == []
+
+
 class TestFitAirVolumes:
     """The p100_vertical fixture is a 100uL syringe with a 2uL margin."""
 
@@ -576,8 +600,8 @@ class TestPipetteTransfer:
         self, pipette_with_plates: AutoPipette
     ) -> None:
         # p100_vertical is a 100uL syringe with a 2uL capacity margin, so a
-        # chunk is 98uL of usable capacity -- a 250uL transfer splits into
-        # [98, 98, 54] rather than [100, 100, 50].
+        # chunk holds at most 98uL -- a 250uL transfer needs three chunks,
+        # split as evenly as whole microlitres allow.
         pipette_with_plates.state.tip_state = TipState.ATTACHED
 
         with patch.object(
@@ -590,14 +614,14 @@ class TestPipetteTransfer:
             )
 
         aspirated_volumes = [call.args[0] for call in spy_aspirate.call_args_list]
-        assert aspirated_volumes == pytest.approx([98.0, 98.0, 54.0])
+        assert aspirated_volumes == pytest.approx([83.0, 83.0, 84.0])
 
     def test_air_gaps_come_out_of_the_per_chunk_budget(
         self, pipette_with_plates: AutoPipette
     ) -> None:
         # 98uL usable, less a 30uL pre-gap and a 2uL post-gap, leaves 66uL of
-        # liquid per chunk. Chunking on max_volume_ul alone would overflow the
-        # syringe by the air overhead on every full chunk.
+        # liquid per chunk, so 100uL takes two. Chunking on max_volume_ul
+        # alone would overflow the syringe by the air overhead.
         pipette_with_plates.state.tip_state = TipState.ATTACHED
 
         with patch.object(
@@ -615,4 +639,4 @@ class TestPipetteTransfer:
             )
 
         aspirated_volumes = [call.args[0] for call in spy_aspirate.call_args_list]
-        assert aspirated_volumes == pytest.approx([66.0, 34.0])
+        assert aspirated_volumes == pytest.approx([50.0, 50.0])

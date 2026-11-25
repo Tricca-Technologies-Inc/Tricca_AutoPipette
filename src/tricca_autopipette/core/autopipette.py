@@ -88,6 +88,38 @@ class DispenseTarget(NamedTuple):
 _PLUNGER_EPS_MM = 1e-6
 
 
+def even_chunks(total: float, max_chunk: float) -> list[float]:
+    """Split a volume into the fewest near-equal chunks that each fit.
+
+    Chunks are whole microlitres where that keeps every chunk within
+    `max_chunk`, the larger ones last; any fraction goes on the first.
+    Otherwise every chunk is exactly ``total / n``.
+
+    Args:
+        total: Volume to split, in μL.
+        max_chunk: Largest volume one chunk may hold, in μL.
+
+    Returns:
+        The chunk volumes in μL, summing to `total`; empty for nothing.
+
+    Example:
+        >>> even_chunks(1000.0, 490.0)
+        [333.0, 333.0, 334.0]
+    """
+    tol = PhysicalConstants.VOLUME_TOLERANCE_UL
+    if total <= tol:
+        return []
+    n = math.ceil(total / max_chunk - tol)
+    base = math.floor(total / n)
+    extra = total - base * n
+    whole = int(extra)
+    chunks = [float(base)] * (n - whole) + [float(base + 1)] * whole
+    chunks[0] += extra - whole
+    if max(chunks) > max_chunk + tol:
+        return [total / n] * n
+    return chunks
+
+
 class AutoPipette:
     """Main controller class for automated pipette operations.
 
@@ -1930,13 +1962,7 @@ class AutoPipette:
         if max_vol <= PhysicalConstants.VOLUME_TOLERANCE_UL:
             raise VolumeCapacityError(vol_ul, self.usable_capacity_ul())
 
-        chunks = int(vol_ul // max_vol)
-        remainder = vol_ul - (chunks * max_vol)
-        transfer_volumes: list[float] = [float(max_vol)] * chunks
-
-        # Add remainder if significant
-        if remainder > PhysicalConstants.VOLUME_TOLERANCE_UL:
-            transfer_volumes.append(remainder)
+        transfer_volumes = even_chunks(vol_ul, max_vol)
 
         # A metered dispense smaller than the first chunk leaves liquid for
         # the waste: refuse now, before the tip pickup, if there is none.
