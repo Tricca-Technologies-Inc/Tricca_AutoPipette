@@ -299,6 +299,8 @@ HIGH_RISK_BOUNDS: dict[tuple[type[BaseModel], str], tuple[float, float]] = {
     (PipetteModel, "tip_press_mm"): (0, 10),
     (PipetteModel, "tip_press_feedrate"): (10, 12000),  # mm/min
     (PipetteModel, "tip_press_wait_ms"): (0, 5000),
+    (PipetteModel, "dispense_hover_mm"): (0, 20),
+    (PipetteModel, "dispense_rise_mm"): (0, 20),
     (ServoConfig, "angle_retract"): (0, 180),  # degrees
     (ServoConfig, "angle_eject"): (0, 180),  # degrees
     (ServoConfig, "wait_ms"): (0, 5000),

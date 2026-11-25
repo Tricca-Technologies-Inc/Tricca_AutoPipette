@@ -159,7 +159,10 @@ def test_stage2_coordinated_air_gap_emission(pipette_with_plates: AutoPipette) -
     25 mm/s, with accel 72.472 = 200 x 2/5.519353; the liquid is drawn
     stationary at the dip; the post gap (4.302626 mm) rides the rise back
     to ``Z3.0`` at F697.249 / accel 92.966, scaled the same way. Each
-    restores the gantry's 3000.
+    restores the gantry's 3000. The dispense (issue #205) pushes the post
+    gap out first (``P-20.77252``), then the 20 μL of liquid
+    (``P-5.519353``), then clears to ``P0``, which pushes out the pre gap
+    behind it. plate_a dips to its travel height, so the hover is a no-op.
     """
     ap = pipette_with_plates
     ap.plunger = AbsolutePlunger("P", -60.0, 0.0, 0.0)

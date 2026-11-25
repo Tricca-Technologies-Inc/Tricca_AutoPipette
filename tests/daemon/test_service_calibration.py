@@ -195,9 +195,13 @@ class TestDispense:
         assert result.ok, result.message
         assert result.data is not None
         point = result.data["points"][0]
-        # The dispense is the last plunger MOVE; the calibration pairs the
-        # weighed volume with exactly that travel, not with the 40 uL asked.
-        assert point["travel_mm"] == pytest.approx(abs(_move_distances(emitted)[-1]))
+        # The dispense is the plunger MOVE just before the final clear; the
+        # calibration pairs the weighed volume with exactly that travel, not
+        # with the 40 uL asked.
+        moves = [abs(d) for d in _move_distances(emitted)]
+        clear = 2 * svc._autopipette.syringe.max_travel_mm
+        dispense = moves[moves.index(clear, moves.index(clear) + 2) - 1]
+        assert point["travel_mm"] == pytest.approx(dispense)
         assert point["target_ul"] == 40.0  # ruff:ignore[float-equality-comparison]
         assert result.data["step"] == "record"
         assert result.data["index"] == 0
