@@ -43,10 +43,12 @@ from tricca_autopipette.core.pipette_constants import (
     PhysicalConstants,
 )
 from tricca_autopipette.core.pipette_exceptions import (
+    NoTipboxError,
     NotALocationError,
     NotHomedError,
     NoTipOriginError,
     NoWasteContainerError,
+    OutOfTipsError,
     TipAlreadyOnError,
     VolumeCapacityError,
 )
@@ -974,25 +976,41 @@ class AutoPipette:
         """  # ruff: ignore[docstring-extraneous-exception]
         if self.state.tip_state == TipState.ATTACHED:
             raise TipAlreadyOnError()
-        # Checked on the box that will supply the tip, before a slot is taken.
-        resolved_name: str | None = (
-            tipbox_name
-            or self.pipette_model.tipbox
-        )
 
-        if resolved_name is not None:
-            supplier = resolved_name
+        # Resolve the tipbox source: explicit call arg wins, then pipette config.
+        # pipette_model.tipbox may now be str | list[str] | None.
+        configured = tipbox_name or self.pipette_model.tipbox
+
+        if isinstance(configured, list):
+            # Try each allowed box in order; raise OutOfTipsError if all empty.
+            if not configured:
+                raise NoTipboxError()
+            last_exc: OutOfTipsError | None = None
+            for box_name in configured:
+                self.location_manager.check_drawer(box_name)
+                try:
+                    name, box, loc_tip, index = (
+                        self.location_manager.tipbox_manager.next_tip(name=box_name)
+                    )
+                    break
+                except OutOfTipsError as exc:
+                    last_exc = exc
+                    continue
+            else:
+                raise OutOfTipsError(configured) from last_exc
         else:
-            peeked = self.location_manager.tipbox_manager.peek_tip()
-            supplier = peeked[0] if peeked else None
-        if supplier is not None:
-            self.location_manager.check_drawer(supplier)
-
-        # The supplying box comes back with the coordinate: boxes may sit at
-        # different heights, so the dip distance must come from *that* box.
-        name, box, loc_tip, index = self.location_manager.tipbox_manager.next_tip(
-            name=resolved_name
-        )
+            # Single name or None — original behaviour.
+            resolved_name: str | None = configured
+            if resolved_name is not None:
+                supplier = resolved_name
+            else:
+                peeked = self.location_manager.tipbox_manager.peek_tip()
+                supplier = peeked[0] if peeked else None
+            if supplier is not None:
+                self.location_manager.check_drawer(supplier)
+            name, box, loc_tip, index = self.location_manager.tipbox_manager.next_tip(
+                name=resolved_name
+            )
         self.note_action(
             f"Picking up tip from '{name}' at (X:{loc_tip.x:.2f}, Y:{loc_tip.y:.2f})"
         )

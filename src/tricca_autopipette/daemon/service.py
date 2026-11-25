@@ -100,6 +100,7 @@ from tricca_autopipette.core.pipette_constants import (
 from tricca_autopipette.core.pipette_exceptions import (
     NotALocationError,
     NotHomedError,
+    OutOfTipsError,
     ProtocolAbortedError,
 )
 from tricca_autopipette.core.pipette_models import (
@@ -4230,7 +4231,25 @@ class AutoPipetteService:
                 self._seed_drawer_model()
                 for line in commands:
                     check_canceled()
-                    self._dispatch_protocol_line(line)
+                    while True:
+                        try:
+                            self._dispatch_protocol_line(line)
+                            break
+                        except OutOfTipsError as exc:
+                            boxes = ", ".join(exc.args[0]) if exc.args else "unknown"
+                            logger.warning(
+                                "Out of tips (boxes: %s) — pausing for reload", boxes
+                            )
+                            self._current.message = (
+                                f"Out of tips ({boxes}). Reload the tipbox, "
+                                "reset the tip count in the Tips tab, then continue."
+                            )
+                            self._broadcast_status()
+                            if not self.request_breakpoint():
+                                raise ProtocolAbortedError(
+                                    "Protocol aborted: out of tips."
+                                ) from exc
+                            # Operator reloaded and continued — retry the same line
                 check_canceled()
                 if control is not None and self.client is not None:
                     gcode_buffer = gcode_manager.get_buffer()

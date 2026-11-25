@@ -533,11 +533,14 @@ class PipetteModel(BaseModel):
         ),
     )
 
-    tipbox: str | None = Field(
+    tipbox: str | list[str] | None = Field(
         default=None,
         description=(
-            "Name of the tipbox location this pipette draws from. "
-            "When set, AutoPipette.next_tip() routes to this specific box."
+            "Tipbox(es) this pipette draws from. A single string names one box; "
+            "a list names multiple boxes tried in order (first non-empty wins); "
+            "null draws from all registered boxes in location-file order. "
+            "Use a list to restrict a pipette to its own tip size while still "
+            "supporting automatic fallthrough to a second box of the same type."
         ),
     )
 

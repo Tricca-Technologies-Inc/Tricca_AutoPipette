@@ -99,6 +99,8 @@ const App = (() => {
   }
 
   // ── global breakpoint banner ────────────────────────────────────────────
+  let _lastBreakpointId = null;
+
   function renderBreakpointBanner() {
     const banner = document.getElementById('breakpointBanner');
     const msg = document.getElementById('breakpointMsg');
@@ -106,7 +108,39 @@ const App = (() => {
       status.breakpoint?.run_id === status.run_id ? status.breakpoint : null;
     banner.classList.toggle('active', !!bp);
     if (bp) {
-      msg.textContent = bp.filename ? `Protocol: ${bp.filename}` : '';
+      // Show status.message if set (e.g. out-of-tips reason), else filename
+      msg.textContent = status.message || (bp.filename ? `Protocol: ${bp.filename}` : '');
+
+      // Audio alert on new breakpoint — beep three times
+      const bpKey = bp.run_id + (status.message || '');
+      if (bpKey !== _lastBreakpointId) {
+        _lastBreakpointId = bpKey;
+        playAlert();
+      }
+    } else {
+      _lastBreakpointId = null;
+    }
+  }
+
+  function playAlert() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const beep = (startTime) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 880;
+        gain.gain.setValueAtTime(0.4, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.18);
+        osc.start(startTime);
+        osc.stop(startTime + 0.18);
+      };
+      beep(ctx.currentTime);
+      beep(ctx.currentTime + 0.25);
+      beep(ctx.currentTime + 0.5);
+    } catch (e) {
+      // Audio unavailable — silent fallback
     }
   }
 
