@@ -602,9 +602,8 @@ class AutoPipetteService:
 
         self.breakpoint_handler: Callable[[], bool] | None = None
         self._last_persisted_state: tuple[str, bool, str | None] | None = None
-        # Set when a live pipette/gantry/system change makes Moonraker's
-        # homed_axes untrustworthy (issue #33); cleared by a full init.
-        self._homing_invalidated = False
+        # Backs `_homing_invalidated`, set without the push it makes.
+        self._homing_invalidated_flag = False
         # Last snapshot written to Moonraker's DB, so the decorator can skip
         # a round trip when nothing about tip occupancy changed.
         self._persisted_tip_presence: dict[str, Any] | None = None
@@ -4374,6 +4373,33 @@ class AutoPipetteService:
         """Return the current (or most recent) run status."""
         return self._current
 
+    def status_dict(self) -> dict[str, Any]:
+        """Describe the run status for ``run.status``/``notify_run_status``.
+
+        Returns:
+            `RunStatus.to_dict`, plus ``homing_invalidated``.
+        """
+        return {
+            **self._current.to_dict(),
+            "homing_invalidated": self._homing_invalidated,
+        }
+
+    @property
+    def _homing_invalidated(self) -> bool:
+        """Whether a live config change made Klipper's homed state untrustworthy.
+
+        Set by a pipette/gantry/system change (issue #33) and cleared by a
+        full ``init``/``home all``. A change is pushed to clients, since
+        Klipper keeps reporting the axes homed.
+        """
+        return self._homing_invalidated_flag
+
+    @_homing_invalidated.setter
+    def _homing_invalidated(self, value: bool) -> None:
+        if value != self._homing_invalidated_flag:
+            self._homing_invalidated_flag = value
+            self._broadcast_status()
+
     def list_protocols(self) -> list[dict[str, str]]:
         """List available protocol files.
 
@@ -4505,7 +4531,7 @@ class AutoPipetteService:
         """Push the current run status to control-plane clients, if wired up."""
         if self._broadcast_callback is None:
             return
-        self._broadcast_callback("notify_run_status", self._current.to_dict())
+        self._broadcast_callback("notify_run_status", self.status_dict())
 
 
 def _curve(volumes_ul: list[float], travel_mm: list[float]) -> dict[str, Any]:

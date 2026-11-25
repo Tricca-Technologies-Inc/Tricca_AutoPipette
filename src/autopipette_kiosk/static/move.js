@@ -23,8 +23,11 @@
     return !!homedAxes && ['x', 'y', 'z'].every(axis => homedAxes.includes(axis));
   }
 
-  function renderNotHomedBanner(homedAxes) {
-    document.getElementById('moveNotHomedBanner').classList.toggle('active', !isHomed(homedAxes));
+  // A config change (pipette/gantry/system swap) also makes tapd refuse
+  // moves until a full home, though Klipper still reports xyz homed.
+  function renderNotHomedBanner(homedAxes, homingInvalidated) {
+    document.getElementById('moveNotHomedBanner').classList.toggle(
+      'active', homingInvalidated || !isHomed(homedAxes));
   }
 
   // ── live position: skip overwriting a field the operator is actively
@@ -57,7 +60,7 @@
     running = data.status === 'running';
     applyRunningState();
     const toolhead = data.toolhead || {};
-    renderNotHomedBanner(toolhead.homed_axes);
+    renderNotHomedBanner(toolhead.homed_axes, !!data.homing_invalidated);
     renderLivePosition(toolhead.position);
   });
 

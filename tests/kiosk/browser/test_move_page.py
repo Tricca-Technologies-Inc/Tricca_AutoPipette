@@ -97,6 +97,27 @@ def test_step_selector_is_mutually_exclusive(
     expect(page.locator("#dpadStepLabel")).to_have_text("10 mm")
 
 
+def test_banner_shows_when_a_config_change_invalidated_homing(
+    page: Page,
+    live_kiosk_server_with_moonraker: LiveKioskServer,
+    live_control_plane: LiveControlPlane,
+) -> None:
+    # Klipper still says xyz is homed, but tapd refuses moves until a full
+    # home; the banner must side with tapd.
+    assert isinstance(live_control_plane.service.client, FakeWebSocketClient)
+    page.goto(live_kiosk_server_with_moonraker.url)
+    page.click('.tab-btn[data-page="move"]')
+    live_control_plane.service.client.trigger_notification(
+        "notify_status_update",
+        [{"toolhead": {"position": [0.0, 0.0, 0.0, 0.0], "homed_axes": "xyz"}}, 1.0],
+    )
+    expect(page.locator("#moveNotHomedBanner")).not_to_have_class(ACTIVE)
+
+    live_control_plane.service._homing_invalidated = True
+
+    expect(page.locator("#moveNotHomedBanner")).to_have_class(ACTIVE)
+
+
 def test_absolute_move_with_a_blank_field_does_not_fire_and_shows_an_error(
     page: Page, live_kiosk_server: LiveKioskServer
 ) -> None:

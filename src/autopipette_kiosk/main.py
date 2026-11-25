@@ -213,6 +213,9 @@ _current_breakpoint: dict[str, Any] | None = None
 # Whether config writes are run-locked (issue #33), mirrored from each
 # notify_run_status push, so the Settings page can disable its fields.
 _config_locked: bool = False
+# Mirrored from notify_run_status: tapd refuses moves after a config change
+# until a full home, even though Klipper still reports the axes homed.
+_homing_invalidated: bool = False
 # Live toolhead state (Move page, issue #86), mirrored from notify_raw_event
 # pushes carrying a raw Moonraker "notify_status_update" for the "toolhead"
 # object -- see `_on_raw_event_notification`. Klipper only sends the fields
@@ -912,18 +915,19 @@ def _on_run_status_notification(params: Any) -> None:  # ruff:ignore[any-type]
 
     Args:
         params: Notification params, `{"status", "message", "run_id",
-            "filename", "config_locked"}` as sent by
+            "filename", "config_locked", "homing_invalidated"}` as sent by
             `AutoPipetteService._broadcast_status`.
 
     Note:
         Invoked from the control-plane WebSocketClient's background thread;
         marshals the browser-facing broadcast back onto the main event loop.
     """
-    global _current_run, _current_breakpoint, _config_locked
+    global _current_run, _current_breakpoint, _config_locked, _homing_invalidated
     if not isinstance(params, dict):
         return
     notification = as_dict(params)
     _config_locked = bool(notification.get("config_locked"))
+    _homing_invalidated = bool(notification.get("homing_invalidated"))
     _current_run = RunStatus(
         status=notification.get("status", "idle"),
         message=notification.get("message", ""),
@@ -1057,13 +1061,15 @@ def _status_payload() -> dict[str, Any]:
         breakpoint's `{"run_id", "filename", "pending"}` dict, or None) and
         `toolhead` (`{"position", "homed_axes"}`, either possibly still
         None if no live update has arrived yet -- see
-        `_on_raw_event_notification`), and `config_locked`.
+        `_on_raw_event_notification`), `config_locked` and
+        `homing_invalidated`.
     """
     return {
         **_current_run.model_dump(),
         "breakpoint": _current_breakpoint,
         "toolhead": dict(_current_toolhead),
         "config_locked": _config_locked,
+        "homing_invalidated": _homing_invalidated,
     }
 
 

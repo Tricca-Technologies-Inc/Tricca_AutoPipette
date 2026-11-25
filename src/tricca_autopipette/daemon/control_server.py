@@ -451,7 +451,7 @@ class ControlServer:
                 )
             )
         if method == "run.status":
-            return _run_status_to_dict(self.service.get_status())
+            return self.service.status_dict()
         if method == "run.cancel":
             return _run_status_to_dict(await self.service.cancel_run())
         if method == "run.pause":

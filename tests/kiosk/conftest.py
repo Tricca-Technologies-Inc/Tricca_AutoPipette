@@ -58,6 +58,7 @@ def kiosk_client(
     monkeypatch.setattr(kiosk_main, "_current_run", kiosk_main.RunStatus(status="idle"))
     monkeypatch.setattr(kiosk_main, "_current_breakpoint", None)
     monkeypatch.setattr(kiosk_main, "_config_locked", False)
+    monkeypatch.setattr(kiosk_main, "_homing_invalidated", False)
     monkeypatch.setattr(
         kiosk_main, "_current_toolhead", {"position": None, "homed_axes": None}
     )
@@ -94,6 +95,7 @@ def kiosk_client_with_moonraker(
     monkeypatch.setattr(kiosk_main, "_current_run", kiosk_main.RunStatus(status="idle"))
     monkeypatch.setattr(kiosk_main, "_current_breakpoint", None)
     monkeypatch.setattr(kiosk_main, "_config_locked", False)
+    monkeypatch.setattr(kiosk_main, "_homing_invalidated", False)
     monkeypatch.setattr(
         kiosk_main, "_current_toolhead", {"position": None, "homed_axes": None}
     )
@@ -124,6 +126,7 @@ def kiosk_client_with_plates(
     monkeypatch.setattr(kiosk_main, "_current_run", kiosk_main.RunStatus(status="idle"))
     monkeypatch.setattr(kiosk_main, "_current_breakpoint", None)
     monkeypatch.setattr(kiosk_main, "_config_locked", False)
+    monkeypatch.setattr(kiosk_main, "_homing_invalidated", False)
     monkeypatch.setattr(
         kiosk_main, "_current_toolhead", {"position": None, "homed_axes": None}
     )
