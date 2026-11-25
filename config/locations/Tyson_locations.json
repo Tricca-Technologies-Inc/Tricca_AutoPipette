@@ -494,9 +494,20 @@
             "name": "ICEM",
             "type": "singleton",
             "x": 88.8,
-            "y": 146,
+            "y": 149,
             "z": 0,
             "dip_top": 71,
+            "dip_btm": 122,
+            "dip_func": "cylinder",
+            "well_diameter": 17.6
+        },
+        {
+            "name": "PITC1_p1000",
+            "type": "singleton",
+            "x": 88.8,
+            "y": 149,
+            "z": 0,
+            "dip_top": 103,
             "dip_btm": 122,
             "dip_func": "cylinder",
             "well_diameter": 17.6
