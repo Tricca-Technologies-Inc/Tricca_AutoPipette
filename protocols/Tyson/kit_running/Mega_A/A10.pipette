@@ -4,7 +4,7 @@
 # redrawn between splits to prevent dripping.
 
 load_pipette TysonP1000.json
-home
+home all
 
 pipette 450 --tip_end keep PITC1 96wellplatePITC --prewet 5 --splits '96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50'
 pipette 450 --tip_end keep PITC1 96wellplatePITC --splits '96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50'
