@@ -110,11 +110,17 @@ class MoveRelArgs:
         x: X-axis offset in millimeters.
         y: Y-axis offset in millimeters.
         z: Z-axis offset in millimeters.
+        feedrate_xy: Optional XY feedrate override in mm/min.
+            When omitted, the gantry's configured speed_xy is used.
+        feedrate_z: Optional Z feedrate override in mm/min.
+            When omitted, the gantry's configured speed_z is used.
     """
 
     x: float
     y: float
     z: float
+    feedrate_xy: float | None = None
+    feedrate_z: float | None = None
 
 
 @dataclass

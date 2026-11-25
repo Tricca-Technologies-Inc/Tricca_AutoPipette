@@ -90,12 +90,17 @@
   });
 
   // ── D-pad (move_rel) ────────────────────────────────────────────────────
+  // Jog speeds — slow enough to be smooth and controllable on the touchscreen.
+  // Much lower than the protocol speeds (38000/12000 mm/min on Tyson).
+  const JOG_FEEDRATE_XY = 3000;  // 50 mm/s
+  const JOG_FEEDRATE_Z  = 1000;  // ~17 mm/s
+
   document.querySelector('.dpad').addEventListener('click', e => {
     const btn = e.target.closest('.dpad-btn');
     if (!btn || running) return;
     const axis = btn.dataset.axis;
     const offset = parseFloat(btn.dataset.dir) * stepSize;
-    const body = { x: 0, y: 0, z: 0 };
+    const body = { x: 0, y: 0, z: 0, feedrate_xy: JOG_FEEDRATE_XY, feedrate_z: JOG_FEEDRATE_Z };
     body[axis] = offset;
     postMove('/move_rel', body, document.getElementById('moveJogFeedback'));
   });

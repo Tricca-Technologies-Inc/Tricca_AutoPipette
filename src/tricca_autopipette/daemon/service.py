@@ -1559,7 +1559,21 @@ class AutoPipetteService:
         autopipette.note_action(f"Moving relative: {' '.join(parts)}")
 
         autopipette.set_coor_sys(CoordinateSystem.RELATIVE)
-        autopipette.move_to(coor)
+        # Use caller-supplied feedrate overrides when provided (e.g. slow jog
+        # from the kiosk), otherwise fall back to configured gantry speeds.
+        speed_xy = args.feedrate_xy or autopipette.gantry.speed_xy
+        speed_z = args.feedrate_z or autopipette.gantry.speed_z
+        gc = autopipette.gcode_commands
+        if args.x != 0.0 or args.y != 0.0:
+            autopipette.gcode_buffers.add(
+                gc.linear_move(x=args.x if args.x != 0.0 else None,
+                               y=args.y if args.y != 0.0 else None,
+                               feedrate=speed_xy)
+            )
+        if args.z != 0.0:
+            autopipette.gcode_buffers.add(
+                gc.linear_move(z=args.z, feedrate=speed_z)
+            )
         autopipette.set_coor_sys(CoordinateSystem.ABSOLUTE)
         self.output_gcode(autopipette.get_gcode())
 
