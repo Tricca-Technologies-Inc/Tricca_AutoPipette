@@ -1,5 +1,5 @@
 load_pipette TysonP1000.json
-home
+home all
 #
 
 pipette 490 --tip_end keep DFIBUF DFIPLATE_p1000 --prewet 5
