@@ -25,6 +25,7 @@ from pydantic import BaseModel
 from tricca_autopipette.core.json_config_manager import JsonConfigManager
 from tricca_autopipette.core.pipette_constants import DefaultPaths, LocalConfigRoots
 from tricca_autopipette.core.pipette_models import (
+    DeckOffset,
     GantryKinematics,
     LiquidProfile,
     LocationsConfig,
@@ -278,6 +279,10 @@ HIGH_RISK_BOUNDS: dict[tuple[type[BaseModel], str], tuple[float, float]] = {
     (GantryKinematics, "x_max"): (0, 1000),
     (GantryKinematics, "y_max"): (0, 1000),
     (GantryKinematics, "z_max"): (0, 1000),
+    # A nozzle beside the reference one: a few cm, never across the deck.
+    (DeckOffset, "x"): (-100, 100),
+    (DeckOffset, "y"): (-100, 100),
+    (DeckOffset, "z"): (-100, 100),
     (PipetteSyringeKinematics, "max_volume_ul"): (1, 1000),
     (PipetteSyringeKinematics, "min_volume_ul"): (0.1, 100),
     (PipetteSyringeKinematics, "capacity_margin_ul"): (0, 50),

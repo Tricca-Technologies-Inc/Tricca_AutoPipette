@@ -17,7 +17,11 @@ import pytest
 from tricca_autopipette.core.autopipette import AutoPipette, DispenseTarget
 from tricca_autopipette.core.coordinate import Coordinate
 from tricca_autopipette.core.pipette_exceptions import NoWasteContainerError
-from tricca_autopipette.core.pipette_models import FluidDisplacement, TipState
+from tricca_autopipette.core.pipette_models import (
+    DeckOffset,
+    FluidDisplacement,
+    TipState,
+)
 from tricca_autopipette.core.plates import Plate, PlateParams
 from tricca_autopipette.core.well import StrategyType, Well
 
@@ -169,6 +173,39 @@ class TestSequence:
             ("dip_z_return", travel),
             ("home_pipette_stepper",),
         ]
+
+    def test_every_step_follows_the_pipette_deck_offset(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        # Issue #200: a side-mounted nozzle shifts XY, a longer one shifts
+        # every dip depth -- hover and rise included, since they hang off it.
+        ap = _filled(pipette_with_plates)
+        _, hover, depth, rise = _depths(ap, 12.0)
+        raw = ap.location_manager.get_coordinate("deep", 0, 1)
+        ap.pipette_model = ap.pipette_model.model_copy(
+            update={"deck_offset": DeckOffset(x=10.0, y=-2.0, z=-1.5)}
+        )
+        calls = _record(ap)
+
+        ap.dispense_to([
+            DispenseTarget("deep", 0, 1, 12.0),
+            DispenseTarget("deep", 0, 1, None),
+        ])
+
+        zs = [
+            c[2] if c[0] == "dip_z_down" else c[1]
+            for c in calls[:5]
+            if c[0] in {"dip_z_down", "move_to_z"}
+        ]
+        assert zs == pytest.approx([hover - 1.5, depth - 1.5, rise - 1.5])
+        xy = {
+            (float(w["X"]), float(w["Y"]))
+            for line in ap.get_gcode()
+            if line.startswith("G1")
+            for w in [{t[0]: t[1:] for t in line.split()[1:]}]
+            if "X" in w and "Y" in w
+        }
+        assert xy == {(raw.x + 10.0, raw.y - 2.0)}
 
 
 class TestVolumeChecks:

@@ -62,7 +62,7 @@ from tricca_autopipette.core.pipette_models import (
     TipEnd,
     TipState,
 )
-from tricca_autopipette.core.plates import Plate
+from tricca_autopipette.core.plates import Plate, TipBox
 from tricca_autopipette.core.splits import Split
 from tricca_autopipette.core.traversal import well_id_to_rc
 from tricca_autopipette.core.volume_converter import VolumeConverter
@@ -766,6 +766,53 @@ class AutoPipette:
         )
         self.gcode_buffers.add(gc.manual_stepper(stepper, set_position=0))
 
+    def _dip_depth(self, depth: float) -> float:
+        """Shift a plate or waste dip depth by the active pipette's Z offset.
+
+        Not clamped: a shift above Z0 is refused by ``move_to_z``'s travel
+        check rather than leaving the tip short of the liquid.
+
+        Args:
+            depth: Dip depth from the location, in mm.
+
+        Returns:
+            The depth this pipette's nozzle dips to, in mm.
+        """
+        return depth + self.pipette_model.deck_offset.z
+
+    def _offset(self, coor: Coordinate) -> Coordinate:
+        """Shift a deck target by the active pipette's `deck_offset`.
+
+        Args:
+            coor: Target in the head's reference frame.
+
+        Returns:
+            The same target for the active pipette's nozzle.
+        """
+        off = self.pipette_model.deck_offset
+        return coor.generate_offset(dx=off.x, dy=off.y)
+
+    def get_deck_coordinate(
+        self, name: str, row: int | None = None, col: int | None = None
+    ) -> Coordinate:
+        """Resolve a location for the active pipette's nozzle.
+
+        Tipboxes aren't shifted: each pipette locates its own box in its own
+        frame.
+
+        Args:
+            name: Location name.
+            row: Well row, for a plate.
+            col: Well column, for a plate.
+
+        Returns:
+            The location's coordinate, shifted by the pipette's `deck_offset`.
+        """
+        coor = self.location_manager.get_coordinate(name, row, col)
+        if isinstance(self.location_manager.locations.get(name), TipBox):
+            return coor
+        return self._offset(coor)
+
     def _check_limits(self, coordinate: Coordinate, axes: str = "xyz") -> None:
         """Refuse an absolute target outside the gantry's travel limits.
 
@@ -966,8 +1013,9 @@ class AutoPipette:
         offered again -- unless `tipbox_name` requests a specific box.
 
         Args:
-            tipbox_name: If given, draw only from this box instead of the
-                registration-order default.
+            tipbox_name: If given, draw only from this box; else from the
+                active pipette's `tipbox` (one box, or boxes drained in
+                order), if set; else in registration order.
 
         Raises:
             NoTipboxError: If no tipbox has been configured.
@@ -982,16 +1030,16 @@ class AutoPipette:
         if self.state.tip_state == TipState.ATTACHED:
             raise TipAlreadyOnError()
         # Checked on the box that will supply the tip, before a slot is taken.
-        peeked = self.location_manager.tipbox_manager.peek_tip()
-        supplier = tipbox_name or (peeked[0] if peeked else None)
-        if supplier is not None:
-            self.location_manager.check_drawer(supplier)
+        # An explicit box wins, then the active pipette's own box.
+        boxes = tipbox_name or self.pipette_model.tipbox
+        manager = self.location_manager.tipbox_manager
+        peeked = manager.peek_tip(boxes)
+        if peeked is not None:
+            self.location_manager.check_drawer(peeked[0])
 
         # The supplying box comes back with the coordinate: boxes may sit at
         # different heights, so the dip distance must come from *that* box.
-        name, box, loc_tip, index = self.location_manager.tipbox_manager.next_tip(
-            name=tipbox_name
-        )
+        name, box, loc_tip, index = manager.next_tip(name=boxes)
         self.note_action(
             f"Picking up tip from '{name}' at (X:{loc_tip.x:.2f}, Y:{loc_tip.y:.2f})"
         )
@@ -1053,13 +1101,44 @@ class AutoPipette:
 
         self._check_drawer_of(self.location_manager.waste_container)
         self.note_action("Disposing tip to waste container")
-        curr_coor = self.location_manager.waste_container.next()
+        curr_coor = self._offset(self.location_manager.waste_container.next())
         self.move_to(curr_coor)
         self.dip_z_down(
-            curr_coor, self.location_manager.waste_container.get_dip_distance(vol=None)
+            curr_coor,
+            self._dip_depth(
+                self.location_manager.waste_container.get_dip_distance(vol=None)
+            ),
         )
         self.eject_tip()
         self.dip_z_return(curr_coor)
+
+    def _ensure_transfer_tip(self, tipbox_name: str | None) -> None:
+        """Make sure a fresh tip is on before a transfer.
+
+        An unknown tip state (no saved state after a restart, say) can't be
+        trusted either way: carrying on as if a tip were on would aspirate
+        through a bare nozzle. The possible tip goes to waste first, then a
+        fresh one is picked up. Neither step is physically verified.
+
+        Args:
+            tipbox_name: Tipbox to draw from, or None for the next available.
+
+        Raises:
+            ValueError: If the tip state is unknown and it may hold liquid.
+        """
+        if self.state.tip_state == TipState.UNKNOWN:
+            if self.state.has_liquid:
+                raise ValueError(
+                    "Tip state is unknown and liquid may be present; reconcile "
+                    "the pipette state before transferring."
+                )
+            self.logger.warning(
+                "Tip state is unknown; ejecting into waste before picking up a "
+                "tip. Neither is physically verified."
+            )
+            self.dispose_tip()
+        if self.state.tip_state == TipState.DETACHED:
+            self.next_tip(tipbox_name=tipbox_name)
 
     def return_tip(self) -> None:
         """Put the current tip back in the tipbox slot it was picked up from.
@@ -1490,7 +1569,7 @@ class AutoPipette:
         )
         if rise < 0:
             raise ValueError(f"air_gap_rise must be >= 0 mm, got {rise:g}")
-        coor_source = self.location_manager.get_coordinate(source, src_row, src_col)
+        coor_source = self.get_deck_coordinate(source, src_row, src_col)
         loc_source = self.location_manager.locations[source]
 
         if isinstance(loc_source, Coordinate):
@@ -1544,7 +1623,9 @@ class AutoPipette:
             if pre_air_gap_ul:
                 self.operate_syringe(FluidDisplacement.aspiration, pre_air_gap_ul)
 
-        self.dip_z_down(coor_source, loc_source.get_dip_distance(volume))
+        self.dip_z_down(
+            coor_source, self._dip_depth(loc_source.get_dip_distance(volume))
+        )
 
         # Prewetting cycle
         if prewet_cycles and prewet_vol_ul > PhysicalConstants.VOLUME_TOLERANCE_UL:
@@ -1691,7 +1772,7 @@ class AutoPipette:
             empties: Whether this dispense leaves the tip empty, so it ends
                 with a full clear and draws no new post-gap.
         """
-        coor = self.location_manager.get_coordinate(target.dest, target.row, target.col)
+        coor = self.get_deck_coordinate(target.dest, target.row, target.col)
         loc = self.location_manager.locations[target.dest]
         assert not isinstance(loc, Coordinate)  # checked by dispense_to
         well = (
@@ -1703,7 +1784,7 @@ class AutoPipette:
 
         post = self.state.post_air_gap_ul
         model = self.pipette_model
-        depth = loc.get_dip_distance(volume or None)
+        depth = self._dip_depth(loc.get_dip_distance(volume or None))
         # Larger Z is lower, and Z never goes above the travel height.
         self.move_to(coor)
         if post:
@@ -1868,8 +1949,7 @@ class AutoPipette:
         ):
             raise NoWasteContainerError()
 
-        if self.state.tip_state == TipState.DETACHED:
-            self.next_tip(tipbox_name=tipbox_name)
+        self._ensure_transfer_tip(tipbox_name)
 
         self.note_action(
             f"Transferring {vol_ul:g}μL from '{source}' to '{dest}' "
@@ -2050,8 +2130,7 @@ class AutoPipette:
             )
         )
 
-        if self.state.tip_state == TipState.DETACHED:
-            self.next_tip(tipbox_name=tipbox_name)
+        self._ensure_transfer_tip(tipbox_name)
 
         destinations = ", ".join(f"{s.dest}:{s.vol_ul:g}μL" for s in splits)
         self.note_action(
@@ -2097,9 +2176,9 @@ class AutoPipette:
         self._check_drawer_of(waste)
 
         self.note_action("Emptying leftover tip contents to waste container")
-        curr_coor = waste.next()
+        curr_coor = self._offset(waste.next())
         self.move_to(curr_coor)
-        self.dip_z_down(curr_coor, waste.get_dip_distance(vol=None))
+        self.dip_z_down(curr_coor, self._dip_depth(waste.get_dip_distance(vol=None)))
         self.clear_syringe()
         self.gcode_wait(self.syringe.wait_dispense_ms)
         self.dip_z_return(curr_coor)
