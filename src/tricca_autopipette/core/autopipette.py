@@ -766,6 +766,9 @@ class AutoPipette:
         off = self.pipette_model.deck_offset
         if off.x == 0.0 and off.y == 0.0 and off.z == 0.0:
             return coor
+        # coor.z from locations is always 0 (safe-travel height); clamp so a
+        # negative Z offset on a safe-travel coordinate never goes below 0.
+        # Actual dip depths are handled in dip_z_down, not here.
         new_z = max(0.0, coor.z + off.z)
         return coor.generate_offset(dx=off.x, dy=off.y, dz=new_z - coor.z)
 
@@ -1177,12 +1180,20 @@ class AutoPipette:
     def dip_z_down(self, curr_coor: Coordinate, distance: float) -> None:
         """Lower the pipette tip down by a specified distance.
 
+        Applies the active pipette's deck offset Z so that dip depths
+        calibrated for the P100 reference nozzle are automatically adjusted
+        for pipettes with a different nozzle extension (e.g. P1000 with a
+        negative Z offset meaning its nozzle is longer and needs less
+        downward travel to reach the same depth).
+
         Args:
             curr_coor: Current XY position.
-            distance: Distance to move down in Z axis.
+            distance: Distance to move down in Z axis (from location config).
         """
-        self.logger.debug("Dipping down to Z=%s", distance)
-        coor_dip = Coordinate(x=curr_coor.x, y=curr_coor.y, z=distance)
+        off = self.pipette_model.deck_offset
+        adjusted = max(0.0, distance + off.z) if off.z != 0.0 else distance
+        self.logger.debug("Dipping down to Z=%s (adjusted from %s, offset=%s)", adjusted, distance, off.z)
+        coor_dip = Coordinate(x=curr_coor.x, y=curr_coor.y, z=adjusted)
         self.move_to_z(coor_dip)
         self.gcode_wait(50)  # Default wait
 
