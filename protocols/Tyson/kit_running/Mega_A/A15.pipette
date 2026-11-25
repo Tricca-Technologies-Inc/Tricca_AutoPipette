@@ -1,5 +1,5 @@
 load_pipette TysonP1000.json
-home
+home all
 
 
 pipette 450.0 --tip_end keep WATER LCPLATE_p1000 --prewet 5
