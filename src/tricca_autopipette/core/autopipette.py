@@ -2088,11 +2088,22 @@ class AutoPipette:
         resolved = self.resolve_splits(vol_ul, splits, leftover)
         self.location_manager.check_drawer(source)
 
+        # Match pipette()'s behaviour: when no prewet volume is specified at
+        # the call site or the liquid profile, prewet with the full aspirate
+        # volume so the tip is conditioned with the actual liquid load.
+        use_aspirate_volume_for_prewet = (
+            prewet_vol_ul is None
+            and self.system_config.liquids[self.active_liquid].prewet_vol_ul is None
+        )
+
         pre_air_gap_ul, post_air_gap_ul, prewet_cycles, prewet_vol_ul = (
             self.resolve_technique(
                 pre_air_gap_ul, post_air_gap_ul, prewet_cycles, prewet_vol_ul
             )
         )
+
+        if use_aspirate_volume_for_prewet:
+            prewet_vol_ul = vol_ul
 
         self._ensure_transfer_tip(tipbox_name)
 
