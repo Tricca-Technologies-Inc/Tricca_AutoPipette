@@ -1200,9 +1200,9 @@ class AutoPipette:
         if apply_deck_offset:
             off = self.pipette_model.deck_offset
             adjusted = max(0.0, distance + off.z) if off.z != 0.0 else distance
-            self.logger.debug(
-                "Dipping down to Z=%s (adjusted from %s, deck_offset.z=%s)",
-                adjusted, distance, off.z,
+            self.logger.warning(
+                "DIP_Z_DOWN: raw=%s deck_offset.z=%s adjusted=%s pipette=%s",
+                distance, off.z, adjusted, self.pipette_model.name,
             )
         else:
             adjusted = distance
