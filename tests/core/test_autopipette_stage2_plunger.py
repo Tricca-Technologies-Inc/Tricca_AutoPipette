@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from tricca_autopipette.core.autopipette import AutoPipette
+from tricca_autopipette.core.autopipette import AutoPipette, DispenseTarget
 from tricca_autopipette.core.pipette_exceptions import NotHomedError
 from tricca_autopipette.core.pipette_models import AbsolutePlunger, FluidDisplacement
 from tricca_autopipette.core.volume_converter import VolumeConverter
@@ -49,15 +49,18 @@ class TestAbsoluteTargets:
         ap.aspirate_volume(
             40.0, "plate_a", pre_air_gap_ul=10.0, post_air_gap_ul=0.0, prewet_cycles=0
         )
-        ap.dispense_volume("plate_a", volume=20.0, empties_tip=False)
-        ap.dispense_volume("plate_a")
+        ap.dispense_to([
+            DispenseTarget("plate_a", None, None, 20.0),
+            DispenseTarget("plate_a", None, None, None),
+        ])
         lines = _lines(ap)
 
         assert _p_moves(lines) == [
             f"G1 P-5.0 F{asp}",  # pre-aspirate air gap
             f"G1 P-25.0 F{asp}",  # liquid
             f"G1 P-15.0 F{disp}",  # metered dispense
-            f"G1 P0.0 F{disp}",  # dispense the rest: back to the homed zero
+            f"G1 P-5.0 F{disp}",  # the rest of the liquid
+            f"G1 P0.0 F{disp}",  # then the pre-gap: back to the homed zero
         ]
         assert ap.plunger is not None
         assert ap.plunger.position_mm == pytest.approx(0.0)

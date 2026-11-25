@@ -20,7 +20,6 @@ from typing import Any, Literal
 from cmd2 import Cmd2ArgumentParser
 
 from tricca_autopipette.core.pipette_models import TipEnd
-from tricca_autopipette.core.splits import LeftoverAction
 
 _AIR_GAP_RISE_HELP = (
     "Stage-2 plunger only: draw the air gaps while Z moves this many mm above "
@@ -177,6 +176,9 @@ class DispenseArgs:
         dest_col: Destination column index for plate locations.
         volume: Volume to dispense in μL, or None to dispense all.
         wiggle: If True, wiggle tip during dispensing.
+        splits: Several destinations (``DEST:VOL[@WELL];...``), or None to
+            dispense to `dest` alone. Takes over from `dest`, the
+            row/column pair and `volume` when given.
     """
 
     dest: str
@@ -184,6 +186,7 @@ class DispenseArgs:
     dest_col: int | None
     volume: float | None
     wiggle: bool
+    splits: str | None = None
 
 
 @dataclass
@@ -212,9 +215,6 @@ class PipetteArgs:
         splits: Multi-dispense spec (``DEST:VOL[@WELL];...``), or None for a
             plain single-destination transfer. Takes over from ``dest`` and
             the ``dest_row``/``dest_col`` pair when given.
-        leftover: What to do with liquid left after the splits dispense --
-            ``keep`` or ``waste``. Required when the splits do not consume
-            the whole aspirate.
         tip_end: Where the tip goes afterwards -- ``keep``, ``waste``, or
             ``return`` (to the slot it came from) -- or None for the
             default (``waste``, or ``keep`` under ``--keep_tip``).
@@ -238,7 +238,6 @@ class PipetteArgs:
     wiggle: bool
     keep_tip: bool
     splits: str | None
-    leftover: LeftoverAction | None
     tip_end: TipEnd | None = None
     air_gap_rise_mm: float | None = None
 
@@ -743,6 +742,15 @@ class TAPCmdParsers:
         action="store_true",
         help="Wiggle tip during dispensing to dislodge residual droplets",
     )
+    parser_dispense.add_argument(
+        "--splits",
+        default=None,
+        type=str,
+        help=(
+            "Dispense to several destinations in turn: 'DEST:VOL[@WELL];...', "
+            "e.g. 'plate_a:12@A1;plate_b:8@C3'. Overrides the dest argument."
+        ),
+    )
 
     parser_pipette: Cmd2ArgumentParser = Cmd2ArgumentParser(
         description="Transfer liquid from source to destination."
@@ -853,15 +861,6 @@ class TAPCmdParsers:
         help=(
             "Multi-dispense from one aspirate: 'DEST:VOL[@WELL];...', e.g. "
             "'plate_a:12@A1;plate_b:8@C3'. Overrides the dest argument."
-        ),
-    )
-    parser_pipette.add_argument(
-        "--leftover",
-        default=None,
-        choices=("keep", "waste"),
-        help=(
-            "What to do with liquid left after --splits dispense. Required "
-            "when the splits do not consume the whole aspirated volume."
         ),
     )
 

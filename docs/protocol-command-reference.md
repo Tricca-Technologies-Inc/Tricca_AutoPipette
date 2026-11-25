@@ -155,7 +155,7 @@ Options:
 
 ```
 Usage: dispense [-h] [--volume VOLUME] [--dest_row DEST_ROW]
-                [--dest_col DEST_COL] [--wiggle]
+                [--dest_col DEST_COL] [--wiggle] [--splits SPLITS]
                 dest
 
 Dispense liquid to a destination location.
@@ -171,6 +171,10 @@ Options:
   --dest_col DEST_COL  Destination column index (for plate locations)
   --wiggle             Wiggle tip during dispensing to dislodge residual
                        droplets
+  --splits SPLITS      Dispense to several destinations in turn:
+                       'DEST:VOL[@WELL];...', e.g.
+                       'plate_a:12@A1;plate_b:8@C3'. Overrides the dest
+                       argument.
 ```
 
 ### `pipette`
@@ -182,7 +186,7 @@ Usage: pipette [-h] [--dispense_vol DISP_VOL_UL] [--src_row SRC_ROW]
                [--post_air_gap POST_AIR_GAP_UL] [--prewet PREWET_CYCLES]
                [--prewet_vol PREWET_VOL_UL] [--air_gap_rise AIR_GAP_RISE_MM]
                [--wiggle] [--keep_tip] [--tip_end {keep,waste,return}]
-               [--splits SPLITS] [--leftover {keep,waste}]
+               [--splits SPLITS]
                vol_ul source dest
 
 Transfer liquid from source to destination.
@@ -230,10 +234,6 @@ Options:
                         'DEST:VOL[@WELL];...', e.g.
                         'plate_a:12@A1;plate_b:8@C3'. Overrides the dest
                         argument.
-  --leftover {keep,waste}
-                        What to do with liquid left after --splits dispense.
-                        Required when the splits do not consume the whole
-                        aspirated volume.
 ```
 
 ### `next_tip`

@@ -134,6 +134,7 @@
         return;
       }
       renderFindings(body.data && body.data.findings ? body.data.findings : []);
+      renderTips(body.data && body.data.tips ? body.data.tips : {});
     } catch (e) {
       list.innerHTML = `<div class="finding-item error">${e.message}</div>`;
     }
@@ -152,6 +153,17 @@
         <span class="finding-message">${f.message}</span>
       </div>
     `).join('');
+  }
+
+  // Tips each box must supply, so an operator can top a box up before Run.
+  function renderTips(tips) {
+    const list = document.getElementById('findingsList');
+    list.insertAdjacentHTML('beforeend', Object.entries(tips).map(([box, t]) => `
+      <div class="finding-item info tip-count">
+        <span class="finding-severity">tips</span>
+        <span class="finding-message">${box}: needs ${t.needed} of ${t.left} left</span>
+      </div>
+    `).join(''));
   }
 
   // ── detailed status card (Run-page-specific; the compact pill + global

@@ -62,13 +62,32 @@ class TestFindingsShape:
         result = service.validate_protocol("normal.pipette")
 
         assert result.ok is True
-        assert result.data == {"findings": []}
+        assert result.data == {"findings": [], "tips": {}}
 
     def test_missing_file_raises_file_not_found(
         self, service: AutoPipetteService
     ) -> None:
         with pytest.raises(FileNotFoundError):
             service.validate_protocol("does_not_exist.pipette")
+
+
+class TestTipCounts:
+    def test_reports_tips_needed_and_left_per_box(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        # The fixture's tipbox has 2 slots; the protocol takes one.
+        result = service_with_plates.validate_protocol("next_tip_then_switch.pipette")
+
+        assert result.data is not None
+        assert result.data["tips"] == {"tipbox": {"needed": 1, "left": 2}}
+
+    def test_a_protocol_taking_no_tips_reports_none(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        result = service_with_plates.validate_protocol("normal.pipette")
+
+        assert result.data is not None
+        assert result.data["tips"] == {}
 
 
 class TestUnhomedMachine:
@@ -81,7 +100,7 @@ class TestUnhomedMachine:
         result = service.validate_protocol("unhomed.pipette")
 
         assert result.ok is True
-        assert result.data == {"findings": []}
+        assert result.data == {"findings": [], "tips": {}}
 
 
 class TestCatchAndContinue:

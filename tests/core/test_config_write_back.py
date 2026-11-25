@@ -326,6 +326,12 @@ class TestHighRiskBounds:
         with pytest.raises(ValueError, match="speed_home"):
             set_config_value("pipettes", "p100_vertical.json", "syringe.speed_home", 51)
 
+    def test_a_deck_offset_is_bounded(self, roots: Roots) -> None:
+        with pytest.raises(ValueError, match="deck_offset"):
+            set_config_value(
+                "pipettes", "p100_vertical.json", "deck_offset", {"x": 500, "y": 0}
+            )
+
     def test_a_gantry_file_value_is_bounded(self, roots: Roots) -> None:
         with pytest.raises(ValueError, match="accel_z"):
             set_config_value("gantry", "default_gantry.json", "accel_z", 1e9)
