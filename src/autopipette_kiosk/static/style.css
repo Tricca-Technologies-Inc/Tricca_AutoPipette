@@ -639,7 +639,7 @@ header {
 .run-actions .cancel-btn { flex-shrink: 0; }
 
 .check-btn {
-  height: var(--tap-xl);
+  height: var(--tap-min);
   padding: 0 20px;
   border-radius: var(--radius);
   border: 1px solid var(--border);
