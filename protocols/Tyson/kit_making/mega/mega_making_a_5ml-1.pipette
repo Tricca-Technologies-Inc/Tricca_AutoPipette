@@ -1,4 +1,4 @@
-# Protocol for the first part of making cal 7 5mL for Mega Panel A
+# Protocol for the first part of making cal 7 5mL for Mega Panel A consisting of the first 56 ingredients in the recipe (1,3-Diaminopropane to L-DOPA)
 load_pipette TysonP100.json
 home all
 
