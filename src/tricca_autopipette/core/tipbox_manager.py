@@ -190,16 +190,18 @@ class TipBoxManager:
         """
         return sum(box.capacity for box in self.boxes.values())
 
-    def next_tip(self, name: str | None = None) -> tuple[str, TipBox, Coordinate, int]:
+    def next_tip(
+        self, name: str | list[str] | None = None
+    ) -> tuple[str, TipBox, Coordinate, int]:
         """Consume the next tip from the first box that still has one.
 
         Boxes are tried in registration order, so a box is fully drained before
-        the next is touched -- unless a specific box is requested by name, in
-        which case only that box is drawn from.
+        the next is touched -- unless boxes are requested by name, in which
+        case only those are drawn from, in the order given.
 
         Args:
-            name: If given, draw only from this box instead of trying every
-                registered box in order.
+            name: If given, draw only from this box, or these boxes in order,
+                instead of trying every registered box in order.
 
         Returns:
             Tuple of the supplying box's name, the box itself, the
@@ -210,36 +212,40 @@ class TipBoxManager:
 
         Raises:
             NoTipboxError: If no tipbox is registered at all.
-            NotALocationError: If `name` is given but no box is registered
-                under that name.
+            NotALocationError: If `name` names a box that isn't registered.
             OutOfTipsError: If every tried box is exhausted.
 
         Example:
             ``name, box, coor, index = manager.next_tip()`` returns the
             supplying box's name, the box itself (for its dip distance),
             the tip's coordinate, and its flat well index.
-        """
+        """  # ruff: ignore[docstring-extraneous-exception]
         if not self.boxes:
             raise NoTipboxError()
 
-        if name is not None:
-            box = self.boxes.get(name)
-            if box is None:
-                raise NotALocationError(name)
-            try:
-                index, coor = box.take_tip()
-            except PlateExhaustedError:
-                raise OutOfTipsError([name]) from None
-            return name, box, coor, index
-
-        for box_name, box in self.boxes.items():
+        names = self._names(name)
+        for box_name in names:
+            box = self._require(box_name)
             try:
                 index, coor = box.take_tip()
             except PlateExhaustedError:
                 continue
             return box_name, box, coor, index
 
-        raise OutOfTipsError(list(self.boxes))
+        raise OutOfTipsError(names)
+
+    def _names(self, name: str | list[str] | None) -> list[str]:
+        """Expand a `next_tip`/`peek_tip` box selection.
+
+        Args:
+            name: One box, boxes in order, or None for every box.
+
+        Returns:
+            Box names to try, in order.
+        """
+        if name is None:
+            return list(self.boxes)
+        return [name] if isinstance(name, str) else list(name)
 
     def return_tip(self, name: str, index: int) -> TipBox:
         """Record that a used tip went back into its origin slot.
@@ -258,17 +264,23 @@ class TipBoxManager:
         box.mark_used(index)
         return box
 
-    def peek_tip(self) -> tuple[str, int] | None:
+    def peek_tip(self, name: str | list[str] | None = None) -> tuple[str, int] | None:
         """Report which box and position would supply the next tip.
+
+        Args:
+            name: Restrict to this box or these boxes, as for `next_tip`.
+                Unregistered names are skipped.
 
         Returns:
             Tuple of box name and flat well index, or None if no tips remain.
-            Used by the ``tips`` report rather than by pipetting.
         """
-        for name, box in self.boxes.items():
+        for name_ in self._names(name):
+            box = self.boxes.get(name_)
+            if box is None:
+                continue
             index = box.peek_tip()
             if index is not None:
-                return name, index
+                return name_, index
         return None
 
     # ==================== Resetting ====================
