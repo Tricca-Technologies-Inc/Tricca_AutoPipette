@@ -1679,13 +1679,15 @@ class AutoPipette:
             dest_col: Column index for plate wells, or None for next well.
             volume: Volume to dispense, or None for all.
             wiggle: If True, shake tip to dislodge residual droplets.
-            purge_air_gap_ul: Air cushion to push out before the liquid (μL),
-                so the well receives exactly `volume` of liquid. Ignored when
-                `volume` is None, since that path empties the tip anyway.
-            redraw_post_air_gap_ul: Air to re-draw after dispensing and
-                returning from the well (μL), to prevent dripping before
-                moving to the next destination. Only meaningful for
-                intermediate split dispenses (empties_tip=False).
+            purge_air_gap_ul: Reserved for future use; currently unused since
+                the post-air gap at the tip orifice exits naturally with the
+                liquid as the plunger advances.
+            redraw_post_air_gap_ul: Air to re-draw after returning from the
+                well (μL), restoring the anti-drip seal at the tip orifice
+                before moving to the next destination. Only meaningful for
+                intermediate split dispenses (empties_tip=False). The post-air
+                gap sits at the bottom of the tip (tip orifice end) and was
+                consumed by the dispense, so it must be re-drawn here.
             empties_tip: Whether this dispense leaves the tip empty. False
                 for a partial dispense that will be followed by more, so
                 ``state.has_liquid`` stays true.
@@ -2116,6 +2118,19 @@ class AutoPipette:
             vol_ul, pre_air_gap_ul, post_air_gap_ul
         )
 
+        # Tip contents top→bottom: [pre-air] [liquid] [post-air] [tip orifice]
+        #
+        # post-air is at the bottom — it goes into the well first on each
+        # dispense (tiny air bubble, fine). After each intermediate dispense
+        # re-draw a fresh post-air gap before moving to the next well so
+        # dripping is prevented in transit.
+        #
+        # pre-air sits above the liquid and is pushed through last — it clears
+        # any residual liquid from the tip on the final dispense, handled by
+        # clear_syringe() / empty_tip_to_waste() after the loop.
+        #
+        # purge_air_gap_ul is not needed here: the post-air goes into the well
+        # naturally as the plunger pushes down — no pre-purge required.
         n_splits = len(resolved)
         dispensed = 0.0
         for index, (split, dest_row, dest_col) in enumerate(resolved):
@@ -2127,11 +2142,9 @@ class AutoPipette:
                 dest_col=dest_col,
                 volume=split.vol_ul,
                 wiggle=wiggle,
-                # Each dispense purges the post-air-gap that was drawn (either
-                # from the initial aspirate or re-drawn after the previous split).
-                purge_air_gap_ul=applied_post_air,
-                # Re-draw the post-air-gap after each intermediate dispense to
-                # prevent dripping while moving to the next well.
+                purge_air_gap_ul=0.0,  # post-air exits naturally with the liquid
+                # Re-draw post-air after each intermediate dispense so the tip
+                # has an anti-drip seal before moving to the next destination.
                 redraw_post_air_gap_ul=0.0 if is_last else applied_post_air,
                 empties_tip=False,
             )
