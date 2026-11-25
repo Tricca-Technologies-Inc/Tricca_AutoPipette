@@ -169,6 +169,17 @@ _COMMANDS: list[_CommandDoc] = [
             "activate it -- follow with switch_liquid."
         ),
     ),
+    _CommandDoc(
+        "load_pipette",
+        manual_usage=(
+            "Usage: load_pipette <filename>\n\n"
+            "Swap the active pipette for another from config/pipettes/, "
+            "e.g. a dual-pipette head's P100 for its P1000. Invalidates "
+            "homing: follow with home all (or init) before anything moves. "
+            "If the protocol fails before uploading, or is only validated, "
+            "the original pipette is put back."
+        ),
+    ),
     # -- Configuration & locations --------------------------------------------
     _CommandDoc("set", parser=TAPCmdParsers.parser_set),
     _CommandDoc("coor", parser=TAPCmdParsers.parser_coor),

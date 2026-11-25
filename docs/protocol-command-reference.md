@@ -291,6 +291,14 @@ Usage: load_liquid <filename>
 Load a new liquid profile from config/liquids/. Does not activate it -- follow with switch_liquid.
 ```
 
+### `load_pipette`
+
+```
+Usage: load_pipette <filename>
+
+Swap the active pipette for another from config/pipettes/, e.g. a dual-pipette head's P100 for its P1000. Invalidates homing: follow with home all (or init) before anything moves. If the protocol fails before uploading, or is only validated, the original pipette is put back.
+```
+
 ### `set`
 
 ```
