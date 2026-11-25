@@ -59,6 +59,10 @@ class PipetteState:
     Attributes:
         tip_state: Current tip attachment state.
         has_liquid: Whether liquid is currently in the tip.
+        liquid_ul: Liquid in the tip, in μL, as the last aspirate drew it
+            less what has been dispensed since.
+        pre_air_gap_ul: Air behind the liquid, in μL.
+        post_air_gap_ul: Air between the liquid and the tip opening, in μL.
         homed: Whether the pipette has been homed.
         tip_origin: ``(tipbox name, flat well index)`` the attached tip was
             picked up from, or None when no tip is attached or its origin
@@ -78,6 +82,10 @@ class PipetteState:
     has_liquid: bool = False
     homed: bool = False
     tip_origin: tuple[str, int] | None = None
+    # What the last aspirate left in the tip (issue #205). In memory only.
+    liquid_ul: float = 0.0
+    pre_air_gap_ul: float = 0.0
+    post_air_gap_ul: float = 0.0
 
     # Helper properties for backwards compatibility
     @property
@@ -537,6 +545,19 @@ class PipetteModel(BaseModel):
     )
     tip_press_wait_ms: int = Field(
         default=100, ge=0, description="Dwell at the bottom of the press in ms"
+    )
+
+    # Dispense (issue #205): the post-gap is pushed out this far above the
+    # dispense depth, and redrawn this far above it on the way up.
+    dispense_hover_mm: float = Field(
+        default=2.0,
+        ge=0,
+        description="Height above the dispense depth to push out the post-gap (mm)",
+    )
+    dispense_rise_mm: float = Field(
+        default=2.0,
+        ge=0,
+        description="Height above the dispense depth to redraw the post-gap (mm)",
     )
 
     compatible_tips: list[str] = Field(

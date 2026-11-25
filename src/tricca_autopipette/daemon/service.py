@@ -1530,7 +1530,11 @@ class AutoPipetteService:
             NotHomedError: If the pipette is not homed (checked before the
                 soft no-liquid-in-tip no-op case -- see ``require_homed``'s
                 docstring).
-            NotALocationError: If ``args.dest`` is not a defined location.
+            NotALocationError: If ``args.dest`` (or a ``--splits``
+                destination) is not a defined location.
+            ValueError: If ``--splits`` is malformed or names a bad well.
+            NoWasteContainerError: If liquid will be left for the waste and
+                there is no waste container.
         """  # ruff: ignore[docstring-extraneous-exception]
         autopipette = self._autopipette
 
@@ -1539,18 +1543,26 @@ class AutoPipetteService:
                 ok=False, message="No liquid in tip. Use 'aspirate' first."
             )
 
-        autopipette.dispense_volume(
-            dest=args.dest,
-            dest_row=args.dest_row,
-            dest_col=args.dest_col,
-            volume=args.volume,
-            wiggle=args.wiggle,
-        )
-        self.output_gcode(autopipette.get_gcode())
-        if args.volume is not None:
-            message = f"Dispensed {args.volume} μL to {args.dest}"
+        if args.splits:
+            splits = parse_splits_spec(args.splits)
+            targets = autopipette.resolve_splits(autopipette.state.liquid_ul, splits)
+            autopipette.dispense_to(targets, wiggle=args.wiggle)
+            message = "Dispensed to " + ", ".join(
+                f"{s.dest}:{s.vol_ul:g}" for s in splits
+            )
         else:
-            message = f"Dispensed all liquid to {args.dest}"
+            autopipette.dispense_volume(
+                dest=args.dest,
+                dest_row=args.dest_row,
+                dest_col=args.dest_col,
+                volume=args.volume,
+                wiggle=args.wiggle,
+            )
+            if args.volume is not None:
+                message = f"Dispensed {args.volume} μL to {args.dest}"
+            else:
+                message = f"Dispensed all liquid to {args.dest}"
+        self.output_gcode(autopipette.get_gcode())
         return CommandResult(ok=True, message=message)
 
     @require_homed("pipette")
@@ -1580,9 +1592,9 @@ class AutoPipetteService:
                 configured.
             TipAlreadyOnError: If a tip is already attached when one is
                 needed.
-            NoWasteContainerError: If ``args.leftover`` is ``"waste"`` with no
-                waste container, or the tip goes to waste with neither a
-                container nor a known origin slot to fall back to.
+            NoWasteContainerError: If liquid will be left for the waste and
+                there is no waste container, or the tip goes to waste with
+                neither a container nor a known origin slot to fall back to.
             NoTipOriginError: If ``--tip_end return`` and the tip's origin
                 slot is unknown.
             ValueError: If ``--keep_tip`` conflicts with ``--tip_end``.
@@ -1618,7 +1630,6 @@ class AutoPipetteService:
                 prewet_vol_ul=args.prewet_vol_ul,
                 air_gap_rise_mm=args.air_gap_rise_mm,
                 wiggle=args.wiggle,
-                leftover=args.leftover,
                 tip_end=tip_end,
             )
             destination = ", ".join(f"{s.dest}:{s.vol_ul}" for s in splits)
@@ -1654,8 +1665,6 @@ class AutoPipetteService:
             features.append(f"tip_end={tip_end}")
         if split_count:
             features.append(f"splits×{split_count}")
-        if args.leftover:
-            features.append(f"leftover={args.leftover}")
 
         comment = f"\n; Pipette {args.vol_ul} μL from {args.source} to {destination}"
         if features:
@@ -3707,6 +3716,11 @@ class AutoPipetteService:
             state.has_liquid,
             autopipette.active_liquid,
         )
+        tip_contents_snapshot = (
+            state.liquid_ul,
+            state.pre_air_gap_ul,
+            state.post_air_gap_ul,
+        )
         # The stage-2 plunger model and the gantry accel its moves restore
         # (issue #147).
         motion_snapshot = (copy.copy(autopipette.plunger), autopipette.gantry_accel)
@@ -3726,6 +3740,9 @@ class AutoPipetteService:
             state.tip_state = tip_state
             state.tip_origin = tip_origin
             state.has_liquid = has_liquid
+            state.liquid_ul, state.pre_air_gap_ul, state.post_air_gap_ul = (
+                tip_contents_snapshot
+            )
             autopipette.plunger, autopipette.gantry_accel = motion_snapshot
             if active_liquid != autopipette.active_liquid:
                 autopipette.switch_liquid(active_liquid)
