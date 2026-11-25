@@ -53,7 +53,7 @@ import pytest
 from tricca_autopipette.core.autopipette import AutoPipette
 from tricca_autopipette.core.coordinate import Coordinate
 from tricca_autopipette.core.gcode_commands import GCodeCommands
-from tricca_autopipette.core.pipette_models import AbsolutePlunger
+from tricca_autopipette.core.pipette_models import AbsolutePlunger, TipState
 
 GOLDEN = Path(__file__).parents[1] / "fixtures" / "gcode" / "autopipette_emission.gcode"
 EXTRA_AXIS_GOLDEN = GOLDEN.with_name("extra_axis_emission.gcode")
@@ -97,6 +97,7 @@ def test_every_emission_site_emits_unchanged_gcode(
     ap.gcode_print("hello world")
     ap.move_pipette_stepper(-1.125)  # was -4.5 in rotation_distance-8 units
     ap.clear_syringe()
+    ap.state.tip_state = TipState.ATTACHED  # an unknown tip is ejected first
     ap.pipette(20.0, "plate_a", "plate_a")
 
     actual_text, actual_numbers = _split_numbers(_as_written(ap.get_gcode()))
@@ -133,6 +134,7 @@ def test_stage2_plunger_emission_sites(pipette_with_plates: AutoPipette) -> None
     ap.set_max_accel(3000)
     ap.move_pipette_stepper(-1.125)
     ap.clear_syringe()
+    ap.state.tip_state = TipState.ATTACHED  # an unknown tip is ejected first
     ap.pipette(20.0, "plate_a", "plate_a")
 
     text = _as_written(ap.get_gcode())
@@ -162,6 +164,7 @@ def test_stage2_coordinated_air_gap_emission(pipette_with_plates: AutoPipette) -
     ap = pipette_with_plates
     ap.plunger = AbsolutePlunger("P", -60.0, 0.0, 0.0)
     ap.set_max_accel(3000)
+    ap.state.tip_state = TipState.ATTACHED  # an unknown tip is ejected first
     ap.get_gcode()
 
     ap.pipette(

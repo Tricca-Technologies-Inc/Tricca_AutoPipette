@@ -1094,6 +1094,34 @@ class AutoPipette:
         self.eject_tip()
         self.dip_z_return(curr_coor)
 
+    def _ensure_transfer_tip(self, tipbox_name: str | None) -> None:
+        """Make sure a fresh tip is on before a transfer.
+
+        An unknown tip state (no saved state after a restart, say) can't be
+        trusted either way: carrying on as if a tip were on would aspirate
+        through a bare nozzle. The possible tip goes to waste first, then a
+        fresh one is picked up. Neither step is physically verified.
+
+        Args:
+            tipbox_name: Tipbox to draw from, or None for the next available.
+
+        Raises:
+            ValueError: If the tip state is unknown and it may hold liquid.
+        """
+        if self.state.tip_state == TipState.UNKNOWN:
+            if self.state.has_liquid:
+                raise ValueError(
+                    "Tip state is unknown and liquid may be present; reconcile "
+                    "the pipette state before transferring."
+                )
+            self.logger.warning(
+                "Tip state is unknown; ejecting into waste before picking up a "
+                "tip. Neither is physically verified."
+            )
+            self.dispose_tip()
+        if self.state.tip_state == TipState.DETACHED:
+            self.next_tip(tipbox_name=tipbox_name)
+
     def return_tip(self) -> None:
         """Put the current tip back in the tipbox slot it was picked up from.
 
@@ -1770,9 +1798,7 @@ class AutoPipette:
             )
         )
 
-        # Pick up tip if needed
-        if self.state.tip_state == TipState.DETACHED:
-            self.next_tip(tipbox_name=tipbox_name)
+        self._ensure_transfer_tip(tipbox_name)
 
         # Calculate transfer chunks based on max pipette capacity. The air
         # gaps ride along inside the same syringe, so they come out of the
@@ -1993,8 +2019,7 @@ class AutoPipette:
             )
         )
 
-        if self.state.tip_state == TipState.DETACHED:
-            self.next_tip(tipbox_name=tipbox_name)
+        self._ensure_transfer_tip(tipbox_name)
 
         destinations = ", ".join(f"{s.dest}:{s.vol_ul:g}μL" for s in splits)
         self.note_action(
