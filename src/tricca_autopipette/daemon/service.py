@@ -1154,6 +1154,10 @@ class AutoPipetteService:
                 refuses.
         """
         ap = self._autopipette
+        # Same sync points, same reason: anything may have moved the head
+        # since tapd last compiled G-code (a jog, a macro, an abort), so the
+        # XYZ model starts unknown and fills in from tapd's own first moves.
+        ap.forget_toolhead()
         pipette = self.axis_config.pipette
         if pipette is None or pipette.stage < 2:
             ap.plunger = None
@@ -4068,7 +4072,8 @@ class AutoPipetteService:
         (:meth:`LocationManager.snapshot_cursors`), and the pipette's
         tip/liquid state (``AutoPipette.state.tip_state``/``tip_origin``/
         ``has_liquid`` plus ``active_liquid``, and the stage-2 plunger model
-        with the gantry accel it restores, issue #147). Membership is restored first,
+        with the gantry accel it restores, issue #147, and the XYZ toolhead
+        model the plunger rides travel moves on). Membership is restored first,
         before the other three: doing so brings back the exact original objects, so the
         per-object presence/cursor restores that follow always find a
         shape-matched target -- a location reconfigured under the same name
@@ -4133,12 +4138,16 @@ class AutoPipetteService:
             autopipette.active_liquid,
         )
         # The stage-2 plunger model and the gantry accel its moves restore
-        # (issue #147).
-        motion_snapshot = (copy.copy(autopipette.plunger), autopipette.gantry_accel)
+        # (issue #147), and the XYZ model its travel-riding moves rely on.
+        motion_snapshot = (
+            copy.copy(autopipette.plunger),
+            copy.copy(autopipette.toolhead),
+            autopipette.gantry_accel,
+        )
         config_manager = autopipette.config_manager
         config_snapshot = config_manager.snapshot_runtime_state()
         homing_invalidated_snapshot = self._homing_invalidated
-        
+
         def _restore() -> None:
             # Restore the selected system profile and rebuild AutoPipette's
             # derived pipette/liquid/gantry settings before restoring the
@@ -4163,7 +4172,9 @@ class AutoPipetteService:
             state.tip_state = tip_state
             state.tip_origin = tip_origin
             state.has_liquid = has_liquid
-            autopipette.plunger, autopipette.gantry_accel = motion_snapshot
+            autopipette.plunger, autopipette.toolhead, autopipette.gantry_accel = (
+                motion_snapshot
+            )
             if active_liquid != autopipette.active_liquid:
                 autopipette.switch_liquid(active_liquid)
 

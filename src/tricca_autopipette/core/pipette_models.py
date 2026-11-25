@@ -103,6 +103,32 @@ class PipetteState:
 
 
 @dataclass
+class ToolheadPosition:
+    """tapd's model of the raw X/Y/Z the toolhead will be at.
+
+    Like ``AbsolutePlunger.position_mm``, this is where the toolhead *will*
+    be once the G-code compiled so far has executed, not its live position.
+    An axis is None whenever tapd can't know it: before its first absolute
+    move, after a ``G28``, a relative-mode move, or a Klipper macro that might
+    move it. Anything that needs the distance of the next move (riding the
+    plunger on it) must refuse an unknown axis rather than guess.
+
+    Attributes:
+        x: Modelled raw X (mm), or None if unknown.
+        y: Modelled raw Y (mm), or None if unknown.
+        z: Modelled raw Z (mm), or None if unknown.
+
+    Example:
+        >>> ToolheadPosition().x is None
+        True
+    """
+
+    x: float | None = None
+    y: float | None = None
+    z: float | None = None
+
+
+@dataclass
 class AbsolutePlunger:
     """Stage-2 plunger: Klipper's bound axis plus tapd's position model.
 

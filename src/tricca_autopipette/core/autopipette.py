@@ -30,6 +30,7 @@ Example:
 from __future__ import annotations
 
 import logging
+import math
 from collections.abc import Sequence
 from typing import Literal
 
@@ -62,6 +63,7 @@ from tricca_autopipette.core.pipette_models import (
     SystemConfig,
     TipEnd,
     TipState,
+    ToolheadPosition,
 )
 from tricca_autopipette.core.plates import Plate
 from tricca_autopipette.core.splits import LeftoverAction, Split
@@ -70,6 +72,36 @@ from tricca_autopipette.core.volume_converter import VolumeConverter
 
 #: Float noise tolerated at a stage-2 plunger limit before refusing (mm).
 _PLUNGER_EPS_MM = 1e-6
+
+#: Shortest toolhead leg worth carrying a plunger move on (mm).
+_CARRIER_EPS_MM = 1e-3
+
+
+def _move_time_s(distance_mm: float, speed_mm_s: float, accel_mm_s2: float) -> float:
+    """Rough duration of a single start-stop move: a trapezoid or triangle.
+
+    Only used to share a plunger move between legs in proportion to how long
+    each leg takes, so ignoring Klipper's lookahead blending is fine.
+
+    Args:
+        distance_mm: Move length.
+        speed_mm_s: Cruise speed.
+        accel_mm_s2: Acceleration (= deceleration).
+
+    Returns:
+        Seconds, 0 for a zero-length move.
+
+    Example:
+        >>> _move_time_s(0.0, 100.0, 1000.0)
+        0.0
+        >>> round(_move_time_s(100.0, 100.0, 1000.0), 3)  # 10 mm ramps
+        1.1
+    """
+    if distance_mm <= 0 or speed_mm_s <= 0 or accel_mm_s2 <= 0:
+        return 0.0
+    if distance_mm >= speed_mm_s**2 / accel_mm_s2:
+        return distance_mm / speed_mm_s + speed_mm_s / accel_mm_s2
+    return 2 * math.sqrt(distance_mm / accel_mm_s2)
 
 
 class AutoPipette:
@@ -176,6 +208,7 @@ class AutoPipette:
         self.state = PipetteState()
         self.last_syringe_travel_mm = 0.0
         self.plunger: AbsolutePlunger | None = None
+        self.toolhead = ToolheadPosition()
         self.gantry_accel: float = self.gantry.accel_max
 
         # G-code management
@@ -475,6 +508,8 @@ class AutoPipette:
             self.logger.debug("Coordinate system: relative")
             self._coor_sys = CoordinateSystem.RELATIVE
             self.gcode_buffers.add(self.gcode_commands.relative_mode())
+            # Relative moves carry no position, so stop trusting the model.
+            self.forget_toolhead()
         else:
             raise ValueError(
                 f"Invalid coordinate system mode: '{mode}'. "
@@ -531,21 +566,25 @@ class AutoPipette:
         """
         self.note_action("Homing all axes (X, Y, Z)")
         self.gcode_buffers.add(self.gcode_commands.home())
+        self.forget_toolhead()
 
     def home_x(self) -> None:
         """Home X axis only."""
         self.note_action("Homing X axis")
         self.gcode_buffers.add(self.gcode_commands.home("X"))
+        self.forget_toolhead("x")
 
     def home_y(self) -> None:
         """Home Y axis only."""
         self.note_action("Homing Y axis")
         self.gcode_buffers.add(self.gcode_commands.home("Y"))
+        self.forget_toolhead("y")
 
     def home_z(self) -> None:
         """Home Z axis only."""
         self.note_action("Homing Z axis")
         self.gcode_buffers.add(self.gcode_commands.home("Z"))
+        self.forget_toolhead("z")
 
     def home_pipette_motors(self, plunger_axis: str | None = None) -> None:
         """Home all pipette-specific motors.
@@ -575,6 +614,7 @@ class AutoPipette:
         speed: float,
         accel: float,
         z_move: tuple[float, float] | None = None,
+        xy_move: tuple[tuple[float, float], tuple[float, float]] | None = None,
     ) -> None:
         """Move the stage-2 plunger to an absolute position (issue #147).
 
@@ -591,11 +631,19 @@ class AutoPipette:
         both are scaled to keep the plunger within ``speed``/``accel``, and
         Z within its own ``speed_z``/``gantry_accel``.
 
+        ``xy_move`` does the same on an XY travel move, as one ``G1 X Y P``:
+        ``F`` and accel then apply to the XY path length, and are capped at
+        ``speed_xy``/``gantry_accel``. Neither the plunger nor the gantry is
+        ever asked to go faster or harder than it would on its own; the
+        combined move just takes as long as the slower of the two.
+
         Args:
             target_mm: Absolute target, in mm from the homed zero.
             speed: Plunger speed, in mm/s.
             accel: Plunger acceleration, in mm/s².
             z_move: ``(from, to)`` Z of a move to coordinate with, or None.
+            xy_move: ``((x0, y0), (x1, y1))`` of an XY move at the current Z
+                to coordinate with, or None. Exclusive with ``z_move``.
 
         Raises:
             NotHomedError: If the position model is unknown (plunger not
@@ -606,6 +654,7 @@ class AutoPipette:
         """
         plunger = self.plunger
         assert plunger is not None
+        assert z_move is None or xy_move is None, "one carrier move at a time"
         if plunger.position_mm is None:
             raise NotHomedError("plunger move", "plunger not homed")
         low, high = plunger.position_min, min(plunger.position_max, 0.0)
@@ -619,25 +668,134 @@ class AutoPipette:
                 f"{low:g}...{high:g} mm; refusing to move the syringe."
             )
         gc = self.gcode_commands
+        x = y = z = None
+        if xy_move is not None:
+            x, y = xy_move[1]
         if target_mm == plunger.position_mm:
             if z_move is not None:
                 self.gcode_buffers.add(
                     gc.linear_move(z=z_move[1], feedrate=self.gantry.speed_z)
                 )
+                self._track_toolhead(z=z_move[1])
+            if xy_move is not None:
+                self.gcode_buffers.add(
+                    gc.linear_move(x=x, y=y, feedrate=self.gantry.speed_xy)
+                )
+                self._track_toolhead(x=x, y=y)
             return
-        z = None
         feedrate = speed * 60
+        carrier: tuple[float, float] | None = None  # (path length, F cap)
         if z_move is not None:
             z_from, z = z_move
-            ratio = abs(z - z_from) / abs(target_mm - plunger.position_mm)
-            feedrate = round(min(self.gantry.speed_z, feedrate * ratio), 3)
+            carrier = (abs(z - z_from), self.gantry.speed_z)
+        elif xy_move is not None:
+            (x0, y0), (x1, y1) = xy_move
+            carrier = (math.hypot(x1 - x0, y1 - y0), self.gantry.speed_xy)
+        if carrier is not None:
+            length, cap = carrier
+            ratio = length / abs(target_mm - plunger.position_mm)
+            feedrate = round(min(cap, feedrate * ratio), 3)
             accel = round(min(self.gantry_accel, accel * ratio), 3)
         self.gcode_buffers.add(gc.set_velocity_limit(accel=accel))
         self.gcode_buffers.add(
-            gc.linear_move(z=z, axes={plunger.letter: target_mm}, feedrate=feedrate)
+            gc.linear_move(
+                x=x, y=y, z=z, axes={plunger.letter: target_mm}, feedrate=feedrate
+            )
         )
         self.gcode_buffers.add(gc.set_velocity_limit(accel=self.gantry_accel))
         plunger.position_mm = target_mm
+        self._track_toolhead(x=x, y=y, z=z)
+
+    def forget_toolhead(self, axes: str = "xyz") -> None:
+        """Mark toolhead axes as unknown in the position model.
+
+        Args:
+            axes: Which of ``x``/``y``/``z`` to forget.
+        """
+        for axis in axes:
+            setattr(self.toolhead, axis, None)
+
+    def _track_toolhead(
+        self, x: float | None = None, y: float | None = None, z: float | None = None
+    ) -> None:
+        """Advance the position model past a ``G1`` just emitted.
+
+        Only absolute targets advance it; a relative one forgets the axes it
+        moved (``set_coor_sys`` already forgets everything on ``G91``).
+
+        Args:
+            x: X target of the move, or None if X didn't move.
+            y: Y target of the move, or None if Y didn't move.
+            z: Z target of the move, or None if Z didn't move.
+        """
+        absolute = self._coor_sys is CoordinateSystem.ABSOLUTE
+        for axis, value in (("x", x), ("y", y), ("z", z)):
+            if value is not None:
+                setattr(self.toolhead, axis, value if absolute else None)
+
+    def _travel_homing_plunger(self, coordinate: Coordinate) -> bool:
+        """``move_to(coordinate)``, homing the stage-2 plunger on the way.
+
+        Homing before an aspirate is a dispense-direction move of air only,
+        so with no tip on (and so no liquid) it can happen anywhere. Here it
+        rides the XY leg and then the Z leg of the travel, split in
+        proportion to how long each leg takes on its own, so the plunger
+        reaches 0 as the head arrives. Each leg keeps both the plunger and
+        the gantry within their own speed/accel (``move_plunger_to``). The
+        plunger then makes exactly the moves it made before, in the same
+        order and direction, only earlier.
+
+        Args:
+            coordinate: Where ``move_to`` would have gone.
+
+        Returns:
+            True if the travel was emitted (the plunger is now at 0); False
+            if it wasn't safe or known enough to ride, in which case nothing
+            was emitted and the caller should ``move_to`` as usual.
+        """
+        plunger = self.plunger
+        head = self.toolhead
+        if (
+            plunger is None
+            or plunger.position_mm is None
+            or abs(plunger.position_mm) <= _PLUNGER_EPS_MM
+            or self.state.tip_state is not TipState.DETACHED
+            or self.state.has_liquid
+            or self._coor_sys is not CoordinateSystem.ABSOLUTE
+            or head.x is None
+            or head.y is None
+            or head.z is None
+        ):
+            return False
+        self._check_limits(coordinate)
+        x0, y0, z0 = head.x, head.y, head.z
+        xy_mm = math.hypot(coordinate.x - x0, coordinate.y - y0)
+        z_mm = abs(coordinate.z - z0)
+        if xy_mm <= _CARRIER_EPS_MM:
+            xy_mm = 0.0
+        if z_mm <= _CARRIER_EPS_MM:
+            z_mm = 0.0
+        t_xy = _move_time_s(xy_mm, self.gantry.speed_xy / 60, self.gantry_accel)
+        t_z = _move_time_s(z_mm, self.gantry.speed_z / 60, self.gantry_accel)
+        if t_xy + t_z <= 0:
+            return False
+
+        # Same speed/accel as `home_pipette_stepper`'s own move.
+        speed = self.syringe.speed_dispense
+        accel = self.syringe.accel_home
+        start = plunger.position_mm
+        self.note_action(
+            f"Homing the plunger from P{start:g} during travel to "
+            f"(X:{coordinate.x:.2f}, Y:{coordinate.y:.2f}) (no tip on)"
+        )
+        if xy_mm:
+            after_xy = 0.0 if not z_mm else start * t_z / (t_xy + t_z)
+            self.move_plunger_to(
+                after_xy, speed, accel, xy_move=((x0, y0), (coordinate.x, coordinate.y))
+            )
+        if z_mm:
+            self.move_plunger_to(0.0, speed, accel, z_move=(z0, coordinate.z))
+        return True
 
     def home_plates(self, plates: dict[str, str]) -> None:
         """Home plates with ``G28 <letter>...`` (issue #146).
@@ -650,6 +808,7 @@ class AutoPipette:
         """
         self.note_action(f"Homing plates: {', '.join(plates)}")
         self.gcode_buffers.add(self.gcode_commands.home(*plates.values()))
+        self.forget_toolhead()  # [homing_override] runs Klipper-side macros
 
     def plate_move(self, plate: str, pos: float, speed: float | None = None) -> None:
         """Move a plate drawer with Klipper's ``PLATE_MOVE`` macro (issue #143).
@@ -664,6 +823,7 @@ class AutoPipette:
         """
         self.note_action(f"Moving {plate} to {pos:g} mm")
         self.gcode_buffers.add(self.gcode_commands.plate_move(plate, pos, speed=speed))
+        self.forget_toolhead()  # a Klipper macro: don't assume it left XYZ alone
 
     def raise_tip(self, z: float) -> None:
         """Raise the tip to raw ``z`` before a plate move (owner decision D49).
@@ -679,11 +839,13 @@ class AutoPipette:
         self.gcode_buffers.add(
             self.gcode_commands.linear_move(z=z, feedrate=self.gantry.speed_z)
         )
+        self._track_toolhead(z=z)
 
     def plates_in(self) -> None:
         """Move every plate drawer in with Klipper's ``PLATES_IN`` (issue #143)."""
         self.note_action("Moving every plate in")
         self.gcode_buffers.add(self.gcode_commands.plates_in())
+        self.forget_toolhead()  # a Klipper macro: don't assume it left XYZ alone
 
     def home_servo(self) -> None:
         """Retract the tip ejection servo to home position."""
@@ -819,9 +981,11 @@ class AutoPipette:
                 x=coordinate.x, y=coordinate.y, feedrate=speed_xy
             )
         )
+        self._track_toolhead(x=coordinate.x, y=coordinate.y)
         self.gcode_buffers.add(
             self.gcode_commands.linear_move(z=coordinate.z, feedrate=speed_z)
         )
+        self._track_toolhead(z=coordinate.z)
 
     def move_to_z(self, coordinate: Coordinate) -> None:
         """Move only in Z direction."""
@@ -831,6 +995,7 @@ class AutoPipette:
         self.gcode_buffers.add(
             self.gcode_commands.linear_move(z=coordinate.z, feedrate=speed)
         )
+        self._track_toolhead(z=coordinate.z)
 
     def set_servo_angle(self, angle: float) -> None:
         """Set the tip ejection servo to a specific angle.
@@ -1019,9 +1184,13 @@ class AutoPipette:
         )
         dip_z = box.get_dip_distance(vol=None)
         self._check_limits(Coordinate(x=loc_tip.x, y=loc_tip.y, z=dip_z), "z")
-        self.move_to(loc_tip)
+        # No tip on yet, so the plunger can home on the way here; the
+        # aspirate's own home is then a no-op.
+        if not self._travel_homing_plunger(loc_tip):
+            self.move_to(loc_tip)
         self.dip_z_down(loc_tip, dip_z - 2)
         self.gcode_buffers.add(self.gcode_commands.linear_move(z=dip_z, feedrate=100))
+        self._track_toolhead(z=dip_z)
         self.gcode_wait(100)
         self.dip_z_return(loc_tip)
         self.state.tip_state = TipState.ATTACHED
