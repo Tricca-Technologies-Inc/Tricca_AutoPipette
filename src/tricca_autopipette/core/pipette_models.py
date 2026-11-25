@@ -483,14 +483,15 @@ class PipetteSyringeKinematics(BaseModel):
 class DeckOffset(BaseModel):
     """Where a pipette's nozzle sits relative to the head's reference nozzle.
 
-    Added to the X/Y of every deck target the pipette visits, except
-    tipboxes, which each pipette locates in its own frame. There is no Z:
-    dip depths are absolute, so a Z shift would move only the travel
-    height and leave the dip where the other nozzle needs it.
+    X/Y are added to every deck target the pipette visits, and Z to every
+    dip depth (plates and waste, not travel height), except at tipboxes,
+    which each pipette locates in its own frame. Larger Z is lower, so a
+    longer nozzle takes a negative Z.
 
     Attributes:
         x: X shift in mm.
         y: Y shift in mm.
+        z: Dip-depth shift in mm.
 
     Example:
         >>> DeckOffset(x=36.7, y=3.0).x
@@ -499,6 +500,9 @@ class DeckOffset(BaseModel):
 
     x: float = Field(default=0.0, allow_inf_nan=False, description="X shift in mm")
     y: float = Field(default=0.0, allow_inf_nan=False, description="Y shift in mm")
+    z: float = Field(
+        default=0.0, allow_inf_nan=False, description="Dip-depth shift in mm"
+    )
 
 
 class PipetteModel(BaseModel):
@@ -517,7 +521,8 @@ class PipetteModel(BaseModel):
         compatible_tips: List of compatible tip types.
         deck_offset: X/Y shift applied to deck targets while this pipette
             is active (see `DeckOffset`).
-        tipbox: Tipbox this pipette draws from, or None to draw in load order.
+        tipbox: Tipbox, or tipboxes drained in order, this pipette draws
+            from, or None to draw in load order.
 
     Example:
         >>> pipette = PipetteModel(
@@ -571,11 +576,17 @@ class PipetteModel(BaseModel):
     # and its own tipbox, over one shared deck.
     deck_offset: DeckOffset = Field(
         default_factory=DeckOffset,
-        description="X/Y shift applied to deck targets while this pipette is active",
+        description=(
+            "X/Y shift applied to deck targets and Z shift applied to dip "
+            "depths while this pipette is active"
+        ),
     )
-    tipbox: str | None = Field(
+    tipbox: str | list[str] | None = Field(
         default=None,
-        description="Tipbox this pipette draws tips from; None draws in load order",
+        description=(
+            "Tipbox(es) this pipette draws tips from, drained in list order; "
+            "None draws in load order"
+        ),
     )
 
 

@@ -138,7 +138,7 @@ def autopipette_two_boxes(autopipette: AutoPipette) -> AutoPipette:
     return autopipette
 
 
-def _set_pipette_tipbox(ap: AutoPipette, tipbox: str | None) -> None:
+def _set_pipette_tipbox(ap: AutoPipette, tipbox: str | list[str] | None) -> None:
     """Swap the active pipette model's tipbox field, preserving everything else."""
     old = ap.pipette_model
     ap.pipette_model = old.model_copy(update={"tipbox": tipbox})
@@ -243,3 +243,45 @@ class TestNextTipRouting:
         p1000 = lm.tipbox_manager.boxes["tipbox_p1000"]
         assert p100.remaining == 2  # started at 3, one drawn
         assert p1000.remaining == 1  # started at 2, one drawn
+
+
+class TestTipboxList:
+    def test_list_drains_each_box_in_order(
+        self, autopipette_two_boxes: AutoPipette
+    ) -> None:
+        ap = autopipette_two_boxes
+        _set_pipette_tipbox(ap, ["tipbox_p1000", "tipbox_p100"])
+
+        origins: list[str] = []
+        for _ in range(3):
+            ap.next_tip()
+            assert ap.state.tip_origin is not None
+            origins.append(ap.state.tip_origin[0])
+            ap.state.tip_state = TipState.DETACHED
+
+        assert origins == ["tipbox_p1000", "tipbox_p1000", "tipbox_p100"]
+
+    def test_list_exhausted_names_every_listed_box(
+        self, autopipette_two_boxes: AutoPipette
+    ) -> None:
+        ap = autopipette_two_boxes
+        _set_pipette_tipbox(ap, ["tipbox_p1000"])
+        for _ in range(2):
+            ap.next_tip()
+            ap.state.tip_state = TipState.DETACHED
+
+        with pytest.raises(OutOfTipsError) as exc:
+            ap.next_tip()
+
+        assert exc.value.boxes == ["tipbox_p1000"]
+        assert ap.location_manager.tipbox_manager.boxes["tipbox_p100"].remaining == 3
+
+    def test_list_parses_from_json(self) -> None:
+        model = PipetteModel.model_validate({
+            "name": "P100",
+            "syringe": {"max_travel_mm": 60.0},
+            "servo": {},
+            "tipbox": ["a", "b"],
+        })
+
+        assert model.tipbox == ["a", "b"]

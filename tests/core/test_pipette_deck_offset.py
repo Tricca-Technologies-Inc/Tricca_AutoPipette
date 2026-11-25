@@ -6,12 +6,14 @@ P100). The offset shifts every deck target the active pipette visits, so
 two pipettes share one locations file. Tipboxes are the exception: each
 pipette has its own box, located in that pipette's frame.
 
-There is deliberately no Z offset: dip depths are absolute (a plate's
-``dip_top``/``dip_btm``), so shifting only the travel height would leave
-the dip where the other nozzle needs it.
+Z is added to dip depths, not to travel height: a longer nozzle (negative
+Z) needs less downward travel to reach the same depth in a well. Tipbox
+dips are not shifted.
 """
 
 from __future__ import annotations
+
+from unittest.mock import patch
 
 import pytest
 from pydantic import ValidationError
@@ -21,10 +23,28 @@ from tricca_autopipette.core.coordinate import Coordinate
 from tricca_autopipette.core.pipette_models import DeckOffset, PipetteModel, TipState
 
 
-def _set_offset(ap: AutoPipette, x: float = 0.0, y: float = 0.0) -> None:
+def _set_offset(
+    ap: AutoPipette, x: float = 0.0, y: float = 0.0, z: float = 0.0
+) -> None:
     ap.pipette_model = ap.pipette_model.model_copy(
-        update={"deck_offset": DeckOffset(x=x, y=y)}
+        update={"deck_offset": DeckOffset(x=x, y=y, z=z)}
     )
+
+
+def _deepest_z(ap: AutoPipette) -> float:
+    """Drain the buffer.
+
+    Returns:
+        The largest (lowest) Z any ``G1`` moves to.
+    """
+    zs = [
+        float(w[1:])
+        for line in ap.get_gcode()
+        if line.startswith("G1")
+        for w in line.split()[1:]
+        if w.startswith("Z")
+    ]
+    return max(zs)
 
 
 def _xy_moves(ap: AutoPipette) -> list[tuple[float, float]]:
@@ -51,7 +71,8 @@ class TestModel:
             "servo": {},
         })
 
-        assert (model.deck_offset.x, model.deck_offset.y) == (0.0, 0.0)
+        offset = model.deck_offset
+        assert (offset.x, offset.y, offset.z) == (0.0, 0.0, 0.0)
         assert model.tipbox is None
 
     def test_a_non_finite_offset_is_refused(self) -> None:
@@ -103,3 +124,46 @@ class TestDeckTargetsAreShifted:
         _set_offset(ap, x=50.0)
 
         assert ap.get_deck_coordinate("tipbox", row=0, col=0) == box
+
+
+class TestDipDepthIsShifted:
+    def test_aspirate_dispense_and_waste_dips_shift_by_z(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        ap = pipette_with_plates
+
+        def dips(z: float) -> list[float]:
+            _set_offset(ap, z=z)
+            ap.state.tip_state = TipState.ATTACHED
+            with patch.object(ap, "dip_z_down", wraps=ap.dip_z_down) as spy:
+                ap.aspirate_volume(10.0, "plate_a", src_row=0, src_col=0)
+                ap.dispense_volume("plate_a", dest_row=0, dest_col=0)
+                ap.dispose_tip()
+            return [c.args[1] for c in spy.call_args_list]
+
+        base = dips(0.0)
+
+        assert len(base) == 3
+        assert dips(-1.5) == pytest.approx([d - 1.5 for d in base])
+
+    def test_tipbox_dip_is_not_shifted(self, pipette_with_plates: AutoPipette) -> None:
+        ap = pipette_with_plates
+        ap.get_gcode()
+        ap.next_tip()
+        unshifted = _deepest_z(ap)
+        ap.state.tip_state = TipState.DETACHED
+        _set_offset(ap, z=-1.5)
+
+        ap.next_tip()
+
+        assert _deepest_z(ap) == pytest.approx(unshifted)
+
+    def test_a_dip_shifted_above_z0_is_refused(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        ap = pipette_with_plates
+        ap.state.tip_state = TipState.ATTACHED
+        _set_offset(ap, z=-1000.0)
+
+        with pytest.raises(ValueError, match=r"[Zz]"):
+            ap.aspirate_volume(10.0, "plate_a", src_row=0, src_col=0)
