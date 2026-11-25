@@ -613,6 +613,7 @@ class TestWebSocketStatusBroadcast:
             "breakpoint": None,
             "toolhead": {"position": None, "homed_axes": None},
             "config_locked": False,
+            "homing_invalidated": False,
         }
 
     def test_receives_a_push_when_a_run_starts(

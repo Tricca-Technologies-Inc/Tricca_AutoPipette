@@ -23,10 +23,6 @@ Example:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal
-
-LeftoverAction = Literal["keep", "waste"]
-"""What to do with liquid still in the tip once every split has dispensed."""
 
 
 @dataclass(frozen=True)

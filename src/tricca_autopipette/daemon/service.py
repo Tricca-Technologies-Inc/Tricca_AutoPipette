@@ -602,9 +602,8 @@ class AutoPipetteService:
 
         self.breakpoint_handler: Callable[[], bool] | None = None
         self._last_persisted_state: tuple[str, bool, str | None] | None = None
-        # Set when a live pipette/gantry/system change makes Moonraker's
-        # homed_axes untrustworthy (issue #33); cleared by a full init.
-        self._homing_invalidated = False
+        # Backs `_homing_invalidated`, set without the push it makes.
+        self._homing_invalidated_flag = False
         # Last snapshot written to Moonraker's DB, so the decorator can skip
         # a round trip when nothing about tip occupancy changed.
         self._persisted_tip_presence: dict[str, Any] | None = None
@@ -1379,9 +1378,7 @@ class AutoPipetteService:
             ValueError: If only one of row/col is given for a plate location.
         """  # ruff: ignore[docstring-extraneous-exception]
         autopipette = self._autopipette
-        coor = autopipette.location_manager.get_coordinate(
-            args.name_loc, args.row, args.col
-        )
+        coor = autopipette.get_deck_coordinate(args.name_loc, args.row, args.col)
         autopipette.note_action(
             f"Moving to '{args.name_loc}' "
             f"(X:{coor.x:.2f} Y:{coor.y:.2f} Z:{coor.z:.2f})"
@@ -1530,7 +1527,11 @@ class AutoPipetteService:
             NotHomedError: If the pipette is not homed (checked before the
                 soft no-liquid-in-tip no-op case -- see ``require_homed``'s
                 docstring).
-            NotALocationError: If ``args.dest`` is not a defined location.
+            NotALocationError: If ``args.dest`` (or a ``--splits``
+                destination) is not a defined location.
+            ValueError: If ``--splits`` is malformed or names a bad well.
+            NoWasteContainerError: If liquid will be left for the waste and
+                there is no waste container.
         """  # ruff: ignore[docstring-extraneous-exception]
         autopipette = self._autopipette
 
@@ -1539,18 +1540,26 @@ class AutoPipetteService:
                 ok=False, message="No liquid in tip. Use 'aspirate' first."
             )
 
-        autopipette.dispense_volume(
-            dest=args.dest,
-            dest_row=args.dest_row,
-            dest_col=args.dest_col,
-            volume=args.volume,
-            wiggle=args.wiggle,
-        )
-        self.output_gcode(autopipette.get_gcode())
-        if args.volume is not None:
-            message = f"Dispensed {args.volume} μL to {args.dest}"
+        if args.splits:
+            splits = parse_splits_spec(args.splits)
+            targets = autopipette.resolve_splits(autopipette.state.liquid_ul, splits)
+            autopipette.dispense_to(targets, wiggle=args.wiggle)
+            message = "Dispensed to " + ", ".join(
+                f"{s.dest}:{s.vol_ul:g}" for s in splits
+            )
         else:
-            message = f"Dispensed all liquid to {args.dest}"
+            autopipette.dispense_volume(
+                dest=args.dest,
+                dest_row=args.dest_row,
+                dest_col=args.dest_col,
+                volume=args.volume,
+                wiggle=args.wiggle,
+            )
+            if args.volume is not None:
+                message = f"Dispensed {args.volume} μL to {args.dest}"
+            else:
+                message = f"Dispensed all liquid to {args.dest}"
+        self.output_gcode(autopipette.get_gcode())
         return CommandResult(ok=True, message=message)
 
     @require_homed("pipette")
@@ -1580,9 +1589,9 @@ class AutoPipetteService:
                 configured.
             TipAlreadyOnError: If a tip is already attached when one is
                 needed.
-            NoWasteContainerError: If ``args.leftover`` is ``"waste"`` with no
-                waste container, or the tip goes to waste with neither a
-                container nor a known origin slot to fall back to.
+            NoWasteContainerError: If liquid will be left for the waste and
+                there is no waste container, or the tip goes to waste with
+                neither a container nor a known origin slot to fall back to.
             NoTipOriginError: If ``--tip_end return`` and the tip's origin
                 slot is unknown.
             ValueError: If ``--keep_tip`` conflicts with ``--tip_end``.
@@ -1618,7 +1627,6 @@ class AutoPipetteService:
                 prewet_vol_ul=args.prewet_vol_ul,
                 air_gap_rise_mm=args.air_gap_rise_mm,
                 wiggle=args.wiggle,
-                leftover=args.leftover,
                 tip_end=tip_end,
             )
             destination = ", ".join(f"{s.dest}:{s.vol_ul}" for s in splits)
@@ -1654,8 +1662,6 @@ class AutoPipetteService:
             features.append(f"tip_end={tip_end}")
         if split_count:
             features.append(f"splits×{split_count}")
-        if args.leftover:
-            features.append(f"leftover={args.leftover}")
 
         comment = f"\n; Pipette {args.vol_ul} μL from {args.source} to {destination}"
         if features:
@@ -3729,6 +3735,11 @@ class AutoPipetteService:
             state.has_liquid,
             autopipette.active_liquid,
         )
+        tip_contents_snapshot = (
+            state.liquid_ul,
+            state.pre_air_gap_ul,
+            state.post_air_gap_ul,
+        )
         # The stage-2 plunger model and the gantry accel its moves restore
         # (issue #147).
         motion_snapshot = (copy.copy(autopipette.plunger), autopipette.gantry_accel)
@@ -3753,6 +3764,9 @@ class AutoPipetteService:
             state.tip_state = tip_state
             state.tip_origin = tip_origin
             state.has_liquid = has_liquid
+            state.liquid_ul, state.pre_air_gap_ul, state.post_air_gap_ul = (
+                tip_contents_snapshot
+            )
             if config_manager.snapshot_pipette() != pipette_snapshot:
                 config_manager.restore_pipette(pipette_snapshot)
                 autopipette.apply_config()
@@ -4073,6 +4087,8 @@ class AutoPipetteService:
             exception), "warning" (a soft ``CommandResult(ok=False)``, or a
             WARNING the domain layer logged, e.g. a shrunk air gap), or
             "info" (a ``break`` line, or a skipped ``save_locations``).
+            ``data["tips"]`` maps each tipbox the protocol draws from to
+            ``{"needed", "left"}``: tips taken, and tips it had at the start.
             ``ok`` is True only if no finding is an "error".
 
         Raises:
@@ -4082,6 +4098,7 @@ class AutoPipetteService:
         lines = self._read_protocol_lines(filename)
 
         findings: list[dict[str, Any]] = []
+        tips: dict[str, dict[str, int]] = {}
         gcode_manager = self.gcode_manager
         token = _dry_run.set(True)
         # Captured once for the whole file, not per line: attaching/
@@ -4106,6 +4123,8 @@ class AutoPipetteService:
                 self._sync_plunger()
                 self._seed_drawer_model()
                 interlock = self._interlock_model()
+                boxes = self._autopipette.location_manager.tipbox_manager.boxes
+                left = {name: box.remaining for name, box in boxes.items()}
                 for line_number, raw_line in enumerate(lines, start=1):
                     line = raw_line.strip()
                     if not line or line.startswith("#"):
@@ -4113,6 +4132,13 @@ class AutoPipetteService:
                     self._dispatch_protocol_line_for_validation(
                         line, line_number, findings, warning_capture, interlock
                     )
+                # ponytail: a reset_tips mid-protocol undercounts; count
+                # pickups in next_tip if that ever matters.
+                tips = {
+                    name: {"needed": left[name] - box.remaining, "left": left[name]}
+                    for name, box in boxes.items()
+                    if name in left and left[name] > box.remaining
+                }
         finally:
             autopipette_logger.removeHandler(warning_capture)
             autopipette_logger.setLevel(original_level)
@@ -4130,7 +4156,9 @@ class AutoPipetteService:
                 f"{warning_count} warning(s), {info_count} info."
             )
         return CommandResult(
-            ok=error_count == 0, message=message, data={"findings": findings}
+            ok=error_count == 0,
+            message=message,
+            data={"findings": findings, "tips": tips},
         )
 
     def _interlock_model(self) -> InterlockModel | None:
@@ -4405,6 +4433,33 @@ class AutoPipetteService:
         """Return the current (or most recent) run status."""
         return self._current
 
+    def status_dict(self) -> dict[str, Any]:
+        """Describe the run status for ``run.status``/``notify_run_status``.
+
+        Returns:
+            `RunStatus.to_dict`, plus ``homing_invalidated``.
+        """
+        return {
+            **self._current.to_dict(),
+            "homing_invalidated": self._homing_invalidated,
+        }
+
+    @property
+    def _homing_invalidated(self) -> bool:
+        """Whether a live config change made Klipper's homed state untrustworthy.
+
+        Set by a pipette/gantry/system change (issue #33) and cleared by a
+        full ``init``/``home all``. A change is pushed to clients, since
+        Klipper keeps reporting the axes homed.
+        """
+        return self._homing_invalidated_flag
+
+    @_homing_invalidated.setter
+    def _homing_invalidated(self, value: bool) -> None:
+        if value != self._homing_invalidated_flag:
+            self._homing_invalidated_flag = value
+            self._broadcast_status()
+
     def list_protocols(self) -> list[dict[str, str]]:
         """List available protocol files.
 
@@ -4536,7 +4591,7 @@ class AutoPipetteService:
         """Push the current run status to control-plane clients, if wired up."""
         if self._broadcast_callback is None:
             return
-        self._broadcast_callback("notify_run_status", self._current.to_dict())
+        self._broadcast_callback("notify_run_status", self.status_dict())
 
 
 def _curve(volumes_ul: list[float], travel_mm: list[float]) -> dict[str, Any]:
