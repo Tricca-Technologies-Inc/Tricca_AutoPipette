@@ -1715,9 +1715,9 @@ class AutoPipette:
 
         At each target the tip hovers `PipetteModel.dispense_hover_mm` above
         the dispense depth and pushes out the post-gap there, above the
-        liquid, then dips the rest of the way and dispenses. It then rises
-        `dispense_rise_mm` and draws a fresh post-gap (during the rise at
-        stage 2), so nothing drips on the way to the next target. The target
+        liquid, then dips the rest of the way and dispenses. Back at travel
+        height, clear of the liquid it just dispensed, it draws a fresh
+        post-gap so nothing drips on the way to the next target. The target
         that empties the tip instead finishes with a full clear, which pushes
         out the pre-gap behind the liquid and the last of the liquid with it,
         and draws nothing.
@@ -1836,16 +1836,11 @@ class AutoPipette:
         if wiggle:
             self.wiggle(coor, depth)
 
-        if not empties and post:
-            rise_z = max(coor.z, depth - model.dispense_rise_mm)
-            if self.plunger is not None:
-                self.operate_syringe(
-                    FluidDisplacement.aspiration, post, z_move=(depth, rise_z)
-                )
-            else:
-                self.move_to_z(Coordinate(x=coor.x, y=coor.y, z=rise_z))
-                self.operate_syringe(FluidDisplacement.aspiration, post)
         self.dip_z_return(coor)
+        # Redrawn at travel height: lower down, the tip may still be in the
+        # liquid it just dispensed and would draw some of it back.
+        if not empties and post:
+            self.operate_syringe(FluidDisplacement.aspiration, post)
 
         if empties:
             self.home_pipette_stepper()

@@ -1,9 +1,10 @@
 """Tests for ``AutoPipette.dispense_to``, the one dispense path (issue #205).
 
 Each target: hover just above the dispense depth and push out the
-post-gap there, dip the rest of the way, dispense, rise and draw a fresh
-post-gap. The last target instead pushes out the pre-gap (a full clear)
-and draws nothing. Asking for more than the tip holds warns and dispenses
+post-gap there, dip the rest of the way, dispense, return to travel height
+and draw a fresh post-gap there, clear of the liquid just dispensed. The
+last target instead pushes out the pre-gap (a full clear) and draws
+nothing. Asking for more than the tip holds warns and dispenses
 what is left; liquid left after the last target warns and goes to waste.
 """
 
@@ -68,7 +69,7 @@ def _filled(ap: AutoPipette, volume: float = 20.0) -> AutoPipette:
     Returns:
         The same autopipette, holding the liquid.
     """
-    # Travel at Z1, dips to Z20, so hover (Z18) and rise (Z18) are distinct.
+    # Travel at Z1, dips to Z20, so travel, hover (Z18) and depth are distinct.
     ap.location_manager.set_plate(
         "deep",
         PlateParams(
@@ -92,11 +93,11 @@ def _filled(ap: AutoPipette, volume: float = 20.0) -> AutoPipette:
     return ap
 
 
-def _depths(ap: AutoPipette, volume: float) -> tuple[float, float, float, float]:
-    """Travel, hover, dispense and rise Z for a dispense of `volume`.
+def _depths(ap: AutoPipette, volume: float) -> tuple[float, float, float]:
+    """Travel, hover and dispense Z for a dispense of `volume`.
 
     Returns:
-        ``(travel_z, hover_z, depth, rise_z)`` for ``deep``.
+        ``(travel_z, hover_z, depth)`` for ``deep``.
     """
     travel = ap.location_manager.get_coordinate("deep", 0, 1).z
     plate = ap.location_manager.locations["deep"]
@@ -107,7 +108,6 @@ def _depths(ap: AutoPipette, volume: float) -> tuple[float, float, float, float]
         travel,
         max(travel, depth - model.dispense_hover_mm),
         depth,
-        max(travel, depth - model.dispense_rise_mm),
     )
 
 
@@ -119,15 +119,15 @@ class TestSequence:
     def test_the_deep_plate_separates_every_height(
         self, pipette_with_plates: AutoPipette
     ) -> None:
-        travel, hover, depth, rise = _depths(_filled(pipette_with_plates), 20.0)
+        travel, hover, depth = _depths(_filled(pipette_with_plates), 20.0)
 
-        assert (travel, hover, depth, rise) == pytest.approx((1.0, 18.0, 20.0, 18.0))
+        assert (travel, hover, depth) == pytest.approx((1.0, 18.0, 20.0))
 
     def test_one_target_pushes_the_post_gap_at_hover_then_clears(
         self, pipette_with_plates: AutoPipette
     ) -> None:
         ap = _filled(pipette_with_plates)
-        travel, hover, depth, _ = _depths(ap, 20.0)
+        travel, hover, depth = _depths(ap, 20.0)
         calls = _record(ap)
 
         ap.dispense_to([DispenseTarget("deep", 0, 1, None)])
@@ -144,12 +144,12 @@ class TestSequence:
         assert ap.state.has_liquid is False
         assert ap.state.liquid_ul == pytest.approx(0.0)
 
-    def test_every_target_but_the_last_redraws_the_post_gap_on_the_way_up(
+    def test_every_target_but_the_last_redraws_the_post_gap_at_travel_height(
         self, pipette_with_plates: AutoPipette
     ) -> None:
         ap = _filled(pipette_with_plates)
-        travel, hover, depth, rise = _depths(ap, 12.0)
-        _, hover8, depth8, _ = _depths(ap, 8.0)
+        travel, hover, depth = _depths(ap, 12.0)
+        _, hover8, depth8 = _depths(ap, 8.0)
         calls = _record(ap)
 
         ap.dispense_to([
@@ -162,9 +162,8 @@ class TestSequence:
             ("operate_syringe", DISP, pytest.approx(2.0)),
             ("dip_z_down", travel, depth),
             ("operate_syringe", DISP, pytest.approx(12.0)),
-            ("move_to_z", rise),
-            ("operate_syringe", ASP, pytest.approx(2.0)),
             ("dip_z_return", travel),
+            ("operate_syringe", ASP, pytest.approx(2.0)),
             ("dip_z_down", travel, hover8),
             ("operate_syringe", DISP, pytest.approx(2.0)),
             ("dip_z_down", travel, depth8),
@@ -178,9 +177,9 @@ class TestSequence:
         self, pipette_with_plates: AutoPipette
     ) -> None:
         # Issue #200: a side-mounted nozzle shifts XY, a longer one shifts
-        # every dip depth -- hover and rise included, since they hang off it.
+        # every dip depth -- the hover included, since it hangs off it.
         ap = _filled(pipette_with_plates)
-        _, hover, depth, rise = _depths(ap, 12.0)
+        _, hover, depth = _depths(ap, 12.0)
         raw = ap.location_manager.get_coordinate("deep", 0, 1)
         ap.pipette_model = ap.pipette_model.model_copy(
             update={"deck_offset": DeckOffset(x=10.0, y=-2.0, z=-1.5)}
@@ -194,10 +193,10 @@ class TestSequence:
 
         zs = [
             c[2] if c[0] == "dip_z_down" else c[1]
-            for c in calls[:5]
+            for c in calls[:4]
             if c[0] in {"dip_z_down", "move_to_z"}
         ]
-        assert zs == pytest.approx([hover - 1.5, depth - 1.5, rise - 1.5])
+        assert zs == pytest.approx([hover - 1.5, depth - 1.5])
         xy = {
             (float(w["X"]), float(w["Y"]))
             for line in ap.get_gcode()

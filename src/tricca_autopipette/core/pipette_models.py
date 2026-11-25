@@ -599,16 +599,11 @@ class PipetteModel(BaseModel):
     )
 
     # Dispense (issue #205): the post-gap is pushed out this far above the
-    # dispense depth, and redrawn this far above it on the way up.
+    # dispense depth. It is redrawn at travel height.
     dispense_hover_mm: float = Field(
         default=2.0,
         ge=0,
         description="Height above the dispense depth to push out the post-gap (mm)",
-    )
-    dispense_rise_mm: float = Field(
-        default=2.0,
-        ge=0,
-        description="Height above the dispense depth to redraw the post-gap (mm)",
     )
 
     compatible_tips: list[str] = Field(
