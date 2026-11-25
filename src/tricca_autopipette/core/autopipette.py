@@ -1608,6 +1608,12 @@ class AutoPipette:
                     speed=self.syringe.speed_dispense,
                 )
 
+            # Compute the adjusted dip depth (with deck offset) so the raise
+            # calculation is relative to where the gantry actually is, not the
+            # raw dip_top value which is calibrated for the reference pipette.
+            off = self.pipette_model.deck_offset
+            adjusted_dip_z = max(0.0, dip_z + off.z) if off.z != 0.0 else dip_z
+
             self.dip_z_down(coor_source, dip_z, apply_deck_offset=True)
 
             for _ in range(prewet_cycles):
@@ -1619,12 +1625,12 @@ class AutoPipette:
                 self.operate_syringe(FluidDisplacement.dispense, prewet_vol_ul)
                 self.gcode_wait(self.syringe.wait_aspirate_ms)
 
-            raise_z = max(0, dip_z - 30)
-            if dip_z < 30:
+            raise_z = max(0, adjusted_dip_z - 30)
+            if adjusted_dip_z < 30:
                 self.logger.warning(
                     "Prewet raise is limited to %g mm above the aspiration depth "
                     "by the Z=0 boundary, rather than the requested 30 mm.",
-                    dip_z,
+                    adjusted_dip_z,
                 )
             self.move_to_z(
                 Coordinate(x=coor_source.x, y=coor_source.y, z=raise_z)
