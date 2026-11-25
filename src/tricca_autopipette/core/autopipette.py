@@ -61,7 +61,7 @@ from tricca_autopipette.core.pipette_models import (
     TipEnd,
     TipState,
 )
-from tricca_autopipette.core.plates import Plate
+from tricca_autopipette.core.plates import Plate, TipBox
 from tricca_autopipette.core.splits import LeftoverAction, Split
 from tricca_autopipette.core.traversal import well_id_to_rc
 from tricca_autopipette.core.volume_converter import VolumeConverter
@@ -748,6 +748,39 @@ class AutoPipette:
         )
         self.gcode_buffers.add(gc.manual_stepper(stepper, set_position=0))
 
+    def _offset(self, coor: Coordinate) -> Coordinate:
+        """Shift a deck target by the active pipette's `deck_offset`.
+
+        Args:
+            coor: Target in the head's reference frame.
+
+        Returns:
+            The same target for the active pipette's nozzle.
+        """
+        off = self.pipette_model.deck_offset
+        return coor.generate_offset(dx=off.x, dy=off.y)
+
+    def get_deck_coordinate(
+        self, name: str, row: int | None = None, col: int | None = None
+    ) -> Coordinate:
+        """Resolve a location for the active pipette's nozzle.
+
+        Tipboxes aren't shifted: each pipette locates its own box in its own
+        frame.
+
+        Args:
+            name: Location name.
+            row: Well row, for a plate.
+            col: Well column, for a plate.
+
+        Returns:
+            The location's coordinate, shifted by the pipette's `deck_offset`.
+        """
+        coor = self.location_manager.get_coordinate(name, row, col)
+        if isinstance(self.location_manager.locations.get(name), TipBox):
+            return coor
+        return self._offset(coor)
+
     def _check_limits(self, coordinate: Coordinate, axes: str = "xyz") -> None:
         """Refuse an absolute target outside the gantry's travel limits.
 
@@ -948,8 +981,9 @@ class AutoPipette:
         offered again -- unless `tipbox_name` requests a specific box.
 
         Args:
-            tipbox_name: If given, draw only from this box instead of the
-                registration-order default.
+            tipbox_name: If given, draw only from this box; else from the
+                active pipette's `tipbox`, if it names one; else in
+                registration order.
 
         Raises:
             NoTipboxError: If no tipbox has been configured.
@@ -964,6 +998,8 @@ class AutoPipette:
         if self.state.tip_state == TipState.ATTACHED:
             raise TipAlreadyOnError()
         # Checked on the box that will supply the tip, before a slot is taken.
+        # An explicit box wins, then the active pipette's own box.
+        tipbox_name = tipbox_name or self.pipette_model.tipbox
         peeked = self.location_manager.tipbox_manager.peek_tip()
         supplier = tipbox_name or (peeked[0] if peeked else None)
         if supplier is not None:
@@ -1035,7 +1071,7 @@ class AutoPipette:
 
         self._check_drawer_of(self.location_manager.waste_container)
         self.note_action("Disposing tip to waste container")
-        curr_coor = self.location_manager.waste_container.next()
+        curr_coor = self._offset(self.location_manager.waste_container.next())
         self.move_to(curr_coor)
         self.dip_z_down(
             curr_coor, self.location_manager.waste_container.get_dip_distance(vol=None)
@@ -1472,7 +1508,7 @@ class AutoPipette:
         )
         if rise < 0:
             raise ValueError(f"air_gap_rise must be >= 0 mm, got {rise:g}")
-        coor_source = self.location_manager.get_coordinate(source, src_row, src_col)
+        coor_source = self.get_deck_coordinate(source, src_row, src_col)
         loc_source = self.location_manager.locations[source]
 
         if isinstance(loc_source, Coordinate):
@@ -1579,7 +1615,7 @@ class AutoPipette:
             ValueError: If destination is not a plate with dipping strategy.
             NotALocationError: If ``dest`` is not a defined location.
         """  # ruff: ignore[docstring-extraneous-exception]
-        coor_dest = self.location_manager.get_coordinate(dest, dest_row, dest_col)
+        coor_dest = self.get_deck_coordinate(dest, dest_row, dest_col)
         loc_dest = self.location_manager.locations[dest]
 
         if isinstance(loc_dest, Coordinate):
@@ -2016,7 +2052,7 @@ class AutoPipette:
         self._check_drawer_of(waste)
 
         self.note_action("Emptying leftover tip contents to waste container")
-        curr_coor = waste.next()
+        curr_coor = self._offset(waste.next())
         self.move_to(curr_coor)
         self.dip_z_down(curr_coor, waste.get_dip_distance(vol=None))
         self.clear_syringe()

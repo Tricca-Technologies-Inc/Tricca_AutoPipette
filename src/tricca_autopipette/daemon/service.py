@@ -1379,9 +1379,7 @@ class AutoPipetteService:
             ValueError: If only one of row/col is given for a plate location.
         """  # ruff: ignore[docstring-extraneous-exception]
         autopipette = self._autopipette
-        coor = autopipette.location_manager.get_coordinate(
-            args.name_loc, args.row, args.col
-        )
+        coor = autopipette.get_deck_coordinate(args.name_loc, args.row, args.col)
         autopipette.note_action(
             f"Moving to '{args.name_loc}' "
             f"(X:{coor.x:.2f} Y:{coor.y:.2f} Z:{coor.z:.2f})"
