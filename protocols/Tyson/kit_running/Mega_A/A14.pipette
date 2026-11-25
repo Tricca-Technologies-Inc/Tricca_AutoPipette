@@ -5,7 +5,7 @@
 # with both destination plates via their natural sequential order.
 
 load_pipette TysonP100.json
-home
+home all
 
 pipette 60.0 --src_row 0 --src_col 0  COLPLATE LCPLATE --prewet 1 --splits 'LCPLATE:50;DFIPLATE:10'
 pipette 60.0 --src_row 0 --src_col 1  COLPLATE LCPLATE --prewet 1 --splits 'LCPLATE:50;DFIPLATE:10'
