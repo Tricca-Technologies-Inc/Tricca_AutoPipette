@@ -13,6 +13,8 @@ from typing import Any, Literal, Self, cast
 from pydantic import BaseModel, Field, model_validator
 from pydantic.dataclasses import dataclass
 
+from tricca_autopipette.core.coordinate import Coordinate
+
 
 class TipState(StrEnum):
     """State of tip attachment.
@@ -222,6 +224,17 @@ class GantryKinematics(BaseModel):
     y_max: float | None = Field(default=None, description="Highest allowed Y target")
     z_min: float = Field(default=0.0, description="Lowest allowed Z target in mm")
     z_max: float | None = Field(default=None, description="Highest allowed Z target")
+
+    # After a tip goes into the waste the head parks clear of the deck and
+    # re-homes Z, so a Z step skipped during the eject doesn't carry into
+    # the next transfer (Scott's Tyson tuning). None / False turn them off.
+    park_after_dispose: Coordinate | None = Field(
+        default_factory=lambda: Coordinate(x=150.0, y=150.0, z=0.0),
+        description="Where to park after a tip is ejected into the waste",
+    )
+    home_z_after_dispose: bool = Field(
+        default=True, description="Home Z after a tip is ejected into the waste"
+    )
 
     @model_validator(mode="after")
     def _min_below_max(self) -> Self:

@@ -1148,6 +1148,10 @@ class AutoPipette:
         )
         self.eject_tip()
         self.dip_z_return(curr_coor)
+        if self.gantry.park_after_dispose is not None:
+            self.move_to(self.gantry.park_after_dispose)
+        if self.gantry.home_z_after_dispose:
+            self.home_z()
 
     def _ensure_transfer_tip(self, tipbox_name: str | None) -> None:
         """Make sure a fresh tip is on before a transfer.
