@@ -322,6 +322,10 @@ class TestHighRiskBounds:
                 "pipettes", "p100_vertical.json", "syringe.max_travel_mm", 61.0
             )
 
+    def test_homing_speed_is_bounded_like_the_other_speeds(self, roots: Roots) -> None:
+        with pytest.raises(ValueError, match="speed_home"):
+            set_config_value("pipettes", "p100_vertical.json", "syringe.speed_home", 51)
+
     def test_a_gantry_file_value_is_bounded(self, roots: Roots) -> None:
         with pytest.raises(ValueError, match="accel_z"):
             set_config_value("gantry", "default_gantry.json", "accel_z", 1e9)

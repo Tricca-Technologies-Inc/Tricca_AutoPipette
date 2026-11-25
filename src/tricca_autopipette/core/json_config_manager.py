@@ -954,6 +954,10 @@ class JsonConfigManager:
                 if liquid.air_gap_rise_mm is not None
                 else syringe.air_gap_rise_mm
             ),
+            # Homing and plunger accels (from syringe only, no liquid override)
+            "speed_home": syringe.speed_home,
+            "accel_home": syringe.accel_home,
+            "accel_move": syringe.accel_move,
             # Motor configuration (from syringe only, no liquid override)
             "stepper_name": syringe.stepper_name,
             "motor_orientation": syringe.motor_orientation,
