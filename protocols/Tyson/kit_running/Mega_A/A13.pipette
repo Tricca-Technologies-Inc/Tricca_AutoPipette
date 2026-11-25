@@ -1,7 +1,7 @@
 #Adding 300uL of extraction solvent to the wells of the filter plate
 #
 load_pipette TysonP1000.json
-home
+home all
 #
 
 
