@@ -12,6 +12,7 @@ this file only adds what a browser is needed to prove.
 from __future__ import annotations
 
 import re
+from typing import cast
 
 import pytest
 
@@ -128,6 +129,31 @@ def test_dpad_click_when_not_homed_shows_the_real_daemon_error(
 
     expect(page.locator("#moveJogFeedback")).to_have_class(re.compile(r"\berror\b"))
     expect(page.locator("#moveJogFeedback")).to_contain_text(re.compile(r"home", re.I))
+
+
+@pytest.mark.parametrize(
+    ("button", "axis", "sign"),
+    [
+        # X0 is the machine's right edge and X grows to the left (deck.js's
+        # map draws it that way); Z0 is fully raised and Z grows downward.
+        (".dpad-xminus", "x", 1),  # ◀ moves left
+        (".dpad-xplus", "x", -1),  # ▶ moves right
+        (".dpad-zplus", "z", -1),  # Z ▲ raises
+        (".dpad-zminus", "z", 1),  # Z ▼ lowers
+    ],
+)
+def test_dpad_arrows_move_the_way_they_point(
+    page: Page, live_kiosk_server: LiveKioskServer, button: str, axis: str, sign: int
+) -> None:
+    page.goto(live_kiosk_server.url)
+    page.click('.tab-btn[data-page="move"]')
+
+    with page.expect_request("**/move_rel") as request:
+        page.click(button)
+
+    body = cast("dict[str, float]", request.value.post_data_json)
+    assert body[axis] * sign > 0
+    assert all(body[other] == 0 for other in "xyz" if other != axis)
 
 
 def test_location_dropdown_lists_locations_and_shows_rowcol_for_a_plate(
