@@ -8,6 +8,7 @@ tested against the real ``pipette_with_plates`` fixture (a 1x4 ``plate_a``, a
 
 from __future__ import annotations
 
+import logging
 from unittest.mock import patch
 
 import pytest
@@ -63,26 +64,23 @@ class TestResolveSplits:
     ) -> None:
         # plate_a is 1x4, so A1..A4 are the addressable wells.
         resolved = pipette_with_plates.resolve_splits(
-            20.0, parse_splits_spec("plate_a:12@A1;plate_a:8@A3"), leftover=None
+            20.0, parse_splits_spec("plate_a:12@A1;plate_a:8@A3")
         )
 
-        assert [(row, col) for _, row, col in resolved] == [(0, 0), (0, 2)]
+        assert [(t.row, t.col) for t in resolved] == [(0, 0), (0, 2)]
 
     def test_omitted_well_defers_to_the_plates_traversal_order(
         self, pipette_with_plates: AutoPipette
     ) -> None:
         resolved = pipette_with_plates.resolve_splits(
-            20.0, parse_splits_spec("plate_a:20"), leftover=None
+            20.0, parse_splits_spec("plate_a:20")
         )
 
-        assert resolved[0][1] is None
-        assert resolved[0][2] is None
+        assert (resolved[0].row, resolved[0].col) == (None, None)
 
     def test_unknown_destination_raises(self, pipette_with_plates: AutoPipette) -> None:
         with pytest.raises(NotALocationError):
-            pipette_with_plates.resolve_splits(
-                20.0, parse_splits_spec("nowhere:20@A1"), leftover=None
-            )
+            pipette_with_plates.resolve_splits(20.0, parse_splits_spec("nowhere:20@A1"))
 
     def test_coordinate_destination_raises(
         self, pipette_with_plates: AutoPipette
@@ -92,43 +90,16 @@ class TestResolveSplits:
         )
 
         with pytest.raises(ValueError, match="is a coordinate, not a plate"):
-            pipette_with_plates.resolve_splits(
-                20.0, parse_splits_spec("home:20"), leftover=None
-            )
+            pipette_with_plates.resolve_splits(20.0, parse_splits_spec("home:20"))
 
     def test_well_outside_the_plate_raises(
         self, pipette_with_plates: AutoPipette
     ) -> None:
         # plate_a is 1x4; A9 is off the end of it.
         with pytest.raises(ValueError, match="outside a 1x4 plate"):
-            pipette_with_plates.resolve_splits(
-                20.0, parse_splits_spec("plate_a:20@A9"), leftover=None
-            )
+            pipette_with_plates.resolve_splits(20.0, parse_splits_spec("plate_a:20@A9"))
 
-    def test_oversubscribed_splits_raise(
-        self, pipette_with_plates: AutoPipette
-    ) -> None:
-        with pytest.raises(ValueError, match=r"exceeds the 20\.0 μL aspirated"):
-            pipette_with_plates.resolve_splits(
-                20.0, parse_splits_spec("plate_a:12@A1;plate_a:15@A2"), leftover=None
-            )
-
-    def test_leftover_without_an_action_raises(
-        self, pipette_with_plates: AutoPipette
-    ) -> None:
-        with pytest.raises(ValueError, match="--leftover keep or --leftover waste"):
-            pipette_with_plates.resolve_splits(
-                20.0, parse_splits_spec("plate_a:12@A1"), leftover=None
-            )
-
-    def test_leftover_keep_is_accepted(self, pipette_with_plates: AutoPipette) -> None:
-        resolved = pipette_with_plates.resolve_splits(
-            20.0, parse_splits_spec("plate_a:12@A1"), leftover="keep"
-        )
-
-        assert len(resolved) == 1
-
-    def test_leftover_waste_without_a_waste_container_raises_up_front(
+    def test_leftover_without_a_waste_container_raises_up_front(
         self, pipette_with_plates: AutoPipette
     ) -> None:
         # The whole point of checking here rather than after the last split:
@@ -136,9 +107,7 @@ class TestResolveSplits:
         pipette_with_plates.location_manager.waste_container = None
 
         with pytest.raises(NoWasteContainerError):
-            pipette_with_plates.resolve_splits(
-                20.0, parse_splits_spec("plate_a:12@A1"), leftover="waste"
-            )
+            pipette_with_plates.resolve_splits(20.0, parse_splits_spec("plate_a:12@A1"))
 
     def test_volume_beyond_syringe_capacity_raises(
         self, pipette_with_plates: AutoPipette
@@ -146,7 +115,7 @@ class TestResolveSplits:
         # pipette_splits never chunks -- the whole aspirate has to fit at once.
         with pytest.raises(VolumeCapacityError):
             pipette_with_plates.resolve_splits(
-                150.0, parse_splits_spec("plate_a:150@A1"), leftover=None
+                150.0, parse_splits_spec("plate_a:150@A1")
             )
 
 
@@ -164,8 +133,8 @@ class TestPipetteSplits:
             ) as spy_aspirate,
             patch.object(
                 pipette_with_plates,
-                "dispense_volume",
-                wraps=pipette_with_plates.dispense_volume,
+                "dispense_to",
+                wraps=pipette_with_plates.dispense_to,
             ) as spy_dispense,
         ):
             pipette_with_plates.pipette_splits(
@@ -178,54 +147,27 @@ class TestPipetteSplits:
         assert spy_aspirate.call_count == 1
         assert spy_aspirate.call_args.args[0] == pytest.approx(20.0)
 
-        dispensed = [call.kwargs["volume"] for call in spy_dispense.call_args_list]
-        wells = [
-            (call.kwargs["dest_row"], call.kwargs["dest_col"])
-            for call in spy_dispense.call_args_list
-        ]
+        targets = spy_dispense.call_args.args[0]
+        dispensed = [t.volume for t in targets]
+        wells = [(t.row, t.col) for t in targets]
         assert dispensed == pytest.approx([12.0, 8.0])
         assert wells == [(0, 0), (0, 2)]
-
-    def test_first_dispense_purges_the_post_aspirate_cushion(
-        self, pipette_with_plates: AutoPipette
-    ) -> None:
-        # The cushion sits between the liquid and the orifice, so it has to be
-        # driven out ahead of the first split or that well is short-changed.
-        pipette_with_plates.state.tip_state = TipState.ATTACHED
-
-        with patch.object(
-            pipette_with_plates,
-            "dispense_volume",
-            wraps=pipette_with_plates.dispense_volume,
-        ) as spy_dispense:
-            pipette_with_plates.pipette_splits(
-                vol_ul=20.0,
-                source="plate_a",
-                splits=parse_splits_spec("plate_a:12@A1;plate_a:8@A3"),
-                post_air_gap_ul=3.0,
-                tip_end="keep",
-            )
-
-        purges = [
-            call.kwargs["purge_air_gap_ul"] for call in spy_dispense.call_args_list
-        ]
-        assert purges == pytest.approx([3.0, 0.0])
 
     def test_a_bad_spec_emits_no_gcode(self, pipette_with_plates: AutoPipette) -> None:
         pipette_with_plates.state.tip_state = TipState.ATTACHED
         pipette_with_plates.get_gcode()  # drain anything buffered by setup
 
-        with pytest.raises(ValueError, match="exceeds the"):
+        with pytest.raises(ValueError, match="outside a 1x4 plate"):
             pipette_with_plates.pipette_splits(
                 vol_ul=20.0,
                 source="plate_a",
-                splits=parse_splits_spec("plate_a:12@A1;plate_a:15@A2"),
+                splits=parse_splits_spec("plate_a:12@A1;plate_a:8@A9"),
                 tip_end="keep",
             )
 
         assert pipette_with_plates.get_gcode() == []
 
-    def test_leftover_waste_empties_the_tip_and_disposes_it(
+    def test_leftover_empties_to_waste_and_disposes_the_tip(
         self, pipette_with_plates: AutoPipette
     ) -> None:
         pipette_with_plates.state.tip_state = TipState.ATTACHED
@@ -239,30 +181,34 @@ class TestPipetteSplits:
                 vol_ul=20.0,
                 source="plate_a",
                 splits=parse_splits_spec("plate_a:12@A1"),
-                leftover="waste",
             )
 
         assert spy_waste.call_count == 1
         assert pipette_with_plates.state.has_liquid is False
         assert pipette_with_plates.state.tip_state == TipState.DETACHED
 
-    def test_leftover_keep_retains_the_tip_even_with_tip_end_waste(
-        self, pipette_with_plates: AutoPipette
+    def test_oversubscribed_splits_warn_and_the_last_gets_what_is_left(
+        self, pipette_with_plates: AutoPipette, caplog: pytest.LogCaptureFixture
     ) -> None:
-        # A tip still holding liquid must never go in the bin, so an explicit
-        # `leftover="keep"` outranks tip_end="waste".
         pipette_with_plates.state.tip_state = TipState.ATTACHED
 
-        pipette_with_plates.pipette_splits(
-            vol_ul=20.0,
-            source="plate_a",
-            splits=parse_splits_spec("plate_a:12@A1"),
-            leftover="keep",
-            tip_end="waste",
-        )
+        with (
+            caplog.at_level(logging.WARNING),
+            patch.object(
+                pipette_with_plates,
+                "_dispense_one",
+                wraps=pipette_with_plates._dispense_one,  # pyright: ignore[reportPrivateUsage]
+            ) as spy,
+        ):
+            pipette_with_plates.pipette_splits(
+                vol_ul=20.0,
+                source="plate_a",
+                splits=parse_splits_spec("plate_a:12@A1;plate_a:15@A2"),
+                tip_end="keep",
+            )
 
-        assert pipette_with_plates.state.has_liquid is True
-        assert pipette_with_plates.state.tip_state == TipState.ATTACHED
+        assert "more than" in caplog.text
+        assert [c.args[1] for c in spy.call_args_list] == pytest.approx([12.0, 8.0])
 
     def test_fully_consumed_aspirate_disposes_the_tip(
         self, pipette_with_plates: AutoPipette

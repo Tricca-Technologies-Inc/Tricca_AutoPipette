@@ -27,7 +27,7 @@ SET_VELOCITY_LIMIT ACCEL=3000
 G4 P200
 G1 Z5.0 F12000.0
 G4 P50
-; Dispensing remaining volume to 'plate_a'
+; Dispensing 20μL to 'plate_a'
 G1 X91.0 Y100.0 F38000.0
 G1 Z5.0 F12000.0
 G1 Z5.0 F12000.0

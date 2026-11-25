@@ -116,7 +116,6 @@ _BUILDER_CALLS: list[tuple[str, tuple[Any, ...]]] = [
                 wiggle=False,
                 keep_tip=True,
                 splits=None,
-                leftover=None,
             ),
         ),
     ),

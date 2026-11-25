@@ -13,7 +13,7 @@ from unittest.mock import patch
 import pytest
 from pydantic import ValidationError
 
-from tricca_autopipette.core.autopipette import AutoPipette
+from tricca_autopipette.core.autopipette import AutoPipette, even_chunks
 from tricca_autopipette.core.coordinate import Coordinate
 from tricca_autopipette.core.pipette_exceptions import (
     NoTipboxError,
@@ -438,6 +438,30 @@ class TestResolveTechnique:
         assert spy_fit.call_args.args == pytest.approx((20.0, 5.0, 2.0))
 
 
+class TestEvenChunks:
+    @pytest.mark.parametrize(
+        ("total", "max_chunk", "expected"),
+        [
+            (1000.0, 490.0, [333.0, 333.0, 334.0]),
+            (50.0, 98.0, [50.0]),
+            (196.0, 98.0, [98.0, 98.0]),
+            (100.5, 98.0, [50.5, 50.0]),
+            (195.0, 97.5, [97.5, 97.5]),
+        ],
+    )
+    def test_splits_into_the_fewest_near_equal_chunks(
+        self, total: float, max_chunk: float, expected: list[float]
+    ) -> None:
+        chunks = even_chunks(total, max_chunk)
+
+        assert chunks == pytest.approx(expected)
+        assert sum(chunks) == pytest.approx(total)
+        assert max(chunks) <= max_chunk
+
+    def test_nothing_gives_no_chunks(self) -> None:
+        assert even_chunks(0.0, 98.0) == []
+
+
 class TestFitAirVolumes:
     """The p100_vertical fixture is a 100uL syringe with a 2uL margin."""
 
@@ -520,6 +544,47 @@ class TestPipetteTransfer:
         assert pipette_with_plates.state.tip_state == TipState.DETACHED
         assert pipette_with_plates.state.has_liquid is False
 
+    def test_unknown_tip_is_ejected_to_waste_before_a_fresh_pickup(
+        self, pipette_with_plates: AutoPipette, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        # After a restart with no saved state nothing says whether a tip is
+        # on. Carrying on as if one were would aspirate through a bare nozzle.
+        ap = pipette_with_plates
+        ap.state.tip_state = TipState.UNKNOWN
+        with (
+            patch.object(ap, "dispose_tip", wraps=ap.dispose_tip) as dispose,
+            caplog.at_level(logging.INFO),
+        ):
+            ap.pipette(vol_ul=10.0, source="plate_a", dest="plate_a", tip_end="keep")
+
+        dispose.assert_called_once()
+        messages = [r.getMessage() for r in caplog.records]
+        warning = next(i for i, m in enumerate(messages) if "Tip state is unknown" in m)
+        pickup = next(i for i, m in enumerate(messages) if "Picking up tip" in m)
+        assert warning < pickup
+        assert ap.state.tip_state == TipState.ATTACHED
+
+    def test_unknown_tip_that_may_hold_liquid_is_refused(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        pipette_with_plates.state.tip_state = TipState.UNKNOWN
+        pipette_with_plates.state.has_liquid = True
+        pipette_with_plates.get_gcode()
+
+        with pytest.raises(ValueError, match="liquid may be present"):
+            pipette_with_plates.pipette(vol_ul=10.0, source="plate_a", dest="plate_a")
+
+        assert pipette_with_plates.get_gcode() == []
+
+    def test_unknown_tip_with_no_waste_container_is_refused(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        pipette_with_plates.state.tip_state = TipState.UNKNOWN
+        pipette_with_plates.location_manager.remove_location("waste")
+
+        with pytest.raises(NoWasteContainerError):
+            pipette_with_plates.pipette(vol_ul=10.0, source="plate_a", dest="plate_a")
+
     def test_tip_end_keep_leaves_tip_attached(
         self, pipette_with_plates: AutoPipette
     ) -> None:
@@ -535,8 +600,8 @@ class TestPipetteTransfer:
         self, pipette_with_plates: AutoPipette
     ) -> None:
         # p100_vertical is a 100uL syringe with a 2uL capacity margin, so a
-        # chunk is 98uL of usable capacity -- a 250uL transfer splits into
-        # [98, 98, 54] rather than [100, 100, 50].
+        # chunk holds at most 98uL -- a 250uL transfer needs three chunks,
+        # split as evenly as whole microlitres allow.
         pipette_with_plates.state.tip_state = TipState.ATTACHED
 
         with patch.object(
@@ -549,14 +614,14 @@ class TestPipetteTransfer:
             )
 
         aspirated_volumes = [call.args[0] for call in spy_aspirate.call_args_list]
-        assert aspirated_volumes == pytest.approx([98.0, 98.0, 54.0])
+        assert aspirated_volumes == pytest.approx([83.0, 83.0, 84.0])
 
     def test_air_gaps_come_out_of_the_per_chunk_budget(
         self, pipette_with_plates: AutoPipette
     ) -> None:
         # 98uL usable, less a 30uL pre-gap and a 2uL post-gap, leaves 66uL of
-        # liquid per chunk. Chunking on max_volume_ul alone would overflow the
-        # syringe by the air overhead on every full chunk.
+        # liquid per chunk, so 100uL takes two. Chunking on max_volume_ul
+        # alone would overflow the syringe by the air overhead.
         pipette_with_plates.state.tip_state = TipState.ATTACHED
 
         with patch.object(
@@ -574,7 +639,7 @@ class TestPipetteTransfer:
             )
 
         aspirated_volumes = [call.args[0] for call in spy_aspirate.call_args_list]
-        assert aspirated_volumes == pytest.approx([66.0, 34.0])
+        assert aspirated_volumes == pytest.approx([50.0, 50.0])
 
     def test_min_pre_air_gap_shrinks_the_gap_instead_of_adding_a_chunk(
         self, pipette_with_plates: AutoPipette
@@ -600,14 +665,16 @@ class TestPipetteTransfer:
     def test_min_pre_air_gap_is_kept_by_chunking_when_it_cannot_fit(
         self, pipette_with_plates: AutoPipette
     ) -> None:
-        # 98uL usable less the 5uL minimum and 2uL post leaves 91uL per chunk.
+        # 98uL usable less the 5uL minimum and 2uL post leaves 91uL per chunk,
+        # so 92uL splits in two even chunks, each keeping its full pre-gap.
+        # In one aspirate the pre-gap would shrink to 4uL, under the minimum.
         ap = pipette_with_plates
         ap.state.tip_state = TipState.ATTACHED
         ap.pipette_model.syringe.min_pre_air_gap_ul = 5.0
 
         with patch.object(ap, "fit_air_volumes", wraps=ap.fit_air_volumes) as spy:
             ap.pipette(
-                vol_ul=100.0,
+                vol_ul=92.0,
                 source="plate_a",
                 dest="plate_a",
                 pre_air_gap_ul=30.0,
@@ -616,5 +683,5 @@ class TestPipetteTransfer:
             )
 
         fitted = [ap.fit_air_volumes(*c.args) for c in spy.call_args_list]
-        assert [c.args[0] for c in spy.call_args_list] == pytest.approx([91.0, 9.0])
-        assert fitted == [pytest.approx((5.0, 2.0)), pytest.approx((30.0, 2.0))]
+        assert [c.args[0] for c in spy.call_args_list] == pytest.approx([46.0, 46.0])
+        assert fitted == [pytest.approx((30.0, 2.0))] * 2
