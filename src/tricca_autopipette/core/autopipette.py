@@ -1723,8 +1723,16 @@ class AutoPipette:
         # Calculate transfer chunks based on max pipette capacity. The air
         # gaps ride along inside the same syringe, so they come out of the
         # per-chunk budget -- chunking on max_volume_ul alone would overflow
-        # by exactly the air overhead on every full chunk.
-        max_vol = self.usable_capacity_ul() - pre_air_gap_ul - post_air_gap_ul
+        # by exactly the air overhead on every full chunk. With a minimum
+        # pre-gap set, only that minimum is budgeted: fit_air_volumes shrinks
+        # the pre-gap toward it rather than adding a chunk.
+        min_pre_mm = self.pipette_model.syringe.min_pre_air_gap_mm
+        if min_pre_mm is not None:
+            min_pre_ul = max(0.0, self.volume_converter.mm_to_vol(min_pre_mm))
+            pre_air_gap_ul_budget = min(pre_air_gap_ul, min_pre_ul)
+        else:
+            pre_air_gap_ul_budget = pre_air_gap_ul
+        max_vol = self.usable_capacity_ul() - pre_air_gap_ul_budget - post_air_gap_ul
         if max_vol <= PhysicalConstants.VOLUME_TOLERANCE_UL:
             raise VolumeCapacityError(vol_ul, self.usable_capacity_ul())
 
