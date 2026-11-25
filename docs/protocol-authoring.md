@@ -146,7 +146,7 @@ switching liquids.
 
 ```
 load_locations examples_deck.json --replace
-pipette 25 example_source example_dest --splits 'example_dest:12@A1;example_dest:8@B2' --leftover waste
+pipette 25 example_source example_dest --splits 'example_dest:12@A1;example_dest:8@B2'
 ```
 
 `--splits 'DEST:VOL[@WELL];...'` aspirates once and then dispenses to each
@@ -158,13 +158,18 @@ own traversal order pick the well, the same as a plain `pipette` without
 the whole aspirate volume must fit in the syringe at once, since a single
 aspirate is the point.
 
+At each destination the tip pushes its post-aspirate air gap out just
+above the dispense depth, dips, dispenses, then rises slightly and draws a
+fresh air gap for the trip to the next one. The last destination ends with
+a full clear, which pushes out the pre-aspirate air gap behind the liquid
+and the last drop with it. `dispense --splits` does the same with liquid
+already in the tip.
+
 Here the splits (12 + 8 = 20μL) don't consume the whole 25μL aspirated, so
-`--leftover` is required to say what happens to the remaining 5μL:
-`keep` retains it in the tip, `waste` verifies a waste container up front
-and disposes of the leftover (and the tip) there. Omitting `--leftover`
-when there's a remainder is an error rather than a silent default, since
-"keep the leftover" and "throw it out" are both real, different choices a
-protocol author has to make explicitly.
+the remaining 5μL goes to the waste container, with a warning (Check
+reports it). A missing waste container is caught before anything moves.
+Splits that ask for more than was aspirated also warn, and the last ones
+get what is left.
 
 ## Pausing for an operator
 

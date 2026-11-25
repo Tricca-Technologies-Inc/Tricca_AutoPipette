@@ -544,6 +544,47 @@ class TestPipetteTransfer:
         assert pipette_with_plates.state.tip_state == TipState.DETACHED
         assert pipette_with_plates.state.has_liquid is False
 
+    def test_unknown_tip_is_ejected_to_waste_before_a_fresh_pickup(
+        self, pipette_with_plates: AutoPipette, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        # After a restart with no saved state nothing says whether a tip is
+        # on. Carrying on as if one were would aspirate through a bare nozzle.
+        ap = pipette_with_plates
+        ap.state.tip_state = TipState.UNKNOWN
+        with (
+            patch.object(ap, "dispose_tip", wraps=ap.dispose_tip) as dispose,
+            caplog.at_level(logging.INFO),
+        ):
+            ap.pipette(vol_ul=10.0, source="plate_a", dest="plate_a", tip_end="keep")
+
+        dispose.assert_called_once()
+        messages = [r.getMessage() for r in caplog.records]
+        warning = next(i for i, m in enumerate(messages) if "Tip state is unknown" in m)
+        pickup = next(i for i, m in enumerate(messages) if "Picking up tip" in m)
+        assert warning < pickup
+        assert ap.state.tip_state == TipState.ATTACHED
+
+    def test_unknown_tip_that_may_hold_liquid_is_refused(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        pipette_with_plates.state.tip_state = TipState.UNKNOWN
+        pipette_with_plates.state.has_liquid = True
+        pipette_with_plates.get_gcode()
+
+        with pytest.raises(ValueError, match="liquid may be present"):
+            pipette_with_plates.pipette(vol_ul=10.0, source="plate_a", dest="plate_a")
+
+        assert pipette_with_plates.get_gcode() == []
+
+    def test_unknown_tip_with_no_waste_container_is_refused(
+        self, pipette_with_plates: AutoPipette
+    ) -> None:
+        pipette_with_plates.state.tip_state = TipState.UNKNOWN
+        pipette_with_plates.location_manager.remove_location("waste")
+
+        with pytest.raises(NoWasteContainerError):
+            pipette_with_plates.pipette(vol_ul=10.0, source="plate_a", dest="plate_a")
+
     def test_tip_end_keep_leaves_tip_attached(
         self, pipette_with_plates: AutoPipette
     ) -> None:

@@ -59,6 +59,10 @@ class PipetteState:
     Attributes:
         tip_state: Current tip attachment state.
         has_liquid: Whether liquid is currently in the tip.
+        liquid_ul: Liquid in the tip, in μL, as the last aspirate drew it
+            less what has been dispensed since.
+        pre_air_gap_ul: Air behind the liquid, in μL.
+        post_air_gap_ul: Air between the liquid and the tip opening, in μL.
         homed: Whether the pipette has been homed.
         tip_origin: ``(tipbox name, flat well index)`` the attached tip was
             picked up from, or None when no tip is attached or its origin
@@ -78,6 +82,10 @@ class PipetteState:
     has_liquid: bool = False
     homed: bool = False
     tip_origin: tuple[str, int] | None = None
+    # What the last aspirate left in the tip (issue #205). In memory only.
+    liquid_ul: float = 0.0
+    pre_air_gap_ul: float = 0.0
+    post_air_gap_ul: float = 0.0
 
     # Helper properties for backwards compatibility
     @property
@@ -480,6 +488,31 @@ class PipetteSyringeKinematics(BaseModel):
                 raise ValueError("calibration_volumes must have at least 2 points")
 
 
+class DeckOffset(BaseModel):
+    """Where a pipette's nozzle sits relative to the head's reference nozzle.
+
+    X/Y are added to every deck target the pipette visits, and Z to every
+    dip depth (plates and waste, not travel height), except at tipboxes,
+    which each pipette locates in its own frame. Larger Z is lower, so a
+    longer nozzle takes a negative Z.
+
+    Attributes:
+        x: X shift in mm.
+        y: Y shift in mm.
+        z: Dip-depth shift in mm.
+
+    Example:
+        >>> DeckOffset(x=36.7, y=3.0).x
+        36.7
+    """
+
+    x: float = Field(default=0.0, allow_inf_nan=False, description="X shift in mm")
+    y: float = Field(default=0.0, allow_inf_nan=False, description="Y shift in mm")
+    z: float = Field(
+        default=0.0, allow_inf_nan=False, description="Dip-depth shift in mm"
+    )
+
+
 class PipetteModel(BaseModel):
     """Complete pipette hardware model definition.
 
@@ -494,6 +527,10 @@ class PipetteModel(BaseModel):
         syringe: Syringe plunger kinematics configuration.
         servo: Tip ejection servo configuration.
         compatible_tips: List of compatible tip types.
+        deck_offset: X/Y shift applied to deck targets while this pipette
+            is active (see `DeckOffset`).
+        tipbox: Tipbox, or tipboxes drained in order, this pipette draws
+            from, or None to draw in load order.
 
     Example:
         >>> pipette = PipetteModel(
@@ -539,8 +576,38 @@ class PipetteModel(BaseModel):
         default=100, ge=0, description="Dwell at the bottom of the press in ms"
     )
 
+    # Dispense (issue #205): the post-gap is pushed out this far above the
+    # dispense depth, and redrawn this far above it on the way up.
+    dispense_hover_mm: float = Field(
+        default=2.0,
+        ge=0,
+        description="Height above the dispense depth to push out the post-gap (mm)",
+    )
+    dispense_rise_mm: float = Field(
+        default=2.0,
+        ge=0,
+        description="Height above the dispense depth to redraw the post-gap (mm)",
+    )
+
     compatible_tips: list[str] = Field(
         default_factory=list, description="List of compatible tip types"
+    )
+
+    # Dual-pipette heads (Tyson): each pipette has its own nozzle position
+    # and its own tipbox, over one shared deck.
+    deck_offset: DeckOffset = Field(
+        default_factory=DeckOffset,
+        description=(
+            "X/Y shift applied to deck targets and Z shift applied to dip "
+            "depths while this pipette is active"
+        ),
+    )
+    tipbox: str | list[str] | None = Field(
+        default=None,
+        description=(
+            "Tipbox(es) this pipette draws tips from, drained in list order; "
+            "None draws in load order"
+        ),
     )
 
 

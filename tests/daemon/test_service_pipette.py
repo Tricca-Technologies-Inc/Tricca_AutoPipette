@@ -73,7 +73,6 @@ def _pipette_args(**overrides: object) -> PipetteArgs:
         "wiggle": False,
         "keep_tip": True,
         "splits": None,
-        "leftover": None,
         "tip_end": None,
     }
     defaults.update(overrides)
@@ -262,17 +261,7 @@ class TestTransferSplits:
         assert result.ok is False
         assert "expected 'DEST:VOL'" in result.message
 
-    def test_leftover_omitted_on_a_short_dispense_raises(
-        self, service_with_plates: AutoPipetteService
-    ) -> None:
-        _set_homed(service_with_plates, True)
-
-        with pytest.raises(ValueError, match="--leftover keep or --leftover waste"):
-            service_with_plates.transfer(
-                _pipette_args(vol_ul=20.0, splits="plate_a:12@A1", keep_tip=True)
-            )
-
-    def test_leftover_waste_without_a_container_raises(
+    def test_leftover_without_a_waste_container_raises(
         self, service_with_plates: AutoPipetteService
     ) -> None:
         _set_homed(service_with_plates, True)
@@ -283,7 +272,6 @@ class TestTransferSplits:
                 _pipette_args(
                     vol_ul=20.0,
                     splits="plate_a:12@A1",
-                    leftover="waste",
                     keep_tip=True,
                 )
             )
@@ -509,3 +497,56 @@ class TestTipEnd:
             TipSlotState.EMPTY,
         ]
         assert service_with_plates._autopipette.state.tip_origin == ("tipbox", 1)
+
+
+class TestDispenseTargets:
+    """``dispense`` over the one multi-target path (issue #205)."""
+
+    def test_splits_dispense_to_each_target_and_empty_the_tip(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        _set_homed(service_with_plates, True)
+        ap = service_with_plates._autopipette
+        ap.state.tip_state = TipState.ATTACHED
+        assert service_with_plates.aspirate(_aspirate_args()).ok
+
+        with patch.object(ap, "_dispense_one", wraps=ap._dispense_one) as spy:
+            result = service_with_plates.dispense(
+                _dispense_args(splits="plate_a:12@A1;plate_a:8@A2")
+            )
+
+        assert result.ok, result.message
+        assert [c.args[1] for c in spy.call_args_list] == pytest.approx([12.0, 8.0])
+        assert ap.state.has_liquid is False
+
+    def test_an_unknown_amount_is_not_checked_or_wasted(
+        self, service_with_plates: AutoPipetteService, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        # Liquid in the tip from before tapd started: no record of how much.
+        _set_homed(service_with_plates, True)
+        ap = service_with_plates._autopipette
+        ap.state.tip_state = TipState.ATTACHED
+        ap.state.has_liquid = True
+
+        with (
+            caplog.at_level(logging.WARNING),
+            patch.object(ap, "empty_tip_to_waste") as waste,
+        ):
+            assert service_with_plates.dispense(_dispense_args(volume=10.0)).ok
+
+        assert "unknown" in caplog.text
+        waste.assert_not_called()
+        assert ap.state.has_liquid is True
+
+    def test_a_short_metered_pipette_with_no_waste_raises_before_moving(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        _set_homed(service_with_plates, True)
+        ap = service_with_plates._autopipette
+        ap.location_manager.remove_location("waste")
+        ap.get_gcode()
+
+        with pytest.raises(NoWasteContainerError):
+            service_with_plates.transfer(_pipette_args(vol_ul=20.0, disp_vol_ul=10.0))
+
+        assert ap.get_gcode() == []
