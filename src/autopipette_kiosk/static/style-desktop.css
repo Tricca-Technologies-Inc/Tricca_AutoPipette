@@ -105,6 +105,11 @@ html.desktop-mode .run-btn {
   width: auto;
 }
 
+html.desktop-mode .cancel-btn {
+  height: 56px;
+  font-size: 15px;
+}
+
 html.desktop-mode .run-actions {
   max-width: 360px;
 }
