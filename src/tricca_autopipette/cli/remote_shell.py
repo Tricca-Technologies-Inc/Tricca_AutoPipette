@@ -495,13 +495,18 @@ class RemoteTapShell(Cmd):
             return
         result = as_dict(response.get("result"))
         self.poutput(str(result.get("message", "")))
-        findings: list[Any] = as_dict(result.get("data")).get("findings") or []
+        data = as_dict(result.get("data"))
+        findings: list[Any] = data.get("findings") or []
         for finding in findings:
             f = as_dict(finding)
             self.poutput(
                 f"  line {f.get('line_number')} [{f.get('severity')}] "
                 f"{f.get('command')}: {f.get('message')}"
             )
+        for box, count in as_dict(data.get("tips")).items():
+            c = as_dict(count)
+            needed, left = c.get("needed"), c.get("left")
+            self.poutput(f"  tips: {box} needs {needed} of {left} left")
 
     def do_cancel(self, _: Statement) -> None:
         """Cancel the active run."""
