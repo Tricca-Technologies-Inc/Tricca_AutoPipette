@@ -493,8 +493,10 @@ class RemoteTapShell(Cmd):
         if response is None:
             return
         result = as_dict(response.get("result"))
-        self.poutput(str(result.get("message", "")))
         data = as_dict(result.get("data"))
+        if data.get("description"):
+            self.poutput(str(data["description"]))
+        self.poutput(str(result.get("message", "")))
         findings: list[Any] = data.get("findings") or []
         for finding in findings:
             f = as_dict(finding)

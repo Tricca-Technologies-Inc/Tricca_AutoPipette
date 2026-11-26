@@ -144,6 +144,34 @@ _NO_PLATES_MSG = "No plates configured in Klipper (no _PLATE_CFG)."
 #: within validate_protocol's own synchronous call stack (the same stack
 #: every gated method it calls runs on), which is exactly what a ContextVar
 #: is for -- see validate_protocol's docstring.
+
+
+def _leading_comment(lines: list[str]) -> str:
+    r"""Return a protocol's leading ``#`` comment block, its description.
+
+    Args:
+        lines: The protocol file's lines.
+
+    Returns:
+        The comment lines before the first command, ``#`` and one following
+        space stripped, joined by newlines; "" if the file opens with a
+        command. Blank lines before the first comment are skipped.
+
+    Example:
+        >>> _leading_comment(["", "# Add water.", "#", "# One box.", "home all"])
+        'Add water.\n\nOne box.'
+    """
+    comment: list[str] = []
+    for raw in lines:
+        line = raw.strip()
+        if not line.startswith("#"):
+            if line or comment:
+                break
+            continue
+        comment.append(line[1:].removeprefix(" "))
+    return "\n".join(comment).strip()
+
+
 _dry_run: ContextVar[bool] = ContextVar("dry_run", default=False)
 
 
@@ -4197,6 +4225,8 @@ class AutoPipetteService:
             "info" (a ``break`` line, or a skipped ``save_locations``).
             ``data["tips"]`` maps each tipbox the protocol draws from to
             ``{"needed", "left"}``: tips taken, and tips it had at the start.
+            ``data["description"]`` is the file's leading ``#`` comment block,
+            one line per comment line with the ``#`` stripped ("" if none).
             ``ok`` is True only if no finding is an "error".
 
         Raises:
@@ -4267,7 +4297,11 @@ class AutoPipetteService:
         return CommandResult(
             ok=error_count == 0,
             message=message,
-            data={"findings": findings, "tips": tips},
+            data={
+                "findings": findings,
+                "tips": tips,
+                "description": _leading_comment(lines),
+            },
         )
 
     def _interlock_model(self) -> InterlockModel | None:

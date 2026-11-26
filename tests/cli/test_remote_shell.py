@@ -300,6 +300,15 @@ class TestValidateCommand:
 
         assert "No issues found." in _output(shell)
 
+    def test_validate_prints_the_protocol_description(
+        self, shell: RemoteTapShell, protocol_dir: Path
+    ) -> None:
+        (protocol_dir / "d.pipette").write_text('# Fill the plate.\ngcode_print "hi"\n')
+
+        shell.onecmd_plus_hooks("validate d.pipette")
+
+        assert "Fill the plate." in _output(shell)
+
     def test_validate_without_a_filename_reports_usage_locally(
         self, shell: RemoteTapShell, capsys: pytest.CaptureFixture[str]
     ) -> None:

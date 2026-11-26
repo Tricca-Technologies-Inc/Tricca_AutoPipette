@@ -62,7 +62,11 @@ class TestFindingsShape:
         result = service.validate_protocol("normal.pipette")
 
         assert result.ok is True
-        assert result.data == {"findings": [], "tips": {}}
+        assert result.data == {
+            "findings": [],
+            "tips": {},
+            "description": "A simple protocol assuming the machine is already homed.",
+        }
 
     def test_missing_file_raises_file_not_found(
         self, service: AutoPipetteService
@@ -90,6 +94,24 @@ class TestTipCounts:
         assert result.data["tips"] == {}
 
 
+class TestDescription:
+    def test_is_the_leading_comment_block(self, service: AutoPipetteService) -> None:
+        result = service.validate_protocol("described.pipette")
+
+        assert result.data is not None
+        assert result.data["description"] == (
+            "Add 50 uL of water to each well.\n\nNeeds one tipbox."
+        )
+
+    def test_is_empty_without_a_leading_comment(
+        self, service: AutoPipetteService
+    ) -> None:
+        result = service.validate_protocol("no_description.pipette")
+
+        assert result.data is not None
+        assert result.data["description"] == ""
+
+
 class TestUnhomedMachine:
     def test_gated_commands_run_on_an_unhomed_machine(
         self, service: AutoPipetteService
@@ -100,7 +122,8 @@ class TestUnhomedMachine:
         result = service.validate_protocol("unhomed.pipette")
 
         assert result.ok is True
-        assert result.data == {"findings": [], "tips": {}}
+        assert result.data is not None
+        assert result.data["findings"] == []
 
 
 class TestCatchAndContinue:
