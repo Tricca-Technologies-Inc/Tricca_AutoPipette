@@ -9,6 +9,8 @@ shell and a ``FakeMoonrakerState`` standing in for live homed-axes state.
 
 from __future__ import annotations
 
+from unittest.mock import patch
+
 import pytest
 from fakes.fake_moonraker_state import FakeMoonrakerState
 
@@ -142,6 +144,27 @@ class TestMoveRel:
         assert result.ok is True
         assert "X+5.00" in result.message
         assert "Z+2.00" in result.message
+
+    @pytest.mark.parametrize(
+        ("jog", "xy", "z"), [(False, 38000, 12000), (True, 3000, 1000)]
+    )
+    def test_a_jog_uses_the_gantry_jog_speeds(
+        self, service: AutoPipetteService, jog: bool, xy: int, z: int
+    ) -> None:
+        # Scott's 29f93fb: protocol speeds made touchscreen jogging jerky.
+        assert isinstance(service.moonraker_state, FakeMoonrakerState)
+        service.moonraker_state.set_homed(True)
+        gantry = service._autopipette.gantry
+        gantry.speed_xy, gantry.speed_z = 38000.0, 12000.0
+
+        with patch.object(service, "output_gcode") as spy:
+            service.move_rel(MoveRelArgs(x=5.0, y=0.0, z=2.0, jog=jog))
+
+        moves = [
+            line.strip() for line in spy.call_args.args[0] if line.startswith("G1")
+        ]
+        assert moves[0].endswith(f"F{xy:.1f}")
+        assert moves[1].endswith(f"F{z:.1f}")
 
     def test_negative_offset_moves_back(self, service: AutoPipetteService) -> None:
         assert isinstance(service.moonraker_state, FakeMoonrakerState)

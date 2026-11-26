@@ -104,7 +104,8 @@
     if (!btn || running) return;
     const axis = btn.dataset.axis;
     const offset = parseFloat(btn.dataset.dir) * stepSize;
-    const body = { x: 0, y: 0, z: 0 };
+    // jog: the gantry's slower jog speeds, not the protocol speeds.
+    const body = { x: 0, y: 0, z: 0, jog: true };
     body[axis] = offset;
     postMove('/move_rel', body, document.getElementById('moveJogFeedback'));
   });

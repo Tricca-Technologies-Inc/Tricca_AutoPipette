@@ -8,6 +8,8 @@ exercised via `TestClient` against a real `ControlServer`/`AutoPipetteService`
 
 from __future__ import annotations
 
+from unittest.mock import patch
+
 import pytest
 from fakes.fake_moonraker_state import FakeMoonrakerState
 from fakes.fake_websocket_client import FakeWebSocketClient
@@ -106,6 +108,17 @@ class TestMoveRelEndpoint:
         response = kiosk_client.post("/move_rel", json={"x": 1.0, "y": 0.0, "z": 0.0})
 
         assert response.status_code == 200
+
+    def test_the_jog_flag_reaches_the_daemon(
+        self, kiosk_client: TestClient, live_control_plane: LiveControlPlane
+    ) -> None:
+        _set_homed(live_control_plane)
+        ap = live_control_plane.service._autopipette
+
+        with patch.object(ap, "move_to", wraps=ap.move_to) as spy:
+            kiosk_client.post("/move_rel", json={"x": 1.0, "jog": True})
+
+        assert spy.call_args.kwargs == {"jog": True}
 
     def test_all_zero_offsets_is_a_200_not_an_error(
         self, kiosk_client: TestClient, live_control_plane: LiveControlPlane

@@ -1439,7 +1439,7 @@ class AutoPipetteService:
         autopipette.note_action(f"Moving relative: {' '.join(parts)}")
 
         autopipette.set_coor_sys(CoordinateSystem.RELATIVE)
-        autopipette.move_to(coor)
+        autopipette.move_to(coor, jog=args.jog)
         autopipette.set_coor_sys(CoordinateSystem.ABSOLUTE)
         self.output_gcode(autopipette.get_gcode())
 
