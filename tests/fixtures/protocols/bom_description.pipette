@@ -1,0 +1,2 @@
+﻿# Starts with a byte-order mark.
+gcode_print "hi"

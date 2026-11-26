@@ -26,6 +26,7 @@ from __future__ import annotations
 import itertools
 import json
 import logging
+import math
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -38,7 +39,7 @@ from tricca_autopipette.core.json_config_manager import (
     JsonConfigManager,
 )
 from tricca_autopipette.core.pipette_constants import DefaultPaths
-from tricca_autopipette.core.pipette_models import LocationsConfig
+from tricca_autopipette.core.pipette_models import DeckGrid, LocationsConfig
 
 PREFIX = "pytest_tmp_"
 
@@ -274,6 +275,45 @@ class TestReferencesByFilename:
 
         with pytest.raises(FileNotFoundError):
             JsonConfigManager().load_system_config(system)
+
+
+class TestDeckGrid:
+    def test_deck_grid_loads_from_the_system_config(
+        self, write_system_config: Any
+    ) -> None:
+        child = write_system_config(
+            "grid.json",
+            {
+                "pipette": "p100_vertical",
+                "deck_grid": {"x_edges": [190], "y_edges": [70, 165, 235]},
+            },
+        )
+
+        grid = JsonConfigManager().load_system_config(child).deck_grid
+
+        assert grid is not None
+        assert grid.x_edges == [190]
+        assert grid.y_edges == [70, 165, 235]
+
+    def test_absent_deck_grid_is_none(self, write_system_config: Any) -> None:
+        child = write_system_config("nogrid.json", {"pipette": "p100_vertical"})
+
+        assert JsonConfigManager().load_system_config(child).deck_grid is None
+
+    def test_unsorted_edges_are_refused(self, write_system_config: Any) -> None:
+        child = write_system_config(
+            "badgrid.json",
+            {"pipette": "p100_vertical", "deck_grid": {"x_edges": [200, 100]}},
+        )
+
+        with pytest.raises(ValueError, match="ascending"):
+            JsonConfigManager().load_system_config(child)
+
+
+class TestDeckGridNonFinite:
+    def test_a_nan_edge_is_refused(self) -> None:
+        with pytest.raises(ValueError, match="finite"):
+            DeckGrid(x_edges=[190, math.nan])
 
 
 class TestTriggerPins:

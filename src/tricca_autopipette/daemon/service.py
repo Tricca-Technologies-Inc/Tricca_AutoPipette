@@ -144,6 +144,34 @@ _NO_PLATES_MSG = "No plates configured in Klipper (no _PLATE_CFG)."
 #: within validate_protocol's own synchronous call stack (the same stack
 #: every gated method it calls runs on), which is exactly what a ContextVar
 #: is for -- see validate_protocol's docstring.
+
+
+def _leading_comment(lines: list[str]) -> str:
+    r"""Return a protocol's leading ``#`` comment block, its description.
+
+    Args:
+        lines: The protocol file's lines.
+
+    Returns:
+        The comment lines before the first command, ``#`` and one following
+        space stripped, joined by newlines; "" if the file opens with a
+        command. Blank lines before the first comment are skipped.
+
+    Example:
+        >>> _leading_comment(["", "# Add water.", "#", "# One box.", "home all"])
+        'Add water.\n\nOne box.'
+    """
+    comment: list[str] = []
+    for raw in lines:
+        line = raw.strip()
+        if not line.startswith("#"):
+            if line or comment:
+                break
+            continue
+        comment.append(line[1:].removeprefix(" "))
+    return "\n".join(comment).strip()
+
+
 _dry_run: ContextVar[bool] = ContextVar("dry_run", default=False)
 
 
@@ -3478,9 +3506,11 @@ class AutoPipetteService:
             Result with ``data["locations"]``: a list of dicts with
             ``name``/``type``/``x``/``y``/``z``/``details`` keys, plus
             ``drawer``/``stop`` for a location linked to a drawer stop
-            (issue #142).
+            (issue #142), and ``data["deck_grid"]``: the system config's
+            slot boundaries (``x_edges``/``y_edges``) or None.
         """
         loc_mgr = self._autopipette.location_manager
+        grid = self._autopipette.system_config.deck_grid
         rows: list[dict[str, Any]] = []
         for name in sorted(loc_mgr.get_all_names()):
             location = loc_mgr.locations[name]
@@ -3512,7 +3542,7 @@ class AutoPipetteService:
         return CommandResult(
             ok=bool(rows),
             message=f"{len(rows)} location(s)." if rows else "No locations defined.",
-            data={"locations": rows},
+            data={"locations": rows, "deck_grid": grid and grid.model_dump()},
         )
 
     def list_plates(self) -> CommandResult:
@@ -3930,7 +3960,7 @@ class AutoPipetteService:
         """  # ruff: ignore[docstring-extraneous-exception]
         proto_path = LocalConfigRoots.resolve("protocols", filename)
         try:
-            return proto_path.read_text(encoding="utf-8").splitlines()
+            return proto_path.read_text(encoding="utf-8-sig").splitlines()
         except UnicodeDecodeError as exc:
             raise ValueError(
                 f"Error reading protocol file (encoding issue): {exc}"
@@ -4197,6 +4227,8 @@ class AutoPipetteService:
             "info" (a ``break`` line, or a skipped ``save_locations``).
             ``data["tips"]`` maps each tipbox the protocol draws from to
             ``{"needed", "left"}``: tips taken, and tips it had at the start.
+            ``data["description"]`` is the file's leading ``#`` comment block,
+            one line per comment line with the ``#`` stripped ("" if none).
             ``ok`` is True only if no finding is an "error".
 
         Raises:
@@ -4234,6 +4266,8 @@ class AutoPipetteService:
                 interlock = self._interlock_model()
                 boxes = self._autopipette.location_manager.tipbox_manager.boxes
                 left = {name: box.remaining for name, box in boxes.items()}
+                taken = self._autopipette.tips_taken
+                taken.clear()
                 for line_number, raw_line in enumerate(lines, start=1):
                     line = raw_line.strip()
                     if not line or line.startswith("#"):
@@ -4241,12 +4275,11 @@ class AutoPipetteService:
                     self._dispatch_protocol_line_for_validation(
                         line, line_number, findings, warning_capture, interlock
                     )
-                # ponytail: a reset_tips mid-protocol undercounts; count
-                # pickups in next_tip if that ever matters.
+                # Pickups, not left - remaining: a box that runs out is
+                # modelled as reloaded, so remaining would undercount.
                 tips = {
-                    name: {"needed": left[name] - box.remaining, "left": left[name]}
-                    for name, box in boxes.items()
-                    if name in left and left[name] > box.remaining
+                    name: {"needed": count, "left": left.get(name, 0)}
+                    for name, count in taken.items()
                 }
         finally:
             autopipette_logger.removeHandler(warning_capture)
@@ -4267,7 +4300,11 @@ class AutoPipetteService:
         return CommandResult(
             ok=error_count == 0,
             message=message,
-            data={"findings": findings, "tips": tips},
+            data={
+                "findings": findings,
+                "tips": tips,
+                "description": _leading_comment(lines),
+            },
         )
 
     def _interlock_model(self) -> InterlockModel | None:

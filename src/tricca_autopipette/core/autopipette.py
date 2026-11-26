@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import logging
 import math
+from collections import Counter
 from collections.abc import Sequence
 from typing import Literal, NamedTuple
 
@@ -227,6 +228,8 @@ class AutoPipette:
         # Set for a protocol run: an empty tipbox pauses the machine for a
         # reload rather than failing the run (see `next_tip`).
         self.pause_when_out_of_tips = False
+        # Tips picked up per box; validate_protocol clears it and reads it.
+        self.tips_taken: Counter[str] = Counter()
 
         # G-code management
         self.gcode_buffers = GCodeBuffer()
@@ -1142,6 +1145,7 @@ class AutoPipette:
         self.dip_z_return(loc_tip)
         self.state.tip_state = TipState.ATTACHED
         self.state.tip_origin = (name, index)
+        self.tips_taken[name] += 1  # only a pickup that got this far
 
     def eject_tip(self) -> None:
         """Eject the current pipette tip."""

@@ -62,7 +62,11 @@ class TestFindingsShape:
         result = service.validate_protocol("normal.pipette")
 
         assert result.ok is True
-        assert result.data == {"findings": [], "tips": {}}
+        assert result.data == {
+            "findings": [],
+            "tips": {},
+            "description": "A simple protocol assuming the machine is already homed.",
+        }
 
     def test_missing_file_raises_file_not_found(
         self, service: AutoPipetteService
@@ -81,6 +85,15 @@ class TestTipCounts:
         assert result.data is not None
         assert result.data["tips"] == {"tipbox": {"needed": 1, "left": 2}}
 
+    def test_counts_every_pickup_when_the_box_runs_out(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        # A real run pauses for a reload at the third; the count must say 3.
+        result = service_with_plates.validate_protocol("three_tips.pipette")
+
+        assert result.data is not None
+        assert result.data["tips"] == {"tipbox": {"needed": 3, "left": 2}}
+
     def test_a_protocol_taking_no_tips_reports_none(
         self, service_with_plates: AutoPipetteService
     ) -> None:
@@ -88,6 +101,31 @@ class TestTipCounts:
 
         assert result.data is not None
         assert result.data["tips"] == {}
+
+
+class TestDescription:
+    def test_is_the_leading_comment_block(self, service: AutoPipetteService) -> None:
+        result = service.validate_protocol("described.pipette")
+
+        assert result.data is not None
+        assert result.data["description"] == (
+            "Add 50 uL of water to each well.\n\nNeeds one tipbox."
+        )
+
+    def test_survives_a_byte_order_mark(self, service: AutoPipetteService) -> None:
+        result = service.validate_protocol("bom_description.pipette")
+
+        assert result.data is not None
+        assert result.data["description"] == "Starts with a byte-order mark."
+        assert _findings(result) == []
+
+    def test_is_empty_without_a_leading_comment(
+        self, service: AutoPipetteService
+    ) -> None:
+        result = service.validate_protocol("no_description.pipette")
+
+        assert result.data is not None
+        assert result.data["description"] == ""
 
 
 class TestUnhomedMachine:
@@ -100,7 +138,8 @@ class TestUnhomedMachine:
         result = service.validate_protocol("unhomed.pipette")
 
         assert result.ok is True
-        assert result.data == {"findings": [], "tips": {}}
+        assert result.data is not None
+        assert result.data["findings"] == []
 
 
 class TestCatchAndContinue:

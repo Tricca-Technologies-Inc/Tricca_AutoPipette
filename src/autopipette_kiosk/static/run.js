@@ -1,11 +1,18 @@
-// Run page: protocol list, run button, detailed status card.
+// Protocols page + Run page (Scott's 5" redesign).
+//
+// Protocols (page-protocols): the protocol list, Check (pre-flight
+// findings, issue #88), and Load, which dry-runs the protocol and opens the
+// Run page with its description and tip needs. Run (page-run): the loaded
+// protocol, the detailed status card, progress, and one Run button that
+// becomes Pause and Resume during a run, plus Cancel.
 //
 // Subscribes to App.onStatus rather than owning any WebSocket connection or
 // run-status state itself (app.js owns both, since the header's compact
 // status pill and paused-run banner need the same data regardless of which
 // tab is active -- see issue #25).
 (() => {
-  let selected = null;
+  let selected = null; // highlighted on the Protocols page
+  let loaded = null;   // on the Run page, what Run starts
   let protocols = [];
   let folder = '';
 
@@ -83,34 +90,108 @@
     });
   }
 
+  const stem = filename => filename.slice(0, -'.pipette'.length);
+
   function selectProtocol(el, filename) {
     document.querySelectorAll('.protocol-item').forEach(i => i.classList.remove('selected'));
     el.classList.add('selected');
     selected = filename;
 
     const nameEl = document.getElementById('selectionName');
-    nameEl.textContent = filename.slice(0, -'.pipette'.length);
+    nameEl.textContent = stem(filename);
     nameEl.classList.remove('placeholder');
-    document.getElementById('runBtn').disabled = App.isRunActive(App.getStatus().status);
     document.getElementById('checkBtn').disabled = false;
+    document.getElementById('loadBtn').disabled = App.isRunActive(App.getStatus().status);
     document.getElementById('findingsList').innerHTML = '';
   }
 
-  // ── run ────────────────────────────────────────────────────────────────
-  document.getElementById('runBtn').addEventListener('click', async () => {
-    if (!selected) return;
+  async function validate(filename) {
+    const res = await fetch('/validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename }),
+    });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.detail || `HTTP ${res.status}`);
+    return body.data || {};
+  }
+
+  // ── load: dry-run, then show what the protocol does and needs ─────────
+  // A tip shortfall is a warning, not a block: Check never disables Run
+  // (issue #88), and an empty tipbox pauses the run for a reload anyway.
+  let loadSeq = 0; // a slow answer for an earlier Load must not win
+
+  document.getElementById('loadBtn').addEventListener('click', async () => {
+    if (!selected || App.isRunActive(App.getStatus().status)) return;
+    loaded = selected;
+    const seq = ++loadSeq;
+    document.getElementById('runProtocolName').textContent = stem(loaded);
+    const card = document.getElementById('protocolInfoCard');
+    const desc = document.getElementById('protocolInfoDescription');
+    const tipsEl = document.getElementById('protocolInfoTips');
+    const error = document.getElementById('protocolInfoError');
+    card.hidden = true;
+    error.hidden = true;
+    renderStatusCard(App.getStatus());
+    App.switchTo('run');
     try {
-      const res = await fetch('/run', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename: selected }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        renderStatusCard({ status: 'error', message: err.detail });
+      const data = await validate(loaded);
+      if (seq !== loadSeq) return;
+      desc.textContent = data.description || '';
+      desc.hidden = !data.description;
+      const tips = Object.entries(data.tips || {});
+      tipsEl.replaceChildren(...tips.map(([box, t]) => {
+        const row = document.createElement('div');
+        const short = t.needed > t.left;
+        row.className = `protocol-info-tip-row ${short ? 'short' : 'ok'}`;
+        row.textContent = `${short ? '✗' : '✓'} ${box}: needs ${t.needed}, has ${t.left}`;
+        return row;
+      }));
+      // Errors and warnings only: info findings (a break line) aren't news.
+      const serious = (data.findings || []).filter(f => f.severity !== 'info');
+      tipsEl.append(...findingItems(serious));
+      card.hidden = !data.description && !tips.length && !serious.length;
+      if (tips.some(([, t]) => t.needed > t.left)) {
+        error.textContent = 'Not enough tips: reload the tipbox and reset it on the Tips tab.';
+        error.hidden = false;
       }
     } catch (e) {
-      renderStatusCard({ status: 'error', message: e.message });
+      if (seq !== loadSeq) return;
+      error.textContent = `Could not check the protocol: ${e.message}`;
+      error.hidden = false;
+    }
+  });
+
+  // ── run, pause/resume, cancel ──────────────────────────────────────────
+  // A refused request is shown under the buttons; the status card keeps
+  // showing what the daemon last reported.
+  async function post(path, body) {
+    const feedback = document.getElementById('runFeedback');
+    feedback.textContent = '';
+    try {
+      const res = await fetch(path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+      if (!res.ok) feedback.textContent = (await res.json()).detail || `HTTP ${res.status}`;
+    } catch (e) {
+      feedback.textContent = e.message;
+    }
+  }
+
+  document.getElementById('runBtn').addEventListener('click', () => {
+    const data = App.getStatus();
+    if (!App.isRunActive(data.status)) {
+      if (loaded) post('/run', { filename: loaded });
+      return;
+    }
+    post(data.paused ? '/run/resume' : '/run/pause');
+  });
+
+  document.getElementById('cancelBtn').addEventListener('click', () => {
+    if (window.confirm('Cancel this protocol? Cancel is not an emergency stop.')) {
+      post('/run/cancel');
     }
   });
 
@@ -123,22 +204,37 @@
     const list = document.getElementById('findingsList');
     list.innerHTML = '<div class="empty-state">Checking…</div>';
     try {
-      const res = await fetch('/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename: selected }),
-      });
-      const body = await res.json();
-      if (!res.ok) {
-        list.innerHTML = `<div class="finding-item error">${body.detail}</div>`;
-        return;
-      }
-      renderFindings(body.data && body.data.findings ? body.data.findings : []);
-      renderTips(body.data && body.data.tips ? body.data.tips : {});
+      const data = await validate(selected);
+      renderFindings(data.findings || []);
+      renderTips(data.tips || {});
     } catch (e) {
-      list.innerHTML = `<div class="finding-item error">${e.message}</div>`;
+      list.innerHTML = '';
+      const item = document.createElement('div');
+      item.className = 'finding-item error';
+      item.textContent = e.message;
+      list.appendChild(item);
     }
   });
+
+  // Built with textContent: a finding's message can quote the protocol
+  // file (a location name), so it must never be parsed as HTML.
+  function findingItem(severity, parts) {
+    const item = document.createElement('div');
+    item.className = `finding-item ${severity}`;
+    parts.forEach(([cls, text]) => {
+      const span = document.createElement('span');
+      span.className = cls;
+      span.textContent = text;
+      item.appendChild(span);
+    });
+    return item;
+  }
+
+  const findingItems = findings => findings.map(f => findingItem(f.severity, [
+    ['finding-severity', f.severity],
+    ['finding-line', `line ${f.line_number}`],
+    ['finding-message', f.message],
+  ]));
 
   function renderFindings(findings) {
     const list = document.getElementById('findingsList');
@@ -146,24 +242,20 @@
       list.innerHTML = '<div class="empty-state">No issues found</div>';
       return;
     }
-    list.innerHTML = findings.map(f => `
-      <div class="finding-item ${f.severity}">
-        <span class="finding-severity">${f.severity}</span>
-        <span class="finding-line">line ${f.line_number}</span>
-        <span class="finding-message">${f.message}</span>
-      </div>
-    `).join('');
+    list.replaceChildren(...findingItems(findings));
   }
 
   // Tips each box must supply, so an operator can top a box up before Run.
   function renderTips(tips) {
     const list = document.getElementById('findingsList');
-    list.insertAdjacentHTML('beforeend', Object.entries(tips).map(([box, t]) => `
-      <div class="finding-item info tip-count">
-        <span class="finding-severity">tips</span>
-        <span class="finding-message">${box}: needs ${t.needed} of ${t.left} left</span>
-      </div>
-    `).join(''));
+    Object.entries(tips).forEach(([box, t]) => {
+      const item = findingItem('info', [
+        ['finding-severity', 'tips'],
+        ['finding-message', `${box}: needs ${t.needed} of ${t.left} left`],
+      ]);
+      item.classList.add('tip-count');
+      list.appendChild(item);
+    });
   }
 
   // ── time left: elapsed running time over progress made, extrapolated.
@@ -197,8 +289,9 @@
     const label = document.getElementById('progressLabel');
     const p = data.progress;
     const known = active && typeof p === 'number';
-    bar.classList.toggle('determinate', known);
-    bar.style.width = known ? `${Math.floor(p * 100)}%` : '';
+    bar.hidden = !active;
+    if (known) bar.value = Math.floor(p * 100);
+    else bar.removeAttribute('value'); // indeterminate
     if (!active) eta = null;
     if (!known) {
       label.textContent = '';
@@ -209,53 +302,38 @@
     label.textContent = left === null ? percent : `${percent} · ~${formatDuration(left)} left`;
   }
 
-  // ── Pause/Resume and Cancel ────────────────────────────────────────────
-  let paused = false;
-
-  async function runControl(action) {
-    if (action === 'cancel' && !window.confirm(
-      'Cancel this protocol? Cancel is not an emergency stop.'
-    )) return;
-    await fetch(`/run/${action}`, { method: 'POST' });
-  }
-
-  document.getElementById('pauseBtn').addEventListener(
-    'click', () => runControl(paused ? 'resume' : 'pause'));
-  document.getElementById('cancelBtn').addEventListener(
-    'click', () => runControl('cancel'));
-
   // ── detailed status card (Run-page-specific; the compact pill + global
   // paused-run banner in the header are app.js's job) ─────────────────────
   function renderStatusCard(data) {
     const icon  = document.getElementById('statusIcon');
     const state = document.getElementById('statusState');
     const msg   = document.getElementById('statusMsg');
-    const bar   = document.getElementById('progressBar');
-    const btn   = document.getElementById('runBtn');
 
     const s = data.status;
     const { label, icon: iconChar } = App.describeStatus(s);
+    const active = App.isRunActive(s);
+    const paused = active && !!data.paused;
 
     icon.className  = `status-icon ${s}`;
     state.className = `status-state ${s}`;
     icon.textContent  = iconChar;
-    state.textContent = label;
+    state.textContent = paused ? 'Paused' : label;
     msg.textContent   = data.message || '';
-
-    const active = App.isRunActive(s);
-    paused = active && !!data.paused;
     icon.classList.toggle('spinning', active && !paused);
-    bar.classList.toggle('active', active);
-    btn.disabled = active || !selected;
     renderProgress(data, active);
 
-    const pauseBtn = document.getElementById('pauseBtn');
-    pauseBtn.textContent = paused ? 'Resume' : 'Pause';
-    pauseBtn.disabled = !active;
+    document.getElementById('runBtnLabel').textContent =
+      active ? (paused ? 'Resume' : 'Pause') : 'Run';
+    document.getElementById('runBtnIcon').setAttribute(
+      'd', active && !paused ? 'M6 4h4v16H6zM14 4h4v16h-4z' : 'M8 5v14l11-7z');
+    document.getElementById('runBtn').disabled = !active && !loaded;
     document.getElementById('cancelBtn').disabled = !active;
+    // Loading another protocol mid-run would relabel the Run page.
+    document.getElementById('loadBtn').disabled = active || !selected;
   }
 
   App.onStatus(renderStatusCard);
+  App.registerPage('protocols', {});
   App.registerPage('run', {});
 
   loadProtocols();

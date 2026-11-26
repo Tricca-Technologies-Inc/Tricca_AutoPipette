@@ -1,6 +1,6 @@
-"""Real-browser coverage of `run.js`: protocol list/selection, and the
-run-status pipeline it shares with `app.js`'s status pill (ADR-0003 /
-issue #78).
+"""Real-browser coverage of `run.js`: the Protocols page's list, Check and
+Load, the Run page, and the run-status pipeline it shares with `app.js`'s
+status pill (ADR-0003 / issue #78).
 
 The run test below is the other named gap from issue #78 beyond `tips.js`'s
 toggle math: "the client-side WebSocket message handling." It drives a real
@@ -25,25 +25,69 @@ from playwright.sync_api import Page, expect
 from support.live_kiosk_server import LiveKioskServer
 
 
+def _open_protocols(page: Page, server: LiveKioskServer) -> None:
+    page.goto(server.url)
+    page.click('.tab-btn[data-page="protocols"]')
+
+
+def _load(page: Page) -> None:
+    """Load the first protocol listed; this opens the Run page."""
+    page.click(".protocol-item")
+    page.click("#loadBtn")
+    expect(page.locator("#page-run")).to_be_visible()
+
+
 def test_empty_protocol_list_shows_a_placeholder(
     page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
 ) -> None:
     del protocols_dir  # exists (redirected), just empty
-    page.goto(live_kiosk_server.url)
+    _open_protocols(page, live_kiosk_server)
 
     expect(page.locator("#protocolList")).to_contain_text("No .pipette files found")
 
 
-def test_selecting_a_protocol_enables_run_and_shows_its_name(
+def test_a_reload_lands_on_the_run_page(
+    page: Page, live_kiosk_server: LiveKioskServer
+) -> None:
+    page.goto(live_kiosk_server.url)
+
+    expect(page.locator("#page-run")).to_be_visible()
+    expect(page.locator("#runBtn")).to_be_disabled()  # nothing loaded yet
+
+
+def test_loading_a_protocol_opens_the_run_page_with_its_name(
     page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
 ) -> None:
     (protocols_dir / "a.pipette").write_text('gcode_print "hi"\n')
-    page.goto(live_kiosk_server.url)
+    _open_protocols(page, live_kiosk_server)
     expect(page.locator(".protocol-item")).to_have_count(1)
 
     page.click(".protocol-item")
-
     expect(page.locator("#selectionName")).to_have_text("a")
+    page.click("#loadBtn")
+
+    expect(page.locator("#runProtocolName")).to_have_text("a")
+    expect(page.locator("#runBtn")).to_be_enabled()
+
+
+def test_load_shows_the_description_and_a_tip_shortfall_without_blocking_run(
+    page: Page, live_kiosk_server_with_plates: LiveKioskServer, protocols_dir: Path
+) -> None:
+    # The fixture's tipbox holds 2 tips; this takes 3.
+    (protocols_dir / "a.pipette").write_text(
+        "# Three tips, one box.\n" + "next_tip\neject_tip\n" * 3
+    )
+    _open_protocols(page, live_kiosk_server_with_plates)
+
+    _load(page)
+
+    expect(page.locator("#protocolInfoDescription")).to_have_text(
+        "Three tips, one box."
+    )
+    expect(page.locator(".protocol-info-tip-row.short")).to_contain_text(
+        "tipbox: needs"
+    )
+    expect(page.locator("#protocolInfoError")).to_contain_text("Not enough tips")
     expect(page.locator("#runBtn")).to_be_enabled()
 
 
@@ -54,7 +98,7 @@ def test_folder_navigation_selects_and_checks_nested_protocol(
     nested.mkdir(parents=True)
     (nested / "a.pipette").write_text("wait 1\n")
     (protocols_dir / "a.pipette").write_text("wait 1\n")
-    page.goto(live_kiosk_server.url)
+    _open_protocols(page, live_kiosk_server)
 
     page.get_by_role("button", name="examples /").click()
     page.get_by_role("button", name="transfers /").click()
@@ -71,7 +115,7 @@ def test_protocol_names_are_rendered_as_text(
     page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
 ) -> None:
     (protocols_dir / "quote's <test>.pipette").write_text("wait 1\n")
-    page.goto(live_kiosk_server.url)
+    _open_protocols(page, live_kiosk_server)
 
     page.locator(".protocol-item").click()
     expect(page.locator("#selectionName")).to_have_text("quote's <test>")
@@ -83,8 +127,8 @@ def test_running_a_protocol_updates_the_shared_pill_and_the_run_page_card(
     page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
 ) -> None:
     (protocols_dir / "a.pipette").write_text('gcode_print "hi"\n')
-    page.goto(live_kiosk_server.url)
-    page.click(".protocol-item")
+    _open_protocols(page, live_kiosk_server)
+    _load(page)
 
     page.click("#runBtn")
 
@@ -93,7 +137,7 @@ def test_running_a_protocol_updates_the_shared_pill_and_the_run_page_card(
     # ...and run.js's own detailed status card -- both driven by the same
     # real notify_run_status push, relayed over the real /ws/status socket.
     expect(page.locator("#statusState")).to_have_text("Running")
-    expect(page.locator("#runBtn")).to_be_disabled()
+    expect(page.locator("#runBtnLabel")).to_have_text("Pause")
 
 
 def test_a_failed_run_shows_the_error_label_and_icon_on_both_widgets(
@@ -106,8 +150,8 @@ def test_a_failed_run_shows_the_error_label_and_icon_on_both_widgets(
     # event -- the one non-"running" status this fake-backed setup can
     # reach (see this file's module docstring).
     (protocols_dir / "a.pipette").write_text("next_tip\n")
-    page.goto(live_kiosk_server.url)
-    page.click(".protocol-item")
+    _open_protocols(page, live_kiosk_server)
+    _load(page)
 
     page.click("#runBtn")
 
@@ -120,7 +164,7 @@ def test_check_button_reports_no_issues_for_a_clean_protocol(
     page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
 ) -> None:
     (protocols_dir / "a.pipette").write_text("wait 1\n")
-    page.goto(live_kiosk_server.url)
+    _open_protocols(page, live_kiosk_server)
     page.click(".protocol-item")
 
     page.click("#checkBtn")
@@ -132,7 +176,7 @@ def test_check_button_shows_tips_needed_per_box(
     page: Page, live_kiosk_server_with_plates: LiveKioskServer, protocols_dir: Path
 ) -> None:
     (protocols_dir / "a.pipette").write_text("next_tip\n")
-    page.goto(live_kiosk_server_with_plates.url)
+    _open_protocols(page, live_kiosk_server_with_plates)
     page.click(".protocol-item")
 
     page.click("#checkBtn")
@@ -148,7 +192,7 @@ def test_check_button_lists_findings_without_disabling_run(
     # but never touches the machine, so it works on this fixture's unhomed
     # fake Moonraker state.
     (protocols_dir / "a.pipette").write_text("move_loc missing\n")
-    page.goto(live_kiosk_server.url)
+    _open_protocols(page, live_kiosk_server)
     page.click(".protocol-item")
 
     page.click("#checkBtn")
@@ -156,6 +200,50 @@ def test_check_button_lists_findings_without_disabling_run(
     finding = page.locator(".finding-item.error")
     expect(finding).to_be_visible()
     expect(finding).to_contain_text("error")
-    # Warn-only (issue #88): Check never disables/blocks Run, regardless of
-    # what it finds.
+    # Warn-only (issue #88): Check never disables/blocks Load or Run,
+    # regardless of what it finds.
+    expect(page.locator("#loadBtn")).to_be_enabled()
+    page.click("#loadBtn")
     expect(page.locator("#runBtn")).to_be_enabled()
+
+
+def test_finding_text_is_rendered_as_text_not_html(
+    page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
+) -> None:
+    # The finding's message names the location, which came from the file.
+    (protocols_dir / "a.pipette").write_text("move_loc '<b>x</b>'\n")
+    _open_protocols(page, live_kiosk_server)
+    page.click(".protocol-item")
+
+    page.click("#checkBtn")
+
+    expect(page.locator(".finding-item.error")).to_contain_text("<b>x</b>")
+    expect(page.locator("#findingsList b")).to_have_count(0)
+
+
+def test_load_shows_error_findings_on_the_run_page(
+    page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
+) -> None:
+    (protocols_dir / "a.pipette").write_text("move_loc missing\n")
+    _open_protocols(page, live_kiosk_server)
+
+    _load(page)
+
+    expect(page.locator("#protocolInfoCard .finding-item.error")).to_contain_text(
+        "missing"
+    )
+    expect(page.locator("#runBtn")).to_be_enabled()  # still advisory
+
+
+def test_load_is_disabled_while_a_run_is_active(
+    page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
+) -> None:
+    (protocols_dir / "a.pipette").write_text('gcode_print "hi"\n')
+    _open_protocols(page, live_kiosk_server)
+    _load(page)
+    page.click("#runBtn")
+    expect(page.locator("#statusState")).to_have_text("Running")
+
+    page.click('.tab-btn[data-page="protocols"]')
+
+    expect(page.locator("#loadBtn")).to_be_disabled()

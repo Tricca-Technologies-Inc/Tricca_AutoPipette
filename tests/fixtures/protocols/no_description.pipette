@@ -1,0 +1,2 @@
+gcode_print "hi"
+# a comment after a command is not a description

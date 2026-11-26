@@ -19,7 +19,8 @@
       const res = await fetch('/tips');
       const result = await res.json();
       if (!result.ok) {
-        container.innerHTML = `<div class="tips-empty">${result.message || 'Failed to load tip boxes'}</div>`;
+        container.innerHTML = '<div class="tips-empty"></div>';
+        container.firstChild.textContent = result.message || 'Failed to load tip boxes';
         return;
       }
       renderBoxes(result.data.boxes || []);
@@ -68,7 +69,7 @@
       header.appendChild(resetBtn);
     }
     const toggleBtn = document.createElement('button');
-    toggleBtn.className = 'tipbox-reset-btn tipbox-toggle-btn';
+    toggleBtn.className = `tipbox-toggle-btn ${enabled ? 'tipbox-toggle-disable' : 'tipbox-toggle-enable'}`;
     toggleBtn.textContent = enabled ? 'Disable' : 'Enable';
     toggleBtn.title = enabled
       ? `Stop drawing tips from ${box.name}`
@@ -80,8 +81,8 @@
 
     const grid = document.createElement('div');
     grid.className = 'tipbox-grid';
-    grid.style.gridTemplateColumns = `repeat(${box.num_col}, 1fr)`;
-    grid.style.gridTemplateRows = `repeat(${box.num_row}, 1fr)`;
+    grid.style.gridTemplateColumns = `repeat(${box.num_col}, 28px)`;
+    grid.style.gridTemplateRows = `repeat(${box.num_row}, 28px)`; // fixed cells: boxes sit side by side
 
     const eligible = new Set(box.eligible || []);
     for (let row = 0; row < box.num_row; row++) {
