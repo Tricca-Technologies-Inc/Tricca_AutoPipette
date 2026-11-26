@@ -51,6 +51,7 @@ class TestStart:
             "toolhead",
             "print_stats",
             "display_status",
+            "virtual_sdcard",
             "gcode_macro _PLATE_STATE",
             "gcode_macro _PIPETTE_STATE",
             "stepper_enable",
@@ -409,6 +410,36 @@ class TestDisplayMessage:
         tracker._apply_status({"display_status": {"message": None}})
 
         assert tracker.display_message == ""
+
+
+class TestProgress:
+    """``virtual_sdcard.progress`` is how far through its G-code file a job is."""
+
+    def test_a_progress_change_calls_back_with_the_new_value(
+        self, fake_websocket_client: FakeWebSocketClient
+    ) -> None:
+        tracker = _tracker(fake_websocket_client)
+        seen: list[float] = []
+        tracker.on_progress_change(seen.append)
+
+        tracker._apply_status({"virtual_sdcard": {"progress": 0.25}})
+        tracker._apply_status({"virtual_sdcard": {"progress": 0.25}})
+        tracker._apply_status({"virtual_sdcard": {"progress": 0.5}})
+
+        assert seen == [0.25, 0.5]
+        assert tracker.progress == pytest.approx(0.5)
+
+    def test_a_push_without_progress_changes_nothing(
+        self, fake_websocket_client: FakeWebSocketClient
+    ) -> None:
+        tracker = _tracker(fake_websocket_client)
+        seen: list[float] = []
+        tracker.on_progress_change(seen.append)
+
+        tracker._apply_status({"virtual_sdcard": {"is_active": True}})
+
+        assert seen == []
+        assert tracker.progress is None
 
 
 class TestLoadTipLiquidState:

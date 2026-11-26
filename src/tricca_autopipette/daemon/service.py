@@ -164,6 +164,8 @@ class RunStatus:
             ended by one, or a refused resume), or None (issue #150).
         paused: Whether Klipper has the running print paused, at a ``break``
             or an empty tipbox, waiting for Resume.
+        progress: How far through the uploaded G-code the print is, 0 to 1
+            (Klipper's ``virtual_sdcard.progress``), or None before it starts.
     """
 
     status: Literal["idle", "running", "done", "error"]
@@ -172,6 +174,7 @@ class RunStatus:
     filename: str | None = None
     refusal: InterlockRefusal | None = None
     paused: bool = False
+    progress: float | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """The JSON shape of ``run.status`` and ``notify_run_status``.
@@ -715,6 +718,7 @@ class AutoPipetteService:
         if self.moonraker_state is not None:
             self.moonraker_state.start()
             self.moonraker_state.on_print_state_change(self._handle_print_state_change)
+            self.moonraker_state.on_progress_change(self._handle_progress_change)
             persisted = self.moonraker_state.load_tip_liquid_state()
             self._apply_persisted_state(persisted)
             self._apply_persisted_tip_presence(self.moonraker_state.load_tip_presence())
@@ -4552,6 +4556,27 @@ class AutoPipetteService:
             self._apply_print_state_change(new_state, message), self._loop
         )
 
+    def _handle_progress_change(self, progress: float) -> None:
+        """Marshal a ``virtual_sdcard.progress`` change onto the service loop.
+
+        Args:
+            progress: The new progress, 0 to 1.
+        """
+        if self._loop is not None:
+            asyncio.run_coroutine_threadsafe(self._apply_progress(progress), self._loop)
+
+    async def _apply_progress(self, progress: float) -> None:
+        """Put the print's progress on a running run's status, and broadcast it.
+
+        Args:
+            progress: The new progress, 0 to 1.
+        """
+        async with self._lock:
+            if self._current.status != "running":
+                return
+            self._current = replace(self._current, progress=progress)
+            self._broadcast_status()
+
     async def _apply_print_state_change(
         self, new_state: str, message: str = ""
     ) -> None:
@@ -4585,6 +4610,7 @@ class AutoPipetteService:
                     message="Protocol completed successfully",
                     run_id=self._current.run_id,
                     filename=self._current.filename,
+                    progress=1.0,
                 )
             elif new_state in ("error", "cancelled"):
                 refusal = (

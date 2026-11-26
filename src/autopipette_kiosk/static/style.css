@@ -550,6 +550,42 @@ header {
 
 .progress-bar.active { display: block; }
 
+/* Known progress: a plain bar, filled to the fraction done. */
+.progress-bar.determinate {
+  animation: none;
+  transition: width 0.3s ease-out;
+}
+
+.progress-label {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--muted);
+  min-height: 1em;
+}
+
+.run-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.run-control-btn {
+  padding: 10px 18px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.run-control-btn.cancel { color: var(--error); }
+
+.run-control-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 /* ── Tips page (issue #17) ── */
 #page-tips.active {
   grid-template-columns: 1fr;
