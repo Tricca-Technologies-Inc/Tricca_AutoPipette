@@ -66,6 +66,7 @@ GCODE_MOVE_OBJECT = "gcode_move"
 SUBSCRIBED_OBJECTS: dict[str, list[str] | None] = {
     "toolhead": None,
     "print_stats": None,
+    "display_status": ["message"],
     PLATE_STATE_OBJECT: None,
     PIPETTE_STATE_OBJECT: None,
     STEPPER_ENABLE_OBJECT: None,
@@ -212,6 +213,7 @@ class MoonrakerStateTracker:
         self._homed_axes: frozenset[str] = frozenset()
         self._print_state: str = "standby"
         self._print_message: str = ""
+        self._display_message: str = ""
         self._print_state_callbacks: list[Callable[[str], None]] = []
         self._axis_config: AxisConfig | None = None
         #: Last-known fields of the extra-axis objects, merged push by push
@@ -340,6 +342,11 @@ class MoonrakerStateTracker:
         """The last known ``print_stats.message`` (Klipper's error text)."""
         return self._print_message
 
+    @property
+    def display_message(self) -> str:
+        """The last ``M117`` message (``display_status.message``)."""
+        return self._display_message
+
     def on_print_state_change(self, callback: Callable[[str], None]) -> None:
         """Register a callback invoked whenever ``print_stats.state`` changes.
 
@@ -390,6 +397,13 @@ class MoonrakerStateTracker:
         ):
             if name in status:
                 self._live.setdefault(name, {}).update(as_dict(status[name]))
+
+        # Before print_stats: a pause's reason arrives with or before it.
+        display = as_dict(status.get("display_status")).get("message")
+        if isinstance(display, str):
+            self._display_message = display
+        elif "display_status" in status and display is None:
+            self._display_message = ""
 
         print_stats = as_dict(status.get("print_stats"))
         message = print_stats.get("message")

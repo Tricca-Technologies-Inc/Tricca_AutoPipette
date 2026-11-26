@@ -254,7 +254,7 @@ class TipBoxManager:
         if not self.boxes:
             raise NoTipboxError()
 
-        names = self._names(name)
+        names = self.selection(name)
         for box_name in names:
             box = self._require(box_name)
             try:
@@ -265,7 +265,7 @@ class TipBoxManager:
 
         raise OutOfTipsError(names)
 
-    def _names(self, name: str | list[str] | None) -> list[str]:
+    def selection(self, name: str | list[str] | None) -> list[str]:
         """Expand a `next_tip`/`peek_tip` box selection.
 
         Args:
@@ -310,7 +310,7 @@ class TipBoxManager:
         Returns:
             Tuple of box name and flat well index, or None if no tips remain.
         """
-        for name_ in self._names(name):
+        for name_ in self.selection(name):
             box = self.boxes.get(name_)
             if box is None:
                 continue

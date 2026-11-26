@@ -224,6 +224,9 @@ class AutoPipette:
         self.last_syringe_travel_mm = 0.0
         self.plunger: AbsolutePlunger | None = None
         self.gantry_accel: float = self.gantry.accel_max
+        # Set for a protocol run: an empty tipbox pauses the machine for a
+        # reload rather than failing the run (see `next_tip`).
+        self.pause_when_out_of_tips = False
 
         # G-code management
         self.gcode_buffers = GCodeBuffer()
@@ -1019,6 +1022,21 @@ class AutoPipette:
         self.logger.debug("Dwell: %s ms", milliseconds)
         self.gcode_buffers.add(self.gcode_commands.dwell(milliseconds))
 
+    def pause(self, reason: str) -> None:
+        """Stop the machine here until the operator resumes.
+
+        A protocol compiles to one G-code file before anything moves, so a
+        pause has to be in the G-code: Klipper's ``PAUSE``, once the queued
+        moves finish, with the reason on the display.
+
+        Args:
+            reason: What the operator should do, shown with ``M117``.
+        """
+        self.note_action(f"Pausing: {reason}")
+        self.gcode_buffers.add(self.gcode_commands.wait_for_moves())
+        self.gcode_buffers.add(self.gcode_commands.display_message(reason))
+        self.gcode_buffers.add(self.gcode_commands.pause())
+
     def gcode_print(self, msg: str) -> None:
         """Send a message to be displayed on the controller screen.
 
@@ -1073,6 +1091,18 @@ class AutoPipette:
         boxes = tipbox_name or self.pipette_model.tipbox
         manager = self.location_manager.tipbox_manager
         peeked = manager.peek_tip(boxes)
+        if peeked is None and self.pause_when_out_of_tips:
+            # During a run: stop the machine for a reload instead of failing
+            # the protocol, and model the reloaded boxes as full.
+            names = manager.selection(boxes)
+            self.logger.warning(
+                "Out of tips in %s; the run pauses here for a reload",
+                ", ".join(names),
+            )
+            self.pause(f"Out of tips: reload {', '.join(names)}, then Resume")
+            for name in names:
+                manager.reset_tips(name)
+            peeked = manager.peek_tip(boxes)
         if peeked is not None:
             self.location_manager.check_drawer(peeked[0])
 

@@ -50,6 +50,7 @@ class TestStart:
         assert set(request["params"]["objects"]) == {
             "toolhead",
             "print_stats",
+            "display_status",
             "gcode_macro _PLATE_STATE",
             "gcode_macro _PIPETTE_STATE",
             "stepper_enable",
@@ -378,6 +379,36 @@ class TestPrintMessage:
         tracker._apply_status({"print_stats": {"state": "error"}})
 
         assert tracker.print_message == "boom"
+
+
+class TestDisplayMessage:
+    """``display_status.message`` is the reason shown before a ``PAUSE``."""
+
+    def test_message_is_known_when_the_pause_fires(
+        self, fake_websocket_client: FakeWebSocketClient
+    ) -> None:
+        tracker = _tracker(fake_websocket_client)
+        seen: list[str] = []
+        tracker.on_print_state_change(
+            lambda _state: seen.append(tracker.display_message)
+        )
+
+        tracker._apply_status({
+            "display_status": {"message": "Out of tips"},
+            "print_stats": {"state": "paused"},
+        })
+
+        assert seen == ["Out of tips"]
+
+    def test_a_cleared_message_reads_empty(
+        self, fake_websocket_client: FakeWebSocketClient
+    ) -> None:
+        tracker = _tracker(fake_websocket_client)
+        tracker._apply_status({"display_status": {"message": "x"}})
+
+        tracker._apply_status({"display_status": {"message": None}})
+
+        assert tracker.display_message == ""
 
 
 class TestLoadTipLiquidState:

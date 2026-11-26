@@ -595,5 +595,5 @@ Options:
 ```
 Usage: break
 
-Pause the running protocol and wait for an operator (or remote client) to confirm continue/abort -- not a real AutoPipetteService method, handled specially by the protocol dispatch loop. Choosing abort raises ProtocolAbortedError and stops the rest of the file from running.
+Stop the machine here (Klipper's PAUSE) until an operator presses Resume (the kiosk banner, or tap's resume); Cancel ends the run. Not a real AutoPipetteService method: the protocol dispatch loop emits the pause into the G-code.
 ```

@@ -108,7 +108,6 @@ class RemoteTapShell(Cmd):
         self.requests = ControlRequests()
         self.client = WebSocketClient(control_uri)
         self.client.register_handler("notify_run_status", self._on_run_status)
-        self.client.register_handler("notify_breakpoint", self._on_breakpoint)
 
     # ==================== lifecycle ====================
 
@@ -155,20 +154,6 @@ class RemoteTapShell(Cmd):
         status = notification.get("status")
         message = notification.get("message", "")
         self.add_alert(msg=f"[run:{status}] {message}")
-
-    def _on_breakpoint(self, params: Any) -> None:  # ruff:ignore[any-type]
-        """Prompt the user to answer a pending breakpoint.
-
-        Args:
-            params: `{"run_id", "filename", "pending"}` as sent by
-                `AutoPipetteService.request_breakpoint`/`confirm_breakpoint`.
-        """
-        notification = as_dict(params)
-        if notification.get("pending"):
-            self.add_alert(
-                msg="⏸ Protocol paused at a breakpoint. "
-                "Type 'continue' or 'abort' to proceed."
-            )
 
     # ==================== movement ====================
 
@@ -534,14 +519,6 @@ class RemoteTapShell(Cmd):
         """Resume the active run."""
         self._call_and_print(self.requests.run_resume())
 
-    def do_continue(self, _: Statement) -> None:
-        """Confirm a pending breakpoint and continue the protocol."""
-        self._confirm_breakpoint(proceed=True)
-
-    def do_abort(self, _: Statement) -> None:
-        """Confirm a pending breakpoint and abort the protocol."""
-        self._confirm_breakpoint(proceed=False)
-
     def do_stop(self, _: Statement) -> None:
         """Send an emergency stop to the pipette."""
         self._call_and_print(self.requests.run_stop())
@@ -561,19 +538,6 @@ class RemoteTapShell(Cmd):
             return
         for protocol in protocols:
             self.poutput(str(as_dict(protocol).get("filename", "")))
-
-    def _confirm_breakpoint(self, *, proceed: bool) -> None:
-        """Send a breakpoint confirmation to the daemon.
-
-        Args:
-            proceed: True to continue the protocol, False to abort it.
-        """
-        try:
-            self.client.send_jsonrpc(self.requests.run_confirm_breakpoint(proceed))
-        except RuntimeError as exc:
-            self.perror(str(exc))
-            return
-        self.poutput("Continuing..." if proceed else "Aborting...")
 
     # ==================== utility ====================
 

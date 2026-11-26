@@ -25,10 +25,7 @@ from tricca_autopipette.daemon.control_requests import ControlRequests
 # Builders with no standalone `tap` command, by design rather than a gap:
 # - "identify" is a one-time connection tag `preloop` sends itself, not a
 #   user-invocable command (see CLAUDE.md's daemon.identify note, issue #53).
-# - "run_confirm_breakpoint" is reached via `do_continue`/`do_abort`, which
-#   pick the `proceed` value for the user rather than exposing it as a raw
-#   argument.
-_NO_COMMAND_BY_DESIGN = frozenset({"identify", "run_confirm_breakpoint"})
+_NO_COMMAND_BY_DESIGN = frozenset({"identify"})
 
 # ControlRequests builder name -> the `do_<name>` command on RemoteTapShell
 # that reaches it. Most are 1:1 (`move` -> `do_move`); the rest are listed

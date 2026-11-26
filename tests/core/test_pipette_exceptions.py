@@ -11,7 +11,6 @@ from tricca_autopipette.core.pipette_exceptions import (
     NoTipboxError,
     NoWasteContainerError,
     OutOfTipsError,
-    ProtocolAbortedError,
     TipAlreadyOnError,
     VolumeCapacityError,
 )
@@ -97,14 +96,6 @@ class TestVolumeCapacityError:
         assert str(err) == (
             "Cannot aspirate 150.0 μL: exceeds usable syringe capacity of 98.0 μL."
         )
-
-
-class TestProtocolAbortedError:
-    def test_is_an_autopipette_error(self) -> None:
-        assert issubclass(ProtocolAbortedError, AutoPipetteError)
-
-    def test_can_carry_a_custom_message(self) -> None:
-        assert str(ProtocolAbortedError("user aborted")) == "user aborted"
 
 
 class TestNotHomedError:

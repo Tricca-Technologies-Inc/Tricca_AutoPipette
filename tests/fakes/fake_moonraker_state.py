@@ -44,6 +44,8 @@ class FakeMoonrakerState:
         self._print_state_callback: Callable[[str], None] | None = None
         #: Klipper's ``print_stats.message``, read with each state change.
         self.print_message = ""
+        #: Klipper's ``display_status.message`` (the last ``M117``).
+        self.display_message = ""
         #: What Klipper's plate/plunger axis config reads as; "not
         #: configured" by default, like a machine without the axis expansion.
         self.axis_config = AxisConfig()

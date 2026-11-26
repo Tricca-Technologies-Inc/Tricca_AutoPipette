@@ -16,7 +16,7 @@ import pytest
 from fakes.fake_moonraker_state import FakeMoonrakerState
 
 from tricca_autopipette.core.pipette_constants import DefaultPaths
-from tricca_autopipette.daemon.service import AutoPipetteService, ProtocolAbortedError
+from tricca_autopipette.daemon.service import AutoPipetteService
 
 _EXAMPLES = [
     "examples/home_and_move.pipette",
@@ -55,28 +55,19 @@ def example_service(service: AutoPipetteService) -> AutoPipetteService:
 def test_example_protocol_runs_cleanly(
     filename: str, example_service: AutoPipetteService
 ) -> None:
-    """Every committed example executes without raising.
-
-    ``breakpoint.pipette``'s ``break`` line is answered "continue" here, so
-    the whole file runs; ``test_breakpoint_example_aborts_cleanly`` below
-    covers the "abort" path separately.
-    """
-    with patch.object(example_service, "request_breakpoint", return_value=True):
-        example_service._run_protocol_sync(filename)
+    """Every committed example executes without raising."""
+    example_service._run_protocol_sync(filename)
 
 
-def test_breakpoint_example_aborts_cleanly(
+def test_breakpoint_example_pauses_the_machine(
     example_service: AutoPipetteService,
 ) -> None:
-    """Answering ``breakpoint.pipette``'s break with "abort" stops the run.
-
-    The lines after ``break`` (the transfer and disposal) must not run --
-    there's no direct way to observe that from here, but a clean
-    ``ProtocolAbortedError`` (rather than some other exception from a line
-    that shouldn't have executed) is the closest black-box proxy available.
-    """
-    with (
-        patch.object(example_service, "request_breakpoint", return_value=False),
-        pytest.raises(ProtocolAbortedError),
-    ):
+    """``breakpoint.pipette``'s ``break`` is a ``PAUSE`` between its moves."""
+    with patch.object(
+        example_service.gcode_manager,
+        "write_gcode_file",
+        wraps=example_service.gcode_manager.write_gcode_file,
+    ) as spy_write:
         example_service._run_protocol_sync("examples/breakpoint.pipette")
+
+    assert "PAUSE" in [line.strip() for line in spy_write.call_args.args[0]]
