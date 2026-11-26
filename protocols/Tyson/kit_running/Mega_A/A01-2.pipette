@@ -1,4 +1,4 @@
-# now taking by column not row transferring 10uL of FIS1 and FIS2 to the filter plate
+# Mega Panel A transferring 10uL of FIS1 and FIS2 to the filter plate
 
 load_pipette TysonP100.json
 home all
