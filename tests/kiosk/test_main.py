@@ -535,6 +535,26 @@ class TestIndexRoute:
         assert response.status_code == 200
         assert "text/html" in response.headers["content-type"]
 
+    def test_page_and_assets_require_revalidation(
+        self, kiosk_client: TestClient
+    ) -> None:
+        # Without no-cache, a browser may heuristically reuse an old app.js
+        # after an upgrade while serving the new index.html.
+        for path in ("/", "/static/app.js", "/static/style.css"):
+            response = kiosk_client.get(path)
+            assert response.headers["cache-control"] == "no-cache"
+
+    def test_unchanged_asset_revalidates_as_not_modified(
+        self, kiosk_client: TestClient
+    ) -> None:
+        first = kiosk_client.get("/static/app.js")
+        again = kiosk_client.get(
+            "/static/app.js", headers={"If-None-Match": first.headers["etag"]}
+        )
+
+        assert again.status_code == 304
+        assert again.headers["cache-control"] == "no-cache"
+
 
 class TestBreakpointRespond:
     def test_returns_503_when_the_daemon_is_not_connected(
