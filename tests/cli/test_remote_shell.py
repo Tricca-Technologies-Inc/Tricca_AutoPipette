@@ -272,6 +272,50 @@ class TestPausedRunAlert:
         assert any(a.msg and "Paused: Out of tips" in a.msg for a in shell._alert_queue)
 
 
+class TestLastJobAlert:
+    """A failed immediate job (issue #187) reaches ``tap`` as an alert."""
+
+    def test_a_failed_job_shows_klippers_message_once(
+        self, shell: RemoteTapShell
+    ) -> None:
+        push = {
+            "status": "idle",
+            "message": "",
+            "last_job": {
+                "filename": "home_all.gcode",
+                "state": "cancelled",
+                "message": "Endstop z3 still triggered after retract",
+            },
+        }
+        shell._on_run_status(push)
+        shell._on_run_status(push)  # a later push, e.g. a pipette swap
+
+        shown = [
+            a.msg
+            for a in shell._alert_queue
+            if a.msg
+            and "home_all.gcode cancelled: Endstop z3 still triggered after retract"
+            in a.msg
+        ]
+        assert len(shown) == 1
+
+    def test_a_completed_job_and_an_unchanged_run_say_nothing(
+        self, shell: RemoteTapShell
+    ) -> None:
+        # Every immediate job now ends in a push; only news is shown.
+        idle = {"status": "idle", "message": ""}
+        shell._on_run_status(idle)
+        before = len(shell._alert_queue)
+
+        shell._on_run_status({
+            **idle,
+            "last_job": {"filename": "a.gcode", "state": "completed", "message": ""},
+        })
+        shell._on_run_status({**idle, "last_job": None})
+
+        assert len(shell._alert_queue) == before
+
+
 class TestValidateCommand:
     """Issue #36: `validate <file>` dry-runs a protocol over the control plane."""
 

@@ -7,6 +7,7 @@ shared root and a scratch local root (with its own ``system/``), both under
 
 from __future__ import annotations
 
+import asyncio
 import json
 import shutil
 from pathlib import Path
@@ -14,6 +15,7 @@ from typing import Any
 
 import pytest
 from fakes.fake_moonraker_state import FakeMoonrakerState
+from fakes.fake_websocket_client import FakeWebSocketClient
 
 from tricca_autopipette.commands.tap_cmd_parsers import (
     HomeArgs,
@@ -149,7 +151,11 @@ class TestForcedRehome:
             "pipettes", "p100_vertical.json", "syringe.max_volume_ul", 90.0
         )
 
+        svc.client = FakeWebSocketClient()  # type: ignore[assignment]
+
         svc.init()
+        # Only once Moonraker reports the home completed (issue #187).
+        asyncio.run(svc._apply_job_finished("home_all.gcode", "completed"))
 
         assert svc.move(MoveArgs(x=1.0, y=1.0, z=1.0)).ok
 

@@ -108,6 +108,10 @@ class RemoteTapShell(Cmd):
         self.requests = ControlRequests()
         self.client = WebSocketClient(control_uri)
         self.client.register_handler("notify_run_status", self._on_run_status)
+        # The run line last alerted, so a push that changes nothing about
+        # the run (every immediate job ends in one) stays quiet.
+        self._last_run_alert: tuple[Any, Any] | None = None
+        self._last_job: dict[str, Any] = {}
 
     # ==================== lifecycle ====================
 
@@ -144,16 +148,30 @@ class RemoteTapShell(Cmd):
     def _on_run_status(self, params: Any) -> None:  # ruff:ignore[any-type]
         """Show a live run-status update without disrupting the prompt.
 
+        Also shows a failed ``last_job`` (an immediate job, e.g. ``home all``,
+        that Klipper ended in ``error``/``cancelled``) with Klipper's message.
+
         Args:
-            params: `{"status", "message", "run_id", "filename"}` as sent by
-                `AutoPipetteService._broadcast_status`.
+            params: `{"status", "message", "run_id", "filename", "last_job",
+                ...}` as sent by `AutoPipetteService._broadcast_status`.
         """
         notification = as_dict(params)
         if not notification:
             return
         status = notification.get("status")
         message = notification.get("message", "")
-        self.add_alert(msg=f"[run:{status}] {message}")
+        if (status, message) != self._last_run_alert:
+            self._last_run_alert = (status, message)
+            self.add_alert(msg=f"[run:{status}] {message}")
+        job = as_dict(notification.get("last_job"))
+        if job == self._last_job:
+            return
+        self._last_job = job
+        if job and job.get("state") != "completed":
+            self.add_alert(
+                msg=f"[job] {job.get('filename')} {job.get('state')}: "
+                f"{job.get('message')}"
+            )
 
     # ==================== movement ====================
 
