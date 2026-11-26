@@ -1,5 +1,8 @@
 #second of four parts for making mega panel b cal 7 ingredients 29-56
 
+load_pipette TysonP100.json
+home all
+
 # alpha-Ketoglutaric acid 25uL
 pipette 25 --src_row 0 --src_col 0 manu2 KIT1 --prewet 1
 # alpha-Ketoisovaleric acid 25uL
