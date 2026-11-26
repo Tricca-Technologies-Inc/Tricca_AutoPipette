@@ -88,3 +88,31 @@ def test_the_display_message_is_read_for_a_pause(service: AutoPipetteService) ->
         service._loop.close()
 
     assert seen == [("paused", "Protocol break: press Resume to continue")]
+
+
+def test_progress_rides_the_run_status(
+    service: AutoPipetteService, pushes: list[dict[str, Any]]
+) -> None:
+    _running(service)
+
+    asyncio.run(service._apply_progress(0.4))
+
+    assert service.get_status().progress == pytest.approx(0.4)
+    assert pushes[-1]["progress"] == pytest.approx(0.4)
+
+
+def test_progress_outside_a_run_is_ignored(
+    service: AutoPipetteService, pushes: list[dict[str, Any]]
+) -> None:
+    asyncio.run(service._apply_progress(0.4))
+
+    assert service.get_status().progress is None
+    assert pushes == []
+
+
+def test_completion_reports_full_progress(service: AutoPipetteService) -> None:
+    _running(service)
+    asyncio.run(service._apply_progress(0.9))
+    asyncio.run(service._apply_print_state_change("complete"))
+
+    assert service.get_status().progress == pytest.approx(1.0)
