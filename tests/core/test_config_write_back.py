@@ -345,6 +345,12 @@ class TestHighRiskBounds:
         with pytest.raises(ValueError, match="accel_z"):
             set_config_value("gantry", "default_gantry.json", "accel_z", 1e9)
 
+    @pytest.mark.parametrize("value", [10, 1e6])
+    def test_the_plate_jog_speed_is_bounded(self, roots: Roots, value: float) -> None:
+        # A new key, so it also proves GantryKinematics defines it (issue #215).
+        with pytest.raises(ValueError, match=r"plate_jog_speed = .* outside"):
+            set_config_value("gantry", "default_gantry.json", "plate_jog_speed", value)
+
     @pytest.mark.parametrize(
         ("category", "filename", "key", "value"),
         [

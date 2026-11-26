@@ -220,6 +220,11 @@ class GantryKinematics(BaseModel):
     jog_speed_z: float = Field(
         default=1000.0, gt=0, description="Z jog speed in mm/min"
     )
+    # A relative plate move (`plate_move --rel`, the kiosk's plate jog,
+    # issue #215) without --speed. One value for every drawer.
+    plate_jog_speed: float = Field(
+        default=600.0, gt=0, description="Plate drawer jog speed in mm/min"
+    )
 
     wait_dip_ms: int = Field(
         default=50, ge=0, description="Settle time after each dip or return, in ms"

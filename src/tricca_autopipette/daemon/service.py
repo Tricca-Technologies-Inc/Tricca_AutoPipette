@@ -1335,35 +1335,94 @@ class AutoPipetteService:
         if z is None or z > z_safe:
             self._autopipette.raise_tip(z_safe)
 
+    @staticmethod
+    def _plate_offset(offset: str) -> float:
+        """Read a ``plate_move --rel`` offset.
+
+        Args:
+            offset: The offset in mm, as typed.
+
+        Returns:
+            The offset (mm).
+
+        Raises:
+            ValueError: Not a finite number (a stop name is no offset).
+        """
+        try:
+            value = float(offset)
+        except ValueError:
+            value = math.nan
+        if not math.isfinite(value):
+            raise ValueError(f"--rel needs an offset in mm, got '{offset}'.")
+        return value
+
+    def _plate_now(self, plate: PlateAxis) -> float:
+        """Where a plate is now, for a relative move (issue #215).
+
+        Live ``gcode_move`` position outside a batch; in a protocol or dry
+        run, the compile-time drawer model, since live position is where the
+        drawer was before the batch, not where its earlier lines leave it.
+
+        Args:
+            plate: The plate being moved.
+
+        Returns:
+            Its position (mm).
+
+        Raises:
+            ValueError: The position is unknown.
+        """
+        state = self.moonraker_state
+        if self.gcode_manager.is_batch_mode:
+            now = self._autopipette.location_manager.drawer_positions.get(plate.name)
+        else:
+            now = None if state is None else state.axis_position(plate.letter)
+        if now is None:
+            raise ValueError(
+                f"{plate.name}'s position is unknown; home it or move it to a "
+                f"stop or position first."
+            )
+        return now
+
     def plate_move(self, args: PlateMoveArgs) -> CommandResult:
         """Move a plate drawer to a named stop or a position (``PLATE_MOVE``).
 
-        Gated by :meth:`require_plates_homed` (Z and that plate); everything
-        is checked before any G-code is emitted. Raises the tip to
-        ``z_safe`` first (:meth:`_raise_tip_for_plates`). Updates the
-        compile-time drawer model.
+        With ``rel``, the target is the current position (:meth:`_plate_now`)
+        plus ``target`` mm, at the gantry's ``plate_jog_speed`` unless a
+        speed is given (issue #215). Gated by :meth:`require_plates_homed`
+        (Z and that plate); everything is checked before any G-code is
+        emitted, and a target outside travel is refused, never clamped.
+        Raises the tip to ``z_safe`` first (:meth:`_raise_tip_for_plates`).
+        Updates the compile-time drawer model.
 
         Args:
-            args: Plate (name or letter), target (stop or mm), optional speed.
+            args: Plate (name or letter), target (stop or mm, or an offset
+                with ``rel``), optional speed.
 
         Returns:
             Result describing the move.
 
         Raises:
             ValueError: No plates configured, unknown plate or stop, a
-                position outside the plate's travel, or a bad speed.
+                position outside the plate's travel, a bad speed, or (with
+                ``rel``) a bad offset or an unknown current position.
             NotHomedError: Z or the plate isn't homed.
         """  # ruff: ignore[docstring-extraneous-exception]
         plate = self._plate(args.plate)
-        position = self._plate_target(plate, args.target)
-        if args.speed is not None and not (
-            math.isfinite(args.speed) and args.speed > 0
-        ):
-            raise ValueError(f"Invalid speed {args.speed}: must be positive (mm/s).")
+        speed = args.speed
+        if args.rel:
+            target = str(self._plate_now(plate) + self._plate_offset(args.target))
+            if speed is None:
+                speed = self._autopipette.gantry.plate_jog_speed / 60
+        else:
+            target = args.target
+        position = self._plate_target(plate, target)
+        if speed is not None and not (math.isfinite(speed) and speed > 0):
+            raise ValueError(f"Invalid speed {speed}: must be positive (mm/s).")
         self.require_plates_homed("plate_move", [plate.name])
         autopipette = self._autopipette
         self._raise_tip_for_plates()
-        autopipette.plate_move(plate.name, position, args.speed)
+        autopipette.plate_move(plate.name, position, speed)
         self.output_gcode(autopipette.get_gcode())
         autopipette.location_manager.set_drawer_position(plate.name, position)
         return CommandResult(

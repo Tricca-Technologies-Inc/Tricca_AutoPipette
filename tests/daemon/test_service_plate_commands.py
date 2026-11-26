@@ -15,7 +15,12 @@ from typing import Any
 import pytest
 from fakes.fake_moonraker_state import FakeMoonrakerState
 
-from tricca_autopipette.commands.tap_cmd_parsers import HomeArgs, PlateMoveArgs
+from tricca_autopipette.commands.tap_cmd_parsers import (
+    HomeArgs,
+    PlateMoveArgs,
+    TAPCmdParsers,
+    args_from_namespace,
+)
 from tricca_autopipette.core.gcode_commands import GCode
 from tricca_autopipette.core.pipette_exceptions import NotHomedError
 from tricca_autopipette.daemon.moonraker_state import AxisConfig, PlateAxis
@@ -87,8 +92,10 @@ def emitted(service: AutoPipetteService, call: Callable[[], object]) -> list[GCo
     return [g for g in gcode if g.strip() and not g.startswith(";")]
 
 
-def move(plate: str, target: str, speed: float | None = None) -> PlateMoveArgs:
-    return PlateMoveArgs(plate=plate, target=target, speed=speed)
+def move(
+    plate: str, target: str, speed: float | None = None, *, rel: bool = False
+) -> PlateMoveArgs:
+    return PlateMoveArgs(plate=plate, target=target, speed=speed, rel=rel)
 
 
 def model(service: AutoPipetteService) -> dict[str, float]:
@@ -174,6 +181,94 @@ class TestPlateMove:
     def test_not_configured(self, service: AutoPipetteService) -> None:
         with pytest.raises(ValueError, match="No plates configured"):
             service.plate_move(move("plate1", "0"))
+
+
+class TestRelativePlateMove:
+    """``plate_move <plate> <mm> --rel`` (issue #215): the kiosk's plate jog."""
+
+    def test_offsets_the_live_position_at_the_gantry_jog_speed(
+        self,
+        svc: AutoPipetteService,
+        fake: FakeMoonrakerState,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        # default_gantry.json has no plate_jog_speed: the model default,
+        # 600 mm/min, goes out as SPEED= in mm/s.
+        fake.positions = {"V": 120.0}
+        gcode = interactive(
+            svc, monkeypatch, lambda: svc.plate_move(move("V", "-10", rel=True))
+        )
+        assert gcode == [*RAISE, "PLATE_MOVE PLATE=plate2 POS=110.0 SPEED=10.0\n"]
+        assert model(svc)["plate2"] == pytest.approx(110.0)
+
+    def test_an_explicit_speed_wins(
+        self,
+        svc: AutoPipetteService,
+        fake: FakeMoonrakerState,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        fake.positions = {"V": 120.0}
+        gcode = interactive(
+            svc, monkeypatch, lambda: svc.plate_move(move("V", "0.1", 5, rel=True))
+        )
+        assert gcode[-1] == "PLATE_MOVE PLATE=plate2 POS=120.1 SPEED=5\n"
+
+    def test_in_a_batch_offsets_the_drawer_model_not_live_position(
+        self, svc: AutoPipetteService, fake: FakeMoonrakerState
+    ) -> None:
+        fake.positions = {"V": 120.0}
+        gcode = emitted(
+            svc,
+            lambda: (
+                svc.plate_move(move("plate2", "cover")),
+                svc.plate_move(move("plate2", "25", rel=True)),
+            ),
+        )
+        assert gcode[-1] == "PLATE_MOVE PLATE=plate2 POS=325.0 SPEED=10.0\n"
+
+    @pytest.mark.parametrize(("live", "offset"), [(345.0, "10"), (5.0, "-10")])
+    def test_out_of_range_target_refused_not_clamped(
+        self,
+        svc: AutoPipetteService,
+        fake: FakeMoonrakerState,
+        monkeypatch: pytest.MonkeyPatch,
+        live: float,
+        offset: str,
+    ) -> None:
+        fake.positions = {"V": live}
+        gcode: list[GCode] = []
+        with pytest.raises(ValueError, match=r"outside .*0 to 350"):
+            gcode = interactive(
+                svc, monkeypatch, lambda: svc.plate_move(move("V", offset, rel=True))
+            )
+        assert gcode == []
+
+    def test_unknown_position_refused(
+        self, svc: AutoPipetteService, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        with pytest.raises(ValueError, match="position is unknown"):
+            interactive(
+                svc, monkeypatch, lambda: svc.plate_move(move("V", "1", rel=True))
+            )
+
+    def test_a_stop_name_is_not_an_offset(
+        self, svc: AutoPipetteService, fake: FakeMoonrakerState
+    ) -> None:
+        fake.positions = {"V": 120.0}
+        with pytest.raises(ValueError, match="offset in mm"):
+            svc.plate_move(move("V", "load", rel=True))
+
+    def test_refused_when_the_plate_is_not_homed(
+        self, svc: AutoPipetteService, fake: FakeMoonrakerState
+    ) -> None:
+        fake.positions = {"V": 120.0}
+        fake.homed_plates = {"plate1"}
+        with pytest.raises(NotHomedError, match="plate2 not homed"):
+            svc.plate_move(move("V", "1", rel=True))
+
+    def test_tap_parser_takes_a_negative_offset(self) -> None:
+        ns = TAPCmdParsers.parser_plate_move.parse_args(["plate2", "-10", "--rel"])
+        assert args_from_namespace(PlateMoveArgs, ns) == move("plate2", "-10", rel=True)
 
 
 class TestPlatesIn:
@@ -430,6 +525,30 @@ class TestProtocolFile:
         assert [f["line_number"] for f in errors] == [2]
         assert "at 350 mm" in errors[0]["message"]
 
+    def test_a_relative_line_follows_the_model_and_validate_reports_overtravel(
+        self,
+        svc: AutoPipetteService,
+        fake: FakeMoonrakerState,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        fake.set_homed(False)
+        fake.homed_plates = set()
+        self._protocol(
+            tmp_path,
+            monkeypatch,
+            "plate_move plate2 cover\nplate_move plate2 -180 --rel\n"
+            "move_loc sample_plate\nplate_move plate2 300 --rel\n",
+        )
+
+        data = svc.validate_protocol("p.pipette").data
+        assert data is not None
+        errors = [f for f in data["findings"] if f["severity"] == "error"]
+
+        # 300 - 180 = 120 (work_b), so move_loc is fine; +300 overtravels.
+        assert [f["line_number"] for f in errors] == [4]
+        assert "outside" in errors[0]["message"]
+
 
 def test_plate_emissions_match_the_golden_file(svc: AutoPipetteService) -> None:
     """Every plate-command emission, byte for byte (issue #143).
@@ -445,6 +564,8 @@ def test_plate_emissions_match_the_golden_file(svc: AutoPipetteService) -> None:
             svc.plate_move(move("plate2", "load", 50)),
             svc.plate_move(move("U", "12.5")),
             svc.plate_move(move("plate1", "0", 25.5)),
+            svc.plate_move(move("plate1", "10", rel=True)),
+            svc.plate_move(move("U", "-2.5", 5, rel=True)),
             svc.plates_in(),
         ),
     )

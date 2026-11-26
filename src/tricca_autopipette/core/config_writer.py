@@ -282,6 +282,7 @@ HIGH_RISK_BOUNDS: dict[tuple[type[BaseModel], str], tuple[float, float]] = {
     (GantryKinematics, "speed_max"): (100, 99999),  # mm/min
     (GantryKinematics, "jog_speed_xy"): (100, 38000),  # mm/min
     (GantryKinematics, "jog_speed_z"): (100, 12000),  # mm/min
+    (GantryKinematics, "plate_jog_speed"): (100, 6000),  # mm/min
     (GantryKinematics, "accel_xy"): (100, 40000),  # mm/s²
     (GantryKinematics, "accel_z"): (100, 40000),  # mm/s²
     (GantryKinematics, "accel_max"): (100, 40000),  # mm/s²
