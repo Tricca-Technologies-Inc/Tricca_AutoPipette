@@ -25,9 +25,10 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Literal, cast
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from starlette.types import Scope
 
 from tricca_autopipette.commands.tap_cmd_parsers import (
     CalibrateStartArgs,
@@ -286,8 +287,32 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
         await asyncio.to_thread(client.stop)
 
 
+# Revalidate on every load: the files change on upgrade but keep their URLs,
+# so a heuristically cached app.js could run against a newer index.html. An
+# unchanged file still comes back as a cheap 304.
+_NO_CACHE = {"Cache-Control": "no-cache"}
+
+
+class RevalidatingStaticFiles(StaticFiles):
+    """`StaticFiles` that tells the browser to revalidate before reuse."""
+
+    async def get_response(self, path: str, scope: Scope) -> Response:
+        """Serve `path` with `Cache-Control: no-cache` added.
+
+        Args:
+            path: The requested path under the mount.
+            scope: The ASGI request scope.
+
+        Returns:
+            The static file response (or 304) with the header set.
+        """
+        response = await super().get_response(path, scope)
+        response.headers.update(_NO_CACHE)
+        return response
+
+
 app = FastAPI(title="AutoPipette Kiosk", lifespan=lifespan)
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+app.mount("/static", RevalidatingStaticFiles(directory=STATIC_DIR), name="static")
 
 
 # ── routes ─────────────────────────────────────────────────────────────────────
@@ -298,7 +323,7 @@ def index() -> FileResponse:
     Returns:
         The static `index.html` file.
     """
-    return FileResponse(STATIC_DIR / "index.html")
+    return FileResponse(STATIC_DIR / "index.html", headers=_NO_CACHE)
 
 
 # Folders the kiosk never offers. The converted Murphy protocols are
