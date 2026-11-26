@@ -5363,6 +5363,12 @@ _LINE_DISPATCH: dict[str, _LineCommand] = {
         UnloadLocationsArgs,
         AutoPipetteService.unload_locations,
     ),
+    "disable_tipbox": _LineCommand(
+        TAPCmdParsers.parser_disable_tipbox, ResetTipsArgs, AutoPipetteService.disable_tipbox
+    ),
+    "enable_tipbox": _LineCommand(
+        TAPCmdParsers.parser_enable_tipbox, ResetTipsArgs, AutoPipetteService.enable_tipbox
+    ),
     "reset_tips": _LineCommand(
         TAPCmdParsers.parser_reset_tips, ResetTipsArgs, AutoPipetteService.reset_tips
     ),

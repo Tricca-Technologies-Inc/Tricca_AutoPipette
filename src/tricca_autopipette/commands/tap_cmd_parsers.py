@@ -1010,6 +1010,16 @@ class TAPCmdParsers:
         "filename", type=str, help="Pipette config file under config/pipettes/"
     )
 
+    parser_disable_tipbox: Cmd2ArgumentParser = Cmd2ArgumentParser(
+        prog="disable_tipbox", description="Remove a tipbox from the tip draw pool."
+    )
+    parser_disable_tipbox.add_argument("name", type=str, help="Tipbox location name")
+
+    parser_enable_tipbox: Cmd2ArgumentParser = Cmd2ArgumentParser(
+        prog="enable_tipbox", description="Restore a tipbox to the tip draw pool."
+    )
+    parser_enable_tipbox.add_argument("name", type=str, help="Tipbox location name")
+
     parser_reset_tips: Cmd2ArgumentParser = Cmd2ArgumentParser(
         description="Mark a tipbox as full, after physically reloading it."
     )
