@@ -167,3 +167,26 @@ class TestDipDepthIsShifted:
 
         with pytest.raises(ValueError, match=r"[Zz]"):
             ap.aspirate_volume(10.0, "plate_a", src_row=0, src_col=0)
+
+
+class TestWasteDipIsClampedAtZ0:
+    """A waste dip shifted above Z0 stays at Z0 (owner decision, 2026-11-26).
+
+    Tyson's P1000 (``deck_offset.z = -42``) over a waste container with
+    ``dip_top: 0`` would otherwise target Z=-42. Dropping a tip or emptying
+    the tip from the top is safe over waste, so it is clamped there; a plate
+    dip above Z0 is still refused (above).
+    """
+
+    @pytest.mark.parametrize("action", ["dispose_tip", "empty_tip_to_waste"])
+    def test_a_waste_dip_above_z0_goes_to_z0(
+        self, pipette_with_plates: AutoPipette, action: str
+    ) -> None:
+        ap = pipette_with_plates
+        ap.state.tip_state = TipState.ATTACHED
+        _set_offset(ap, z=-1000.0)
+
+        with patch.object(ap, "dip_z_down", wraps=ap.dip_z_down) as spy:
+            getattr(ap, action)()
+
+        assert spy.call_args.args[1] == pytest.approx(0.0)

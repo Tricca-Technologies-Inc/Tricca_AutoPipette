@@ -62,7 +62,7 @@ from tricca_autopipette.core.pipette_models import (
     TipEnd,
     TipState,
 )
-from tricca_autopipette.core.plates import Plate, TipBox
+from tricca_autopipette.core.plates import Plate, TipBox, WasteContainer
 from tricca_autopipette.core.splits import Split
 from tricca_autopipette.core.traversal import well_id_to_rc
 from tricca_autopipette.core.volume_converter import VolumeConverter
@@ -809,8 +809,9 @@ class AutoPipette:
     def _dip_depth(self, depth: float) -> float:
         """Shift a plate or waste dip depth by the active pipette's Z offset.
 
-        Not clamped: a shift above Z0 is refused by ``move_to_z``'s travel
-        check rather than leaving the tip short of the liquid.
+        Not clamped: a plate dip shifted above Z0 is refused by
+        ``move_to_z``'s travel check rather than leaving the tip short of the
+        liquid. Waste dips go through `_waste_dip_depth`, which caps at Z0.
 
         Args:
             depth: Dip depth from the location, in mm.
@@ -819,6 +820,22 @@ class AutoPipette:
             The depth this pipette's nozzle dips to, in mm.
         """
         return depth + self.pipette_model.deck_offset.z
+
+    def _waste_dip_depth(self, waste: WasteContainer) -> float:
+        """Return the active pipette's waste dip depth, capped at Z0.
+
+        Unlike a plate dip, a waste dip shifted above Z0 (a long nozzle over
+        a shallow ``dip_top``) stays at Z0 rather than being refused: a tip
+        dropped or emptied from the top still lands in the waste (owner
+        decision, 2026-11-26; Tyson's P1000 needs it).
+
+        Args:
+            waste: The waste container being dipped into.
+
+        Returns:
+            The waste dip depth, in mm, never above Z0.
+        """
+        return max(0.0, self._dip_depth(waste.get_dip_distance(vol=None)))
 
     def _offset(self, coor: Coordinate) -> Coordinate:
         """Shift a deck target by the active pipette's `deck_offset`.
@@ -1170,14 +1187,10 @@ class AutoPipette:
 
         self._check_drawer_of(self.location_manager.waste_container)
         self.note_action("Disposing tip to waste container")
-        curr_coor = self._offset(self.location_manager.waste_container.next())
+        waste = self.location_manager.waste_container
+        curr_coor = self._offset(waste.next())
         self.move_to(curr_coor)
-        self.dip_z_down(
-            curr_coor,
-            self._dip_depth(
-                self.location_manager.waste_container.get_dip_distance(vol=None)
-            ),
-        )
+        self.dip_z_down(curr_coor, self._waste_dip_depth(waste))
         self.eject_tip()
         self.dip_z_return(curr_coor)
         if self.gantry.park_after_dispose is not None:
@@ -2264,7 +2277,7 @@ class AutoPipette:
         self.note_action("Emptying leftover tip contents to waste container")
         curr_coor = self._offset(waste.next())
         self.move_to(curr_coor)
-        self.dip_z_down(curr_coor, self._dip_depth(waste.get_dip_distance(vol=None)))
+        self.dip_z_down(curr_coor, self._waste_dip_depth(waste))
         self.clear_syringe()
         self.gcode_wait(self.syringe.wait_dispense_ms)
         self.dip_z_return(curr_coor)
