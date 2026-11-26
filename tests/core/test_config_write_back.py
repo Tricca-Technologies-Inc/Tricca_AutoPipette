@@ -502,6 +502,13 @@ class TestLeadScaledBounds:
         assert {k: syringe[k.removeprefix("syringe.")] for k in nick} == nick
         assert _read(path)["speed_dispense"] == 150
 
+    def test_the_lead_itself_is_bounded_at_8mm(self, roots: Roots) -> None:
+        # A larger lead would widen every motor cap with it.
+        with pytest.raises(ValueError, match="lead_mm"):
+            set_config_value("pipettes", "p100_vertical.json", "syringe.lead_mm", 9)
+
+        set_config_value("pipettes", "p100_vertical.json", "syringe.lead_mm", 8)
+
     def test_a_lead_set_in_the_same_write_applies(self, roots: Roots) -> None:
         set_config_values(
             "pipettes",

@@ -307,6 +307,9 @@ HIGH_RISK_BOUNDS: dict[tuple[type[BaseModel], str], tuple[float, float]] = {
     # endstop. 80 mm covers every syringe in use (issue #178).
     (PipetteSyringeKinematics, "max_travel_mm"): (1, 80),
     (PipetteSyringeKinematics, "min_pre_air_gap_ul"): (0, 100),
+    # The screw lead scales the motor bounds below, so it is bounded itself
+    # (not scaled): 8 mm (a T8x8) is the longest in use (issue #178).
+    (PipetteSyringeKinematics, "lead_mm"): (1, 8),
     # Plunger speeds and accels are motor limits, written here for a 2 mm
     # lead; `high_risk_bounds` scales them by the pipette's own lead.
     (PipetteSyringeKinematics, "speed_aspirate"): (0.25, 50),  # mm/s
