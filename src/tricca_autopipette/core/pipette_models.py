@@ -341,7 +341,10 @@ class PipetteSyringeKinematics(BaseModel):
         wait_aspirate_ms: Wait after aspiration in milliseconds.
         wait_dispense_ms: Wait after dispense in milliseconds.
         prewet_cycles: Default prewet cycles before aspirating.
-        prewet_vol_ul: Default volume drawn per prewet cycle in μL.
+        prewet_vol_ul: Default volume drawn per prewet cycle in μL, or None
+            for the aspirate volume.
+        prewet_raise_mm: Rise above the dip, after prewetting, at which the
+            air cushion is pushed out, in mm.
         pre_air_gap_ul: Default air drawn before the liquid in μL.
         post_air_gap_ul: Default air drawn after the liquid in μL.
         min_pre_air_gap_ul: Smallest pre-aspirate gap, in μL, that still
@@ -455,8 +458,19 @@ class PipetteSyringeKinematics(BaseModel):
         default=0, ge=0, description="Prewet cycles to run before aspirating"
     )
 
-    prewet_vol_ul: float = Field(
-        default=10.0, ge=0, description="Volume drawn per prewet cycle (μL)"
+    prewet_vol_ul: float | None = Field(
+        default=None,
+        ge=0,
+        description="Volume drawn per prewet cycle (μL); None = the aspirate volume",
+    )
+
+    prewet_raise_mm: float = Field(
+        default=30.0,
+        ge=0,
+        description=(
+            "After prewetting, rise this far above the dip (capped at Z0) to "
+            "push out the air cushion (mm)"
+        ),
     )
 
     pre_air_gap_ul: float = Field(

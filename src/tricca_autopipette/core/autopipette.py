@@ -1413,7 +1413,7 @@ class AutoPipette:
         post_air_gap_ul: float | None = None,
         prewet_cycles: int | None = None,
         prewet_vol_ul: float | None = None,
-    ) -> tuple[float, float, int, float]:
+    ) -> tuple[float, float, int, float | None]:
         """Fill unset technique parameters in from the active liquid profile.
 
         Resolution order is **explicit argument > active liquid profile >
@@ -1431,7 +1431,8 @@ class AutoPipette:
 
         Returns:
             The resolved ``(pre_air_gap_ul, post_air_gap_ul, prewet_cycles,
-            prewet_vol_ul)``.
+            prewet_vol_ul)``. A prewet volume nobody set stays None, meaning
+            the aspirate volume.
 
         Example:
             >>> pipette.switch_liquid("methanol")  # doctest: +SKIP
@@ -1630,6 +1631,9 @@ class AutoPipette:
         pre_air_gap_ul, post_air_gap_ul = self.fit_air_volumes(
             volume, pre_air_gap_ul, post_air_gap_ul
         )
+        if prewet_vol_ul is None:
+            prewet_vol_ul = volume
+            sources = (*sources[:3], "aspirate volume")
         # A prewet cycle draws on top of the pre-aspirate gap already in the
         # tip, so it gets the headroom left over from that -- not the whole
         # syringe.
@@ -1664,17 +1668,30 @@ class AutoPipette:
             if pre_air_gap_ul:
                 self.operate_syringe(FluidDisplacement.aspiration, pre_air_gap_ul)
 
-        self.dip_z_down(
-            coor_source, self._dip_depth(loc_source.get_dip_distance(volume))
-        )
+        depth = self._dip_depth(loc_source.get_dip_distance(volume))
+        self.dip_z_down(coor_source, depth)
 
-        # Prewetting cycle
         if prewet_cycles and prewet_vol_ul > PhysicalConstants.VOLUME_TOLERANCE_UL:
             for _ in range(prewet_cycles):
                 self.operate_syringe(FluidDisplacement.aspiration, prewet_vol_ul)
                 self.gcode_wait(self.syringe.wait_aspirate_ms)
                 self.operate_syringe(FluidDisplacement.dispense, prewet_vol_ul)
                 self.gcode_wait(self.syringe.wait_aspirate_ms)
+            # The pre-gap drawn so far was a cushion for the prewet: push it
+            # out above the liquid, clearing what the prewet left in the tip,
+            # then draw a fresh pre-gap there and dip again.
+            if pre_air_gap_ul:
+                raise_mm = self.pipette_model.syringe.prewet_raise_mm
+                self.move_to_z(
+                    Coordinate(
+                        x=coor_source.x,
+                        y=coor_source.y,
+                        z=max(0.0, depth - raise_mm),
+                    )
+                )
+                self.operate_syringe(FluidDisplacement.dispense, pre_air_gap_ul)
+                self.operate_syringe(FluidDisplacement.aspiration, pre_air_gap_ul)
+                self.dip_z_down(coor_source, depth)
 
         # Aspirate liquid
         self.operate_syringe(FluidDisplacement.aspiration, volume)

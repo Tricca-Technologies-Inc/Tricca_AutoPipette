@@ -1,5 +1,5 @@
 ; Transferring 20μL from 'plate_a' to 'plate_a' (1 chunk(s))
-; Aspirating 20μL from 'plate_a' (pre_air_gap=4μL[explicit flag], post_air_gap=2μL[explicit flag], prewet=0x10μL[explicit flag/explicit flag])
+; Aspirating 20μL from 'plate_a' (pre_air_gap=4μL[explicit flag], post_air_gap=2μL[explicit flag], prewet=0x20μL[explicit flag/aspirate volume])
 G1 X100.0 Y100.0 F38000.0
 G1 Z3.0 F12000.0
 SET_VELOCITY_LIMIT ACCEL=72.472

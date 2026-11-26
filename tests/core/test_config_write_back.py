@@ -350,6 +350,12 @@ class TestHighRiskBounds:
         with pytest.raises(ValueError, match=key):
             set_config_value(category, filename, key, value)
 
+    def test_the_prewet_raise_is_bounded(self, roots: Roots) -> None:
+        with pytest.raises(ValueError, match="prewet_raise_mm"):
+            set_config_value(
+                "pipettes", "p100_vertical.json", "syringe.prewet_raise_mm", 500.0
+            )
+
     def test_a_travel_limit_far_past_zero_is_refused(self, roots: Roots) -> None:
         # A typo'd minimum would let every absolute move drive into the frame.
         with pytest.raises(ValueError, match="x_min"):
