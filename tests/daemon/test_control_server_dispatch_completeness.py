@@ -175,6 +175,7 @@ _BUILDER_CALLS: list[tuple[str, tuple[Any, ...]]] = [
     ("gcode_print", (GcodePrintArgs(msg="hi"),)),
     ("webcam_url", ()),
     ("vol_to_mm", (VolToMmArgs(vol=10.0),)),
+    ("command", ("vol_to_mm 10",)),
     ("mm_to_vol", (100,)),
     ("see_calibration", (SeeCalibrationArgs(liquid=None),)),
     # The unhomed fixture refuses start/dispense (NotHomedError); the rest

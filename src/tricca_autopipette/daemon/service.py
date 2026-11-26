@@ -358,6 +358,28 @@ def refuse_while_running(
     return wrapper
 
 
+#: Commands the kiosk's command entry (`AutoPipetteService.command`) may run:
+#: motion, tips and pipetting. Config edits, file writes, raw G-code, triggers
+#: and `break` stay `tap` and protocol-file only.
+_KIOSK_COMMANDS = frozenset({
+    "init",
+    "home",
+    "move",
+    "move_loc",
+    "move_rel",
+    "plate_move",
+    "plates_in",
+    "aspirate",
+    "dispense",
+    "pipette",
+    "next_tip",
+    "eject_tip",
+    "dispose_tip",
+    "change_tip",
+    "vol_to_mm",
+})
+
+
 #: The liquid fields the Settings page edits: every numeric `LiquidProfile`
 #: override (low-risk, so no bounds beyond the model's own).
 _LIQUID_SETTING_KEYS = (
@@ -2546,6 +2568,39 @@ class AutoPipetteService:
         """
         url = f"http://{self.hostname}/webcam/?action=stream"
         return CommandResult(ok=True, message=url, data={"url": url})
+
+    @refuse_while_running
+    def command(self, line: str) -> CommandResult:
+        """Run one typed command line, as the kiosk's command entry sends it.
+
+        The line goes through the same dispatch a protocol line does, so the
+        same parsers, homed gates and bounds apply. Only
+        :data:`_KIOSK_COMMANDS` may run this way, one line at a time, and
+        never while a protocol runs.
+
+        Args:
+            line: One command, e.g. ``move_rel --x 5``.
+
+        Returns:
+            The command's result, or ``ok=False`` for a refused line or bad
+            arguments. Anything else the command raises (``NotHomedError``)
+            propagates, as from its own RPC.
+        """
+        if "\n" in line or "\r" in line:
+            return CommandResult(ok=False, message="Enter one command at a time.")
+        try:
+            tokens = self._tokenize_protocol_line(line)
+            if tokens is None or tokens[0] not in _KIOSK_COMMANDS:
+                return CommandResult(
+                    ok=False,
+                    message=(
+                        f"{line.strip()!r} can't be run from the kiosk. "
+                        f"Allowed: {', '.join(sorted(_KIOSK_COMMANDS))}."
+                    ),
+                )
+            return self._dispatch_protocol_line(line)
+        except ValueError as exc:
+            return CommandResult(ok=False, message=str(exc))
 
     def vol_to_mm(self, args: VolToMmArgs) -> CommandResult:
         """Convert a volume in microliters to plunger travel in mm.

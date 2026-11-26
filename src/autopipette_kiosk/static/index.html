@@ -44,6 +44,7 @@
     <button class="tab-btn" data-page="deck">Deck</button>
     <button class="tab-btn" data-page="settings">Settings</button>
     <button class="tab-btn" data-page="calibrate">Calibrate</button>
+    <button class="tab-btn" data-page="commands">Commands</button>
   </nav>
 
   <!-- Global paused-run banner: reachable from any tab, not scoped to the
@@ -296,6 +297,24 @@
       </div>
       <div class="move-feedback" id="calFeedback"></div>
     </div>
+
+    <!-- Commands page: one typed command, as in tap or a protocol file -->
+    <div class="page" id="page-commands">
+      <div class="settings-banner lock" id="commandLock">
+        <span>🔒</span> Locked while a protocol is running.
+      </div>
+      <div class="tips-hint">
+        Type one command, as in <code>tap</code> or a protocol file, e.g.
+        <code>move_rel --x 5</code> or <code>pipette 50 src dst</code>. It runs on the
+        machine straight away. Only motion, tip and pipetting commands are allowed here.
+      </div>
+      <form class="command-entry" id="commandForm">
+        <input id="commandInput" type="text" maxlength="1024" autocomplete="off"
+          autocapitalize="off" spellcheck="false" placeholder="vol_to_mm 10">
+        <button type="submit" class="settings-btn" id="commandSendBtn" disabled>Send</button>
+      </form>
+      <div class="command-output" id="commandOutput" role="log" aria-live="polite"></div>
+    </div>
   </main>
 </div>
 
@@ -306,5 +325,6 @@
 <script src="/static/deck.js"></script>
 <script src="/static/settings.js"></script>
 <script src="/static/calibrate.js"></script>
+<script src="/static/commands.js"></script>
 </body>
 </html>
