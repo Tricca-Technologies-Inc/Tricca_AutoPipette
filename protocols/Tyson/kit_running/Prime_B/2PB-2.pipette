@@ -1,5 +1,10 @@
 #Prime Panel B: Adds 50.0uL of Reagent D to the sample plate
 #
+# Lock in the tipbox config for this protocol
+disable_tipbox tipbox_p100_b
+enable_tipbox tipbox_p100
+enable_tipbox tipbox_p100_c
+
 load_pipette TysonP100.json
 home all
 #
