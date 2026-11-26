@@ -1,7 +1,7 @@
 #Adds 10uL of L-RA to each well of the LC-MS/MS plate except the first.
 
 load_pipette TysonP100.json
-home
+home all
 #
 # This protocol uses the Tyson100 liquid profile's air gaps explicitly:
 # pre-air 30 µL, post-air 5 µL. Each prewet cycle uses the transfer volume.
