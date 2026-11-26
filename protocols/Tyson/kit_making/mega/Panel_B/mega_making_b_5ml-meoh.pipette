@@ -1,0 +1,10 @@
+#final methanol addition for cal 7 for mega panel b cal 7 adding 2525uL of methanol
+
+load_pipette TysonP1000.json
+home all
+
+pipette 505.0 --tip_end keep WATER KIT1 --prewet 5
+pipette 505.0 --tip_end keep WATER KIT1 
+pipette 505.0 --tip_end keep WATER KIT1 
+pipette 505.0 --tip_end keep WATER KIT1 
+pipette 505.0 WATER KIT1 
