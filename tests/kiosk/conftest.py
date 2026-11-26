@@ -15,6 +15,14 @@ from autopipette_kiosk import main as kiosk_main
 from tricca_autopipette.core.pipette_constants import DefaultPaths
 
 
+@pytest.fixture(autouse=True)
+def _allow_testclient_host(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Let `TestClient`'s ``Host: testserver`` past the kiosk's host check."""
+    monkeypatch.setattr(
+        kiosk_main, "ALLOWED_HOSTS", kiosk_main.ALLOWED_HOSTS | {"testserver"}
+    )
+
+
 @pytest.fixture
 def protocols_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Redirect the daemon's shared protocol directory to an empty temp dir.
