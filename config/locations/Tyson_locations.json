@@ -143,10 +143,10 @@
             "well_diameter": 8.2
         },
         {
-            "name": "PBIST",
+            "name": "PBISTD",
             "type": "singleton",
-            "x": 294,
-            "y": 184,
+            "x": 101.8,
+            "y": 185.7,
             "z": 0,
             "dip_top": 44.6,
             "dip_btm": 71.2,
