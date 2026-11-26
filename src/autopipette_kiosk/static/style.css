@@ -1152,6 +1152,7 @@ header {
 }
 
 .settings-btn:hover:not(:disabled) { background: var(--accent-dim); }
+.settings-btn.subtle { background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
 .settings-btn:disabled,
 .settings-panel input:disabled,
 .settings-panel select:disabled { opacity: 0.5; cursor: not-allowed; }

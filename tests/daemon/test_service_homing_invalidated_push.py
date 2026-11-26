@@ -33,3 +33,15 @@ def test_run_status_carries_the_flag(service: AutoPipetteService) -> None:
     service._homing_invalidated = True
 
     assert service.status_dict()["homing_invalidated"] is True
+
+
+def test_a_second_pipette_swap_still_pushes(service: AutoPipetteService) -> None:
+    # Clients (the kiosk's pipette pill) refetch on a push; a swap while
+    # homing is already invalidated must not go unannounced.
+    service._homing_invalidated = True
+    pushes: list[str] = []
+    service.set_broadcast_callback(lambda m, _p: pushes.append(m))
+
+    assert service.load_pipette("default_pipette.json").ok
+
+    assert pushes == ["notify_run_status"]
