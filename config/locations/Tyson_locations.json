@@ -436,6 +436,7 @@
             "spacing_row": 17,
             "spacing_col": 35,
             "well_diameter": 13
+        },
         {
             "name": "manu6",
             "type": "array",
