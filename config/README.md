@@ -67,9 +67,9 @@ to shared-only. Don't read the current scope as a permanent shape.
 
 `syringe.speed_home` in a pipette file is the plunger homing speed in mm/s.
 Omitted or `null`, homing uses the effective dispense speed, as before. It
-doesn't change dispense or syringe-clearing speed. On a stage-2 plunger it
-sets the speed of the move back to zero; physical `G28` homing is set by
-Klipper's own configuration.
+also sets the speed of `clear_syringe`'s endstop move (issue #178), not the
+dispense speed. On a stage-2 plunger it sets the speed of homing's move back
+to zero; physical `G28` homing is set by Klipper's own configuration.
 
 ### Gantry speed units
 
@@ -98,7 +98,9 @@ and nothing is written. So is a *new* key the file's model doesn't define
 keys already in a file stay editable. High-risk pipette and gantry values
 (speeds, accelerations, syringe volumes and travel, servo angles) are also
 refused outside a fixed range (`HIGH_RISK_BOUNDS` in `core/config_writer.py`;
-e.g. `max_travel_mm` 1-60). `tap`'s `settings`, and the kiosk's Settings
+e.g. `max_travel_mm` 1-80). The syringe speed and acceleration ranges are
+for a 2 mm screw lead and scale with the pipette's `lead_mm` (4x on an 8 mm
+lead). `tap`'s `settings`, and the kiosk's Settings
 page, list every editable value with its range and the file an edit goes to.
 `save_locations` likewise writes to the
 local `locations/`, saving file-loaded entries back as they were loaded. Both
@@ -234,6 +236,11 @@ Pipette model definitions including:
 - `syringe.max_travel_mm` (**required**): the syringe's manufacturer-stated
   plunger travel in mm. Homing drives up to twice this toward the endstop.
   A pipette file without it fails to load, naming the field.
+- `syringe.lead_mm` (**required**): the plunger screw's lead in mm, 2 for a
+  single-start T8, 8 for a 4-start T8x8. It must match Klipper's
+  `[manual_stepper pipette_stepper] rotation_distance`. The shared files use
+  2; each rig's measured lead is in `docs/machines/`. A pipette file without
+  it fails to load, naming the field.
 - Servo configuration (angles, timing)
 - Volume capacity and motor orientation
 

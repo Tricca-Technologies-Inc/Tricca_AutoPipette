@@ -41,7 +41,11 @@ WRITABLE_CATEGORIES = ("system", "gantry", "pipettes", "liquids", "locations", "
 
 
 def set_config_value(
-    category: str, filename: str, key_path: str, value: object
+    category: str,
+    filename: str,
+    key_path: str,
+    value: object,
+    lead_mm: float | None = None,
 ) -> Path:
     """Set one value in one config file and save it to the local root.
 
@@ -57,6 +61,9 @@ def set_config_value(
             a segment indexing into a JSON list is an integer, e.g.
             ``plates.0.x``. Every segment but the last must already exist.
         value: New JSON-serializable value.
+        lead_mm: The active pipette's screw lead, which scales the syringe
+            motor bounds (see `high_risk_bounds`) for a file that doesn't
+            carry its own (a liquid). None uses `BASE_LEAD_MM`.
 
     Returns:
         The local file that was written.
@@ -74,10 +81,15 @@ def set_config_value(
         ... )  # doctest: +SKIP
         PosixPath('/home/me/.config/tricca-autopipette/liquids/water.json')
     """  # ruff: ignore[docstring-extraneous-exception]
-    return set_config_values(category, filename, {key_path: value})
+    return set_config_values(category, filename, {key_path: value}, lead_mm)
 
 
-def set_config_values(category: str, filename: str, updates: dict[str, object]) -> Path:
+def set_config_values(
+    category: str,
+    filename: str,
+    updates: dict[str, object],
+    lead_mm: float | None = None,
+) -> Path:
     """Set several values in one config file as one validated, atomic write.
 
     For fields that are only valid together, such as a calibration curve's
@@ -89,6 +101,7 @@ def set_config_values(category: str, filename: str, updates: dict[str, object]) 
         category: As for `set_config_value`.
         filename: As for `set_config_value`.
         updates: Dotted key path to new value, applied in order.
+        lead_mm: As for `set_config_value`.
 
     Returns:
         The local file that was written.
@@ -140,8 +153,9 @@ def set_config_values(category: str, filename: str, updates: dict[str, object]) 
         raise ValueError(
             f"Refusing to write {category}/{filename}: it would not load ({e})"
         ) from e
+    lead = _own_lead_mm(category, data) or lead_mm or BASE_LEAD_MM
     for key_path, value in updates.items():
-        _check_bounds(category, key_path, value)
+        _check_bounds(category, key_path, value, lead)
     write_json_atomic(target, data)
     return target
 
@@ -288,10 +302,16 @@ HIGH_RISK_BOUNDS: dict[tuple[type[BaseModel], str], tuple[float, float]] = {
     (PipetteSyringeKinematics, "max_volume_ul"): (1, 1000),
     (PipetteSyringeKinematics, "min_volume_ul"): (0.1, 100),
     (PipetteSyringeKinematics, "capacity_margin_ul"): (0, 50),
-    # The hard mechanical limit (#29): the syringe's physical stroke is 60 mm,
-    # and homing drives up to twice this toward the endstop.
-    (PipetteSyringeKinematics, "max_travel_mm"): (1, 60),
+    # The plunger stroke depends on the syringe, not the screw, and is set per
+    # pipette (nick measured 68 mm); homing drives up to twice this toward the
+    # endstop. 80 mm covers every syringe in use (issue #178).
+    (PipetteSyringeKinematics, "max_travel_mm"): (1, 80),
     (PipetteSyringeKinematics, "min_pre_air_gap_ul"): (0, 100),
+    # The screw lead scales the motor bounds below, so it is bounded itself
+    # (not scaled): 8 mm (a T8x8) is the longest in use (issue #178).
+    (PipetteSyringeKinematics, "lead_mm"): (1, 8),
+    # Plunger speeds and accels are motor limits, written here for a 2 mm
+    # lead; `high_risk_bounds` scales them by the pipette's own lead.
     (PipetteSyringeKinematics, "speed_aspirate"): (0.25, 50),  # mm/s
     (PipetteSyringeKinematics, "speed_dispense"): (0.25, 50),  # mm/s
     (PipetteSyringeKinematics, "speed_home"): (0.25, 50),  # mm/s
@@ -315,8 +335,74 @@ HIGH_RISK_BOUNDS: dict[tuple[type[BaseModel], str], tuple[float, float]] = {
     (LiquidProfile, "speed_dispense"): (0.25, 50),  # mm/s
 }
 
+#: The screw lead `HIGH_RISK_BOUNDS`' syringe motor limits are written for: a
+#: single-start T8 (issue #178).
+BASE_LEAD_MM = 2.0
 
-def _check_bounds(category: str, key_path: str, value: object) -> None:
+#: Bounds that are motor limits in plunger mm, so scale with the screw lead.
+_LEAD_SCALED_BOUNDS = frozenset({
+    (PipetteSyringeKinematics, "speed_aspirate"),
+    (PipetteSyringeKinematics, "speed_dispense"),
+    (PipetteSyringeKinematics, "speed_home"),
+    (PipetteSyringeKinematics, "accel_home"),
+    (PipetteSyringeKinematics, "accel_move"),
+    (LiquidProfile, "speed_aspirate"),
+    (LiquidProfile, "speed_dispense"),
+})
+
+
+def high_risk_bounds(
+    owner: type[BaseModel], field: str, lead_mm: float = BASE_LEAD_MM
+) -> tuple[float, float] | None:
+    """Look up a field's allowed range, scaled to the syringe's screw lead.
+
+    The same motor speed moves the plunger 4x as far per second on an 8 mm
+    lead as on a 2 mm one, so a syringe speed or accel bound (both ends) is
+    its `HIGH_RISK_BOUNDS` entry times ``lead_mm / BASE_LEAD_MM``. Every other
+    bound is returned as is.
+
+    Args:
+        owner: The model that owns the field.
+        field: The field's name.
+        lead_mm: The pipette's screw lead in mm.
+
+    Returns:
+        ``(min, max)``, or None for a field that isn't high-risk.
+
+    Example:
+        >>> high_risk_bounds(PipetteSyringeKinematics, "speed_dispense", 8.0)
+        (1.0, 200.0)
+    """
+    bounds = HIGH_RISK_BOUNDS.get((owner, field))
+    if bounds is None or (owner, field) not in _LEAD_SCALED_BOUNDS:
+        return bounds
+    scale = lead_mm / BASE_LEAD_MM
+    return bounds[0] * scale, bounds[1] * scale
+
+
+def _own_lead_mm(category: str, data: dict[str, Any]) -> float | None:
+    """Read the screw lead a config file being written carries itself.
+
+    Args:
+        category: The config category.
+        data: The file's raw JSON, already validated.
+
+    Returns:
+        A pipette file's lead, a system file's inline pipette's lead, or None.
+    """
+    pipette: object = data if category == "pipettes" else data.get("pipette")
+    if category not in {"pipettes", "system"} or not isinstance(pipette, dict):
+        return None
+    syringe = cast("dict[str, Any]", pipette).get("syringe")
+    lead = (
+        cast("dict[str, Any]", syringe).get("lead_mm")
+        if isinstance(syringe, dict)
+        else None
+    )
+    return lead if isinstance(lead, int | float) else None
+
+
+def _check_bounds(category: str, key_path: str, value: object, lead_mm: float) -> None:
     """Reject a write that puts a high-risk field outside `HIGH_RISK_BOUNDS`.
 
     A dict `value` (a whole block, e.g. ``gantry``) is checked leaf by leaf.
@@ -325,6 +411,7 @@ def _check_bounds(category: str, key_path: str, value: object) -> None:
         category: The config category.
         key_path: Dotted path the value is written at.
         value: The value being written.
+        lead_mm: The pipette's screw lead (see `high_risk_bounds`).
 
     Raises:
         ValueError: If a bounded field's new value is out of range.
@@ -334,10 +421,10 @@ def _check_bounds(category: str, key_path: str, value: object) -> None:
         return
     if isinstance(value, dict):
         for key, sub in cast("dict[str, object]", value).items():
-            _check_bounds(category, f"{key_path}.{key}", sub)
+            _check_bounds(category, f"{key_path}.{key}", sub, lead_mm)
         return
     owner = _owning_field(model, key_path.split("."))
-    bounds = HIGH_RISK_BOUNDS.get(owner) if owner else None
+    bounds = high_risk_bounds(*owner, lead_mm=lead_mm) if owner else None
     if bounds is None or isinstance(value, bool) or not isinstance(value, int | float):
         return  # unbounded, or not a number (the model rejects that itself)
     low, high = bounds

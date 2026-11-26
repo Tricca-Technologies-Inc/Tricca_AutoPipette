@@ -254,6 +254,7 @@ class AutoPipette:
             min_volume_ul=merged["min_volume_ul"],
             capacity_margin_ul=merged["capacity_margin_ul"],
             max_travel_mm=merged["max_travel_mm"],
+            lead_mm=merged["lead_mm"],
             calibration_volumes=merged["calibration_volumes"],
             calibration_mm=merged["calibration_mm"],
             speed_aspirate=merged["speed_aspirate"],
@@ -1389,20 +1390,25 @@ class AutoPipette:
 
         Args:
             stepper: Name of stepper, or None for configured stepper.
-            speed: Homing speed in mm/s, or None for default.
+            speed: Speed in mm/s, or None for the homing speed (the
+                dispense speed when that is unset; at stage 2, always the
+                dispense speed).
             accel: Homing acceleration, or None for default.
         """
         if stepper is None:
             stepper = self.syringe.stepper_name
-        if speed is None:
-            speed = self.syringe.speed_dispense
         if accel is None:
             accel = self.syringe.accel_home
 
         if self.plunger is not None:
             # Stage 2: the soft limit replaces the endstop overshoot.
-            self.move_plunger_to(0.0, speed, accel)
+            self.move_plunger_to(
+                0.0, speed if speed is not None else self.syringe.speed_dispense, accel
+            )
             return
+        if speed is None:
+            # An endstop move, like homing (issue #178).
+            speed = self.syringe.speed_home or self.syringe.speed_dispense
 
         distance = 2 * self.syringe.max_travel_mm
         distance *= FluidDisplacement.dispense

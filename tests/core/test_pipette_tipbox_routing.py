@@ -65,7 +65,7 @@ class TestPipetteModelTipboxField:
         """Existing pipette configs with no tipbox field load unchanged."""
         model = PipetteModel(
             name="P100",
-            syringe=PipetteSyringeKinematics(max_travel_mm=60.0),
+            syringe=PipetteSyringeKinematics(max_travel_mm=60.0, lead_mm=2.0),
             servo=ServoConfig(),
         )
         assert model.tipbox is None
@@ -73,7 +73,7 @@ class TestPipetteModelTipboxField:
     def test_accepts_string_name(self) -> None:
         model = PipetteModel(
             name="P100",
-            syringe=PipetteSyringeKinematics(max_travel_mm=60.0),
+            syringe=PipetteSyringeKinematics(max_travel_mm=60.0, lead_mm=2.0),
             servo=ServoConfig(),
             tipbox="tipbox_p100",
         )
@@ -82,7 +82,7 @@ class TestPipetteModelTipboxField:
     def test_accepts_none_explicitly(self) -> None:
         model = PipetteModel(
             name="P100",
-            syringe=PipetteSyringeKinematics(max_travel_mm=60.0),
+            syringe=PipetteSyringeKinematics(max_travel_mm=60.0, lead_mm=2.0),
             servo=ServoConfig(),
             tipbox=None,
         )
@@ -91,7 +91,9 @@ class TestPipetteModelTipboxField:
     def test_round_trips_through_json(self) -> None:
         model = PipetteModel(
             name="P100",
-            syringe=PipetteSyringeKinematics(max_travel_mm=60.0, min_volume_ul=0.5),
+            syringe=PipetteSyringeKinematics(
+                max_travel_mm=60.0, lead_mm=2.0, min_volume_ul=0.5
+            ),
             servo=ServoConfig(),
             tipbox="tipbox_p100",
         )
@@ -104,7 +106,7 @@ class TestPipetteModelTipboxField:
 
         raw = json.dumps({
             "name": "P100",
-            "syringe": {"max_travel_mm": 60.0},
+            "syringe": {"max_travel_mm": 60.0, "lead_mm": 2.0},
             "servo": {},
         })
         model = PipetteModel.model_validate_json(raw)
@@ -279,7 +281,7 @@ class TestTipboxList:
     def test_list_parses_from_json(self) -> None:
         model = PipetteModel.model_validate({
             "name": "P100",
-            "syringe": {"max_travel_mm": 60.0},
+            "syringe": {"max_travel_mm": 60.0, "lead_mm": 2.0},
             "servo": {},
             "tipbox": ["a", "b"],
         })

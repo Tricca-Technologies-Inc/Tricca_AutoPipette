@@ -472,7 +472,11 @@ class TestLoadConfigs:
     ) -> None:
         pipette_name = write_pipette_config(
             "pipette.json",
-            {"name": "Custom", "syringe": {"max_travel_mm": 60.0}, "servo": {}},
+            {
+                "name": "Custom",
+                "syringe": {"max_travel_mm": 60.0, "lead_mm": 2.0},
+                "servo": {},
+            },
         )
         manager = JsonConfigManager()
 
@@ -528,12 +532,27 @@ class TestPipetteResolution:
         with pytest.raises(ValidationError, match="max_travel_mm"):
             JsonConfigManager().load_system_config(child)
 
+    def test_pipette_without_lead_fails_naming_the_field(
+        self, write_system_config: Any, write_pipette_config: Any
+    ) -> None:
+        """Issue #178: the screw lead scales the syringe bounds; no default."""
+        pipette_file = write_pipette_config(
+            "no_lead.json",
+            {"name": "Old", "syringe": {"max_travel_mm": 60.0}, "servo": {}},
+        )
+        child = write_system_config(
+            "no_lead_system.json", {"pipette": Path(pipette_file).stem}
+        )
+
+        with pytest.raises(ValidationError, match="lead_mm"):
+            JsonConfigManager().load_system_config(child)
+
     def test_inline_full_pipette_config_is_used_directly(
         self, write_system_config: Any
     ) -> None:
         inline_pipette: dict[str, Any] = {
             "name": "InlinePipette",
-            "syringe": {"max_travel_mm": 60.0},
+            "syringe": {"max_travel_mm": 60.0, "lead_mm": 2.0},
             "servo": {},
         }
         child = write_system_config("inline_pipette.json", {"pipette": inline_pipette})
@@ -688,7 +707,8 @@ class TestLoadPipette:
         manager = JsonConfigManager()
         manager.load_system_config()
         name = write_pipette_config(
-            "bad.json", {"syringe": {"max_travel_mm": 60.0}, "servo": {}}
+            "bad.json",
+            {"syringe": {"max_travel_mm": 60.0, "lead_mm": 2.0}, "servo": {}},
         )  # no name
 
         with pytest.raises(ValueError, match="Pipette config validation failed"):
@@ -701,7 +721,11 @@ class TestLoadPipette:
         manager.load_system_config()
         name = write_pipette_config(
             "custom.json",
-            {"name": "Custom", "syringe": {"max_travel_mm": 60.0}, "servo": {}},
+            {
+                "name": "Custom",
+                "syringe": {"max_travel_mm": 60.0, "lead_mm": 2.0},
+                "servo": {},
+            },
         )
 
         pipette = manager.load_pipette(name)
@@ -894,7 +918,7 @@ class TestLoadDefaultPipettes:
         (tmp_path / "good.json").write_text(
             json.dumps({
                 "name": "Good",
-                "syringe": {"max_travel_mm": 60.0},
+                "syringe": {"max_travel_mm": 60.0, "lead_mm": 2.0},
                 "servo": {},
             })
         )
