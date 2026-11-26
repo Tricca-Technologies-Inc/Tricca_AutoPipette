@@ -237,5 +237,11 @@
     });
   });
 
-  App.registerPage('settings', { onShow: loadSettings });
+  let shown = false;
+  document.addEventListener('pipette-changed', () => { if (shown) loadSettings(); });
+
+  App.registerPage('settings', {
+    onShow: () => { shown = true; loadSettings(); },
+    onHide: () => { shown = false; },
+  });
 })();

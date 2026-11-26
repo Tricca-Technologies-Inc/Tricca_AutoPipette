@@ -54,6 +54,7 @@ const PipettePill = (() => {
       }
       close();
       await refresh();
+      document.dispatchEvent(new Event('pipette-changed')); // settings.js re-renders
     } catch (e) {
       feedback.textContent = e.message;
     }
@@ -68,10 +69,13 @@ const PipettePill = (() => {
     if (!switcher.contains(e.target)) close();
   });
 
+  // The daemon pushes a status on every pipette/gantry change, including one
+  // made from tap. Pushes are rare outside a run, and a run holds the config
+  // lock, so a refetch per unlocked push is cheap.
   App.onStatus(data => {
     pill.disabled = !!data.config_locked;
     if (pill.disabled) close();
-    if (!pipette) refresh(); // the daemon wasn't up for the first fetch
+    else refresh();
   });
 
   refresh();
