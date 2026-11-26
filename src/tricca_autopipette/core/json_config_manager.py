@@ -290,6 +290,7 @@ class JsonConfigManager:
             locations=LocationsConfig.model_validate(user_data.get("locations")),
             network=user_data.get("network", {"hostname": "localhost", "port": "7125"}),
             trigger_pins=user_data.get("trigger_pins", {}),
+            deck_grid=user_data.get("deck_grid"),
         )
 
     def _load_system_data(self, filename: str) -> dict[str, Any]:

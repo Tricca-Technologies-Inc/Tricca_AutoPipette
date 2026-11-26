@@ -7,10 +7,11 @@ configuration.
 
 from __future__ import annotations
 
+import itertools
 from enum import IntEnum, StrEnum
 from typing import Any, Literal, Self, cast
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic.dataclasses import dataclass
 
 
@@ -799,6 +800,44 @@ class LiquidProfile(BaseModel):
 # ============================================================================
 
 
+class DeckGrid(BaseModel):
+    """Where one physical deck slot ends and the next begins, per rig.
+
+    The kiosk's Deck page groups locations into these slots. Edges are deck
+    millimetres: ``n`` edges make ``n + 1`` columns (along X) or rows
+    (along Y), and a location falls in the slot its origin lies in.
+
+    Attributes:
+        x_edges: Ascending X boundaries between slot columns.
+        y_edges: Ascending Y boundaries between slot rows.
+
+    Example:
+        >>> DeckGrid(x_edges=[190], y_edges=[70, 165, 235]).y_edges
+        [70.0, 165.0, 235.0]
+    """
+
+    x_edges: list[float] = Field(default_factory=list[float])
+    y_edges: list[float] = Field(default_factory=list[float])
+
+    @field_validator("x_edges", "y_edges")
+    @classmethod
+    def _ascending(cls, edges: list[float]) -> list[float]:
+        """Refuse edges that aren't strictly ascending.
+
+        Args:
+            edges: The configured boundaries.
+
+        Returns:
+            ``edges``, unchanged.
+
+        Raises:
+            ValueError: If any edge isn't above the one before it.
+        """
+        if any(b <= a for a, b in itertools.pairwise(edges)):
+            raise ValueError(f"deck_grid edges must be ascending: {edges}")
+        return edges
+
+
 class LocationsConfig(BaseModel):
     """The deck layout a system config declares, as an ordered source list.
 
@@ -903,6 +942,7 @@ class SystemConfig(BaseModel):
         liquids: Available liquid profiles keyed by name.
         locations: Deck layout for this system/protocol.
         network: Network connection settings (hostname and port).
+        deck_grid: Slot boundaries the kiosk's Deck page draws, or None.
         trigger_pins: Trigger channel alias (``air``, ``shake``, ...) to the
             Klipper ``[output_pin]`` it drives, for the ``trigger`` command.
 
@@ -948,6 +988,11 @@ class SystemConfig(BaseModel):
         description="Network connection settings",
     )
 
+    # Per-rig slot boundaries for the kiosk's Deck page (None = plain map)
+    deck_grid: DeckGrid | None = Field(
+        default=None, description="Deck slot boundaries for the kiosk Deck page"
+    )
+
     # Machine wiring for the ``trigger`` command (aux hardware)
     trigger_pins: dict[str, str] = Field(
         default_factory=dict,
@@ -969,6 +1014,8 @@ __all__ = [  # ruff:ignore[unsorted-dunder-all]  (grouped by domain, which reads
     # Gantry
     "GantryKinematics",
     "ServoConfig",
+    # Deck
+    "DeckGrid",
     # Pipette
     "PipetteSyringeKinematics",
     "PipetteModel",

@@ -3482,9 +3482,11 @@ class AutoPipetteService:
             Result with ``data["locations"]``: a list of dicts with
             ``name``/``type``/``x``/``y``/``z``/``details`` keys, plus
             ``drawer``/``stop`` for a location linked to a drawer stop
-            (issue #142).
+            (issue #142), and ``data["deck_grid"]``: the system config's
+            slot boundaries (``x_edges``/``y_edges``) or None.
         """
         loc_mgr = self._autopipette.location_manager
+        grid = self._autopipette.system_config.deck_grid
         rows: list[dict[str, Any]] = []
         for name in sorted(loc_mgr.get_all_names()):
             location = loc_mgr.locations[name]
@@ -3516,7 +3518,7 @@ class AutoPipetteService:
         return CommandResult(
             ok=bool(rows),
             message=f"{len(rows)} location(s)." if rows else "No locations defined.",
-            data={"locations": rows},
+            data={"locations": rows, "deck_grid": grid and grid.model_dump()},
         )
 
     def list_plates(self) -> CommandResult:
