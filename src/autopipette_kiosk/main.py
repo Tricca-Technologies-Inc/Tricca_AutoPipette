@@ -27,7 +27,7 @@ from typing import Any, Literal, cast
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from tricca_autopipette.commands.tap_cmd_parsers import (
     CalibrateStartArgs,
@@ -87,6 +87,12 @@ class BreakpointResponse(BaseModel):
     """Request body for `POST /breakpoint/respond`."""
 
     proceed: bool
+
+
+class CommandRequest(BaseModel):
+    """Request body for `POST /command`: one typed command line."""
+
+    command: str = Field(min_length=1, max_length=1024)
 
 
 class TipsResetRequest(BaseModel):
@@ -622,6 +628,22 @@ async def respond_to_breakpoint(req: BreakpointResponse) -> dict[str, bool]:
         _control_requests.run_confirm_breakpoint(req.proceed),
     )
     return {"ok": True}
+
+
+@app.post("/command", response_model=CommandResultResponse)
+async def run_command(req: CommandRequest) -> CommandResultResponse:
+    """Run one typed command (the Commands page), over `util.command`.
+
+    The daemon allows only motion, tip and pipetting commands, and none
+    while a protocol runs.
+
+    Args:
+        req: The command line.
+
+    Returns:
+        The daemon's `CommandResult`, refusals included.
+    """
+    return await _dispatch_control_request(_control_requests.command(req.command))
 
 
 async def _dispatch_control_request(request: dict[str, Any]) -> CommandResultResponse:
