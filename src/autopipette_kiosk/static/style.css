@@ -108,6 +108,14 @@ header {
   font-weight: 600;
   color: var(--muted);
   flex-shrink: 0;
+  max-width: 40vw;
+}
+
+/* A failed job's Klipper message can be long. */
+#statusPillLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .status-pill-dot {

@@ -229,6 +229,21 @@ class RunStatus:
 
 
 @dataclass
+class _PendingJob:
+    """An immediate job started on Klipper, not yet finished (issue #187).
+
+    Attributes:
+        filename: The uploaded G-code file's name.
+        on_complete: Run if the job completes, or None.
+        printing: Whether Klipper has reported it printing yet.
+    """
+
+    filename: str
+    on_complete: Callable[[], None] | None
+    printing: bool = False
+
+
+@dataclass
 class CommandResult:
     """Outcome of one typed command dispatched to ``AutoPipetteService``.
 
@@ -684,6 +699,10 @@ class AutoPipetteService:
         self._raw_subscription_priors: dict[str, Callable[[Any], None] | None] = {}
         # The one calibration session in progress, if any (issue #26).
         self._calibration: CalibrationSession | None = None
+        # The immediate job last started, until Klipper reports how it
+        # ended, and that outcome (issue #187).
+        self._pending_job: _PendingJob | None = None
+        self._last_job: dict[str, str] | None = None
 
     @staticmethod
     def _load_locations(
@@ -1047,17 +1066,26 @@ class AutoPipetteService:
     def init(self) -> CommandResult:
         """Initialise the pipette: coordinate system, speed, and full homing.
 
+        Returns immediately; the job's outcome arrives later as
+        ``last_job`` (issue #187). Only a completed job clears
+        ``_homing_invalidated`` and models the plates in.
+
         Returns:
-            Result describing the completed initialisation.
+            Result saying homing has started.
         """
         autopipette = self._autopipette
         autopipette.init_pipette(self._plunger_axis())
-        self.output_gcode(autopipette.get_gcode(), "home_all.gcode")
+        self.output_gcode(
+            autopipette.get_gcode(),
+            "home_all.gcode",
+            on_complete=self._full_home_complete,
+        )
+        return CommandResult(ok=True, message="Initialisation and homing started.")
+
+    def _full_home_complete(self) -> None:
+        """A full home finished: homing is trustworthy and the plates are in."""
         self._homing_invalidated = False
         self._model_plates_in(p.name for p in self.axis_config.plates)
-        return CommandResult(
-            ok=True, message="Pipette initialised and all motors homed."
-        )
 
     def _model_plates_in(self, plates: Iterable[str]) -> None:
         """Record plates as in (0 mm) in the compile-time drawer model.
@@ -1126,15 +1154,19 @@ class AutoPipetteService:
         With Klipper's plate/plunger axes configured (issue #146), ``all``
         relies on bare ``G28`` for the plates and plunger, ``pipette`` homes
         the plunger with ``G28 P``, and ``plates`` / a plate's name (or its
-        axis letter) emit ``G28 <letter>...``. Only ``all`` clears
+        axis letter) emit ``G28 <letter>...``. Only a completed ``all`` clears
         ``_homing_invalidated``. Without them, behavior is unchanged.
+
+        Returns immediately; the job's outcome arrives later as ``last_job``
+        (issue #187), and the plates homed are modelled in only once it
+        completes.
 
         Args:
             args: Motor specification (x, y, z, pipette, all, servo,
                 plates, or a plate name/letter).
 
         Returns:
-            Result describing the completed homing operation.
+            Result saying homing has started.
 
         Raises:
             ValueError: If ``args.motors`` is not a recognized target, or is
@@ -1159,9 +1191,14 @@ class AutoPipetteService:
         if plates:
             autopipette.home_plates(plates)
             name = motors if motors == "plates" else next(iter(plates))
-            self.output_gcode(autopipette.get_gcode(), f"home_{name}.gcode")
-            self._model_plates_in(plates)
-            return CommandResult(ok=True, message=f"Homed {', '.join(plates)}.")
+            self.output_gcode(
+                autopipette.get_gcode(),
+                f"home_{name}.gcode",
+                on_complete=lambda: self._model_plates_in(plates),
+            )
+            return CommandResult(
+                ok=True, message=f"Homing {', '.join(plates)} started."
+            )
 
         if motors not in HomingTargets.VALID_MOTORS:
             extra = {"plates", *all_plates} if all_plates else set[str]()
@@ -1175,11 +1212,11 @@ class AutoPipetteService:
             # speed are always reset alongside homing (identical to init()).
             filename = HomingTargets.MOTOR_SPECIAL[motors]
             autopipette.init_pipette(self._plunger_axis())
-            self.output_gcode(autopipette.get_gcode(), filename)
-            self._homing_invalidated = False
-            self._model_plates_in(all_plates)
+            self.output_gcode(
+                autopipette.get_gcode(), filename, on_complete=self._full_home_complete
+            )
             return CommandResult(
-                ok=True, message="All motors homed (full init complete)."
+                ok=True, message="Homing all motors started (full init)."
             )
 
         filename, method_name = HomingTargets.MOTOR_METHODS[motors]
@@ -1188,7 +1225,7 @@ class AutoPipetteService:
         else:
             getattr(autopipette, method_name)()
         self.output_gcode(autopipette.get_gcode(), filename)
-        return CommandResult(ok=True, message=f"Homed {motors}.")
+        return CommandResult(ok=True, message=f"Homing {motors} started.")
 
     # ==================== Plate drawer commands (issue #143) ====================
     #
@@ -2778,17 +2815,24 @@ class AutoPipetteService:
         gcode: list[GCode],
         filename: str | None = None,
         append_header: bool = False,
+        on_complete: Callable[[], None] | None = None,
     ) -> None:
         """Write G-code to file and upload for execution.
 
         Operates in two modes based on ``GCodeManager`` state:
         1. Batch mode: appends to the buffer for later combined upload.
-        2. Immediate mode: writes to file and uploads/executes immediately.
+        2. Immediate mode: writes to file and uploads/executes immediately,
+           as the pending immediate job: how it ends (``print_stats``) is
+           reported as ``last_job`` (issue #187), which is None again
+           while the next job is pending.
 
         Args:
             gcode: List of G-code command strings.
             filename: Output filename, or None to auto-generate a timestamp.
             append_header: Whether to prepend the configuration header.
+            on_complete: Run once the job completes (immediate mode), or at
+                once in batch mode, where the run's compile-time model moves
+                on with the buffer. Not run if the job fails.
 
         Raises:
             OSError: If the G-code file can't be written.
@@ -2810,6 +2854,8 @@ class AutoPipetteService:
         """  # ruff: ignore[docstring-extraneous-exception]
         if self.gcode_manager.is_batch_mode:
             self.gcode_manager.add_gcode(gcode)
+            if on_complete is not None:
+                on_complete()
             return
 
         if self.client is None:
@@ -2818,6 +2864,10 @@ class AutoPipetteService:
 
         file_path = self.gcode_manager.write_gcode_file(gcode, filename, append_header)
         self.upload_and_execute_gcode(file_path.name, file_path, delete_file=True)
+        self._pending_job = _PendingJob(file_path.name, on_complete)
+        if self._last_job is not None:
+            self._last_job = None
+            self._broadcast_status()
 
     # ==================== WebSocket diagnostics ====================
     #
@@ -4638,11 +4688,14 @@ class AutoPipetteService:
         """Describe the run status for ``run.status``/``notify_run_status``.
 
         Returns:
-            `RunStatus.to_dict`, plus ``homing_invalidated``.
+            `RunStatus.to_dict`, plus ``homing_invalidated`` and
+            ``last_job`` (``{filename, state, message}`` for the last
+            immediate job Klipper finished, or None while one is pending).
         """
         return {
             **self._current.to_dict(),
             "homing_invalidated": self._homing_invalidated,
+            "last_job": self._last_job,
         }
 
     @property
@@ -4743,7 +4796,10 @@ class AutoPipetteService:
         """
         async with self._lock:
             if self._current.status != "running":
+                self._apply_immediate_job_state(new_state, message)
                 return
+            # A run's print replaced any job still pending: it can't settle.
+            self._pending_job = None
             if new_state == "paused":
                 self._current = replace(
                     self._current,
@@ -4782,6 +4838,38 @@ class AutoPipetteService:
             else:
                 return
             self._broadcast_status()
+
+    def _apply_immediate_job_state(self, new_state: str, message: str) -> None:
+        """Settle the pending immediate job on a terminal ``print_stats`` state.
+
+        A terminal state before the job was seen printing may be the
+        previous job's, arriving late, so a ``complete`` then is ignored.
+        A failure is still reported: a job that fails at once can end
+        before Klipper's next status push shows it printing.
+
+        Args:
+            new_state: New Klipper ``print_stats.state`` value.
+            message: Klipper's ``print_stats.message``.
+        """
+        job = self._pending_job
+        if job is None:
+            return
+        if new_state == "printing":
+            job.printing = True
+            return
+        if new_state not in ("complete", "error", "cancelled") or (
+            new_state == "complete" and not job.printing
+        ):
+            return
+        self._pending_job = None
+        self._last_job = {
+            "filename": job.filename,
+            "state": new_state,
+            "message": message,
+        }
+        if new_state == "complete" and job.on_complete is not None:
+            job.on_complete()
+        self._broadcast_status()
 
     def _broadcast_status(self) -> None:
         """Push the current run status to control-plane clients, if wired up."""

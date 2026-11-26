@@ -88,6 +88,9 @@ class RunStatus(BaseModel):
     progress: float | None = None
     # Klipper has reported the print started; before that only Cancel applies.
     started: bool = False
+    # How the last immediate job (e.g. Home) ended, `{filename, state,
+    # message}`, or None while one is pending or none has run (issue #187).
+    last_job: dict[str, str] | None = None
 
 
 class CommandRequest(BaseModel):
@@ -522,8 +525,8 @@ async def home_pipette() -> RunStatus:
     command), so this reports whether dispatch succeeded, not physical
     completion. Once Klipper actually finishes homing, the daemon's live
     `toolhead.homed_axes` tracking (see `daemon/moonraker_state.py`)
-    unblocks gated commands automatically — no separate "homing done"
-    signal is needed here.
+    unblocks gated commands automatically; a home Klipper fails or cancels
+    reaches the header pill as `last_job` over `/ws/status` (issue #187).
 
     Returns:
         A status reporting dispatch success, not physical homing completion.
@@ -1058,8 +1061,8 @@ def _on_run_status_notification(params: Any) -> None:  # ruff:ignore[any-type]
 
     Args:
         params: Notification params, `{"status", "message", "run_id",
-            "filename", "config_locked", "homing_invalidated"}` as sent by
-            `AutoPipetteService._broadcast_status`.
+            "filename", "config_locked", "homing_invalidated", "last_job",
+            ...}` as sent by `AutoPipetteService._broadcast_status`.
 
     Note:
         Invoked from the control-plane WebSocketClient's background thread;
@@ -1077,6 +1080,7 @@ def _on_run_status_notification(params: Any) -> None:  # ruff:ignore[any-type]
         paused=bool(notification.get("paused")),
         progress=notification.get("progress"),
         started=bool(notification.get("started")),
+        last_job=notification.get("last_job"),
     )
     if _main_loop is not None:
         asyncio.run_coroutine_threadsafe(_broadcast_status(), _main_loop)

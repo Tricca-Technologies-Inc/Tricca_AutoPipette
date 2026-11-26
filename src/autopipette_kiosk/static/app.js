@@ -83,12 +83,19 @@ const App = (() => {
   }
 
   // ── compact global status pill ──────────────────────────────────────────
+  // Outside a run it also shows a failed immediate job (e.g. a Home that
+  // Klipper cancelled), with Klipper's message (issue #187).
   function renderStatusPill() {
     const pill  = document.getElementById('statusPill');
     const label = document.getElementById('statusPillLabel');
     const s = status.status || 'idle';
-    pill.className = `status-pill ${s}`;
-    label.textContent = describeStatus(s).label;
+    const job = status.last_job;
+    const failed = !isRunActive(s) && job && job.state !== 'complete';
+    pill.className = `status-pill ${failed ? 'error' : s}`;
+    label.textContent = failed
+      ? (job.message || `Job ${job.state}`)
+      : describeStatus(s).label;
+    pill.title = failed ? `${job.filename} ${job.state}: ${job.message}` : '';
   }
 
   // ── global paused-run banner ────────────────────────────────────────────

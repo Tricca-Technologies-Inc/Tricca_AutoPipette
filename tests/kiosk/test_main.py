@@ -672,6 +672,25 @@ class TestRunResumeAndCancel:
 
             assert ws.receive_json()["started"] is True
 
+    def test_a_failed_immediate_job_reaches_the_browser(
+        self, kiosk_client: TestClient
+    ) -> None:
+        job = {
+            "filename": "home_all.gcode",
+            "state": "cancelled",
+            "message": "Endstop z3 still triggered after retract",
+        }
+        with kiosk_client.websocket_connect("/ws/status") as ws:
+            assert ws.receive_json()["last_job"] is None
+
+            kiosk_main._on_run_status_notification({
+                "status": "idle",
+                "message": "",
+                "last_job": job,
+            })
+
+            assert ws.receive_json()["last_job"] == job
+
 
 class TestStatusEndpoint:
     def test_idle_by_default(self, kiosk_client: TestClient) -> None:
@@ -683,6 +702,7 @@ class TestStatusEndpoint:
             "paused": False,
             "progress": None,
             "started": False,
+            "last_job": None,
         }
 
     def test_reflects_the_real_status_after_a_run_starts(
@@ -709,6 +729,7 @@ class TestWebSocketStatusBroadcast:
             "paused": False,
             "progress": None,
             "started": False,
+            "last_job": None,
             "toolhead": {"position": None, "homed_axes": None},
             "config_locked": False,
             "homing_invalidated": False,
