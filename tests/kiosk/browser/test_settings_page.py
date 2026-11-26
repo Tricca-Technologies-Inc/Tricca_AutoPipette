@@ -15,7 +15,8 @@ import pytest
 
 pytest.importorskip("playwright")
 
-from playwright.sync_api import Page, expect
+from playwright.sync_api import Locator, Page, expect
+from support.live_control_plane import LiveControlPlane
 from support.live_kiosk_server import LiveKioskServer
 
 from tricca_autopipette.core.pipette_constants import DefaultFilenames, DefaultPaths
@@ -83,6 +84,11 @@ def test_fields_disable_with_the_reason_while_a_run_is_active(
         "Locked while a protocol is running"
     )
     expect(field).to_be_disabled()
+    expect(page.locator("#settingsLiquidSelect")).to_be_disabled()
+    expect(page.locator('#settingsLiquids button:text-is("Load")')).to_be_disabled()
+    expect(
+        page.locator('#settingsLiquids button:text-is("Unload")').first
+    ).to_be_disabled()
     expect(page.locator("#page-settings button:enabled")).to_have_count(0)
 
 
@@ -201,3 +207,93 @@ def test_a_pill_swap_rerenders_the_open_settings_page(
     ).click()
 
     expect(speed).to_contain_text("25")
+
+
+def _loaded_names(server: LiveKioskServer) -> list[str]:
+    return [r["name"] for r in _settings(server)["liquids"]["loaded"]]
+
+
+def _unload_button(page: Page, liquid: str) -> Locator:
+    return page.locator(f'.settings-liquid[data-liquid="{liquid}"]').get_by_role(
+        "button", name="Unload"
+    )
+
+
+def _load(page: Page, filename: str) -> None:
+    page.locator("#settingsLiquidSelect").select_option(filename)
+    page.locator("#settingsLiquids").get_by_role(
+        "button", name="Load", exact=True
+    ).click()
+
+
+def test_loading_a_liquid_file_adds_its_card(
+    local: Path, page: Page, live_kiosk_server: LiveKioskServer
+) -> None:
+    (local / "liquids").mkdir()
+    (local / "liquids" / "oil.json").write_text(
+        json.dumps({"name": "oil", "viscosity_cP": 30.0})
+    )
+    _open_settings(page, live_kiosk_server)
+
+    _load(page, "oil.json")
+
+    expect(page.locator('.settings-liquid[data-liquid="oil"]')).to_be_visible()
+    assert "oil" in _loaded_names(live_kiosk_server)
+
+
+def test_loading_an_already_loaded_file_rereads_it(
+    local: Path, page: Page, live_kiosk_server: LiveKioskServer
+) -> None:
+    _open_settings(page, live_kiosk_server)
+    viscosity = page.locator(f"{_WATER_VISCOSITY} input")
+    expect(viscosity).to_have_value("1")
+    # An edit on disk, as an operator would make in the local config repo.
+    water = json.loads((DefaultPaths.DIR_CONFIG_LIQUIDS / "water.json").read_text())
+    water["viscosity_cP"] = 2.5
+    (local / "liquids").mkdir()
+    (local / "liquids" / "water.json").write_text(json.dumps(water))
+
+    _load(page, "water.json")
+
+    expect(viscosity).to_have_value("2.5")
+
+
+@pytest.mark.usefixtures("local")
+def test_unloading_a_liquid_removes_its_card(
+    page: Page, live_kiosk_server: LiveKioskServer
+) -> None:
+    _open_settings(page, live_kiosk_server)
+
+    _unload_button(page, "serum").click()
+
+    expect(page.locator('.settings-liquid[data-liquid="serum"]')).to_have_count(0)
+    assert "serum" not in _loaded_names(live_kiosk_server)
+
+
+@pytest.mark.usefixtures("local")
+def test_the_active_liquid_cannot_be_unloaded(
+    page: Page, live_kiosk_server: LiveKioskServer
+) -> None:
+    _open_settings(page, live_kiosk_server)
+
+    expect(_unload_button(page, "water")).to_be_disabled()
+    expect(_unload_button(page, "serum")).to_be_enabled()
+
+
+@pytest.mark.usefixtures("local")
+def test_a_refused_unload_shows_the_daemons_message(
+    page: Page,
+    live_kiosk_server: LiveKioskServer,
+    live_control_plane: LiveControlPlane,
+) -> None:
+    _open_settings(page, live_kiosk_server)
+    # Made active elsewhere (as `tap switch_liquid` would) after the page drew.
+    live_control_plane.service.switch_liquid("serum")
+
+    _unload_button(page, "serum").click()
+
+    card = page.locator('.settings-liquid[data-liquid="serum"]')
+    expect(card.locator(".move-feedback").first).to_contain_text(
+        "'serum' is the active liquid"
+    )
+    assert "serum" in _loaded_names(live_kiosk_server)
