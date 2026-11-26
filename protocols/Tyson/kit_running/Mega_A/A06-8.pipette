@@ -1,5 +1,10 @@
 #Mega Panel A steps 6-8, adding LIS to each well and then adding the PBS, CAls, QC and samples to the wells from a PCR plate by column!
 #
+# Lock in the tipbox config for this protocol
+disable_tipbox tipbox_p100_c
+enable_tipbox tipbox_p100
+enable_tipbox tipbox_p100_b
+
 load_pipette TysonP100.json
 home all
 #
