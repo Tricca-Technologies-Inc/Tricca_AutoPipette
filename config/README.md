@@ -154,10 +154,14 @@ Whichever file is actually loaded, `system/active.json` in the local root is
 next" by hand.
 
 A loaded system config references:
-- Gantry settings (inline)
+- Gantry settings (inline, or a `gantry/` file by name: `"Tyson_gantry"`)
 - Pipette model (by name: "p100_vertical")
-- Liquid profiles (inline definitions)
-- Locations, i.e. the deck layout (see "Per-protocol configs" below)
+- Liquid profiles (inline definitions, or one `liquids/` file by name)
+- Locations, i.e. the deck layout (see "Per-protocol configs" below); a
+  locations filename may drop its `.json`
+
+A name may be a stem or a full filename. A gantry named by file is edited in
+that file, not in the system file.
 - Network settings
 - Trigger pins (`trigger_pins`, see below)
 

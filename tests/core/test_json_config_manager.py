@@ -49,6 +49,9 @@ _NORMALIZATION_CASES: list[tuple[Any, list[Any]]] = [
     ("deck.json", ["deck.json"]),
     ([], []),
     (["a.json", "b.json"], ["a.json", "b.json"]),
+    # A bare stem names a .json file, like a pipette reference (Scott, 9c7b0a3).
+    ("deck_a", ["deck_a.json"]),
+    (["deck_a", {"plates": []}], ["deck_a.json", {"plates": []}]),
     ({"plates": []}, [{"plates": []}]),
 ]
 
@@ -226,6 +229,51 @@ class TestExtends:
         """The existing default config must be unaffected."""
         config = JsonConfigManager().load_system_config()
         assert config.system_name == "AutoPipette"
+
+
+class TestReferencesByFilename:
+    """A system file may name its gantry and liquids by file, like a pipette.
+
+    Ported from Scott's Tyson profiles (9c7b0a3): ``"gantry": "Tyson_gantry"``.
+    A stem or a full filename both work.
+    """
+
+    @pytest.mark.parametrize("suffix", ["", ".json"])
+    def test_gantry_by_file(
+        self, write_system_config: Any, write_gantry_config: Any, suffix: str
+    ) -> None:
+        gantry = write_gantry_config("g.json", {"speed_xy": 1234.0})
+        ref = gantry.removesuffix(".json") + suffix
+        system = write_system_config(
+            "s.json", {"pipette": "p100_vertical", "gantry": ref}
+        )
+
+        manager = JsonConfigManager()
+        config = manager.load_system_config(system)
+
+        assert config.gantry.speed_xy == pytest.approx(1234.0)
+        assert manager.setting_source("gantry") == ("gantry", gantry, "")
+
+    def test_liquids_by_file(
+        self, write_system_config: Any, write_liquid_config: Any
+    ) -> None:
+        liquid = write_liquid_config("l.json", {"name": "zz_ref_liquid"})
+        system = write_system_config(
+            "s.json",
+            {"pipette": "p100_vertical", "liquids": liquid.removesuffix(".json")},
+        )
+
+        config = JsonConfigManager().load_system_config(system)
+
+        assert "zz_ref_liquid" in config.liquids
+
+    def test_a_missing_gantry_file_raises(self, write_system_config: Any) -> None:
+        system = write_system_config(
+            "s.json", {"pipette": "p100_vertical", "gantry": "no_such_gantry"}
+        )
+
+        with pytest.raises(FileNotFoundError):
+            JsonConfigManager().load_system_config(system)
 
 
 class TestTriggerPins:
