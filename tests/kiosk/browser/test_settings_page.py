@@ -55,21 +55,28 @@ def _open_settings(page: Page, server: LiveKioskServer) -> None:
     expect(page.locator("#settingsGantry")).to_be_visible()
 
 
-@pytest.mark.usefixtures("local")
-def test_fields_disable_with_the_reason_while_a_run_is_active(
-    page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
-) -> None:
+def _start_run(server: LiveKioskServer, protocols_dir: Path) -> None:
     (protocols_dir / "a.pipette").write_text('gcode_print "hi"\n')
-    _open_settings(page, live_kiosk_server)
-    field = page.locator('#settingsGantry [data-key="speed_xy"] input')
-    expect(field).to_be_enabled()
-
     request = urllib.request.Request(
-        f"{live_kiosk_server.url}/run",
+        f"{server.url}/run",
         data=json.dumps({"filename": "a.pipette"}).encode(),
         headers={"Content-Type": "application/json"},
     )
     urllib.request.urlopen(request, timeout=5).close()
+
+
+_WATER_VISCOSITY = '.settings-liquid[data-liquid="water"] [data-key="viscosity_cP"]'
+
+
+@pytest.mark.usefixtures("local")
+def test_fields_disable_with_the_reason_while_a_run_is_active(
+    page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
+) -> None:
+    _open_settings(page, live_kiosk_server)
+    field = page.locator(f"{_WATER_VISCOSITY} input")
+    expect(field).to_be_enabled()
+
+    _start_run(live_kiosk_server, protocols_dir)
 
     expect(page.locator("#settingsLockBanner")).to_be_visible()
     expect(page.locator("#settingsLockBanner")).to_contain_text(
@@ -79,35 +86,66 @@ def test_fields_disable_with_the_reason_while_a_run_is_active(
     expect(page.locator("#page-settings button:enabled")).to_have_count(0)
 
 
-def test_an_out_of_bounds_high_risk_value_is_refused(
-    page: Page, live_kiosk_server: LiveKioskServer, local: Path
-) -> None:
-    _open_settings(page, live_kiosk_server)
-    row = page.locator('#settingsPipette [data-key="syringe.max_volume_ul"]')
-
-    row.locator("input").fill("5000")
-    row.get_by_role("button", name="Save").click()
-
-    expect(row.locator(".move-feedback")).to_contain_text("Out of range")
-    expect(row.get_by_role("button", name="Confirm")).to_have_count(0)
-    assert not (local / "pipettes").exists()
-
-
 @pytest.mark.usefixtures("local")
-def test_a_high_risk_edit_needs_confirming_then_asks_for_a_home(
+def test_pipette_and_gantry_values_are_shown_read_only(
     page: Page, live_kiosk_server: LiveKioskServer
 ) -> None:
     _open_settings(page, live_kiosk_server)
-    row = page.locator('#settingsGantry [data-key="speed_z"]')
+    settings = _settings(live_kiosk_server)
+    speed_xy = next(f for f in settings["gantry"]["fields"] if f["key"] == "speed_xy")
 
-    row.locator("input").fill("9000")
-    row.get_by_role("button", name="Save").click()
-    row.get_by_role("button", name="Confirm").click()
+    expect(page.locator("#settingsPipette")).to_contain_text(
+        settings["pipette"]["name"]
+    )
+    expect(page.locator('#settingsGantry [data-key="speed_xy"]')).to_contain_text(
+        f"{speed_xy['value']:g}"
+    )
+    for panel in ("#settingsPipette", "#settingsGantry"):
+        controls = page.locator(f"{panel} input, {panel} select, {panel} button")
+        expect(controls).to_have_count(0)
 
-    expect(row.locator(".move-feedback")).to_have_text("Saved.")
+
+def test_switching_the_system_profile_asks_for_a_home(
+    page: Page, live_kiosk_server: LiveKioskServer, local: Path
+) -> None:
+    other = json.loads((local / "system" / DefaultFilenames.CONFIG_SYSTEM).read_text())
+    other["pipette"] = "default_p100"
+    (local / "system" / "other.json").write_text(json.dumps(other))
+    _open_settings(page, live_kiosk_server)
+
+    page.locator("#settingsSystemSelect").select_option("other.json")
+    page.locator("#settingsSystem").get_by_role("button", name="Switch").click()
+
     expect(page.locator("#settingsHomeBanner")).to_be_visible()
-    gantry = _settings(live_kiosk_server)["gantry"]["fields"]
-    assert next(f for f in gantry if f["key"] == "speed_z")["value"] == 9000.0  # ruff:ignore[float-equality-comparison]
+    expect(page.locator("#pipettePill")).to_contain_text("default_p100")
+    assert _settings(live_kiosk_server)["system_profile"] == "other.json"
+
+
+@pytest.mark.usefixtures("local")
+def test_the_header_pill_switches_the_pipette_from_any_tab(
+    page: Page, live_kiosk_server: LiveKioskServer
+) -> None:
+    page.goto(live_kiosk_server.url)
+    pill = page.locator("#pipettePill")
+    expect(pill).to_contain_text("p100_vertical")
+
+    pill.click()
+    page.locator("#pipetteSwitcher").get_by_role("button", name="default_p100").click()
+
+    expect(pill).to_contain_text("default_p100")
+    assert _settings(live_kiosk_server)["pipette"]["file"] == "default_p100.json"
+
+
+@pytest.mark.usefixtures("local")
+def test_the_header_pill_is_disabled_while_a_run_is_active(
+    page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
+) -> None:
+    page.goto(live_kiosk_server.url)
+    expect(page.locator("#pipettePill")).to_be_enabled()
+
+    _start_run(live_kiosk_server, protocols_dir)
+
+    expect(page.locator("#pipettePill")).to_be_disabled()
 
 
 @pytest.mark.usefixtures("local")
@@ -115,9 +153,7 @@ def test_a_low_risk_liquid_edit_round_trips(
     page: Page, live_kiosk_server: LiveKioskServer
 ) -> None:
     _open_settings(page, live_kiosk_server)
-    row = page.locator(
-        '.settings-liquid[data-liquid="water"] [data-key="viscosity_cP"]'
-    )
+    row = page.locator(_WATER_VISCOSITY)
 
     row.locator("input").fill("1.7")
     row.locator("input").press("Enter")
@@ -130,3 +166,38 @@ def test_a_low_risk_liquid_edit_round_trips(
     )
     viscosity = next(f for f in water["fields"] if f["key"] == "viscosity_cP")
     assert viscosity["value"] == 1.7  # ruff:ignore[float-equality-comparison]
+
+
+@pytest.mark.usefixtures("local")
+def test_the_header_pill_follows_a_swap_made_elsewhere(
+    page: Page, live_kiosk_server: LiveKioskServer
+) -> None:
+    page.goto(live_kiosk_server.url)
+    pill = page.locator("#pipettePill")
+    expect(pill).to_contain_text("p100_vertical")
+
+    # As `tap load_pipette` would: straight to the daemon, not via the pill.
+    request = urllib.request.Request(
+        f"{live_kiosk_server.url}/settings/load_pipette",
+        data=json.dumps({"filename": "default_pipette.json"}).encode(),
+        headers={"Content-Type": "application/json"},
+    )
+    urllib.request.urlopen(request, timeout=5).close()
+
+    expect(pill).to_contain_text("default_pipette")
+
+
+@pytest.mark.usefixtures("local")
+def test_a_pill_swap_rerenders_the_open_settings_page(
+    page: Page, live_kiosk_server: LiveKioskServer
+) -> None:
+    _open_settings(page, live_kiosk_server)
+    speed = page.locator('#settingsPipette [data-key="syringe.speed_dispense"]')
+    expect(speed).to_contain_text("50")
+
+    page.click("#pipettePill")
+    page.locator("#pipetteSwitcher").get_by_role(
+        "button", name="default_pipette"
+    ).click()
+
+    expect(speed).to_contain_text("25")
