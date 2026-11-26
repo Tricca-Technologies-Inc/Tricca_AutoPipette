@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import logging
 import math
+from collections import Counter
 from collections.abc import Sequence
 from typing import Literal, NamedTuple
 
@@ -227,6 +228,8 @@ class AutoPipette:
         # Set for a protocol run: an empty tipbox pauses the machine for a
         # reload rather than failing the run (see `next_tip`).
         self.pause_when_out_of_tips = False
+        # Tips picked up per box; validate_protocol clears it and reads it.
+        self.tips_taken: Counter[str] = Counter()
 
         # G-code management
         self.gcode_buffers = GCodeBuffer()
@@ -1109,6 +1112,7 @@ class AutoPipette:
         # The supplying box comes back with the coordinate: boxes may sit at
         # different heights, so the dip distance must come from *that* box.
         name, box, loc_tip, index = manager.next_tip(name=boxes)
+        self.tips_taken[name] += 1
         self.note_action(
             f"Picking up tip from '{name}' at (X:{loc_tip.x:.2f}, Y:{loc_tip.y:.2f})"
         )
