@@ -80,6 +80,7 @@ from tricca_autopipette.core.calibration import (
 )
 from tricca_autopipette.core.config_writer import (
     HIGH_RISK_BOUNDS,
+    high_risk_bounds,
     set_config_value,
     set_config_values,
 )
@@ -434,7 +435,10 @@ _LIQUID_SETTING_KEYS = (
 
 
 def _setting_fields(
-    model: BaseModel, keys: Iterable[str], source: tuple[str, str, str] | None
+    model: BaseModel,
+    keys: Iterable[str],
+    source: tuple[str, str, str] | None,
+    lead_mm: float,
 ) -> list[dict[str, Any]]:
     """Describe `model`'s fields for `AutoPipetteService.settings`.
 
@@ -443,6 +447,8 @@ def _setting_fields(
         keys: Dotted field paths within `model`.
         source: `JsonConfigManager.setting_source`'s answer; None yields no
             fields, since there is nowhere to write them.
+        lead_mm: The active pipette's screw lead, which scales the syringe
+            motor bounds (`high_risk_bounds`).
 
     Returns:
         One field dict per key (see `AutoPipetteService.settings`).
@@ -456,7 +462,7 @@ def _setting_fields(
         *parents, leaf = key.split(".")
         for part in parents:
             owner = getattr(owner, part)
-        low, high = HIGH_RISK_BOUNDS.get((type(owner), leaf), (None, None))  # type: ignore[arg-type]
+        low, high = high_risk_bounds(type(owner), leaf, lead_mm) or (None, None)  # type: ignore[arg-type]
         rows.append({
             "key": key,
             "value": getattr(owner, leaf),
@@ -2227,7 +2233,13 @@ class AutoPipetteService:
             unchanged).
         """
         try:
-            path = set_config_value(category, filename, key_path, value)
+            path = set_config_value(
+                category,
+                filename,
+                key_path,
+                value,
+                lead_mm=self._autopipette.pipette_model.syringe.lead_mm,
+            )
         except (ValueError, FileNotFoundError) as e:
             return CommandResult(ok=False, message=str(e))
         message = f"Set {key_path} = {value!r} in {path}"
@@ -3689,6 +3701,7 @@ class AutoPipetteService:
         ]
         gantry_keys = [n for o, n in HIGH_RISK_BOUNDS if o is GantryKinematics]
         liquids = ap.system_config.liquids
+        lead = ap.pipette_model.syringe.lead_mm
         data = {
             "system_profile": manager.system_file,
             "system_profiles": [p.name for p in LocalConfigRoots.list_system_configs()],
@@ -3699,12 +3712,12 @@ class AutoPipetteService:
                 else None,
                 "files": sorted(LocalConfigRoots.list_files("pipettes")),
                 "fields": _setting_fields(
-                    ap.pipette_model, pipette_keys, pipette_source
+                    ap.pipette_model, pipette_keys, pipette_source, lead
                 ),
             },
             "gantry": {
                 "fields": _setting_fields(
-                    ap.gantry, gantry_keys, manager.setting_source("gantry")
+                    ap.gantry, gantry_keys, manager.setting_source("gantry"), lead
                 )
             },
             "liquids": {
@@ -3718,6 +3731,7 @@ class AutoPipetteService:
                             liquids[name],
                             _LIQUID_SETTING_KEYS,
                             manager.setting_source("liquid", name),
+                            lead,
                         ),
                     }
                     for name in sorted(liquids)

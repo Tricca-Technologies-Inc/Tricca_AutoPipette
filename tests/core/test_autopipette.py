@@ -173,6 +173,20 @@ class TestSyringeHomingTravel:
 
         assert all("SPEED=12.5 " in line for line in autopipette.get_gcode()[:2])
 
+    def test_clear_syringe_endstop_move_uses_speed_home_when_set(
+        self, autopipette: AutoPipette
+    ) -> None:
+        """Issue #178: both plunger endstop moves run at the homing speed."""
+        autopipette.system_config.pipette.syringe.speed_home = 12.5
+        autopipette._update_syringe_params()
+        autopipette.get_gcode()
+
+        autopipette.clear_syringe()
+
+        endstop_move = autopipette.get_gcode()[0]
+        assert "STOP_ON_ENDSTOP=home" in endstop_move
+        assert "SPEED=12.5 " in endstop_move
+
     def test_pipette_accels_reach_the_syringe(self, autopipette: AutoPipette) -> None:
         # Pipette-only fields: the merged params used to drop them, so every
         # plunger move ran at the 200 mm/s² default whatever the file said.

@@ -16,9 +16,18 @@ from typing import Any
 
 import pytest
 
-from tricca_autopipette.core.config_writer import set_config_value, set_config_values
+from tricca_autopipette.core.config_writer import (
+    HIGH_RISK_BOUNDS,
+    high_risk_bounds,
+    set_config_value,
+    set_config_values,
+)
 from tricca_autopipette.core.location_manager import LocationManager
 from tricca_autopipette.core.pipette_constants import DefaultPaths
+from tricca_autopipette.core.pipette_models import (
+    LiquidProfile,
+    PipetteSyringeKinematics,
+)
 
 REPO_CONFIG = DefaultPaths.DIR_CONFIG
 
@@ -316,10 +325,10 @@ class TestHighRiskBounds:
 
         assert _read(path)["syringe"]["max_volume_ul"] == 90.0  # ruff:ignore[float-equality-comparison]
 
-    def test_max_travel_is_capped_at_the_physical_stroke(self, roots: Roots) -> None:
+    def test_max_travel_is_capped_at_the_longest_stroke(self, roots: Roots) -> None:
         with pytest.raises(ValueError, match="max_travel_mm"):
             set_config_value(
-                "pipettes", "p100_vertical.json", "syringe.max_travel_mm", 61.0
+                "pipettes", "p100_vertical.json", "syringe.max_travel_mm", 81.0
             )
 
     def test_homing_speed_is_bounded_like_the_other_speeds(self, roots: Roots) -> None:
@@ -436,6 +445,100 @@ class TestHighRiskBounds:
             )
 
         assert not (roots.local / "pipettes" / "p100_vertical.json").exists()
+
+
+#: The syringe motor bounds before issue #178, when every rig was assumed to
+#: have a 2 mm lead. A 2 mm rig must keep exactly these.
+_PRE_178_MOTOR_BOUNDS = {
+    (PipetteSyringeKinematics, "speed_aspirate"): (0.25, 50),
+    (PipetteSyringeKinematics, "speed_dispense"): (0.25, 50),
+    (PipetteSyringeKinematics, "speed_home"): (0.25, 50),
+    (PipetteSyringeKinematics, "accel_home"): (2.5, 200),
+    (PipetteSyringeKinematics, "accel_move"): (2.5, 200),
+    (LiquidProfile, "speed_aspirate"): (0.25, 50),
+    (LiquidProfile, "speed_dispense"): (0.25, 50),
+}
+
+
+class TestLeadScaledBounds:
+    """Issue #178: syringe speed/accel bounds are motor limits, so they scale
+    with the screw lead (`lead_mm / 2`); a 2 mm rig keeps today's caps.
+    """
+
+    @pytest.mark.parametrize(("key", "bounds"), list(_PRE_178_MOTOR_BOUNDS.items()))
+    def test_a_2mm_lead_keeps_todays_bounds(
+        self, key: tuple[type, str], bounds: tuple[float, float]
+    ) -> None:
+        assert high_risk_bounds(*key, lead_mm=2.0) == bounds
+
+    @pytest.mark.parametrize(("key", "bounds"), list(_PRE_178_MOTOR_BOUNDS.items()))
+    def test_an_8mm_lead_scales_both_ends_by_four(
+        self, key: tuple[type, str], bounds: tuple[float, float]
+    ) -> None:
+        assert high_risk_bounds(*key, lead_mm=8.0) == (bounds[0] * 4, bounds[1] * 4)
+
+    @pytest.mark.parametrize(
+        "key", [k for k in HIGH_RISK_BOUNDS if k not in _PRE_178_MOTOR_BOUNDS]
+    )
+    def test_other_bounds_ignore_the_lead(self, key: tuple[type, str]) -> None:
+        assert high_risk_bounds(*key, lead_mm=8.0) == HIGH_RISK_BOUNDS[key]
+
+    def test_nicks_real_values_pass_with_an_8mm_lead(self, roots: Roots) -> None:
+        set_config_value("pipettes", "p100_vertical.json", "syringe.lead_mm", 8)
+        nick = {
+            "syringe.speed_dispense": 200,
+            "syringe.speed_aspirate": 100,
+            "syringe.accel_home": 800,
+            "syringe.accel_move": 800,
+            "syringe.max_travel_mm": 68,
+        }
+        for key, value in nick.items():
+            set_config_value("pipettes", "p100_vertical.json", key, value)
+        path = set_config_value(
+            "liquids", "methanol.json", "speed_dispense", 150, lead_mm=8.0
+        )
+
+        syringe = _read(roots.local / "pipettes" / "p100_vertical.json")["syringe"]
+        assert {k: syringe[k.removeprefix("syringe.")] for k in nick} == nick
+        assert _read(path)["speed_dispense"] == 150
+
+    def test_a_lead_set_in_the_same_write_applies(self, roots: Roots) -> None:
+        set_config_values(
+            "pipettes",
+            "p100_vertical.json",
+            {"syringe.lead_mm": 8, "syringe.speed_dispense": 200},
+        )
+
+    def test_a_system_files_inline_pipette_uses_its_own_lead(
+        self, roots: Roots
+    ) -> None:
+        (roots.local / "system").mkdir()
+        pipette = _read(roots.shared / "pipettes" / "p100_vertical.json")
+        pipette["syringe"]["lead_mm"] = 8
+        (roots.local / "system" / "inline.json").write_text(
+            json.dumps({
+                **_read(roots.shared / "system" / "default_system.json"),
+                "pipette": pipette,
+            }),
+            encoding="utf-8",
+        )
+
+        set_config_value("system", "inline.json", "pipette.syringe.speed_dispense", 200)
+
+    def test_nicks_values_are_refused_with_a_2mm_lead(self, roots: Roots) -> None:
+        with pytest.raises(ValueError, match="speed_dispense"):
+            set_config_value(
+                "pipettes", "p100_vertical.json", "syringe.speed_dispense", 200
+            )
+        with pytest.raises(ValueError, match="speed_dispense"):
+            set_config_value(
+                "liquids", "methanol.json", "speed_dispense", 150, lead_mm=2.0
+            )
+
+    def test_a_liquid_override_defaults_to_the_2mm_bounds(self, roots: Roots) -> None:
+        # No active pipette known: never looser than the pre-#178 caps.
+        with pytest.raises(ValueError, match="speed_dispense"):
+            set_config_value("liquids", "methanol.json", "speed_dispense", 150)
 
 
 class TestSetConfigValues:

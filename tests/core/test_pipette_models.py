@@ -47,11 +47,12 @@ class TestPipetteStateHasTip:
 
 class TestSyringeCalibrationValidation:
     def test_both_omitted_is_valid(self) -> None:
-        PipetteSyringeKinematics(max_travel_mm=60.0)  # must not raise
+        PipetteSyringeKinematics(max_travel_mm=60.0, lead_mm=2.0)  # must not raise
 
     def test_both_provided_is_valid(self) -> None:
         PipetteSyringeKinematics(
             max_travel_mm=60.0,
+            lead_mm=2.0,
             calibration_volumes=[0.0, 100.0],
             calibration_mm=[0.0, 48.0],
         )  # must not raise
@@ -59,17 +60,20 @@ class TestSyringeCalibrationValidation:
     def test_volumes_without_mm_rejected(self) -> None:
         with pytest.raises(ValidationError, match="must be provided together"):
             PipetteSyringeKinematics(
-                max_travel_mm=60.0, calibration_volumes=[0.0, 100.0]
+                max_travel_mm=60.0, lead_mm=2.0, calibration_volumes=[0.0, 100.0]
             )
 
     def test_mm_without_volumes_rejected(self) -> None:
         with pytest.raises(ValidationError, match="must be provided together"):
-            PipetteSyringeKinematics(max_travel_mm=60.0, calibration_mm=[0.0, 48.0])
+            PipetteSyringeKinematics(
+                max_travel_mm=60.0, lead_mm=2.0, calibration_mm=[0.0, 48.0]
+            )
 
     def test_mismatched_lengths_rejected(self) -> None:
         with pytest.raises(ValidationError, match="must have the same length"):
             PipetteSyringeKinematics(
                 max_travel_mm=60.0,
+                lead_mm=2.0,
                 calibration_volumes=[0.0, 100.0, 200.0],
                 calibration_mm=[0.0, 48.0],
             )
@@ -78,6 +82,7 @@ class TestSyringeCalibrationValidation:
         with pytest.raises(ValidationError, match="at least 2 points"):
             PipetteSyringeKinematics(
                 max_travel_mm=60.0,
+                lead_mm=2.0,
                 calibration_volumes=[100.0],
                 calibration_mm=[48.0],
             )

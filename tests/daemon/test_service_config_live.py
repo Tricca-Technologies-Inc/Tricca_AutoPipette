@@ -515,6 +515,27 @@ class TestSettings:
 
         assert (field["min"], field["max"]) == (0.25, 50)
 
+    def test_motor_bounds_are_scaled_by_the_active_pipettes_lead(
+        self, svc: AutoPipetteService, local: Path
+    ) -> None:
+        """Issue #178: an 8 mm lead reports 4x the 2 mm speed/accel range."""
+        data = json.loads((REPO_CONFIG / "pipettes" / "p100_vertical.json").read_text())
+        data["syringe"]["lead_mm"] = 8
+        _write_json(local / "pipettes" / "t8x8.json", data)
+        svc.load_pipette("t8x8.json")
+
+        settings = _settings(svc)
+
+        speed = _field(settings, "pipette", "syringe.speed_dispense")
+        accel = _field(settings, "pipette", "syringe.accel_home")
+        liquid = _field(settings, "liquids", "speed_dispense", liquid="water")
+        assert (speed["min"], speed["max"]) == (1, 200)
+        assert (accel["min"], accel["max"]) == (10, 800)
+        assert (liquid["min"], liquid["max"]) == (1, 200)
+        assert svc.set_config_value(
+            "liquids", "methanol.json", "speed_dispense", 150
+        ).ok
+
     def test_a_system_liquid_override_is_where_the_liquid_is_edited(
         self, svc: AutoPipetteService
     ) -> None:

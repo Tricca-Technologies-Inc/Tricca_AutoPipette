@@ -340,6 +340,9 @@ class PipetteSyringeKinematics(BaseModel):
         max_travel_mm: Manufacturer-stated plunger travel (scale length) in
             mm. Required -- homing and ``clear_syringe`` drive the plunger
             up to twice this toward its endstop.
+        lead_mm: Plunger lead screw's lead in mm (2 for a single-start T8,
+            8 for a 4-start T8x8). Required -- the syringe speed and
+            acceleration bounds scale with it (issue #178).
         calibration_volumes: Calibration volume points in μL.
         calibration_mm: Corresponding plunger travel in mm, as fed to
             Klipper's ``MANUAL_STEPPER ... MOVE=``.
@@ -370,6 +373,7 @@ class PipetteSyringeKinematics(BaseModel):
         >>> syringe = PipetteSyringeKinematics(
         ...     max_volume_ul=1000.0,
         ...     max_travel_mm=60.0,
+        ...     lead_mm=2.0,
         ...     calibration_volumes=[0, 100, 500, 1000],
         ...     calibration_mm=[0, 4800, 24000, 48000],
         ... )
@@ -418,6 +422,13 @@ class PipetteSyringeKinematics(BaseModel):
             "Manufacturer-stated plunger travel (scale length) in mm; "
             "homing moves up to twice this toward the endstop"
         ),
+    )
+
+    # Required, no default: rigs differ (screws got mixed), and the speed and
+    # acceleration bounds are motor limits scaled by it (issue #178).
+    lead_mm: float = Field(
+        gt=0,
+        description="Plunger lead screw's lead in mm (2 single-start T8, 8 T8x8)",
     )
 
     # Volume Curve
@@ -597,7 +608,7 @@ class PipetteModel(BaseModel):
         ...     name="P1000_Vertical",
         ...     design_type="vertical",
         ...     syringe=PipetteSyringeKinematics(
-        ...         max_volume_ul=1000.0, max_travel_mm=60.0
+        ...         max_volume_ul=1000.0, max_travel_mm=60.0, lead_mm=2.0
         ...     ),
         ...     servo=ServoConfig(),
         ... )
@@ -993,7 +1004,7 @@ class SystemConfig(BaseModel):
         ...     pipette=PipetteModel(
         ...         name="P1000_Vertical",
         ...         syringe=PipetteSyringeKinematics(
-        ...             max_volume_ul=1000.0, max_travel_mm=60.0
+        ...             max_volume_ul=1000.0, max_travel_mm=60.0, lead_mm=2.0
         ...         ),
         ...         servo=ServoConfig(),
         ...     ),

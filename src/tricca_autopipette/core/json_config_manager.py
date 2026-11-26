@@ -1037,6 +1037,7 @@ class JsonConfigManager:
             "min_volume_ul": syringe.min_volume_ul,
             "capacity_margin_ul": syringe.capacity_margin_ul,
             "max_travel_mm": syringe.max_travel_mm,
+            "lead_mm": syringe.lead_mm,
         }
 
     # ========================================================================

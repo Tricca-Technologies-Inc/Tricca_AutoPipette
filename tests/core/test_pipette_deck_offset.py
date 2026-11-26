@@ -67,7 +67,7 @@ class TestModel:
     def test_defaults_to_no_offset(self) -> None:
         model = PipetteModel.model_validate({
             "name": "p",
-            "syringe": {"max_travel_mm": 60.0},
+            "syringe": {"max_travel_mm": 60.0, "lead_mm": 2.0},
             "servo": {},
         })
 
