@@ -1,5 +1,10 @@
 # Giga A: adding 10uL to each well of the DFI plate for Fia for Mega Panel A. No tip prewetting... 
 #
+# Lock in the tipbox config for this protocol
+disable_tipbox tipbox_p100_c
+enable_tipbox tipbox_p100
+enable_tipbox tipbox_p100_b
+
 load_pipette TysonP100.json
 home all
 #
