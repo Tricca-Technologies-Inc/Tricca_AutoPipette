@@ -42,8 +42,11 @@ class FakeMoonrakerState:
         #: matching a first run with nothing persisted yet.
         self.stored_tip_liquid_state: dict[str, Any] = {}
         self._print_state_callback: Callable[[str], None] | None = None
+        self._progress_callback: Callable[[float], None] | None = None
         #: Klipper's ``print_stats.message``, read with each state change.
         self.print_message = ""
+        #: Klipper's ``display_status.message`` (the last ``M117``).
+        self.display_message = ""
         #: What Klipper's plate/plunger axis config reads as; "not
         #: configured" by default, like a machine without the axis expansion.
         self.axis_config = AxisConfig()
@@ -100,6 +103,15 @@ class FakeMoonrakerState:
                 real ``print_stats`` transitions.
         """
         self._print_state_callback = callback
+
+    def on_progress_change(self, callback: Callable[[float], None]) -> None:
+        """Record the progress callback ``connect()`` registers.
+
+        Args:
+            callback: The function `AutoPipetteService` would have wired to
+                real ``virtual_sdcard.progress`` changes.
+        """
+        self._progress_callback = callback
 
     def load_tip_liquid_state(self) -> dict[str, Any]:
         """Return whatever a test assigned to ``stored_tip_liquid_state``."""

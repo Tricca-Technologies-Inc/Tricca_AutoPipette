@@ -1,0 +1,2 @@
+# The fixture tipbox is drained first, so this pauses for a reload.
+next_tip

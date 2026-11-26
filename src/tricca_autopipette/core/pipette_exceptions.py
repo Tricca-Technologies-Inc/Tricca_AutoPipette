@@ -260,27 +260,6 @@ class VolumeCapacityError(AutoPipetteError):
         )
 
 
-class ProtocolAbortedError(AutoPipetteError):
-    """Raised when a ``break`` line's breakpoint is answered "abort".
-
-    Replaces the old ``KeyboardInterrupt``-based signal, which
-    ``cmd2.Cmd.runcmds_plus_hooks`` used to swallow into the same ``False``
-    return value used for normal completion -- making an aborted protocol
-    indistinguishable from a successful one from the caller's side. This is
-    a distinct, named exception instead, caught explicitly by
-    ``daemon/service.py``'s protocol-run methods.
-
-    Kept in this module (rather than ``daemon/service.py``, where it was
-    originally defined) so that ``commands/protocol_commands.py`` can catch
-    it without importing ``daemon/service.py`` -- ``daemon/service.py``
-    itself imports from ``commands/tap_cmd_parsers.py``, which triggers the
-    ``commands`` package's ``__init__.py``, which imports
-    ``protocol_commands.py`` -- so the reverse import would be a genuine
-    circular import when the daemon (not a cmd2 shell) is the first thing
-    to import ``daemon/service.py``.
-    """
-
-
 class NotHomedError(AutoPipetteError):
     """Raised when a gated command runs before the pipette is homed.
 

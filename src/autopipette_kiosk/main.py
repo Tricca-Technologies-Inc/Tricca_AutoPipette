@@ -81,12 +81,10 @@ class RunStatus(BaseModel):
 
     status: Literal["idle", "running", "done", "error"]
     message: str = ""
-
-
-class BreakpointResponse(BaseModel):
-    """Request body for `POST /breakpoint/respond`."""
-
-    proceed: bool
+    # Klipper has the print paused, at a `break` or an empty tipbox.
+    paused: bool = False
+    # How far through its G-code the print is, 0 to 1; None before it starts.
+    progress: float | None = None
 
 
 class TipsResetRequest(BaseModel):
@@ -207,9 +205,6 @@ _main_loop: asyncio.AbstractEventLoop | None = None
 
 # ── in-memory run state, mirrored from the daemon's notify_run_status pushes ──
 _current_run: RunStatus = RunStatus(status="idle")
-# Pending breakpoint, mirrored from notify_breakpoint pushes: {"run_id",
-# "filename", "pending"} while one is awaiting a response, None otherwise.
-_current_breakpoint: dict[str, Any] | None = None
 # Whether config writes are run-locked (issue #33), mirrored from each
 # notify_run_status push, so the Settings page can disable its fields.
 _config_locked: bool = False
@@ -243,7 +238,6 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
 
     client = WebSocketClient(TAPD_CONTROL_URI)
     client.register_handler("notify_run_status", _on_run_status_notification)
-    client.register_handler("notify_breakpoint", _on_breakpoint_notification)
     client.register_handler("notify_raw_event", _on_raw_event_notification)
     client.start()
     connected = await asyncio.to_thread(
@@ -638,27 +632,62 @@ async def move_rel(req: MoveRelRequest) -> MoveResult:
     return MoveResult(message=str(result.get("message", "")))
 
 
-@app.post("/breakpoint/respond")
-async def respond_to_breakpoint(req: BreakpointResponse) -> dict[str, bool]:
-    """Answer a pending protocol breakpoint (Continue/Abort).
+async def _run_control(request: dict[str, Any]) -> RunStatus:
+    """Send a `run.pause`/`resume`/`cancel` request and return the run status.
 
-    Only one run (and therefore one pending breakpoint) can be active at a
-    time, so no run/breakpoint id is needed to disambiguate.
+    Args:
+        request: The `ControlRequests` builder's result.
 
     Returns:
-        ``{"ok": True}`` once the response has been relayed to the daemon.
+        The run status the daemon reports back.
 
     Raises:
-        HTTPException: 503 if the control daemon isn't connected.
-    """
+        HTTPException: 503 if the control daemon isn't connected, or the
+            daemon error's status (see `_translate_move_error`).
+    """  # ruff: ignore[docstring-missing-exception]
     if _control_client is None:
         raise HTTPException(status_code=503, detail="Control daemon not connected")
-
-    await asyncio.to_thread(
-        _control_client.send_jsonrpc,
-        _control_requests.run_confirm_breakpoint(req.proceed),
+    try:
+        response = await asyncio.to_thread(_control_client.send_jsonrpc, request)
+    except JsonRpcError as exc:
+        raise _translate_move_error(exc) from exc
+    result: dict[str, Any] = response.get("result", {})
+    return RunStatus(
+        status=result.get("status", "running"),
+        message=result.get("message", ""),
+        paused=bool(result.get("paused")),
+        progress=result.get("progress"),
     )
-    return {"ok": True}
+
+
+@app.post("/run/pause", response_model=RunStatus)
+async def pause_run() -> RunStatus:
+    """Pause the active run (the Run page's Pause).
+
+    Returns:
+        The run status after the pause was sent.
+    """
+    return await _run_control(_control_requests.run_pause())
+
+
+@app.post("/run/resume", response_model=RunStatus)
+async def resume_run() -> RunStatus:
+    """Resume a paused run (the banner's Resume).
+
+    Returns:
+        The run status after the resume was sent.
+    """
+    return await _run_control(_control_requests.run_resume())
+
+
+@app.post("/run/cancel", response_model=RunStatus)
+async def cancel_run() -> RunStatus:
+    """Cancel the active run (the banner's Cancel).
+
+    Returns:
+        The run status after the cancel was sent.
+    """
+    return await _run_control(_control_requests.run_cancel())
 
 
 async def _dispatch_control_request(request: dict[str, Any]) -> CommandResultResponse:
@@ -959,7 +988,7 @@ def _on_run_status_notification(params: Any) -> None:  # ruff:ignore[any-type]
         Invoked from the control-plane WebSocketClient's background thread;
         marshals the browser-facing broadcast back onto the main event loop.
     """
-    global _current_run, _current_breakpoint, _config_locked, _homing_invalidated
+    global _current_run, _config_locked, _homing_invalidated
     if not isinstance(params, dict):
         return
     notification = as_dict(params)
@@ -968,33 +997,9 @@ def _on_run_status_notification(params: Any) -> None:  # ruff:ignore[any-type]
     _current_run = RunStatus(
         status=notification.get("status", "idle"),
         message=notification.get("message", ""),
+        paused=bool(notification.get("paused")),
+        progress=notification.get("progress"),
     )
-    if _current_run.status != "running":
-        # A run that's no longer active can't have a pending breakpoint;
-        # clear any stale one (e.g. an aborted run) rather than waiting for
-        # the matching notify_breakpoint(pending=False).
-        _current_breakpoint = None
-    if _main_loop is not None:
-        asyncio.run_coroutine_threadsafe(_broadcast_status(), _main_loop)
-
-
-def _on_breakpoint_notification(params: Any) -> None:  # ruff:ignore[any-type]
-    """Handle a `notify_breakpoint` push from the tapd control daemon.
-
-    Args:
-        params: Notification params, `{"run_id", "filename", "pending"}` as
-            sent by `AutoPipetteService.request_breakpoint`/
-            `confirm_breakpoint`.
-
-    Note:
-        Invoked from the control-plane WebSocketClient's background thread;
-        marshals the browser-facing broadcast back onto the main event loop.
-    """
-    global _current_breakpoint
-    if not isinstance(params, dict):
-        return
-    notification = as_dict(params)
-    _current_breakpoint = notification if notification.get("pending") else None
     if _main_loop is not None:
         asyncio.run_coroutine_threadsafe(_broadcast_status(), _main_loop)
 
@@ -1094,8 +1099,7 @@ def _status_payload() -> dict[str, Any]:
     """Build the JSON payload pushed over `/ws/status`.
 
     Returns:
-        The current `RunStatus` fields plus `breakpoint` (the pending
-        breakpoint's `{"run_id", "filename", "pending"}` dict, or None) and
+        The current `RunStatus` fields (`paused` included) plus
         `toolhead` (`{"position", "homed_axes"}`, either possibly still
         None if no live update has arrived yet -- see
         `_on_raw_event_notification`), `config_locked` and
@@ -1103,7 +1107,6 @@ def _status_payload() -> dict[str, Any]:
     """
     return {
         **_current_run.model_dump(),
-        "breakpoint": _current_breakpoint,
         "toolhead": dict(_current_toolhead),
         "config_locked": _config_locked,
         "homing_invalidated": _homing_invalidated,
@@ -1111,7 +1114,7 @@ def _status_payload() -> dict[str, Any]:
 
 
 async def _broadcast_status() -> None:
-    """Push the current run/breakpoint status to every connected browser."""
+    """Push the current run status to every connected browser."""
     payload = _status_payload()
     stale: list[WebSocket] = []
     # Snapshot: status_ws's finally-block can discard from _ws_clients

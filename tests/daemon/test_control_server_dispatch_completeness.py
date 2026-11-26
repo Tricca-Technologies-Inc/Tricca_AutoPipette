@@ -190,7 +190,6 @@ _BUILDER_CALLS: list[tuple[str, tuple[Any, ...]]] = [
     ("run_cancel", ()),
     ("run_pause", ()),
     ("run_resume", ()),
-    ("run_confirm_breakpoint", (True,)),
     ("protocols_list", ()),
     ("daemon_ping", ()),
     ("identify", ("tap",)),

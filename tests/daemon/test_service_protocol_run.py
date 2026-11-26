@@ -20,7 +20,7 @@ from fakes.fake_websocket_client import FakeWebSocketClient
 from tricca_autopipette.core.pipette_constants import DefaultPaths
 from tricca_autopipette.core.pipette_exceptions import NotALocationError, NotHomedError
 from tricca_autopipette.core.pipette_models import TipState
-from tricca_autopipette.daemon.service import AutoPipetteService, ProtocolAbortedError
+from tricca_autopipette.daemon.service import AutoPipetteService
 
 FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures" / "protocols"
 
@@ -69,22 +69,22 @@ class TestDispatchProtocolLine:
         assert result.ok is False
         assert "Unknown command" in result.message
 
-    def test_break_continues_when_operator_proceeds(
+    def test_break_pauses_the_machine_without_blocking(
         self, service: AutoPipetteService
     ) -> None:
-        with patch.object(service, "request_breakpoint", return_value=True):
+        # The protocol compiles before anything moves, so a break is a
+        # PAUSE in the G-code, answered with Resume -- not a wait here.
+        service.gcode_manager.get_buffer()
+        with service.gcode_manager.batch_mode():
             result = service._dispatch_protocol_line("break")
+            lines = [
+                line.strip()
+                for line in service.gcode_manager.get_buffer()
+                if line.strip()
+            ]
 
         assert result.ok is True
-
-    def test_break_raises_protocol_aborted_when_operator_aborts(
-        self, service: AutoPipetteService
-    ) -> None:
-        with (
-            patch.object(service, "request_breakpoint", return_value=False),
-            pytest.raises(ProtocolAbortedError),
-        ):
-            service._dispatch_protocol_line("break")
+        assert lines[-2:] == ["M117 Protocol break: press Resume to continue", "PAUSE"]
 
 
 class TestRunProtocolSync:
@@ -117,33 +117,40 @@ class TestRunProtocolSync:
 
         assert service.gcode_manager.is_batch_mode is False
 
-    def test_break_abort_raises_protocol_aborted(
-        self, service: AutoPipetteService
-    ) -> None:
-        _set_homed(service, True)
-
-        with (
-            patch.object(service, "request_breakpoint", return_value=False),
-            pytest.raises(ProtocolAbortedError),
-        ):
-            service._run_protocol_sync("breakpoint.pipette")
-
-    def test_break_continue_runs_remaining_lines(
+    def test_a_break_pauses_between_the_lines_around_it(
         self, service: AutoPipetteService
     ) -> None:
         _set_homed(service, True)
         gcode_manager = service.gcode_manager
 
-        with (
-            patch.object(service, "request_breakpoint", return_value=True),
-            patch.object(
-                gcode_manager, "write_gcode_file", wraps=gcode_manager.write_gcode_file
-            ) as spy_write,
-        ):
+        with patch.object(
+            gcode_manager, "write_gcode_file", wraps=gcode_manager.write_gcode_file
+        ) as spy_write:
             service._run_protocol_sync("breakpoint.pipette")
 
-        gcode_arg = spy_write.call_args.args[0]
-        assert any("G4" in line for line in gcode_arg)  # the post-break wait
+        gcode = [line.strip() for line in spy_write.call_args.args[0]]
+        pause = gcode.index("PAUSE")
+        assert any(line.startswith("G1") for line in gcode[:pause])
+        assert any(line.startswith("G4") for line in gcode[pause:])  # post-break wait
+
+    def test_running_out_of_tips_in_a_run_pauses_instead_of_failing(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        service = service_with_plates
+        _set_homed(service, True)
+        ap = service._autopipette
+        manager = ap.location_manager.tipbox_manager
+        for name in manager.names():
+            manager.set_consumed(name, set(range(manager.describe(name)["capacity"])))
+        gcode_manager = service.gcode_manager
+
+        with patch.object(
+            gcode_manager, "write_gcode_file", wraps=gcode_manager.write_gcode_file
+        ) as spy_write:
+            service._run_protocol_sync("out_of_tips.pipette")
+
+        assert "PAUSE" in [line.strip() for line in spy_write.call_args.args[0]]
+        assert ap.pause_when_out_of_tips is False
 
 
 class TestDomainStateSnapshotRollback:

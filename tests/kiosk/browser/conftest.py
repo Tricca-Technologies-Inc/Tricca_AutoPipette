@@ -31,7 +31,7 @@ def _start_live_kiosk(
     """Point the kiosk app at `live_control_plane` and serve it for real.
 
     Same module-global reset `tests/kiosk/conftest.py`'s `kiosk_client`
-    fixture does -- `autopipette_kiosk/main.py` keeps run/breakpoint/
+    fixture does -- `autopipette_kiosk/main.py` keeps run/
     ws-client state as module globals (a long-lived singleton in
     production), so tests sharing that module need it reset per test.
 
@@ -41,7 +41,6 @@ def _start_live_kiosk(
     empty_clients: set[WebSocket] = set()
     monkeypatch.setattr(kiosk_main, "TAPD_CONTROL_URI", live_control_plane.url)
     monkeypatch.setattr(kiosk_main, "_current_run", kiosk_main.RunStatus(status="idle"))
-    monkeypatch.setattr(kiosk_main, "_current_breakpoint", None)
     monkeypatch.setattr(kiosk_main, "_config_locked", False)
     monkeypatch.setattr(
         kiosk_main, "_current_toolhead", {"position": None, "homed_axes": None}

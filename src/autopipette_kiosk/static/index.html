@@ -46,18 +46,19 @@
     <button class="tab-btn" data-page="calibrate">Calibrate</button>
   </nav>
 
-  <!-- Global breakpoint banner: reachable from any tab, not scoped to the
-       Run page's DOM (issue #25's Q2) -- an operator correcting tip
-       inventory must still see and answer a paused breakpoint. -->
+  <!-- Global paused-run banner: reachable from any tab, not scoped to the
+       Run page's DOM (issue #25's Q2) -- an operator reloading tips on the
+       Tips tab must still see the pause and resume it. A `break` line or an
+       empty tipbox pauses the print in Klipper. -->
   <div class="breakpoint-banner" id="breakpointBanner">
     <div class="breakpoint-icon">⚠</div>
     <div class="breakpoint-text">
-      <div class="breakpoint-title">Protocol paused at breakpoint</div>
+      <div class="breakpoint-title">Protocol paused</div>
       <div class="breakpoint-msg" id="breakpointMsg"></div>
     </div>
     <div class="breakpoint-actions">
-      <button class="bp-btn continue" id="bpContinueBtn">Continue</button>
-      <button class="bp-btn abort" id="bpAbortBtn">Abort</button>
+      <button class="bp-btn continue" id="pauseResumeBtn">Resume</button>
+      <button class="bp-btn abort" id="pauseCancelBtn">Cancel</button>
     </div>
   </div>
 
@@ -95,6 +96,11 @@
             <div class="progress-bar-wrap">
               <div class="progress-bar" id="progressBar"></div>
             </div>
+            <div class="progress-label" id="progressLabel"></div>
+          </div>
+          <div class="run-controls">
+            <button class="run-control-btn" id="pauseBtn" disabled>Pause</button>
+            <button class="run-control-btn cancel" id="cancelBtn" disabled>Cancel</button>
           </div>
         </div>
       </div>

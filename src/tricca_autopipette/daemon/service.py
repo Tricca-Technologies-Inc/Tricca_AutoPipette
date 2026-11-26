@@ -28,7 +28,6 @@ import functools
 import logging
 import math
 import shlex
-import threading
 import time
 import uuid
 from collections.abc import Callable, Generator, Iterable
@@ -99,7 +98,6 @@ from tricca_autopipette.core.pipette_constants import (
 from tricca_autopipette.core.pipette_exceptions import (
     NotALocationError,
     NotHomedError,
-    ProtocolAbortedError,
 )
 from tricca_autopipette.core.pipette_models import (
     AbsolutePlunger,
@@ -164,6 +162,10 @@ class RunStatus:
         filename: Protocol filename for the run, or None if idle.
         refusal: The Klipper interlock refusal behind this status (a print
             ended by one, or a refused resume), or None (issue #150).
+        paused: Whether Klipper has the running print paused, at a ``break``
+            or an empty tipbox, waiting for Resume.
+        progress: How far through the uploaded G-code the print is, 0 to 1
+            (Klipper's ``virtual_sdcard.progress``), or None before it starts.
     """
 
     status: Literal["idle", "running", "done", "error"]
@@ -171,6 +173,8 @@ class RunStatus:
     run_id: str | None = None
     filename: str | None = None
     refusal: InterlockRefusal | None = None
+    paused: bool = False
+    progress: float | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """The JSON shape of ``run.status`` and ``notify_run_status``.
@@ -533,10 +537,6 @@ class AutoPipetteService:
             ``AutoPipette``.
         moonraker_state: Live Klipper state tracker, or None if ``client``
             is None.
-        breakpoint_handler: Called by ``break`` in place of a TTY prompt.
-            None for standalone/local-scripting use (falls back to an
-            interactive prompt there); set to :meth:`request_breakpoint` by
-            :meth:`start` for daemon use.
     """
 
     def __init__(
@@ -600,7 +600,6 @@ class AutoPipetteService:
         if self.client is not None:
             self.moonraker_state = MoonrakerStateTracker(self.client, self.mrr)
 
-        self.breakpoint_handler: Callable[[], bool] | None = None
         self._last_persisted_state: tuple[str, bool, str | None] | None = None
         # Backs `_homing_invalidated`, set without the push it makes.
         self._homing_invalidated_flag = False
@@ -612,8 +611,6 @@ class AutoPipetteService:
         self._current = RunStatus(status="idle")
         self._loop: asyncio.AbstractEventLoop | None = None
         self._broadcast_callback: Callable[[str, dict[str, Any]], None] | None = None
-        self._breakpoint_event: threading.Event | None = None
-        self._breakpoint_proceed = False
         self._background_tasks: set[asyncio.Task[None]] = set()
         self._raw_subscriptions: set[str] = set()
         # method -> whatever handler (if any) was already registered on
@@ -721,6 +718,7 @@ class AutoPipetteService:
         if self.moonraker_state is not None:
             self.moonraker_state.start()
             self.moonraker_state.on_print_state_change(self._handle_print_state_change)
+            self.moonraker_state.on_progress_change(self._handle_progress_change)
             persisted = self.moonraker_state.load_tip_liquid_state()
             self._apply_persisted_state(persisted)
             self._apply_persisted_tip_presence(self.moonraker_state.load_tip_presence())
@@ -743,7 +741,6 @@ class AutoPipetteService:
     async def start(self) -> None:
         """Connect to Moonraker without blocking the daemon's event loop."""
         self._loop = asyncio.get_running_loop()
-        self.breakpoint_handler = self.request_breakpoint
         await asyncio.to_thread(self.connect)
 
     async def stop(self) -> None:
@@ -874,8 +871,8 @@ class AutoPipetteService:
         """`dispatch` a config change, refusing at once if a run is active.
 
         Checks before waiting on the dispatch lock, which a run holds for its
-        whole replay (possibly paused at a breakpoint), so a refused change
-        comes back immediately instead of after the replay.
+        whole replay, so a refused change comes back immediately instead of
+        after the replay.
 
         Args:
             func: A zero-argument callable wrapping a config-change method.
@@ -3614,8 +3611,7 @@ class AutoPipetteService:
             run_id: The run's id, as set by :meth:`start_run`.
 
         Note:
-            Holds ``self._lock`` for the whole replay (potentially a long
-            time, if it pauses at a breakpoint) so other structured
+            Holds ``self._lock`` for the whole replay so other structured
             (``movement.*``/etc.) requests from other clients can't
             interleave G-code generation with this run (see
             :meth:`dispatch`). ``cancel_run``/``pause_run``/``resume_run``
@@ -3630,11 +3626,6 @@ class AutoPipetteService:
         async with self._lock:
             try:
                 await asyncio.to_thread(self._run_protocol_sync, filename)
-            except ProtocolAbortedError as exc:
-                self._current = RunStatus(
-                    status="error", message=str(exc), run_id=run_id, filename=filename
-                )
-                self._broadcast_status()
             except Exception as exc:
                 self._current = RunStatus(
                     status="error",
@@ -3821,7 +3812,6 @@ class AutoPipetteService:
         two bug classes at once: there's no longer a filename to
         shell-requote (``shlex.quote`` is gone -- the path is just used
         directly, not re-parsed as command text), and a raised exception
-        (including :class:`ProtocolAbortedError` for an aborted breakpoint)
         is the one unambiguous "this line failed" signal, rather than
         inferring it from cmd2's overloaded ``bool`` return value.
 
@@ -3834,8 +3824,6 @@ class AutoPipetteService:
 
         Raises:
             ValueError: If the file can't be decoded as UTF-8.
-            ProtocolAbortedError: If a ``break`` line's breakpoint is
-                answered "abort" (a compile-time failure -- rolled back).
             Exception: Whatever a dispatched line's service method itself
                 raises (e.g. ``NotALocationError``, a not-homed
                 ``RuntimeError``) -- propagates uncaught, aborting the rest
@@ -3858,7 +3846,11 @@ class AutoPipetteService:
             # domain_state_snapshot wraps exactly the dispatch loop, not the
             # upload below it -- see its docstring for why that boundary is
             # the compile-time/runtime-failure line.
-            with self.domain_state_snapshot(), gcode_manager.batch_mode():
+            with (
+                self.domain_state_snapshot(),
+                gcode_manager.batch_mode(),
+                self._pausing_when_out_of_tips(),
+            ):
                 # Seed the stage-2 plunger model once, at protocol start.
                 self._sync_plunger()
                 self._seed_drawer_model()
@@ -3885,6 +3877,21 @@ class AutoPipetteService:
             self.upload_and_execute_gcode(output_filename, file_path, delete_file=True)
         finally:
             gcode_manager.clear_buffer()
+
+    @contextmanager
+    def _pausing_when_out_of_tips(self) -> Generator[None]:
+        """Let an empty tipbox pause the machine for a reload, for a run.
+
+        Outside a run there is no print to pause, so running out raises.
+
+        Yields:
+            Nothing; used for its enter/exit side effects.
+        """
+        self._autopipette.pause_when_out_of_tips = True
+        try:
+            yield
+        finally:
+            self._autopipette.pause_when_out_of_tips = False
 
     @staticmethod
     def _tokenize_protocol_line(line: str) -> tuple[str, list[str]] | None:
@@ -3922,8 +3929,8 @@ class AutoPipetteService:
         """Dispatch one protocol-file line to its typed service method.
 
         ``break`` is special-cased: it isn't a real ``AutoPipetteService``
-        method, it calls :meth:`request_breakpoint` directly (no cmd2
-        involved on this path at all, nor ever was). A line starting with
+        method, it emits a ``PAUSE`` via ``AutoPipette.pause``, so the
+        machine stops at that point of the run. A line starting with
         ``;`` is treated as a no-op comment -- cmd2 used to treat ``;`` as a
         default statement terminator, so ad hoc ``; some note`` lines in
         some real committed protocol files parsed as an empty statement
@@ -3948,8 +3955,6 @@ class AutoPipetteService:
             raised, but callers (e.g. tests) can still inspect it.
 
         Raises:
-            ProtocolAbortedError: If ``line`` is ``break`` and the operator
-                (or a remote client) chose to abort.
             ValueError: If the line can't be tokenized, or a recognized
                 command's arguments fail to parse.
             Exception: Whatever the underlying service method raises.
@@ -3960,9 +3965,11 @@ class AutoPipetteService:
         command_name, rest = tokens
 
         if command_name == "break":
-            if not self.request_breakpoint():
-                raise ProtocolAbortedError("Protocol aborted at breakpoint.")
-            return CommandResult(ok=True, message="Continuing after breakpoint.")
+            # The protocol compiles before anything moves, so the pause has
+            # to be in the G-code for the machine to stop here.
+            self._autopipette.pause("Protocol break: press Resume to continue")
+            self.output_gcode(self._autopipette.get_gcode())
+            return CommandResult(ok=True, message="Break: the machine pauses here.")
 
         str_arg_method = _STR_ARG_DISPATCH.get(command_name)
         if str_arg_method is not None:
@@ -4006,8 +4013,6 @@ class AutoPipetteService:
 
         Raises:
             FileNotFoundError: If the protocol file does not exist.
-            ProtocolAbortedError: If a ``break`` line's breakpoint is
-                answered "abort".
             Exception: Whatever a dispatched line's service method raises.
         """  # ruff: ignore[docstring-extraneous-exception]
         try:
@@ -4088,6 +4093,7 @@ class AutoPipetteService:
             with (
                 self.domain_state_snapshot(restore="always"),
                 gcode_manager.batch_mode(),
+                self._pausing_when_out_of_tips(),
             ):
                 self._sync_plunger()
                 self._seed_drawer_model()
@@ -4166,10 +4172,8 @@ class AutoPipetteService:
         recorded finding, appended to ``findings`` in place, and replay
         continues with the next line. ``break``/``save_locations`` are
         intercepted here, before ever reaching the real dispatch tables --
-        ``break`` would otherwise block on :meth:`request_breakpoint` forever
-        (no remote client is answering during validation), and
-        ``save_locations`` would otherwise write a real file -- so both are
-        recorded as informational findings and skipped rather than executed.
+        ``save_locations`` would otherwise write a real file -- and recorded
+        as informational findings rather than executed.
         A WARNING the domain layer logs while dispatching the line (e.g.
         ``AutoPipette.fit_air_volumes`` shrinking an air gap) is captured and
         recorded as a "warning" finding too, the same translation this
@@ -4321,11 +4325,10 @@ class AutoPipetteService:
         """Cancel the active run.
 
         Deliberately bypasses ``self._lock``: that lock can be held for a
-        long time by an in-progress run (including one paused at a
-        breakpoint), but :meth:`send_cancel` only sends a Moonraker control
-        RPC — it never touches the G-code buffer or ``AutoPipette`` domain
-        state — so it's safe to run concurrently, and it must be able to
-        interrupt a run that's stuck.
+        long time by an in-progress run, but :meth:`send_cancel` only sends a
+        Moonraker control RPC — it never touches the G-code buffer or
+        ``AutoPipette`` domain state — so it's safe to run concurrently, and
+        it must be able to interrupt a run that's stuck.
 
         Returns:
             The current run status (not necessarily yet reflecting the
@@ -4442,54 +4445,6 @@ class AutoPipetteService:
         files = LocalConfigRoots.list_tree("protocols", "*.pipette")
         return [{"name": path.stem, "filename": name} for name, path in files.items()]
 
-    def request_breakpoint(self) -> bool:
-        """Pause for operator confirmation, called synchronously for a `break` line.
-
-        Called directly by `_dispatch_protocol_line`, itself running on the
-        worker thread `start_run`/`_run_protocol` dispatch onto via
-        `asyncio.to_thread`, so blocking here with a plain `threading.Event`
-        only blocks that worker thread — the daemon's event loop (and thus
-        `confirm_breakpoint`, which resolves the event) keeps running
-        normally.
-
-        Returns:
-            True to continue the protocol, False to abort it — whatever the
-            client passed to `confirm_breakpoint`.
-        """
-        event = threading.Event()
-        self._breakpoint_event = event
-        if self._broadcast_callback is not None:
-            self._broadcast_callback(
-                "notify_breakpoint",
-                {
-                    "run_id": self._current.run_id,
-                    "filename": self._current.filename,
-                    "pending": True,
-                },
-            )
-        event.wait()
-        return self._breakpoint_proceed
-
-    async def confirm_breakpoint(self, proceed: bool) -> None:
-        """Resolve the pending breakpoint raised by `request_breakpoint`.
-
-        Args:
-            proceed: True to continue the protocol, False to abort it.
-        """
-        self._breakpoint_proceed = proceed
-        event, self._breakpoint_event = self._breakpoint_event, None
-        if event is not None:
-            event.set()
-        if self._broadcast_callback is not None:
-            self._broadcast_callback(
-                "notify_breakpoint",
-                {
-                    "run_id": self._current.run_id,
-                    "filename": self._current.filename,
-                    "pending": False,
-                },
-            )
-
     async def ping(self) -> dict[str, bool]:
         """Health check for control-plane clients.
 
@@ -4514,10 +4469,36 @@ class AutoPipetteService:
         if self._loop is None or self.moonraker_state is None:
             return
         # Read now, on this thread: Klipper sets the message with the state.
-        message = self.moonraker_state.print_message
+        # A pause's reason is the M117 shown just before it.
+        message = (
+            self.moonraker_state.display_message
+            if new_state == "paused"
+            else self.moonraker_state.print_message
+        )
         asyncio.run_coroutine_threadsafe(
             self._apply_print_state_change(new_state, message), self._loop
         )
+
+    def _handle_progress_change(self, progress: float) -> None:
+        """Marshal a ``virtual_sdcard.progress`` change onto the service loop.
+
+        Args:
+            progress: The new progress, 0 to 1.
+        """
+        if self._loop is not None:
+            asyncio.run_coroutine_threadsafe(self._apply_progress(progress), self._loop)
+
+    async def _apply_progress(self, progress: float) -> None:
+        """Put the print's progress on a running run's status, and broadcast it.
+
+        Args:
+            progress: The new progress, 0 to 1.
+        """
+        async with self._lock:
+            if self._current.status != "running":
+                return
+            self._current = replace(self._current, progress=progress)
+            self._broadcast_status()
 
     async def _apply_print_state_change(
         self, new_state: str, message: str = ""
@@ -4526,19 +4507,33 @@ class AutoPipetteService:
 
         Args:
             new_state: New Klipper ``print_stats.state`` value.
-            message: Klipper's ``print_stats.message``. An interlock refusal
-                in it is reported specifically (issue #150); any other text
-                keeps the generic "Print job error".
+            message: Klipper's ``print_stats.message``, or for ``paused``
+                the display message. An interlock refusal in an error is
+                reported specifically (issue #150); any other text keeps the
+                generic "Print job error".
         """
         async with self._lock:
             if self._current.status != "running":
                 return
-            if new_state == "complete":
+            if new_state == "paused":
+                self._current = replace(
+                    self._current,
+                    paused=True,
+                    message=f"Paused: {message or 'press Resume to continue'}",
+                )
+            elif new_state == "printing" and self._current.paused:
+                self._current = replace(
+                    self._current,
+                    paused=False,
+                    message=f"Running {self._current.filename}",
+                )
+            elif new_state == "complete":
                 self._current = RunStatus(
                     status="done",
                     message="Protocol completed successfully",
                     run_id=self._current.run_id,
                     filename=self._current.filename,
+                    progress=1.0,
                 )
             elif new_state in ("error", "cancelled"):
                 refusal = (

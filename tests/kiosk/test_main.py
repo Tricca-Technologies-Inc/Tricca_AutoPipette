@@ -11,7 +11,7 @@ exercise honestly. Every test here drives the real FastAPI app (via
 (`tests/support/live_control_plane.py`, the same one `tests/cli/` uses for
 `RemoteTapShell`) over a real localhost socket.
 
-`autopipette_kiosk/main.py` keeps its run/breakpoint/websocket-client state
+`autopipette_kiosk/main.py` keeps its run/websocket-client state
 in plain module globals rather than per-request state (it's a long-lived
 singleton in production) -- the `kiosk_client`/`protocols_dir` fixtures
 (`tests/kiosk/conftest.py`) reset and redirect those per test.
@@ -22,6 +22,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from fakes.fake_websocket_client import FakeWebSocketClient
 from fastapi.testclient import TestClient
 from support.live_control_plane import LiveControlPlane
 from support.polling import poll_until
@@ -536,58 +537,80 @@ class TestIndexRoute:
         assert "text/html" in response.headers["content-type"]
 
 
-class TestBreakpointRespond:
+class TestRunResumeAndCancel:
+    """The Run page pauses a print; it and the banner resume or cancel it."""
+
+    @pytest.mark.parametrize("path", ["/run/pause", "/run/resume", "/run/cancel"])
     def test_returns_503_when_the_daemon_is_not_connected(
-        self, monkeypatch: pytest.MonkeyPatch
+        self, monkeypatch: pytest.MonkeyPatch, path: str
     ) -> None:
         monkeypatch.setattr(kiosk_main, "_control_client", None)
 
         client = TestClient(kiosk_main.app)  # no lifespan, see TestRunEndpoint above
-        response = client.post("/breakpoint/respond", json={"proceed": True})
+        response = client.post(path)
 
         assert response.status_code == 503
 
-    def test_confirms_and_releases_a_pending_breakpoint(
+    @pytest.mark.parametrize(
+        ("path", "method"),
+        [
+            ("/run/pause", "printer.print.pause"),
+            ("/run/resume", "printer.print.resume"),
+            ("/run/cancel", "printer.print.cancel"),
+        ],
+    )
+    def test_sends_the_matching_print_control(
         self,
         kiosk_client: TestClient,
-        protocols_dir: Path,
         live_control_plane: LiveControlPlane,
+        path: str,
+        method: str,
     ) -> None:
-        (protocols_dir / "bp.pipette").write_text(
-            'gcode_print "before"\nbreak\ngcode_print "after"\n'
-        )
+        moonraker = FakeWebSocketClient()
+        live_control_plane.service.client = moonraker  # type: ignore[assignment]
 
+        response = kiosk_client.post(path)
+
+        assert response.status_code == 200
+        assert moonraker.sent_requests[-1]["method"] == method
+
+    def test_a_paused_push_reaches_the_browser(self, kiosk_client: TestClient) -> None:
         with kiosk_client.websocket_connect("/ws/status") as ws:
-            assert ws.receive_json()["status"] == "idle"
+            assert ws.receive_json()["paused"] is False
 
-            kiosk_client.post("/run", json={"filename": "bp.pipette"})
-            assert ws.receive_json()["status"] == "running"
+            kiosk_main._on_run_status_notification({
+                "status": "running",
+                "message": "Paused: Out of tips",
+                "paused": True,
+            })
 
-            pending = ws.receive_json()
-            assert pending["breakpoint"] is not None
-            assert pending["breakpoint"]["pending"] is True
+            pushed = ws.receive_json()
+            assert pushed["paused"] is True
+            assert pushed["message"] == "Paused: Out of tips"
 
-            response = kiosk_client.post("/breakpoint/respond", json={"proceed": True})
-            assert response.status_code == 200
-            assert response.json() == {"ok": True}
+    def test_progress_reaches_the_browser(self, kiosk_client: TestClient) -> None:
+        with kiosk_client.websocket_connect("/ws/status") as ws:
+            assert ws.receive_json()["progress"] is None
 
-            cleared = ws.receive_json()
-            assert cleared["breakpoint"] is None
+            kiosk_main._on_run_status_notification({
+                "status": "running",
+                "message": "Running a.pipette",
+                "progress": 0.42,
+            })
 
-        # request_breakpoint() blocks the worker thread for the run's whole
-        # duration, holding service._lock the entire time -- proceeding past
-        # the breakpoint is what releases it (the same real signal
-        # tests/cli/test_remote_shell.py checks for RemoteTapShell's
-        # "continue", since there's no real Moonraker connection here to
-        # ever move status off "running" on its own).
-        assert poll_until(lambda: not live_control_plane.service._lock.locked())
+            assert ws.receive_json()["progress"] == pytest.approx(0.42)
 
 
 class TestStatusEndpoint:
     def test_idle_by_default(self, kiosk_client: TestClient) -> None:
         response = kiosk_client.get("/status")
 
-        assert response.json() == {"status": "idle", "message": ""}
+        assert response.json() == {
+            "status": "idle",
+            "message": "",
+            "paused": False,
+            "progress": None,
+        }
 
     def test_reflects_the_real_status_after_a_run_starts(
         self, kiosk_client: TestClient, protocols_dir: Path
@@ -610,7 +633,8 @@ class TestWebSocketStatusBroadcast:
         assert payload == {
             "status": "idle",
             "message": "",
-            "breakpoint": None,
+            "paused": False,
+            "progress": None,
             "toolhead": {"position": None, "homed_axes": None},
             "config_locked": False,
             "homing_invalidated": False,
@@ -628,7 +652,7 @@ class TestWebSocketStatusBroadcast:
 
             pushed = ws.receive_json()
             assert pushed["status"] == "running"
-            assert pushed["breakpoint"] is None
+            assert pushed["paused"] is False
 
     def test_fans_out_to_every_connected_client(
         self, kiosk_client: TestClient, protocols_dir: Path

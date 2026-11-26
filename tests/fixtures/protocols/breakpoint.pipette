@@ -1,4 +1,4 @@
-# Exercises the break/abort-vs-continue paths.
+# A break between two lines.
 move 10 20 5
 break
 wait 100
