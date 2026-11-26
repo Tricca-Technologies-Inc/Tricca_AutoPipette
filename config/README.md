@@ -186,6 +186,7 @@ A name may be a stem or a full filename. A gantry named by file is edited in
 that file, not in the system file.
 - Network settings
 - Trigger pins (`trigger_pins`, see below)
+- Deck slot boundaries (`deck_grid`, optional, see below)
 
 #### `trigger_pins` -- auxiliary hardware wiring
 
@@ -202,6 +203,20 @@ channel. `trigger <channel> on|off` emits `M400` (wait for queued moves)
 then `SET_PIN PIN=<pin> VALUE=1|0`. The pin itself must be declared in the
 machine's Klipper `printer.cfg`. Nothing tracks the last commanded state or
 turns a trigger off at the end of a protocol.
+
+#### `deck_grid` -- the kiosk Deck page's slots
+
+Optional. Where one physical deck slot ends and the next begins on *this*
+machine, in deck millimetres:
+
+```json
+"deck_grid": { "x_edges": [190], "y_edges": [70, 165, 235] }
+```
+
+`n` edges make `n + 1` columns (X) or rows (Y); each list must ascend. The
+kiosk's Deck page then draws a grid of slots, each listing the locations
+whose origin lies in it, instead of the spatial map. Without it the map is
+drawn. It is per-rig data, so it belongs in the local system file.
 
 ### `pipettes/*.json`
 Pipette model definitions including:
