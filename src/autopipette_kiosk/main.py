@@ -19,13 +19,13 @@ See systemd/README.md before exposing it.
 import asyncio
 import logging
 import os
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from pathlib import Path, PurePosixPath
 from typing import Any, Literal, cast
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -287,6 +287,43 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
 
 
 app = FastAPI(title="AutoPipette Kiosk", lifespan=lifespan)
+
+#: Host names the kiosk answers to. It binds loopback (ADR-0002), so a request
+#: naming any other host came through DNS rebinding: a web page reaching the
+#: kiosk under the page's own name.
+ALLOWED_HOSTS = frozenset({"127.0.0.1", "localhost"})
+
+_SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
+
+
+@app.middleware("http")
+async def _refuse_cross_site(
+    request: Request, call_next: Callable[[Request], Awaitable[Response]]
+) -> Response:
+    """Refuse a foreign host, and a state-changing request from another site.
+
+    A form on any web page can POST to a body-less route such as ``/home``
+    with no CORS preflight. Browsers always send ``Origin`` on such a POST,
+    so one that isn't this page's own origin is refused. A request with no
+    ``Origin`` (curl, a script) isn't from a web page and is let through.
+
+    Args:
+        request: The incoming request.
+        call_next: The rest of the app.
+
+    Returns:
+        400 for a foreign host, 403 for a cross-site request, else the app's
+        response.
+    """
+    if request.url.hostname not in ALLOWED_HOSTS:
+        return JSONResponse({"detail": "Unknown host"}, status_code=400)
+    origin = request.headers.get("origin")
+    own_origin = f"{request.url.scheme}://{request.headers.get('host', '')}"
+    if request.method not in _SAFE_METHODS and origin not in (None, own_origin):
+        return JSONResponse({"detail": "Cross-site request refused"}, status_code=403)
+    return await call_next(request)
+
+
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
