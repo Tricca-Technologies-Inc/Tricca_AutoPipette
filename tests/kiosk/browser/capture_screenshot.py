@@ -27,6 +27,8 @@ from support.live_kiosk_server import LiveKioskServer
 
 PAGES: dict[str, Callable[[Page], None]] = {
     "run": lambda page: None,  # loaded active by default, nothing to do
+    "protocols": lambda page: page.click('.tab-btn[data-page="protocols"]'),
+    "commands": lambda page: page.click('.tab-btn[data-page="commands"]'),
     "move": lambda page: page.click('.tab-btn[data-page="move"]'),
     "tips": lambda page: page.click('.tab-btn[data-page="tips"]'),
     "deck": lambda page: page.click('.tab-btn[data-page="deck"]'),
@@ -53,10 +55,11 @@ def test_capture(
     if name not in PAGES:
         pytest.fail(f"Unknown --capture-page {name!r}; choices: {sorted(PAGES)}")
 
+    page.set_viewport_size({"width": 800, "height": 480})  # the 5" kiosk screen
     page.goto(live_kiosk_server_with_plates.url)
     PAGES[name](page)
     page.wait_for_timeout(200)  # let the just-triggered render settle
 
     out = Path(str(pytestconfig.getoption("capture_out")))
-    page.screenshot(path=out, full_page=True)
+    page.screenshot(path=out)
     print(f"\nSaved {name!r} screenshot to {out}")

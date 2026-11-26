@@ -17,7 +17,10 @@ import pytest
 pytest.importorskip("playwright")
 
 from playwright.sync_api import Page, expect
+from support.live_control_plane import LiveControlPlane
 from support.live_kiosk_server import LiveKioskServer
+
+from tricca_autopipette.core.pipette_models import DeckGrid
 
 ACTIVE = re.compile(r"\bactive\b")
 SELECTED = re.compile(r"\bselected\b")
@@ -143,3 +146,25 @@ def test_tapping_a_non_tipbox_tile_stays_on_the_deck_tab(
     page.click('.deck-tile[data-name="waste"]')
 
     expect(page.locator("#page-deck")).to_have_class(ACTIVE)
+
+
+def test_a_rig_with_a_deck_grid_gets_slots_drawn_the_way_the_map_is(
+    page: Page,
+    live_kiosk_server_with_plates: LiveKioskServer,
+    live_control_plane_with_plates: LiveControlPlane,
+) -> None:
+    # tipbox (10, 10), waste (50, 50), plate_a (100, 100). X0 is the right
+    # edge and Y0 the top, so high X is the left column, low Y the top row.
+    system = live_control_plane_with_plates.service._autopipette.system_config
+    system.deck_grid = DeckGrid(x_edges=[75], y_edges=[30])
+    _goto_deck(page, live_kiosk_server_with_plates)
+
+    expect(page.locator(".deck-slot")).to_have_count(4)
+    expect(page.locator('.deck-slot[data-slot="0,1"]')).to_contain_text("tipbox")
+    expect(page.locator('.deck-slot[data-slot="1,1"]')).to_contain_text("waste")
+    expect(page.locator('.deck-slot[data-slot="1,0"]')).to_contain_text("plate_a")
+    expect(page.locator('.deck-slot[data-slot="0,0"] .deck-slot-empty')).to_be_visible()
+    expect(page.locator("#deckSquare")).to_be_hidden()
+
+    page.click('.deck-slot-content[data-name="tipbox"]')
+    expect(page.locator("#page-tips")).to_have_class(ACTIVE)

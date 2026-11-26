@@ -1,0 +1,301 @@
+/* Desktop layout overrides — applied only when <html class="desktop-mode">.
+ *
+ * Touch-optimised style.css is the default (smaller screens, Tyson/Nick
+ * kiosk). Add this class via the layout toggle button in the header to
+ * restore the original desktop layout for use on a larger monitor.
+ *
+ * Every rule here is scoped to html.desktop-mode so it beats the base
+ * stylesheet's specificity without needing !important.
+ */
+
+/* ── Shell chrome ── */
+html.desktop-mode .shell {
+  grid-template-rows: 56px 48px 1fr;
+}
+
+html.desktop-mode .breakpoint-banner {
+  top: 104px; /* header 56px + tab-bar 48px */
+}
+
+html.desktop-mode header {
+  gap: 12px;
+  padding: 0 24px;
+}
+
+html.desktop-mode .logo-mark { width: 28px; height: 28px; }
+html.desktop-mode .logo-mark svg { width: 16px; height: 16px; }
+html.desktop-mode .logo-text { font-size: 15px; }
+html.desktop-mode .logo-sub { display: inline; }
+
+html.desktop-mode .home-btn {
+  height: 32px;
+  padding: 0 14px;
+  font-size: 13px;
+}
+
+html.desktop-mode .home-feedback { display: block; }
+
+html.desktop-mode .conn-indicator span { display: inline; }
+html.desktop-mode .conn-dot { width: 7px; height: 7px; }
+
+/* ── Tab bar ── */
+html.desktop-mode .tab-bar {
+  gap: 4px;
+  padding: 0 24px;
+}
+
+html.desktop-mode .tab-btn {
+  flex: none;
+  padding: 0 18px;
+  font-size: 13px;
+}
+
+/* ── Breakpoint banner ── */
+html.desktop-mode .breakpoint-banner {
+  margin: 16px 24px 0;
+  gap: 16px;
+  padding: 18px 22px;
+  border-radius: 12px;
+}
+
+html.desktop-mode .breakpoint-icon { font-size: 20px; }
+html.desktop-mode .breakpoint-title { font-size: 13px; }
+html.desktop-mode .breakpoint-msg { font-size: 13px; white-space: normal; }
+
+html.desktop-mode .bp-btn {
+  height: 40px;
+  padding: 0 20px;
+  font-size: 13px;
+}
+
+/* ── Run page ── */
+html.desktop-mode .run-panel {
+  padding: 32px 36px;
+  gap: 28px;
+  max-width: 1100px;
+  align-self: stretch;
+  width: 100%;
+}
+
+html.desktop-mode .selection-display {
+  display: block;
+  padding: 24px 28px;
+  border-radius: 12px;
+}
+
+html.desktop-mode .selection-label {
+  margin-bottom: 10px;
+}
+
+html.desktop-mode .selection-name {
+  font-size: 28px;
+  min-height: 40px;
+  white-space: normal;
+  overflow: visible;
+}
+
+html.desktop-mode .selection-name.placeholder {
+  font-size: 18px;
+}
+
+html.desktop-mode .run-btn {
+  height: 56px;
+  font-size: 15px;
+  max-width: 360px;
+  width: auto;
+}
+
+html.desktop-mode .cancel-btn {
+  height: 56px;
+  font-size: 15px;
+}
+
+html.desktop-mode .run-actions {
+  max-width: 360px;
+}
+
+html.desktop-mode .run-actions .run-btn {
+  max-width: none;
+}
+
+html.desktop-mode .check-btn {
+  height: 56px;
+  font-size: 15px;
+}
+
+html.desktop-mode .run-controls button {
+  min-height: 48px;
+  font-size: 15px;
+  flex: none;
+}
+
+html.desktop-mode .status-card {
+  border-radius: 12px;
+  padding: 20px 24px;
+  gap: 14px;
+}
+
+html.desktop-mode .status-icon { width: 36px; height: 36px; font-size: 16px; }
+html.desktop-mode .status-state { font-size: 12px; }
+html.desktop-mode .status-msg { font-size: 13px; }
+
+/* ── Move page ── */
+html.desktop-mode #page-move.active {
+  padding: 28px 36px;
+  gap: 20px;
+}
+
+html.desktop-mode .move-columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  flex-direction: unset;
+  gap: 20px;
+}
+
+html.desktop-mode .move-panel {
+  padding: 20px 24px;
+  gap: 14px;
+}
+
+html.desktop-mode .step-btn {
+  height: 32px;
+  font-size: 12px;
+}
+
+html.desktop-mode .dpad-xy {
+  grid-template-columns: repeat(3, 44px);
+  grid-template-rows: repeat(3, 44px);
+  gap: 4px;
+}
+
+html.desktop-mode .dpad-btn {
+  width: 44px;
+  height: 44px;
+  font-size: 15px;
+}
+
+html.desktop-mode .dpad-z { gap: 4px; }
+
+html.desktop-mode .coord-input {
+  height: 36px;
+  font-size: 14px;
+}
+
+html.desktop-mode .move-loc-select { height: 36px; font-size: 13px; }
+
+html.desktop-mode .move-go-btn {
+  height: 40px;
+  font-size: 13px;
+  width: auto;
+}
+
+/* ── Tips page ── */
+html.desktop-mode #page-tips.active {
+  padding: 28px 36px;
+  gap: 24px;
+}
+
+html.desktop-mode .tipbox-card { padding: 20px 24px; gap: 14px; }
+html.desktop-mode .tipbox-reset-btn { height: 32px; padding: 0 14px; font-size: 12px; }
+html.desktop-mode .tipbox-toggle-btn { height: 32px; padding: 0 12px; font-size: 12px; }
+html.desktop-mode .tipbox-grid { gap: 4px; }
+html.desktop-mode .tip-cell { min-width: 22px; min-height: 22px; }
+
+/* ── Deck page ── */
+html.desktop-mode .deck-layout {
+  flex-direction: row;
+  padding: 20px;
+  gap: 16px;
+}
+
+html.desktop-mode #deckTiles {
+  max-width: 480px;
+  height: 380px;
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+html.desktop-mode .deck-info {
+  width: 240px;
+  flex-shrink: 0;
+  border-top: none;
+  border-left: 1px solid var(--border);
+  align-self: stretch;
+}
+
+/* ── Settings page ── */
+html.desktop-mode #page-settings.active {
+  padding: 28px 36px;
+  gap: 20px;
+}
+
+html.desktop-mode .settings-columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(240px, 1fr));
+  flex-direction: unset;
+  gap: 20px;
+}
+
+html.desktop-mode .settings-picker select { height: 40px; }
+
+html.desktop-mode .settings-btn {
+  height: 40px;
+  padding: 0 16px;
+  font-size: 13px;
+}
+
+html.desktop-mode .settings-field-line .coord-input { height: 40px; font-size: 14px; }
+
+html.desktop-mode .settings-liquids {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  flex-direction: unset;
+  gap: 16px;
+}
+
+html.desktop-mode .settings-liquid { padding: 14px 16px; gap: 10px; }
+
+/* ── Calibrate page ── */
+html.desktop-mode #page-calibrate.active {
+  padding: 28px 36px;
+  gap: 20px;
+}
+
+html.desktop-mode .cal-panel { max-width: 720px; }
+
+html.desktop-mode .cal-actions {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+html.desktop-mode .cal-actions .move-go-btn {
+  width: auto;
+  padding: 0 20px;
+}
+
+html.desktop-mode .cal-actions .settings-field-line {
+  flex: 1;
+  min-width: 240px;
+}
+
+html.desktop-mode #calAbortBtn { width: auto; }
+
+html.desktop-mode .cal-points th,
+html.desktop-mode .cal-points td { padding: 6px 8px; }
+html.desktop-mode .cal-points { font-size: 13px; }
+html.desktop-mode .cal-points th { font-size: 11px; }
+
+/* ── Commands page ── */
+html.desktop-mode #page-commands.active { padding: 24px; }
+html.desktop-mode .command-panel { max-width: 760px; }
+html.desktop-mode .command-panel p { font-size: 14px; }
+html.desktop-mode .command-entry input { min-height: 48px; font-size: 16px; }
+html.desktop-mode .command-entry button { min-height: 48px; font-size: 15px; }
+html.desktop-mode .command-result { font-size: 14px; }
+html.desktop-mode .command-result strong { font-size: 14px; }
+html.desktop-mode .command-result pre { font-size: 12px; }
+
+/* ── Shared banners ── */
+html.desktop-mode .settings-banner { padding: 12px 18px; font-size: 13px; border-radius: 12px; }
+html.desktop-mode .move-not-homed-banner { padding: 12px 18px; font-size: 13px; }

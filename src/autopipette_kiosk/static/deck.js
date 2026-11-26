@@ -1,6 +1,8 @@
-// Deck page (issue #87): a read-only spatial map of the configured deck, for
+// Deck page (issue #87): a read-only map of the configured deck, for
 // verifying the physical setup (plate/tipbox/waste-container positions, tip
-// occupancy) against config before a run.
+// occupancy) against config before a run. A rig whose system file sets
+// `deck_grid` gets a grid of its physical slots, each listing the locations
+// in it (Scott's 5" redesign); any other rig gets the spatial map.
 //
 // Two data sources, both already exposed elsewhere -- no new deck logic
 // lives in daemon/service.py, matching the Client parity rule:
@@ -41,7 +43,10 @@
       loadTipsByName(),
     ]);
 
-    const container = document.getElementById('deckTiles');
+    const grid = locationsResult.grid;
+    document.getElementById('deckGrid').hidden = !grid;
+    document.getElementById('deckSquare').hidden = !!grid;
+    const container = document.getElementById(grid ? 'deckGrid' : 'deckTiles');
     if (!locationsResult.ok) {
       // Covers both a real load failure and a genuinely empty deck (the
       // daemon reports the latter as ok=false too, e.g. "No locations
@@ -51,9 +56,9 @@
       return;
     }
     container.innerHTML = '';
-    locationsResult.locations
-      .filter(loc => loc.x != null && loc.y != null)
-      .forEach(loc => container.appendChild(renderTile(loc, tipsByName[loc.name])));
+    const placed = locationsResult.locations.filter(loc => loc.x != null && loc.y != null);
+    if (grid) renderGrid(container, grid, placed, tipsByName);
+    else placed.forEach(loc => container.appendChild(renderTile(loc, tipsByName[loc.name])));
   }
 
   async function loadLocations() {
@@ -67,7 +72,11 @@
           locations: [],
         };
       }
-      return { ok: true, locations: result.data.locations || [] };
+      return {
+        ok: true,
+        locations: result.data.locations || [],
+        grid: result.data.deck_grid || null,
+      };
     } catch (e) {
       return { ok: false, message: 'Failed to load locations', locations: [] };
     }
@@ -85,6 +94,63 @@
       // leave byName empty -- tipbox tiles just render without their grid
     }
     return byName;
+  }
+
+  // ── slot grid (deck_grid) ────────────────────────────────────────────────
+  // n edges make n + 1 bands; a location is in the band its origin lies in.
+  const band = (edges, mm) => edges.filter(edge => mm >= edge).length;
+
+  // Drawn the way the map is: X0 is the right edge, Y0 the back (top), so
+  // the highest-X column is leftmost and the lowest-Y row is on top.
+  function renderGrid(container, grid, locations, tipsByName) {
+    const cols = grid.x_edges.length + 1;
+    const rows = grid.y_edges.length + 1;
+    container.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    container.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+    const slots = new Map();
+    locations.forEach(loc => {
+      const key = `${band(grid.y_edges, loc.y)},${cols - 1 - band(grid.x_edges, loc.x)}`;
+      if (!slots.has(key)) slots.set(key, []);
+      slots.get(key).push(loc);
+    });
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        container.appendChild(renderSlot(row, col, slots.get(`${row},${col}`) || [], tipsByName));
+      }
+    }
+  }
+
+  function renderSlot(row, col, locs, tipsByName) {
+    const slot = document.createElement('div');
+    slot.className = 'deck-slot';
+    slot.dataset.slot = `${row},${col}`;
+    const label = document.createElement('div');
+    label.className = 'deck-slot-label';
+    label.textContent = `Row ${row + 1} · Col ${col + 1}`;
+    slot.appendChild(label);
+    if (!locs.length) {
+      const empty = document.createElement('div');
+      empty.className = 'deck-slot-empty';
+      empty.textContent = '—';
+      slot.appendChild(empty);
+      return slot;
+    }
+    locs.forEach(loc => {
+      const content = document.createElement('div');
+      content.className = 'deck-slot-content';
+      content.classList.toggle('is-tipbox', loc.type === 'TipBox');
+      content.dataset.name = loc.name;
+      if (loc.type === 'TipBox' && tipsByName[loc.name]) {
+        content.appendChild(renderMiniGrid(tipsByName[loc.name]));
+      }
+      const name = document.createElement('div');
+      name.className = 'deck-slot-name';
+      name.textContent = loc.name;
+      content.appendChild(name);
+      content.addEventListener('click', () => selectTile(loc));
+      slot.appendChild(content);
+    });
+    return slot;
   }
 
   // ── tile rendering ───────────────────────────────────────────────────────
@@ -137,7 +203,7 @@
 
   // ── tap interaction: info panel + tipbox -> Tips tab shortcut ───────────
   function selectTile(loc) {
-    document.querySelectorAll('.deck-tile').forEach(t => {
+    document.querySelectorAll('.deck-tile, .deck-slot-content').forEach(t => {
       t.classList.toggle('selected', t.dataset.name === loc.name);
     });
 

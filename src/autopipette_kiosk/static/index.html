@@ -7,6 +7,8 @@
 <style>html { background: #000; }</style>  <!-- inline in <head>, before any linked CSS -->
 <title>AutoPipette</title>
 <link rel="stylesheet" href="/static/style.css">
+<link rel="stylesheet" href="/static/style-desktop.css">
+<script src="/static/layout.js"></script>
 </head>
 <body>
 
@@ -28,6 +30,10 @@
       <span id="statusPillLabel">Idle</span>
     </div>
     <span class="home-feedback" id="homeFeedback"></span>
+    <button class="layout-toggle-btn" id="layoutToggleBtn" title="Switch to desktop layout">
+      <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M21 2H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7v2H8v2h8v-2h-2v-2h7a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zm0 14H3V4h18z"/></svg>
+      <span id="layoutToggleLabel">Desktop</span>
+    </button>
     <button class="home-btn" id="homeBtn" title="Home all axes (init)">
       <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M12 3l9 8h-3v9h-5v-6H11v6H6v-9H3z"/></svg>
       Home
@@ -43,15 +49,16 @@
     <div class="pipette-switcher-title">Switch pipette</div>
     <div id="pipetteOptions"></div>
     <div class="move-feedback error" id="pipetteFeedback"></div>
-    <div class="pipette-switcher-note">Home required after switching.</div>
+    <div class="pipette-switcher-note">Eject the tip before switching. Home required after switching.</div>
   </div>
 
   <!-- Tab bar (issue #25) -- a data-driven registry lives in app.js; this
        markup is the two tabs that registry currently knows about. -->
   <nav class="tab-bar" id="tabBar">
+    <button class="tab-btn" data-page="protocols">Protocols</button>
     <button class="tab-btn active" data-page="run">Run</button>
-    <button class="tab-btn" data-page="move">Move</button>
     <button class="tab-btn" data-page="tips">Tips</button>
+    <button class="tab-btn" data-page="move">Move</button>
     <button class="tab-btn" data-page="deck">Deck</button>
     <button class="tab-btn" data-page="settings">Settings</button>
     <button class="tab-btn" data-page="calibrate">Calibrate</button>
@@ -75,46 +82,56 @@
   </div>
 
   <main>
-    <!-- Run page -->
-    <div class="page active" id="page-run">
+    <!-- Protocols page: pick a protocol, Check it, Load it onto the Run page -->
+    <div class="page" id="page-protocols">
       <div class="protocol-panel">
         <div class="panel-header">Protocols</div>
         <div class="protocol-list" id="protocolList">
           <div class="empty-state">Loading protocols…</div>
         </div>
       </div>
+      <div class="protocol-action-bar">
+        <div class="selection-name placeholder" id="selectionName">Select a protocol</div>
+        <button class="check-btn" id="checkBtn" disabled>Check</button>
+        <button class="go-run-btn" id="loadBtn" disabled>Load</button>
+      </div>
+      <div class="findings-list" id="findingsList"></div>
+    </div>
 
+    <!-- Run page: the loaded protocol, its status and the run controls -->
+    <div class="page active" id="page-run">
       <div class="run-panel">
         <div class="selection-display">
-          <div class="selection-label">Selected protocol</div>
-          <div class="selection-name placeholder" id="selectionName">Select a protocol from the list</div>
+          <div class="selection-label">Protocol</div>
+          <div class="selection-name" id="runProtocolName">Load one from the Protocols tab</div>
         </div>
 
-        <div class="run-actions">
-          <button class="run-btn" id="runBtn" disabled>
-            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-            Run protocol
-          </button>
-          <button class="check-btn" id="checkBtn" disabled>Check</button>
+        <div class="protocol-info-card" id="protocolInfoCard" hidden>
+          <div class="protocol-info-description" id="protocolInfoDescription"></div>
+          <div class="protocol-info-tips" id="protocolInfoTips"></div>
         </div>
-
-        <div class="findings-list" id="findingsList"></div>
+        <div class="protocol-info-error" id="protocolInfoError" hidden></div>
 
         <div class="status-card">
           <div class="status-icon idle" id="statusIcon">○</div>
           <div class="status-body">
             <div class="status-state idle" id="statusState">Idle</div>
             <div class="status-msg" id="statusMsg">No protocol running</div>
-            <div class="progress-bar-wrap">
-              <div class="progress-bar" id="progressBar"></div>
-            </div>
-            <div class="progress-label" id="progressLabel"></div>
-          </div>
-          <div class="run-controls">
-            <button class="run-control-btn" id="pauseBtn" disabled>Pause</button>
-            <button class="run-control-btn cancel" id="cancelBtn" disabled>Cancel</button>
           </div>
         </div>
+
+        <progress id="progressBar" max="100" aria-label="Estimated progress" hidden></progress>
+        <div class="progress-label" id="progressLabel"></div>
+
+        <div class="run-actions">
+          <button class="run-btn" id="runBtn" disabled>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path id="runBtnIcon" d="M8 5v14l11-7z"/></svg>
+            <span id="runBtnLabel">Run</span>
+          </button>
+          <button class="cancel-btn" id="cancelBtn" disabled>Cancel</button>
+        </div>
+        <div class="run-control-feedback" id="runFeedback" role="status"></div>
+        <div class="run-control-note">Cancel is not an emergency stop.</div>
       </div>
     </div>
 
@@ -205,19 +222,20 @@
 
     <!-- Deck page (issue #87) -->
     <div class="page" id="page-deck">
-      <div class="deck-hint">
-        Read-only spatial map of the configured deck, for verifying the physical setup
-        against config before a run. Tap a tile for its name/type/coordinates; tapping a
-        tipbox switches to the Tips tab. Toolhead position isn't shown here (see #86).
+      <div class="deck-hint" id="deckHint">
+        Read-only map of the configured deck, for checking the physical setup against
+        config before a run. Tap a location for its details; tapping a tipbox opens the
+        Tips tab.
       </div>
+      <div id="deckGrid" hidden></div>
       <div class="deck-main">
         <div class="deck-square" id="deckSquare">
           <!-- Decorative-only background: 2x4 large bays flanked by small-slot
                columns, not derived from config data (see deck.js). -->
           <div class="deck-schematic">
             <div class="deck-flank">
-              <div class="deck-slot"></div><div class="deck-slot"></div>
-              <div class="deck-slot"></div><div class="deck-slot"></div>
+              <div class="deck-flank-slot"></div><div class="deck-flank-slot"></div>
+              <div class="deck-flank-slot"></div><div class="deck-flank-slot"></div>
             </div>
             <div class="deck-bays">
               <div class="deck-bay"></div><div class="deck-bay"></div>
@@ -226,8 +244,8 @@
               <div class="deck-bay"></div><div class="deck-bay"></div>
             </div>
             <div class="deck-flank">
-              <div class="deck-slot"></div><div class="deck-slot"></div>
-              <div class="deck-slot"></div><div class="deck-slot"></div>
+              <div class="deck-flank-slot"></div><div class="deck-flank-slot"></div>
+              <div class="deck-flank-slot"></div><div class="deck-flank-slot"></div>
             </div>
           </div>
           <div class="deck-origin-label">origin (0,0)</div>

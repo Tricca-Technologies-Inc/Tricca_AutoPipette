@@ -1,7 +1,7 @@
 """Real-browser coverage of the Run page's run controls and progress.
 
-While a protocol runs, the status card offers Pause (Resume once paused)
-and Cancel, and shows how far through its G-code the print is, from
+While a protocol runs, the Run button becomes Pause (Resume once paused)
+beside Cancel, and the page and shows how far through its G-code the print is, from
 Klipper's `virtual_sdcard.progress`, with an estimate of the time left.
 """
 
@@ -37,7 +37,7 @@ def test_controls_are_disabled_with_no_run(
 ) -> None:
     page.goto(live_kiosk_server.url)
 
-    expect(page.locator("#pauseBtn")).to_be_disabled()
+    expect(page.locator("#runBtn")).to_be_disabled()
     expect(page.locator("#cancelBtn")).to_be_disabled()
 
 
@@ -48,15 +48,15 @@ def test_pause_then_resume(
 ) -> None:
     page.goto(live_kiosk_server.url)
     _push(live_control_plane)
-    expect(page.locator("#pauseBtn")).to_have_text("Pause")
+    expect(page.locator("#runBtnLabel")).to_have_text("Pause")
 
     with page.expect_request("**/run/pause"):
-        page.click("#pauseBtn")
+        page.click("#runBtn")
 
     _push(live_control_plane, paused=True)
-    expect(page.locator("#pauseBtn")).to_have_text("Resume")
+    expect(page.locator("#runBtnLabel")).to_have_text("Resume")
     with page.expect_request("**/run/resume"):
-        page.click("#pauseBtn")
+        page.click("#runBtn")
 
 
 def test_cancel_asks_first(
@@ -96,7 +96,7 @@ def test_progress_shows_percent_and_time_left(
 
     # 10 s for 10 %, so 80 s for the 80 % left.
     expect(label).to_have_text("20% · ~1m 20s left")
-    expect(page.locator("#progressBar")).to_have_attribute("style", "width: 20%;")
+    expect(page.locator("#progressBar")).to_have_attribute("value", "20")
 
 
 def test_paused_time_is_not_counted(
@@ -111,10 +111,10 @@ def test_paused_time_is_not_counted(
     expect(label).to_have_text("10%")
 
     _push(live_control_plane, progress=0.1, paused=True)
-    expect(page.locator("#pauseBtn")).to_have_text("Resume")
+    expect(page.locator("#runBtnLabel")).to_have_text("Resume")
     page.clock.fast_forward(60_000)
     _push(live_control_plane, progress=0.1)
-    expect(page.locator("#pauseBtn")).to_have_text("Pause")
+    expect(page.locator("#runBtnLabel")).to_have_text("Pause")
     page.clock.fast_forward(10_000)
     _push(live_control_plane, progress=0.2)
 
