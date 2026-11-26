@@ -3,7 +3,7 @@
   "manufacturer": "Tricca",
   "description": "100µL vertical displacement pipette for TAP-Tyson",
   "design_type": "vertical",
-  "tipbox": ["tipbox_p100", "tipbox_p100_b"],
+  "tipbox": ["tipbox_p100", "tipbox_p100_b", "tipbox_p100_c"],
   "syringe": {
     "syringe_model": "Hamilton 100µL",
     "stepper_name": "pipette_stepper",
