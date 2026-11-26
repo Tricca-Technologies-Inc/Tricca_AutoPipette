@@ -1,0 +1,19 @@
+# MEGA Panel A — adding PITC to each well of the plate
+# Uses P1000 with splits: 9 wells per aspiration (450uL), 11 aspirations total.
+# Same single tip throughout. PITC is methanol-based so post-air gap is
+# redrawn between splits to prevent dripping.
+
+load_pipette TysonP1000.json
+home all
+
+pipette 450 --tip_end keep PITC1_p1000 96wellplatePITC --prewet 5 --splits '96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50'
+pipette 450 --tip_end keep PITC1_p1000 96wellplatePITC --splits '96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50'
+pipette 450 --tip_end keep PITC1_p1000 96wellplatePITC --splits '96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50'
+pipette 450 --tip_end keep PITC1_p1000 96wellplatePITC --splits '96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50'
+pipette 450 --tip_end keep PITC1_p1000 96wellplatePITC --splits '96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50'
+pipette 450 --tip_end keep PITC1_p1000 96wellplatePITC --splits '96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50'
+pipette 450 --tip_end keep PITC1_p1000 96wellplatePITC --splits '96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50'
+pipette 450 --tip_end keep PITC1_p1000 96wellplatePITC --splits '96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50'
+pipette 450 --tip_end keep PITC1_p1000 96wellplatePITC --splits '96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50'
+pipette 450 --tip_end keep PITC1_p1000 96wellplatePITC --splits '96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50'
+pipette 300 PITC1_p1000 96wellplatePITC --splits '96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50;96wellplatePITC:50'
