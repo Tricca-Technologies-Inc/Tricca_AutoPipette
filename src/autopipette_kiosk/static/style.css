@@ -613,6 +613,8 @@ header {
 
 .tipbox-reset-btn:hover:not(:disabled) { background: var(--border); }
 .tipbox-reset-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.tipbox-toggle-btn { margin-left: 8px; }
+.tipbox-card.tipbox-disabled { opacity: 0.6; border-style: dashed; }
 
 .tipbox-grid {
   display: grid;

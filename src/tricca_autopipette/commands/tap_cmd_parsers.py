@@ -1026,6 +1026,19 @@ class TAPCmdParsers:
     )
     parser_reset_tips.add_argument("name", type=str, help="Tipbox location name")
 
+    parser_disable_tipbox: Cmd2ArgumentParser = Cmd2ArgumentParser(
+        description=(
+            "Stop drawing tips from a box (e.g. one not on the deck), keeping "
+            "its place in the draw order and its tip state."
+        )
+    )
+    parser_disable_tipbox.add_argument("name", type=str, help="Tipbox location name")
+
+    parser_enable_tipbox: Cmd2ArgumentParser = Cmd2ArgumentParser(
+        description="Draw tips from a disabled box again."
+    )
+    parser_enable_tipbox.add_argument("name", type=str, help="Tipbox location name")
+
     parser_set_tips: Cmd2ArgumentParser = Cmd2ArgumentParser(
         description=(
             "Declare which tip positions of a box are consumed (or, with "
