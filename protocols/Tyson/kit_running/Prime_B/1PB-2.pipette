@@ -1,0 +1,109 @@
+#Prime Panel B: Adding 75uL of Reagent ABC to each well of the plate
+load_pipette TysonP100.json
+home all
+#
+# This protocol uses the Tyson100 liquid profile's air gaps
+
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE --prewet 5
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75 --tip_end keep RGNT_ABC SAMPLEPLATE
+pipette 75  RGNT_ABC SAMPLEPLATE
