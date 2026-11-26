@@ -12,6 +12,7 @@ import pytest
 from fakes.fake_websocket_client import FakeWebSocketClient
 
 from tricca_autopipette.core.coordinate import Coordinate
+from tricca_autopipette.core.pipette_models import DeckGrid
 from tricca_autopipette.daemon.service import AutoPipetteService
 from tricca_autopipette.moonraker.websocket_client import MessageType
 
@@ -373,7 +374,19 @@ class TestReporting:
         result = service.list_locations()
 
         assert result.ok is False
-        assert result.data == {"locations": []}
+        assert result.data == {"locations": [], "deck_grid": None}
+
+    def test_list_locations_reports_the_deck_grid(
+        self, service: AutoPipetteService
+    ) -> None:
+        service._autopipette.system_config.deck_grid = DeckGrid(
+            x_edges=[190], y_edges=[70, 165]
+        )
+
+        result = service.list_locations()
+
+        assert result.data is not None
+        assert result.data["deck_grid"] == {"x_edges": [190], "y_edges": [70, 165]}
 
     def test_list_locations_reports_a_coordinate(
         self, service: AutoPipetteService

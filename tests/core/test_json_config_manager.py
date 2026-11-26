@@ -276,6 +276,39 @@ class TestReferencesByFilename:
             JsonConfigManager().load_system_config(system)
 
 
+class TestDeckGrid:
+    def test_deck_grid_loads_from_the_system_config(
+        self, write_system_config: Any
+    ) -> None:
+        child = write_system_config(
+            "grid.json",
+            {
+                "pipette": "p100_vertical",
+                "deck_grid": {"x_edges": [190], "y_edges": [70, 165, 235]},
+            },
+        )
+
+        grid = JsonConfigManager().load_system_config(child).deck_grid
+
+        assert grid is not None
+        assert grid.x_edges == [190]
+        assert grid.y_edges == [70, 165, 235]
+
+    def test_absent_deck_grid_is_none(self, write_system_config: Any) -> None:
+        child = write_system_config("nogrid.json", {"pipette": "p100_vertical"})
+
+        assert JsonConfigManager().load_system_config(child).deck_grid is None
+
+    def test_unsorted_edges_are_refused(self, write_system_config: Any) -> None:
+        child = write_system_config(
+            "badgrid.json",
+            {"pipette": "p100_vertical", "deck_grid": {"x_edges": [200, 100]}},
+        )
+
+        with pytest.raises(ValueError, match="ascending"):
+            JsonConfigManager().load_system_config(child)
+
+
 class TestTriggerPins:
     def test_trigger_pins_load_from_the_system_config(
         self, write_system_config: Any
