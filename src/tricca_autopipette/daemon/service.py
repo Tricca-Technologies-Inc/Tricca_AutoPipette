@@ -3929,7 +3929,7 @@ class AutoPipetteService:
         """  # ruff: ignore[docstring-extraneous-exception]
         proto_path = LocalConfigRoots.resolve("protocols", filename)
         try:
-            return proto_path.read_text(encoding="utf-8").splitlines()
+            return proto_path.read_text(encoding="utf-8-sig").splitlines()
         except UnicodeDecodeError as exc:
             raise ValueError(
                 f"Error reading protocol file (encoding issue): {exc}"

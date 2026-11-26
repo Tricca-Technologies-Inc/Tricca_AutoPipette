@@ -112,6 +112,13 @@ class TestDescription:
             "Add 50 uL of water to each well.\n\nNeeds one tipbox."
         )
 
+    def test_survives_a_byte_order_mark(self, service: AutoPipetteService) -> None:
+        result = service.validate_protocol("bom_description.pipette")
+
+        assert result.data is not None
+        assert result.data["description"] == "Starts with a byte-order mark."
+        assert _findings(result) == []
+
     def test_is_empty_without_a_leading_comment(
         self, service: AutoPipetteService
     ) -> None:

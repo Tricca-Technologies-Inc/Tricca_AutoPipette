@@ -26,6 +26,7 @@ from __future__ import annotations
 import itertools
 import json
 import logging
+import math
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -38,7 +39,7 @@ from tricca_autopipette.core.json_config_manager import (
     JsonConfigManager,
 )
 from tricca_autopipette.core.pipette_constants import DefaultPaths
-from tricca_autopipette.core.pipette_models import LocationsConfig
+from tricca_autopipette.core.pipette_models import DeckGrid, LocationsConfig
 
 PREFIX = "pytest_tmp_"
 
@@ -259,6 +260,12 @@ class TestDeckGrid:
 
         with pytest.raises(ValueError, match="ascending"):
             JsonConfigManager().load_system_config(child)
+
+
+class TestDeckGridNonFinite:
+    def test_a_nan_edge_is_refused(self) -> None:
+        with pytest.raises(ValueError, match="finite"):
+            DeckGrid(x_edges=[190, math.nan])
 
 
 class TestTriggerPins:

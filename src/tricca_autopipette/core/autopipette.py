@@ -1112,7 +1112,6 @@ class AutoPipette:
         # The supplying box comes back with the coordinate: boxes may sit at
         # different heights, so the dip distance must come from *that* box.
         name, box, loc_tip, index = manager.next_tip(name=boxes)
-        self.tips_taken[name] += 1
         self.note_action(
             f"Picking up tip from '{name}' at (X:{loc_tip.x:.2f}, Y:{loc_tip.y:.2f})"
         )
@@ -1129,6 +1128,7 @@ class AutoPipette:
         self.dip_z_return(loc_tip)
         self.state.tip_state = TipState.ATTACHED
         self.state.tip_origin = (name, index)
+        self.tips_taken[name] += 1  # only a pickup that got this far
 
     def eject_tip(self) -> None:
         """Eject the current pipette tip."""

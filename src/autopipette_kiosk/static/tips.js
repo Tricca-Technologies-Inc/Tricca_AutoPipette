@@ -19,7 +19,8 @@
       const res = await fetch('/tips');
       const result = await res.json();
       if (!result.ok) {
-        container.innerHTML = `<div class="tips-empty">${result.message || 'Failed to load tip boxes'}</div>`;
+        container.innerHTML = '<div class="tips-empty"></div>';
+        container.firstChild.textContent = result.message || 'Failed to load tip boxes';
         return;
       }
       renderBoxes(result.data.boxes || []);

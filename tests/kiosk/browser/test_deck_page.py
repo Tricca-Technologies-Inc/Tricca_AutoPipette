@@ -20,6 +20,7 @@ from playwright.sync_api import Page, expect
 from support.live_control_plane import LiveControlPlane
 from support.live_kiosk_server import LiveKioskServer
 
+from tricca_autopipette.core.coordinate import Coordinate
 from tricca_autopipette.core.pipette_models import DeckGrid
 
 ACTIVE = re.compile(r"\bactive\b")
@@ -168,3 +169,18 @@ def test_a_rig_with_a_deck_grid_gets_slots_drawn_the_way_the_map_is(
 
     page.click('.deck-slot-content[data-name="tipbox"]')
     expect(page.locator("#page-tips")).to_have_class(ACTIVE)
+
+
+def test_location_details_are_rendered_as_text(
+    page: Page,
+    live_kiosk_server_with_plates: LiveKioskServer,
+    live_control_plane_with_plates: LiveControlPlane,
+) -> None:
+    manager = live_control_plane_with_plates.service._autopipette.location_manager
+    manager.set_coordinate("<b>spot</b>", Coordinate(x=200.0, y=200.0, z=0.0))
+    _goto_deck(page, live_kiosk_server_with_plates)
+
+    page.locator('.deck-tile[data-name="<b>spot</b>"]').click()
+
+    expect(page.locator(".deck-info-name")).to_have_text("<b>spot</b>")
+    expect(page.locator("#deckInfo b")).to_have_count(0)

@@ -136,7 +136,7 @@
       const res = await fetch('/locations');
       const result = await res.json();
       if (!res.ok || !result.ok) {
-        select.innerHTML = `<option value="">${result.message || result.detail || 'Failed to load locations'}</option>`;
+        select.replaceChildren(new Option(result.message || result.detail || 'Failed to load locations', ''));
         return;
       }
       const locations = (result.data && result.data.locations) || [];
