@@ -25,7 +25,9 @@ from tricca_autopipette.daemon.control_requests import ControlRequests
 # Builders with no standalone `tap` command, by design rather than a gap:
 # - "identify" is a one-time connection tag `preloop` sends itself, not a
 #   user-invocable command (see CLAUDE.md's daemon.identify note, issue #53).
-_NO_COMMAND_BY_DESIGN = frozenset({"identify"})
+# - "command" is the kiosk's command entry: one typed line. tap is a command
+#   line already, so each allowed command is its own tap command.
+_NO_COMMAND_BY_DESIGN = frozenset({"command", "identify"})
 
 # ControlRequests builder name -> the `do_<name>` command on RemoteTapShell
 # that reaches it. Most are 1:1 (`move` -> `do_move`); the rest are listed

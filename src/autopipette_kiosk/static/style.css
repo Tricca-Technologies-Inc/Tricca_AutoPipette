@@ -1211,3 +1211,49 @@ header {
 
 .cal-fit { font-family: var(--mono); font-size: 13px; display: flex; flex-direction: column; gap: 4px; }
 .cal-fit-label { display: inline-block; width: 64px; color: var(--muted); }
+
+/* ── Commands page ── */
+#page-commands.active {
+  grid-template-columns: 1fr;
+  grid-auto-rows: min-content;
+  align-content: start;
+  padding: 28px 36px;
+  gap: 20px;
+  overflow-y: auto;
+}
+
+.command-entry {
+  display: flex;
+  gap: 10px;
+}
+
+.command-entry input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 15px;
+}
+
+.command-output {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.command-result {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--success);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-size: 13px;
+  white-space: pre-wrap;
+}
+
+.command-result strong { font-family: var(--mono); display: block; margin-bottom: 4px; }
+.command-result.error { border-left-color: var(--error); }

@@ -27,7 +27,7 @@ from typing import Any, Literal, cast
 from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from tricca_autopipette.commands.tap_cmd_parsers import (
     CalibrateStartArgs,
@@ -85,6 +85,12 @@ class RunStatus(BaseModel):
     paused: bool = False
     # How far through its G-code the print is, 0 to 1; None before it starts.
     progress: float | None = None
+
+
+class CommandRequest(BaseModel):
+    """Request body for `POST /command`: one typed command line."""
+
+    command: str = Field(min_length=1, max_length=1024)
 
 
 class TipsResetRequest(BaseModel):
@@ -688,6 +694,22 @@ async def cancel_run() -> RunStatus:
         The run status after the cancel was sent.
     """
     return await _run_control(_control_requests.run_cancel())
+
+
+@app.post("/command", response_model=CommandResultResponse)
+async def run_command(req: CommandRequest) -> CommandResultResponse:
+    """Run one typed command (the Commands page), over `util.command`.
+
+    The daemon allows only motion, tip and pipetting commands, and none
+    while a protocol runs.
+
+    Args:
+        req: The command line.
+
+    Returns:
+        The daemon's `CommandResult`, refusals included.
+    """
+    return await _dispatch_control_request(_control_requests.command(req.command))
 
 
 async def _dispatch_control_request(request: dict[str, Any]) -> CommandResultResponse:

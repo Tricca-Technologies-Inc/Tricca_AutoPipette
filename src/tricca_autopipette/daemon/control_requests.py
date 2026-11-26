@@ -470,6 +470,17 @@ class ControlRequests(JsonRpcRequestBuilder):
         """
         return self.gen_request("util.webcam_url")
 
+    def command(self, line: str) -> dict[str, Any]:
+        """Build a request to run one typed command line (kiosk command entry).
+
+        Args:
+            line: One command, as it would appear in a protocol file.
+
+        Returns:
+            Request to run the command.
+        """
+        return self.gen_request("util.command", {"line": line})
+
     def vol_to_mm(self, args: VolToMmArgs) -> dict[str, Any]:
         """Build a request to convert a volume to plunger travel (in mm).
 
