@@ -2143,10 +2143,17 @@ class AutoPipette:
         # purge_air_gap_ul is not needed here: the post-air goes into the well
         # naturally as the plunger pushes down — no pre-purge required.
         n_splits = len(resolved)
+        total_split_vol = sum(s.vol_ul for s in splits)
+        no_leftover = (vol_ul - total_split_vol) <= PhysicalConstants.VOLUME_TOLERANCE_UL
+
         dispensed = 0.0
         for index, (split, dest_row, dest_col) in enumerate(resolved):
             dispensed += split.vol_ul
             is_last = index == n_splits - 1
+            # On the final split, if splits exactly consume the aspirated volume,
+            # clear_syringe() pushes the pre-air through so the last well gets
+            # its full volume and the tip is empty before disposal/return.
+            final_empties = is_last and no_leftover
             self.dispense_volume(
                 split.dest,
                 dest_row=dest_row,
@@ -2158,7 +2165,7 @@ class AutoPipette:
                 # the remaining liquid volume, under-delivering to each well.
                 # The pre-air at the top of the tip prevents dripping in transit.
                 redraw_post_air_gap_ul=0.0,
-                empties_tip=False,
+                empties_tip=final_empties,
             )
 
         remaining = vol_ul - dispensed
