@@ -20,6 +20,9 @@
     </div>
     <span class="logo-sub" style="margin-left:4px">/ kiosk</span>
     <div class="header-spacer"></div>
+    <button class="pipette-pill" id="pipettePill" title="Active pipette: tap to switch">
+      <span id="pipettePillLabel">…</span>
+    </button>
     <div class="status-pill idle" id="statusPill">
       <div class="status-pill-dot" id="statusPillDot"></div>
       <span id="statusPillLabel">Idle</span>
@@ -34,6 +37,14 @@
       <span id="connLabel">connecting</span>
     </div>
   </header>
+
+  <!-- Pipette switcher, opened by the header pill (pipette.js) -->
+  <div class="pipette-switcher" id="pipetteSwitcher">
+    <div class="pipette-switcher-title">Switch pipette</div>
+    <div id="pipetteOptions"></div>
+    <div class="move-feedback error" id="pipetteFeedback"></div>
+    <div class="pipette-switcher-note">Home required after switching.</div>
+  </div>
 
   <!-- Tab bar (issue #25) -- a data-driven registry lives in app.js; this
        markup is the two tabs that registry currently knows about. -->
@@ -234,13 +245,13 @@
         <span>🔒</span> Locked while a protocol is running.
       </div>
       <div class="settings-banner home" id="settingsHomeBanner">
-        <span>⚠</span> Home required: the pipette, gantry or system profile changed, so
+        <span>⚠</span> Home required: the system profile changed, so
         homing was invalidated. Press Home before moving.
       </div>
       <div class="tips-hint">
-        Pipette and gantry values are high-risk: each has a fixed allowed range and needs
-        confirming. Liquid values save as soon as you change them; leave one empty to use
-        the pipette's default.
+        Pipette and gantry values are read-only here: switch the system profile, or the
+        pipette from the header. Liquid values save as soon as you change them; leave one
+        empty to use the pipette's default.
       </div>
       <div id="settingsContent">
         <div class="tips-empty">Loading settings…</div>
@@ -319,6 +330,7 @@
 </div>
 
 <script src="/static/app.js"></script>
+<script src="/static/pipette.js"></script>
 <script src="/static/run.js"></script>
 <script src="/static/move.js"></script>
 <script src="/static/tips.js"></script>
