@@ -1,0 +1,104 @@
+#Giga B: Adds 25uL of Reagent D to the sample plate
+#
+load_pipette TysonP100.json
+home
+#
+# This protocol uses the Tyson100 liquid profile's air gaps explicitly:
+# pre-air 30 µL, post-air 5 µL. Each prewet cycle uses the transfer volume.
+
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE --prewet 5
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 --tip_end keep RGNT_D SAMPLEPLATE
+pipette 25 RGNT_D SAMPLEPLATE
