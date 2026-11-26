@@ -67,6 +67,7 @@ SUBSCRIBED_OBJECTS: dict[str, list[str] | None] = {
     "toolhead": None,
     "print_stats": None,
     "display_status": ["message"],
+    "virtual_sdcard": ["progress"],
     PLATE_STATE_OBJECT: None,
     PIPETTE_STATE_OBJECT: None,
     STEPPER_ENABLE_OBJECT: None,
@@ -215,6 +216,8 @@ class MoonrakerStateTracker:
         self._print_message: str = ""
         self._display_message: str = ""
         self._print_state_callbacks: list[Callable[[str], None]] = []
+        self._progress: float | None = None
+        self._progress_callbacks: list[Callable[[float], None]] = []
         self._axis_config: AxisConfig | None = None
         #: Last-known fields of the extra-axis objects, merged push by push
         #: (Moonraker only sends fields that changed).
@@ -347,6 +350,24 @@ class MoonrakerStateTracker:
         """The last ``M117`` message (``display_status.message``)."""
         return self._display_message
 
+    @property
+    def progress(self) -> float | None:
+        """How far through its G-code file the job is, 0 to 1, or None.
+
+        Klipper's ``virtual_sdcard.progress``: the file position over its
+        size, so an estimate, not time.
+        """
+        return self._progress
+
+    def on_progress_change(self, callback: Callable[[float], None]) -> None:
+        """Register a callback invoked whenever ``progress`` changes.
+
+        Args:
+            callback: Called with the new progress, from the WebSocket
+                client's background thread (see `on_print_state_change`).
+        """
+        self._progress_callbacks.append(callback)
+
     def on_print_state_change(self, callback: Callable[[str], None]) -> None:
         """Register a callback invoked whenever ``print_stats.state`` changes.
 
@@ -404,6 +425,12 @@ class MoonrakerStateTracker:
             self._display_message = display
         elif "display_status" in status and display is None:
             self._display_message = ""
+
+        progress = as_dict(status.get("virtual_sdcard")).get("progress")
+        if isinstance(progress, (int, float)) and progress != self._progress:
+            self._progress = float(progress)
+            for callback in self._progress_callbacks:
+                callback(self._progress)
 
         print_stats = as_dict(status.get("print_stats"))
         message = print_stats.get("message")

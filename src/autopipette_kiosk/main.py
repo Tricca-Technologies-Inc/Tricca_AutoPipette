@@ -84,6 +84,8 @@ class RunStatus(BaseModel):
     message: str = ""
     # Klipper has the print paused, at a `break` or an empty tipbox.
     paused: bool = False
+    # How far through its G-code the print is, 0 to 1; None before it starts.
+    progress: float | None = None
 
 
 class TipsResetRequest(BaseModel):
@@ -656,7 +658,7 @@ async def move_rel(req: MoveRelRequest) -> MoveResult:
 
 
 async def _run_control(request: dict[str, Any]) -> RunStatus:
-    """Send a `run.resume`/`run.cancel` request and return the run status.
+    """Send a `run.pause`/`resume`/`cancel` request and return the run status.
 
     Args:
         request: The `ControlRequests` builder's result.
@@ -679,7 +681,18 @@ async def _run_control(request: dict[str, Any]) -> RunStatus:
         status=result.get("status", "running"),
         message=result.get("message", ""),
         paused=bool(result.get("paused")),
+        progress=result.get("progress"),
     )
+
+
+@app.post("/run/pause", response_model=RunStatus)
+async def pause_run() -> RunStatus:
+    """Pause the active run (the Run page's Pause).
+
+    Returns:
+        The run status after the pause was sent.
+    """
+    return await _run_control(_control_requests.run_pause())
 
 
 @app.post("/run/resume", response_model=RunStatus)
@@ -1010,6 +1023,7 @@ def _on_run_status_notification(params: Any) -> None:  # ruff:ignore[any-type]
         status=notification.get("status", "idle"),
         message=notification.get("message", ""),
         paused=bool(notification.get("paused")),
+        progress=notification.get("progress"),
     )
     if _main_loop is not None:
         asyncio.run_coroutine_threadsafe(_broadcast_status(), _main_loop)

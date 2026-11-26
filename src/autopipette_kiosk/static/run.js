@@ -166,6 +166,64 @@
     `).join(''));
   }
 
+  // ── time left: elapsed running time over progress made, extrapolated.
+  // Paused time doesn't count. Client-side only; resets with each run. ─────
+  let eta = null; // { start, startProgress, pausedMs, pausedAt }
+
+  function timeLeft(progress, paused) {
+    const now = Date.now();
+    if (!eta) eta = { start: now, startProgress: progress, pausedMs: 0, pausedAt: null };
+    if (paused && eta.pausedAt === null) eta.pausedAt = now;
+    if (!paused && eta.pausedAt !== null) {
+      eta.pausedMs += now - eta.pausedAt;
+      eta.pausedAt = null;
+    }
+    const activeMs = (eta.pausedAt ?? now) - eta.start - eta.pausedMs;
+    const done = progress - eta.startProgress;
+    if (done < 0.005 || activeMs < 5000) return null; // too little to go on
+    return (activeMs / done) * (1 - progress);
+  }
+
+  function formatDuration(ms) {
+    const s = Math.round(ms / 1000);
+    if (s < 60) return `${s}s`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m}m ${s % 60}s`;
+    return `${Math.floor(m / 60)}h ${m % 60}m`;
+  }
+
+  function renderProgress(data, active) {
+    const bar = document.getElementById('progressBar');
+    const label = document.getElementById('progressLabel');
+    const p = data.progress;
+    const known = active && typeof p === 'number';
+    bar.classList.toggle('determinate', known);
+    bar.style.width = known ? `${Math.floor(p * 100)}%` : '';
+    if (!active) eta = null;
+    if (!known) {
+      label.textContent = '';
+      return;
+    }
+    const left = timeLeft(p, !!data.paused);
+    const percent = `${Math.floor(p * 100)}%`;
+    label.textContent = left === null ? percent : `${percent} · ~${formatDuration(left)} left`;
+  }
+
+  // ── Pause/Resume and Cancel ────────────────────────────────────────────
+  let paused = false;
+
+  async function runControl(action) {
+    if (action === 'cancel' && !window.confirm(
+      'Cancel this protocol? Cancel is not an emergency stop.'
+    )) return;
+    await fetch(`/run/${action}`, { method: 'POST' });
+  }
+
+  document.getElementById('pauseBtn').addEventListener(
+    'click', () => runControl(paused ? 'resume' : 'pause'));
+  document.getElementById('cancelBtn').addEventListener(
+    'click', () => runControl('cancel'));
+
   // ── detailed status card (Run-page-specific; the compact pill + global
   // paused-run banner in the header are app.js's job) ─────────────────────
   function renderStatusCard(data) {
@@ -184,9 +242,17 @@
     state.textContent = label;
     msg.textContent   = data.message || '';
 
-    icon.classList.toggle('spinning', App.isRunActive(s));
-    bar.classList.toggle('active', App.isRunActive(s));
-    btn.disabled = App.isRunActive(s) || !selected;
+    const active = App.isRunActive(s);
+    paused = active && !!data.paused;
+    icon.classList.toggle('spinning', active && !paused);
+    bar.classList.toggle('active', active);
+    btn.disabled = active || !selected;
+    renderProgress(data, active);
+
+    const pauseBtn = document.getElementById('pauseBtn');
+    pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+    pauseBtn.disabled = !active;
+    document.getElementById('cancelBtn').disabled = !active;
   }
 
   App.onStatus(renderStatusCard);

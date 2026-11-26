@@ -558,9 +558,9 @@ class TestIndexRoute:
 
 
 class TestRunResumeAndCancel:
-    """A ``break`` or an empty tipbox pauses the print; the banner resumes it."""
+    """The Run page pauses a print; it and the banner resume or cancel it."""
 
-    @pytest.mark.parametrize("path", ["/run/resume", "/run/cancel"])
+    @pytest.mark.parametrize("path", ["/run/pause", "/run/resume", "/run/cancel"])
     def test_returns_503_when_the_daemon_is_not_connected(
         self, monkeypatch: pytest.MonkeyPatch, path: str
     ) -> None:
@@ -574,6 +574,7 @@ class TestRunResumeAndCancel:
     @pytest.mark.parametrize(
         ("path", "method"),
         [
+            ("/run/pause", "printer.print.pause"),
             ("/run/resume", "printer.print.resume"),
             ("/run/cancel", "printer.print.cancel"),
         ],
@@ -607,12 +608,29 @@ class TestRunResumeAndCancel:
             assert pushed["paused"] is True
             assert pushed["message"] == "Paused: Out of tips"
 
+    def test_progress_reaches_the_browser(self, kiosk_client: TestClient) -> None:
+        with kiosk_client.websocket_connect("/ws/status") as ws:
+            assert ws.receive_json()["progress"] is None
+
+            kiosk_main._on_run_status_notification({
+                "status": "running",
+                "message": "Running a.pipette",
+                "progress": 0.42,
+            })
+
+            assert ws.receive_json()["progress"] == pytest.approx(0.42)
+
 
 class TestStatusEndpoint:
     def test_idle_by_default(self, kiosk_client: TestClient) -> None:
         response = kiosk_client.get("/status")
 
-        assert response.json() == {"status": "idle", "message": "", "paused": False}
+        assert response.json() == {
+            "status": "idle",
+            "message": "",
+            "paused": False,
+            "progress": None,
+        }
 
     def test_reflects_the_real_status_after_a_run_starts(
         self, kiosk_client: TestClient, protocols_dir: Path
@@ -636,6 +654,7 @@ class TestWebSocketStatusBroadcast:
             "status": "idle",
             "message": "",
             "paused": False,
+            "progress": None,
             "toolhead": {"position": None, "homed_axes": None},
             "config_locked": False,
             "homing_invalidated": False,
