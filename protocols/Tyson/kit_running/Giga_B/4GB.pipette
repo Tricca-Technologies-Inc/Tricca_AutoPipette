@@ -1,0 +1,103 @@
+#Giga B: Final dilution of 430uL of water in the LC/MS-MS plate
+#
+load_pipette TysonP1000.json
+home all
+#
+# This protocol uses the Tyson1000 liquid profile's air gaps
+
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000 --prewet 5
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 --tip_end keep WATER MSPLATE_p1000
+pipette 430.0 WATER MSPLATE_p1000
