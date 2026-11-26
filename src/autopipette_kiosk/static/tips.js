@@ -40,24 +40,43 @@
   }
 
   function renderBox(box) {
+    // A disabled box (not on the deck, Scott's dd331b7) keeps its state but
+    // supplies no tips, so its grid is hidden until it's enabled again.
+    const enabled = box.enabled !== false;
     const card = document.createElement('div');
     card.className = 'tipbox-card';
+    card.classList.toggle('tipbox-disabled', !enabled);
     card.dataset.box = box.name;
 
     const header = document.createElement('div');
     header.className = 'tipbox-header';
     header.innerHTML = `
-      <span class="tipbox-name">${box.name}</span>
-      <span class="tipbox-count">${box.remaining}/${box.capacity} available</span>
+      <span class="tipbox-name"></span>
+      <span class="tipbox-count"></span>
       <span class="tipbox-spacer"></span>
     `;
-    const resetBtn = document.createElement('button');
-    resetBtn.className = 'tipbox-reset-btn';
-    resetBtn.textContent = 'Reloaded';
-    resetBtn.title = `Mark ${box.name} as full`;
-    resetBtn.addEventListener('click', () => resetBox(box.name));
-    header.appendChild(resetBtn);
+    header.querySelector('.tipbox-name').textContent = box.name;
+    header.querySelector('.tipbox-count').textContent = enabled
+      ? `${box.remaining}/${box.capacity} available`
+      : 'disabled';
+    if (enabled) {
+      const resetBtn = document.createElement('button');
+      resetBtn.className = 'tipbox-reset-btn';
+      resetBtn.textContent = 'Reloaded';
+      resetBtn.title = `Mark ${box.name} as full`;
+      resetBtn.addEventListener('click', () => resetBox(box.name));
+      header.appendChild(resetBtn);
+    }
+    const toggleBtn = document.createElement('button');
+    toggleBtn.className = 'tipbox-reset-btn tipbox-toggle-btn';
+    toggleBtn.textContent = enabled ? 'Disable' : 'Enable';
+    toggleBtn.title = enabled
+      ? `Stop drawing tips from ${box.name}`
+      : `Draw tips from ${box.name} again`;
+    toggleBtn.addEventListener('click', () => toggleBox(box.name, enabled));
+    header.appendChild(toggleBtn);
     card.appendChild(header);
+    if (!enabled) return card;
 
     const grid = document.createElement('div');
     grid.className = 'tipbox-grid';
@@ -140,6 +159,18 @@
       cell.classList.remove('pending');
       // Refetch so remaining/capacity/next_well (server-computed) and any
       // change from a concurrent client are reflected, not just this cell.
+      loadTips();
+    }
+  }
+
+  async function toggleBox(name, enabled) {
+    try {
+      await fetch(enabled ? '/tips/disable' : '/tips/enable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+    } finally {
       loadTips();
     }
   }

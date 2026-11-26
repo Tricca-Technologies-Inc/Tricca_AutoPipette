@@ -452,3 +452,51 @@ class TestReturnedTips:
         record = {"num_row": 1, "num_col": 3, "slots": ["available", "bogus", "used"]}
         assert mgr.restore({"tips_a": record}) == ["tips_a"]
         assert mgr.boxes["tips_a"].remaining == 3
+
+
+class TestDisabledBoxes:
+    """A disabled box keeps its place and its state but supplies no tips.
+
+    Ported from Scott's dd331b7, for a box not physically on the deck.
+    """
+
+    def test_a_disabled_box_is_skipped(self, manager: TipBoxManager) -> None:
+        manager.set_enabled("tips_a", False)
+
+        assert manager.next_tip()[0] == "tips_b"
+
+    def test_re_enabling_keeps_draw_order_and_state(
+        self, manager: TipBoxManager
+    ) -> None:
+        manager.next_tip()  # tips_a A1
+        manager.set_enabled("tips_a", False)
+        manager.set_enabled("tips_a", True)
+
+        name, _box, _coor, index = manager.next_tip()
+
+        assert (name, index) == ("tips_a", 1)
+        assert manager.names() == ["tips_a", "tips_b"]
+
+    def test_disabled_tips_do_not_count_as_available(
+        self, manager: TipBoxManager
+    ) -> None:
+        manager.set_enabled("tips_b", False)
+
+        assert manager.remaining == 3
+        assert manager.describe("tips_b")["enabled"] is False
+        assert manager.describe("tips_a")["enabled"] is True
+
+    def test_the_flag_survives_a_snapshot_round_trip(
+        self, manager: TipBoxManager
+    ) -> None:
+        manager.set_enabled("tips_a", False)
+        saved = manager.snapshot()
+        manager.set_enabled("tips_a", True)
+
+        manager.restore(saved)
+
+        assert manager.describe("tips_a")["enabled"] is False
+
+    def test_an_unknown_box_is_refused(self, manager: TipBoxManager) -> None:
+        with pytest.raises(NotALocationError):
+            manager.set_enabled("nope", False)

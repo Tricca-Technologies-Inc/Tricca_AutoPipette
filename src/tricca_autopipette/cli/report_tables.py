@@ -331,7 +331,7 @@ def build_tipbox_map(
     order = box["order"]
     lines = [
         f"{box['name']}   {box['remaining']}/{box['capacity']} remaining   "
-        f"order={order}"
+        f"order={order}" + ("" if box.get("enabled", True) else "   (disabled)")
     ]
 
     width = max(2, len(str(num_col)))

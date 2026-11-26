@@ -200,6 +200,8 @@ _COMMANDS: list[_CommandDoc] = [
         ),
     ),
     _CommandDoc("reset_tips", parser=TAPCmdParsers.parser_reset_tips),
+    _CommandDoc("disable_tipbox", parser=TAPCmdParsers.parser_disable_tipbox),
+    _CommandDoc("enable_tipbox", parser=TAPCmdParsers.parser_enable_tipbox),
     _CommandDoc(
         "reset_tips_all",
         manual_usage=("Usage: reset_tips_all\n\nMark every configured tipbox as full."),

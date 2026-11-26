@@ -125,6 +125,12 @@ _RPC_DISPATCH: dict[str, _RpcCommand] = {
     ),
     "config.reset_tips": _RpcCommand(ResetTipsArgs, AutoPipetteService.reset_tips),
     "config.reset_tips_all": _RpcCommand(None, AutoPipetteService.reset_tips_all),
+    "config.disable_tipbox": _RpcCommand(
+        ResetTipsArgs, AutoPipetteService.disable_tipbox
+    ),
+    "config.enable_tipbox": _RpcCommand(
+        ResetTipsArgs, AutoPipetteService.enable_tipbox
+    ),
     "config.set_tips": _RpcCommand(SetTipsArgs, AutoPipetteService.set_tips),
     "config.tips": _RpcCommand(TipsArgs, AutoPipetteService.tips),
     "util.wait": _RpcCommand(WaitArgs, AutoPipetteService.wait),
