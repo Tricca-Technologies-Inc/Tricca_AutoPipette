@@ -1,0 +1,108 @@
+#Prime Panel A: Adding 300uL of extraction solvent to the wells of the filter plate
+
+load_pipette TysonP1000.json
+home all
+
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000 --prewet 5
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 --tip_end keep SOLV 96wellplate_p1000
+pipette 300.0 SOLV 96wellplate_p1000
