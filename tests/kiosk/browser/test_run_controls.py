@@ -19,7 +19,11 @@ from tricca_autopipette.daemon.service import RunStatus
 
 
 def _push(
-    plane: LiveControlPlane, *, paused: bool = False, progress: float | None = None
+    plane: LiveControlPlane,
+    *,
+    paused: bool = False,
+    progress: float | None = None,
+    started: bool = True,
 ) -> None:
     plane.service._current = RunStatus(
         status="running",
@@ -28,6 +32,7 @@ def _push(
         filename="a.pipette",
         paused=paused,
         progress=progress,
+        started=started,
     )
     plane.service._broadcast_status()
 
@@ -39,6 +44,25 @@ def test_controls_are_disabled_with_no_run(
 
     expect(page.locator("#runBtn")).to_be_disabled()
     expect(page.locator("#cancelBtn")).to_be_disabled()
+
+
+def test_pause_waits_for_the_print_to_start(
+    page: Page,
+    live_kiosk_server: LiveKioskServer,
+    live_control_plane: LiveControlPlane,
+) -> None:
+    # While tapd prepares the G-code there's no print to pause, only to cancel.
+    page.goto(live_kiosk_server.url)
+    _push(live_control_plane, started=False)
+
+    expect(page.locator("#runBtnLabel")).to_have_text("Pause")
+    expect(page.locator("#runBtn")).to_be_disabled()
+    expect(page.locator("#cancelBtn")).to_be_enabled()
+    expect(page.locator("#progressLabel")).to_have_text("Preparing")
+
+    _push(live_control_plane)
+    expect(page.locator("#runBtn")).to_be_enabled()
+    expect(page.locator("#progressLabel")).to_have_text("Progress not known yet")
 
 
 def test_pause_then_resume(

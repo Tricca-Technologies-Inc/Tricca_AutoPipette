@@ -294,7 +294,8 @@
     else bar.removeAttribute('value'); // indeterminate
     if (!active) eta = null;
     if (!known) {
-      label.textContent = '';
+      // Say why there's no number rather than show a blank bar.
+      label.textContent = !active ? '' : data.started ? 'Progress not known yet' : 'Preparing';
       return;
     }
     const left = timeLeft(p, !!data.paused);
@@ -326,7 +327,9 @@
       active ? (paused ? 'Resume' : 'Pause') : 'Run';
     document.getElementById('runBtnIcon').setAttribute(
       'd', active && !paused ? 'M6 4h4v16H6zM14 4h4v16h-4z' : 'M8 5v14l11-7z');
-    document.getElementById('runBtn').disabled = !active && !loaded;
+    // Until Klipper reports the print started there's nothing to pause,
+    // only to cancel (tapd stops a run it hasn't handed off yet).
+    document.getElementById('runBtn').disabled = active ? !data.started : !loaded;
     document.getElementById('cancelBtn').disabled = !active;
     // Loading another protocol mid-run would relabel the Run page.
     document.getElementById('loadBtn').disabled = active || !selected;
