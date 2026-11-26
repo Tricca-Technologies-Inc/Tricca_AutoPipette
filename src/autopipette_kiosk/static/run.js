@@ -2,7 +2,7 @@
 //
 // Subscribes to App.onStatus rather than owning any WebSocket connection or
 // run-status state itself (app.js owns both, since the header's compact
-// status pill and breakpoint banner need the same data regardless of which
+// status pill and paused-run banner need the same data regardless of which
 // tab is active -- see issue #25).
 (() => {
   let selected = null;
@@ -167,7 +167,7 @@
   }
 
   // ── detailed status card (Run-page-specific; the compact pill + global
-  // breakpoint banner in the header are app.js's job) ─────────────────────
+  // paused-run banner in the header are app.js's job) ─────────────────────
   function renderStatusCard(data) {
     const icon  = document.getElementById('statusIcon');
     const state = document.getElementById('statusState');

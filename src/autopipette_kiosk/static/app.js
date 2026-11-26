@@ -1,10 +1,10 @@
 // Kiosk shell: owns the single `/ws/status` WebSocket connection, the
-// shared run-status/breakpoint state, the global header chrome (connection
-// indicator, Home button, compact status pill, breakpoint banner), and the
+// shared run-status state, the global header chrome (connection
+// indicator, Home button, compact status pill, paused-run banner), and the
 // tab switcher (issue #25).
 //
 // Page modules (run.js, tips.js) register themselves via `App.registerPage`
-// and read run-status/breakpoint updates via `App.onStatus` instead of
+// and read run-status updates via `App.onStatus` instead of
 // touching the WebSocket directly -- the shell is the one thing guaranteed
 // to be alive regardless of which tab is active, so it's the one thing that
 // owns the connection. Client-side view switching only (never a full page
@@ -12,10 +12,10 @@
 // mid-run, which is unacceptable (see CLAUDE.md).
 const App = (() => {
   let ws = null;
-  let status = { status: 'idle', message: '', breakpoint: null };
+  let status = { status: 'idle', message: '', paused: false };
   const statusListeners = [];
 
-  // ── shared run-status/breakpoint state ──────────────────────────────────
+  // ── shared run-status state ──────────────────────────────────────────────
   function onStatus(fn) {
     statusListeners.push(fn);
     fn(status); // deliver the current snapshot immediately to late subscribers
@@ -91,29 +91,54 @@ const App = (() => {
     label.textContent = describeStatus(s).label;
   }
 
-  // ── global breakpoint banner ────────────────────────────────────────────
+  // ── global paused-run banner ────────────────────────────────────────────
+  // Klipper has the print paused (a `break` line, or an empty tipbox); the
+  // message is the reason. Beeps once per new pause so an operator across
+  // the room notices (Scott's c5e549e).
+  let lastPause = null;
+
   function renderBreakpointBanner() {
     const banner = document.getElementById('breakpointBanner');
-    const msg = document.getElementById('breakpointMsg');
-    const bp = status.breakpoint;
-    banner.classList.toggle('active', !!bp);
-    if (bp) {
-      msg.textContent = bp.filename ? `Protocol: ${bp.filename}` : '';
+    const paused = status.status === 'running' && !!status.paused;
+    banner.classList.toggle('active', paused);
+    if (!paused) {
+      lastPause = null;
+      return;
+    }
+    document.getElementById('breakpointMsg').textContent = status.message || '';
+    if (status.message !== lastPause) {
+      lastPause = status.message;
+      beep();
     }
   }
 
-  async function respondToBreakpoint(proceed) {
-    document.getElementById('bpContinueBtn').disabled = true;
-    document.getElementById('bpAbortBtn').disabled = true;
+  function beep() {
     try {
-      await fetch('/breakpoint/respond', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ proceed }),
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [0, 0.25, 0.5].forEach((offset) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 880;
+        const t = ctx.currentTime + offset;
+        gain.gain.setValueAtTime(0.4, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+        osc.start(t);
+        osc.stop(t + 0.18);
       });
+    } catch (e) {
+      // No audio on this device: the banner alone has to do.
+    }
+  }
+
+  async function runControl(path) {
+    const buttons = ['pauseResumeBtn', 'pauseCancelBtn'].map((id) => document.getElementById(id));
+    buttons.forEach((b) => { b.disabled = true; });
+    try {
+      await fetch(path, { method: 'POST' });
     } finally {
-      document.getElementById('bpContinueBtn').disabled = false;
-      document.getElementById('bpAbortBtn').disabled = false;
+      buttons.forEach((b) => { b.disabled = false; });
     }
   }
 
@@ -185,8 +210,8 @@ const App = (() => {
   // ── init ─────────────────────────────────────────────────────────────
   function init() {
     document.getElementById('homeBtn').addEventListener('click', home);
-    document.getElementById('bpContinueBtn').addEventListener('click', () => respondToBreakpoint(true));
-    document.getElementById('bpAbortBtn').addEventListener('click', () => respondToBreakpoint(false));
+    document.getElementById('pauseResumeBtn').addEventListener('click', () => runControl('/run/resume'));
+    document.getElementById('pauseCancelBtn').addEventListener('click', () => runControl('/run/cancel'));
     initTabBar();
     connectWS();
   }

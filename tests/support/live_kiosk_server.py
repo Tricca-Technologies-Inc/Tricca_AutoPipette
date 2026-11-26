@@ -30,7 +30,7 @@ class LiveKioskServer(uvicorn.Server):
 
         Args:
             app: The kiosk's FastAPI app (`autopipette_kiosk.main.app`),
-                with `TAPD_CONTROL_URI` and the run/breakpoint/ws-client
+                with `TAPD_CONTROL_URI` and the run/ws-client
                 module globals already patched to a test backend -- same
                 setup `tests/kiosk/conftest.py`'s `kiosk_client` does.
         """

@@ -3,7 +3,7 @@
 Backs both the CLI (`tests/cli/`) and kiosk (`tests/kiosk/`, once it exists)
 test suites: rather than mocking at the RPC-call boundary, both connect to
 this as genuine control-plane clients over a real localhost socket, exercising
-the real JSON-RPC envelope and real `notify_run_status`/`notify_breakpoint`
+the real JSON-RPC envelope and real `notify_run_status`
 push timing -- the thing a client-side unit test mocking `send_jsonrpc`
 directly can't catch (see issue #37).
 

@@ -1,7 +1,7 @@
 """A small polling helper shared by tests that wait on another thread.
 
 Control-plane tests can't just call a synchronous method and assert on the
-result -- a push notification (`notify_run_status`, `notify_breakpoint`)
+result -- a push notification (`notify_run_status`)
 arrives asynchronously on the client's background thread, so the test has to
 wait for it rather than read it immediately after sending the triggering
 request.

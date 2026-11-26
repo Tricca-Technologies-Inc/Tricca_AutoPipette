@@ -133,13 +133,9 @@ class TestCatchAndContinue:
 
 
 class TestBreakAndSaveLocations:
-    def test_break_is_an_info_finding_and_never_blocks(
-        self, service: AutoPipetteService
-    ) -> None:
-        with patch.object(service, "request_breakpoint") as mock_breakpoint:
-            result = service.validate_protocol("validate_break_and_save.pipette")
+    def test_break_is_an_info_finding(self, service: AutoPipetteService) -> None:
+        result = service.validate_protocol("validate_break_and_save.pipette")
 
-        mock_breakpoint.assert_not_called()
         findings = _findings(result)
         break_findings = [f for f in findings if f["command"] == "break"]
         assert len(break_findings) == 1
