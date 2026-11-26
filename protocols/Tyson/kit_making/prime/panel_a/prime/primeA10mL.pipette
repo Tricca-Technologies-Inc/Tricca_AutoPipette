@@ -194,3 +194,21 @@ pipette 50.0 --src_row 0 --src_col 2 manu3 KIT1 --prewet 1
 pipette 60.0 --tip_end keep --src_row 1 --src_col 2 manu3 KIT1 --prewet 1 
 pipette 50.0 --tip_end keep --src_row 1 --src_col 2 manu3 KIT1 --prewet 1 
 pipette 50.0 --src_row 1 --src_col 2 manu3 KIT1 --prewet 1 
+
+#adding the larger volumes for the 10mL prime panel A CAL 7-1kit making procedure
+
+load_pipette TysonP1000.json
+home all
+
+pipette 465.2 --tip_end keep WATER KIT1_p1000 --prewet 5
+pipette 465.2 --tip_end keep WATER KIT1_p1000 
+pipette 465.2 --tip_end keep WATER KIT1_p1000 
+pipette 465.2 --tip_end keep WATER KIT1_p1000 
+pipette 465.2 --tip_end keep WATER KIT1_p1000 
+pipette 465.2 --tip_end keep WATER KIT1_p1000 
+pipette 465.2 --tip_end keep WATER KIT1_p1000 
+pipette 465.2 --tip_end keep WATER KIT1_p1000 
+pipette 465.2 --tip_end keep WATER KIT1_p1000 
+pipette 465.2 --tip_end keep WATER KIT1_p1000 
+pipette 465.2 --tip_end keep WATER KIT1_p1000 
+pipette 465.2 WATER KIT1_p1000 
