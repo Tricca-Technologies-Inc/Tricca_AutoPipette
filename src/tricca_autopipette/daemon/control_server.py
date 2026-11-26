@@ -435,6 +435,12 @@ class ControlServer:
             return dataclasses.asdict(
                 await self.service.dispatch_config(self.service.calibrate_commit)
             )
+        if method == "util.command":
+            return dataclasses.asdict(
+                await self.service.dispatch_config(
+                    lambda: self.service.command(params["line"])
+                )
+            )
         if method == "util.mm_to_vol":
             return dataclasses.asdict(
                 await self.service.dispatch(

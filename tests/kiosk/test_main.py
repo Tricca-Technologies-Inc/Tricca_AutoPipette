@@ -360,6 +360,35 @@ class TestHomeEndpoint:
         assert response.status_code == 503
 
 
+class TestCommandEndpoint:
+    """`POST /command`: the command entry's one typed line, over `util.command`."""
+
+    def test_forwards_the_daemons_result(self, kiosk_client: TestClient) -> None:
+        response = kiosk_client.post("/command", json={"command": "vol_to_mm 10"})
+
+        assert response.status_code == 200
+        assert response.json()["ok"] is True
+        assert "mm" in response.json()["message"]
+
+    def test_a_refusal_is_ok_false_not_an_http_error(
+        self, kiosk_client: TestClient
+    ) -> None:
+        response = kiosk_client.post("/command", json={"command": "gcode_print hi"})
+
+        assert response.status_code == 200
+        assert response.json()["ok"] is False
+
+    def test_not_homed_is_a_409(self, kiosk_client: TestClient) -> None:
+        response = kiosk_client.post("/command", json={"command": "move 1 2 3"})
+
+        assert response.status_code == 409
+
+    def test_an_overlong_command_is_rejected(self, kiosk_client: TestClient) -> None:
+        response = kiosk_client.post("/command", json={"command": "x" * 1025})
+
+        assert response.status_code == 422
+
+
 class TestTipsEndpoints:
     """Tests for `GET /tips`, `POST /tips/reset`, `POST /tips/set` (issue #17).
 
