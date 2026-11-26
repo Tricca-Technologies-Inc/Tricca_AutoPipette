@@ -184,15 +184,18 @@ pipette 20 example_source example_dest --tip_end keep
 dispose_tip
 ```
 
-A bare `break` line pauses the run right there and waits for a human (or a
-remote client) to say whether it should continue. In `tap`, a paused run
-shows up via `continue`/`abort`; the kiosk surfaces the same pause as a
-breakpoint prompt in the UI. Use it for a manual check partway through a
-run — confirming a reagent is loaded, a plate is seated correctly, before
-committing to the rest of the file. Answering "continue" resumes on the
-next line exactly where it left off; answering "abort" raises
-`ProtocolAbortedError` and stops the rest of the file from running (any
-lines already executed are not undone).
+A bare `break` line stops the machine right there: tapd puts Klipper's
+`PAUSE` into the G-code at that point, with "Protocol break: press Resume to
+continue" on the display. The kiosk shows a banner (on every tab, with a
+beep) and `tap` an alert. Use it for a manual check partway through a run
+— confirming a reagent is loaded, a plate is seated correctly — before
+committing to the rest of the file. **Resume** (the banner, or `tap`'s
+`resume`) carries on from the next line; **Cancel** (the banner, or `tap`'s
+`cancel`) ends the run. Nothing already done is undone.
+
+A tipbox running out mid-run pauses the same way, naming the boxes to
+reload. Reload them, then Resume: tapd counts them as full again. Check
+(`validate`) warns where a protocol will run out.
 
 ## Things to know before you improvise
 

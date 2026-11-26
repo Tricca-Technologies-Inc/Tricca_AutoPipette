@@ -170,7 +170,7 @@ def live_control_plane(service: AutoPipetteService) -> Iterator[LiveControlPlane
 
     For control-plane-level tests (``tests/cli/``, and ``tests/kiosk/`` once
     it exists) that need a genuine client<->daemon round trip -- the real
-    JSON-RPC envelope, real ``notify_run_status``/``notify_breakpoint`` push
+    JSON-RPC envelope, real ``notify_run_status`` push
     timing -- rather than calling a service method directly or mocking
     ``send_jsonrpc``. See ``tests/support/live_control_plane.py``. Starts
     with the same unhomed, plate-less ``service`` as the ``service`` fixture;

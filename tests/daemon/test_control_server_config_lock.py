@@ -21,7 +21,7 @@ def test_run_status_reports_the_config_lock(service: AutoPipetteService) -> None
 def test_refusal_does_not_wait_for_the_run_to_release_the_dispatch_lock(
     service: AutoPipetteService,
 ) -> None:
-    """A run holds the dispatch lock for its whole replay (maybe a breakpoint)."""
+    """A run holds the dispatch lock for its whole replay."""
     server = ControlServer(service)
     service._current = RunStatus(status="running", filename="a.pipette")
 

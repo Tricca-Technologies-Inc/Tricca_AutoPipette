@@ -1,17 +1,16 @@
 # breakpoint.pipette
 #
-# A `break` line pauses the run and waits for an operator (`tap`'s
-# `continue`/`abort`, or the kiosk's breakpoint prompt) before continuing --
-# useful for a manual check partway through a protocol, e.g. confirming a
-# reagent is in place. Assumes the machine is already homed.
+# A `break` line pauses the machine (Klipper's PAUSE) until an operator
+# presses Resume (the kiosk banner, or `tap`'s `resume`) -- useful for a
+# manual check partway through a protocol, e.g. confirming a reagent is in
+# place. Cancel ends the run. Assumes the machine is already homed.
 
 load_locations examples_deck.json --replace
 
 next_tip
 move_loc example_source
 
-# Pauses here until an operator confirms. Choosing "abort" stops the rest
-# of this file from running; choosing "continue" resumes on the next line.
+# The machine stops here until Resume; it then carries on with the next line.
 break
 
 pipette 20 example_source example_dest --tip_end keep

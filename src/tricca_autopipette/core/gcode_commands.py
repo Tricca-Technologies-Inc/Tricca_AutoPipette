@@ -177,6 +177,18 @@ class GCodeCommands:
         """
         return GCode(f"G4 P{milliseconds}\n")
 
+    def pause(self) -> GCode:
+        r"""Build ``PAUSE``: pause the running print until ``RESUME``.
+
+        Returns:
+            ``PAUSE``.
+
+        Example:
+            >>> GCodeCommands().pause()
+            'PAUSE\n'
+        """
+        return GCode("PAUSE\n")
+
     def display_message(self, message: str) -> GCode:
         r"""Build ``M117``: show a message on the controller display.
 

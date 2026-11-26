@@ -5,8 +5,8 @@ in-process control plane.
 `do_*` is a hand-written method that builds a `ControlRequests` request and
 dispatches it through the shared `_call_and_print`/`_send` helpers. What a
 request-builder-level test can't exercise honestly is the *client-side
-reaction* to what comes back over the wire: `_on_run_status`/`_on_breakpoint` react to
-real `notify_run_status`/`notify_breakpoint` pushes (issue #37's specific
+reaction* to what comes back over the wire: `_on_run_status` reacts to
+real `notify_run_status` pushes (issue #37's specific
 ask), and `_call_and_print`/`_send` react to a real JSON-RPC error frame,
 not a canned one. Every test here drives a real `RemoteTapShell` against a
 real `ControlServer` (`tests/support/live_control_plane.py`, via the
@@ -259,60 +259,17 @@ class TestRunLifecycleAlerts:
         assert "Usage: run <filename>" in capsys.readouterr().err
 
 
-class TestBreakpointFlow:
-    """`break`'s notify_breakpoint push, and continue/abort answering it."""
+class TestPausedRunAlert:
+    """A paused run's ``notify_run_status`` reaches ``tap`` as an alert."""
 
-    def test_continue_releases_the_worker_thread_blocked_on_the_breakpoint(
-        self,
-        shell: RemoteTapShell,
-        live_control_plane: LiveControlPlane,
-        protocol_dir: Path,
-    ) -> None:
-        (protocol_dir / "bp.pipette").write_text(
-            'gcode_print "before"\nbreak\ngcode_print "after"\n'
-        )
+    def test_the_pause_reason_is_shown(self, shell: RemoteTapShell) -> None:
+        shell._on_run_status({
+            "status": "running",
+            "message": "Paused: Out of tips: reload tb, then Resume",
+            "paused": True,
+        })
 
-        shell.onecmd_plus_hooks("run bp.pipette")
-        assert poll_until(
-            lambda: any(
-                a.msg and "paused at a breakpoint" in a.msg for a in shell._alert_queue
-            )
-        )
-
-        shell.onecmd_plus_hooks("continue")
-
-        # request_breakpoint() blocks the worker thread _run_protocol
-        # dispatches onto for the run's whole duration, holding
-        # service._lock (an asyncio.Lock) the entire time; "continue"
-        # resolving the breakpoint's threading.Event is what lets
-        # _run_protocol_sync return and that lock release. There's no
-        # observable RunStatus transition to poll instead: with no real
-        # Moonraker connection (client is None here), a successful run
-        # never reaches "done" -- that's detected later, from real
-        # print_stats pushes -- so the lock release is the one honest
-        # signal that "continue" actually unblocked the dispatch loop
-        # rather than merely being accepted.
-        assert poll_until(lambda: not live_control_plane.service._lock.locked())
-
-    def test_abort_ends_the_run_with_an_error_status(
-        self, shell: RemoteTapShell, protocol_dir: Path
-    ) -> None:
-        (protocol_dir / "bp.pipette").write_text("break\n")
-
-        shell.onecmd_plus_hooks("run bp.pipette")
-        assert poll_until(
-            lambda: any(
-                a.msg and "paused at a breakpoint" in a.msg for a in shell._alert_queue
-            )
-        )
-
-        shell.onecmd_plus_hooks("abort")
-
-        def _run_is_error() -> bool:
-            response = shell.client.send_jsonrpc(shell.requests.run_status())
-            return response["result"]["status"] == "error"
-
-        assert poll_until(_run_is_error)
+        assert any(a.msg and "Paused: Out of tips" in a.msg for a in shell._alert_queue)
 
 
 class TestValidateCommand:

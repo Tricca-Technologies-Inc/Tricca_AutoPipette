@@ -44,7 +44,7 @@ def kiosk_client(
     connected" tests, which rely on exactly that to get a clean
     `_control_client is None` state for free).
 
-    Also resets the run/breakpoint/toolhead/websocket-client module globals
+    Also resets the run/toolhead/websocket-client module globals
     `autopipette_kiosk/main.py` keeps instead of per-request state (it's a
     long-lived singleton in production) -- tests share that same module
     across the whole session, so leftover state from one test would
@@ -56,7 +56,6 @@ def kiosk_client(
     empty_clients: set[WebSocket] = set()
     monkeypatch.setattr(kiosk_main, "TAPD_CONTROL_URI", live_control_plane.url)
     monkeypatch.setattr(kiosk_main, "_current_run", kiosk_main.RunStatus(status="idle"))
-    monkeypatch.setattr(kiosk_main, "_current_breakpoint", None)
     monkeypatch.setattr(kiosk_main, "_config_locked", False)
     monkeypatch.setattr(kiosk_main, "_homing_invalidated", False)
     monkeypatch.setattr(
@@ -93,7 +92,6 @@ def kiosk_client_with_moonraker(
     empty_clients: set[WebSocket] = set()
     monkeypatch.setattr(kiosk_main, "TAPD_CONTROL_URI", live_control_plane.url)
     monkeypatch.setattr(kiosk_main, "_current_run", kiosk_main.RunStatus(status="idle"))
-    monkeypatch.setattr(kiosk_main, "_current_breakpoint", None)
     monkeypatch.setattr(kiosk_main, "_config_locked", False)
     monkeypatch.setattr(kiosk_main, "_homing_invalidated", False)
     monkeypatch.setattr(
@@ -124,7 +122,6 @@ def kiosk_client_with_plates(
         kiosk_main, "TAPD_CONTROL_URI", live_control_plane_with_plates.url
     )
     monkeypatch.setattr(kiosk_main, "_current_run", kiosk_main.RunStatus(status="idle"))
-    monkeypatch.setattr(kiosk_main, "_current_breakpoint", None)
     monkeypatch.setattr(kiosk_main, "_config_locked", False)
     monkeypatch.setattr(kiosk_main, "_homing_invalidated", False)
     monkeypatch.setattr(

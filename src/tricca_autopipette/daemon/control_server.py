@@ -225,7 +225,7 @@ class ControlServer:
 
         Called both from the event loop thread (``AutoPipetteService``'s own
         async methods) and from worker threads (e.g.
-        ``request_breakpoint``, invoked via ``asyncio.to_thread``), so this
+        a protocol run's, invoked via ``asyncio.to_thread``), so this
         must not assume it's running on the loop's thread —
         ``asyncio.create_task`` would raise ``RuntimeError: no running
         event loop`` when called from a worker thread.
@@ -458,9 +458,6 @@ class ControlServer:
             return _run_status_to_dict(await self.service.pause_run())
         if method == "run.resume":
             return _run_status_to_dict(await self.service.resume_run())
-        if method == "run.confirm_breakpoint":
-            await self.service.confirm_breakpoint(bool(params["proceed"]))
-            return {}
         if method == "run.stop":
             return _run_status_to_dict(await self.service.stop_run())
         if method == "protocols.list":
