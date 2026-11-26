@@ -810,6 +810,30 @@ async def reset_tips(req: TipsResetRequest) -> CommandResultResponse:
     )
 
 
+@app.post("/tips/disable", response_model=CommandResultResponse)
+async def disable_tipbox(req: TipsResetRequest) -> CommandResultResponse:
+    """Stop drawing tips from a box (e.g. one not on the deck).
+
+    Returns:
+        `CommandResultResponse`, `ok=False` for an unknown box.
+    """
+    return await _dispatch_control_request(
+        _control_requests.disable_tipbox(ResetTipsArgs(name=req.name))
+    )
+
+
+@app.post("/tips/enable", response_model=CommandResultResponse)
+async def enable_tipbox(req: TipsResetRequest) -> CommandResultResponse:
+    """Draw tips from a disabled box again.
+
+    Returns:
+        `CommandResultResponse`, `ok=False` for an unknown box.
+    """
+    return await _dispatch_control_request(
+        _control_requests.enable_tipbox(ResetTipsArgs(name=req.name))
+    )
+
+
 @app.post("/tips/set", response_model=CommandResultResponse)
 async def set_tips(req: TipsSetRequest) -> CommandResultResponse:
     """Declare exactly which positions of a tipbox hold tips.

@@ -65,6 +65,8 @@ _BUILDER_TO_COMMAND: dict[str, str] = {
     "load_locations": "load_locations",
     "unload_locations": "unload_locations",
     "reset_tips": "reset_tips",
+    "disable_tipbox": "disable_tipbox",
+    "enable_tipbox": "enable_tipbox",
     "reset_tips_all": "reset_tips_all",
     "set_tips": "set_tips",
     "tips": "tips",

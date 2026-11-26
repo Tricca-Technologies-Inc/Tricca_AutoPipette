@@ -2316,6 +2316,52 @@ class AutoPipetteService:
         )
 
     @persist_tip_presence
+    def disable_tipbox(self, args: ResetTipsArgs) -> CommandResult:
+        """Stop drawing tips from a box, keeping its place and tip state.
+
+        For a box that isn't physically on the deck. Persisted with the tip
+        state, so it stays disabled across a restart.
+
+        Args:
+            args: Name of the tipbox.
+
+        Returns:
+            The result, or ``ok=False`` if no tipbox by that name is loaded.
+        """
+        return self._set_tipbox_enabled(args.name, False)
+
+    @persist_tip_presence
+    def enable_tipbox(self, args: ResetTipsArgs) -> CommandResult:
+        """Draw tips from a disabled box again.
+
+        Args:
+            args: Name of the tipbox.
+
+        Returns:
+            The result, or ``ok=False`` if no tipbox by that name is loaded.
+        """
+        return self._set_tipbox_enabled(args.name, True)
+
+    def _set_tipbox_enabled(self, name: str, enabled: bool) -> CommandResult:
+        """Shared body of `enable_tipbox`/`disable_tipbox`.
+
+        Args:
+            name: Tipbox location name.
+            enabled: Whether tips may be drawn from it.
+
+        Returns:
+            The result, or ``ok=False`` for an unknown box.
+        """
+        manager = self._autopipette.location_manager.tipbox_manager
+        try:
+            manager.set_enabled(name, enabled)
+        except NotALocationError:
+            return CommandResult(ok=False, message=f"No such tipbox: {name}")
+        return CommandResult(
+            ok=True, message=f"{name} {'enabled' if enabled else 'disabled'}"
+        )
+
+    @persist_tip_presence
     def reset_tips_all(self) -> CommandResult:
         """Mark every registered tipbox as full.
 
@@ -4789,6 +4835,16 @@ _LINE_DISPATCH: dict[str, _LineCommand] = {
         TAPCmdParsers.parser_reset_tips, ResetTipsArgs, AutoPipetteService.reset_tips
     ),
     "reset_tips_all": _LineCommand(None, None, AutoPipetteService.reset_tips_all),
+    "disable_tipbox": _LineCommand(
+        TAPCmdParsers.parser_disable_tipbox,
+        ResetTipsArgs,
+        AutoPipetteService.disable_tipbox,
+    ),
+    "enable_tipbox": _LineCommand(
+        TAPCmdParsers.parser_enable_tipbox,
+        ResetTipsArgs,
+        AutoPipetteService.enable_tipbox,
+    ),
     "set_tips": _LineCommand(
         TAPCmdParsers.parser_set_tips, SetTipsArgs, AutoPipetteService.set_tips
     ),

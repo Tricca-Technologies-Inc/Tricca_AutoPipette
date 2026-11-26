@@ -444,6 +444,20 @@ class RemoteTapShell(Cmd):
             self.requests.reset_tips(args_from_namespace(ResetTipsArgs, args))
         )
 
+    @with_argparser(TAPCmdParsers.parser_disable_tipbox)  # type: ignore[arg-type]
+    def do_disable_tipbox(self, args: ResetTipsArgs) -> None:
+        """Stop drawing tips from a box, keeping its place and tip state."""
+        self._call_and_print(
+            self.requests.disable_tipbox(args_from_namespace(ResetTipsArgs, args))
+        )
+
+    @with_argparser(TAPCmdParsers.parser_enable_tipbox)  # type: ignore[arg-type]
+    def do_enable_tipbox(self, args: ResetTipsArgs) -> None:
+        """Draw tips from a disabled box again."""
+        self._call_and_print(
+            self.requests.enable_tipbox(args_from_namespace(ResetTipsArgs, args))
+        )
+
     def do_reset_tips_all(self, _: Statement) -> None:
         """Mark every loaded tipbox as full, after physically reloading them."""
         self._call_and_print(self.requests.reset_tips_all())

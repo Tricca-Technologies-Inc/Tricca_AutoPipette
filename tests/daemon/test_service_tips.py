@@ -60,6 +60,35 @@ class TestResetTips:
         assert result.ok is False
 
 
+class TestEnableDisableTipbox:
+    """Scott's dd331b7: a box not on the deck can be taken out of the draw."""
+
+    def test_disable_then_enable(self, service_with_plates: AutoPipetteService) -> None:
+        manager = _manager(service_with_plates)
+
+        off = service_with_plates.disable_tipbox(ResetTipsArgs(name="tipbox"))
+        assert off.ok is True
+        assert manager.remaining == 0
+
+        on = service_with_plates.enable_tipbox(ResetTipsArgs(name="tipbox"))
+        assert on.ok is True
+        assert manager.remaining == manager.capacity
+
+    @pytest.mark.parametrize("method", ["disable_tipbox", "enable_tipbox"])
+    def test_unknown_box_reports_failure(
+        self, service_with_plates: AutoPipetteService, method: str
+    ) -> None:
+        result = getattr(service_with_plates, method)(ResetTipsArgs(name="nope"))
+
+        assert result.ok is False
+        assert "nope" in result.message
+
+    def test_is_a_protocol_line(self, service_with_plates: AutoPipetteService) -> None:
+        service_with_plates._dispatch_protocol_line("disable_tipbox tipbox")
+
+        assert _manager(service_with_plates).disabled == {"tipbox"}
+
+
 class TestSetTips:
     def test_declares_consumed_positions(
         self, service_with_plates: AutoPipetteService
@@ -185,6 +214,11 @@ class TestTipMapRendering:
         assert "tipbox" in header
         assert "remaining" in header
         assert "order=" in header
+
+    def test_a_disabled_box_says_so(self, box: dict[str, Any]) -> None:
+        header = build_tipbox_map({**box, "enabled": False}).splitlines()[0]
+
+        assert header.endswith("(disabled)")
 
     def test_consumed_positions_are_marked(self, box: dict[str, Any]) -> None:
         rendered = build_tipbox_map(box)

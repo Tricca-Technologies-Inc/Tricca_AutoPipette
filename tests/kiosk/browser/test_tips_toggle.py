@@ -130,3 +130,26 @@ def test_a_returned_tip_shows_as_used_and_tapping_makes_it_available(
     expect(card.locator('.tip-cell[data-index="0"]')).not_to_have_class(USED)
     listing = _get_json(f"{live_kiosk_server_with_plates.url}/tips")
     assert listing["data"]["boxes"][0]["slots"] == ["available", "available"]
+
+
+DISABLED = re.compile(r"\btipbox-disabled\b")
+
+
+def test_disabling_a_box_takes_it_out_of_the_draw_end_to_end(
+    page: Page, live_kiosk_server_with_plates: LiveKioskServer
+) -> None:
+    # Scott's dd331b7: for a box that isn't on the deck.
+    page.goto(live_kiosk_server_with_plates.url)
+    page.click('.tab-btn[data-page="tips"]')
+    card = page.locator('.tipbox-card[data-box="tipbox"]')
+
+    card.locator(".tipbox-toggle-btn").click()
+
+    expect(card).to_have_class(DISABLED)
+    expect(card.locator(".tipbox-count")).to_have_text("disabled")
+    boxes = _get_json(f"{live_kiosk_server_with_plates.url}/tips")["data"]["boxes"]
+    assert boxes[0]["enabled"] is False
+
+    card.locator(".tipbox-toggle-btn").click()
+
+    expect(card).not_to_have_class(DISABLED)

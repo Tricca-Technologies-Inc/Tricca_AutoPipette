@@ -165,6 +165,8 @@ _BUILDER_CALLS: list[tuple[str, tuple[Any, ...]]] = [
     # tipbox name comes back as ok=False rather than raising, which is exactly
     # what this test asserts is *not* an unrecognized-method error.
     ("reset_tips", (ResetTipsArgs(name="tipbox"),)),
+    ("disable_tipbox", (ResetTipsArgs(name="tipbox"),)),
+    ("enable_tipbox", (ResetTipsArgs(name="tipbox"),)),
     ("reset_tips_all", ()),
     ("set_tips", (SetTipsArgs(name="tipbox", ranges=["A1"]),)),
     ("tips", (TipsArgs(),)),

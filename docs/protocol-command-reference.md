@@ -454,6 +454,35 @@ Options:
   -h, --help  show this help message and exit
 ```
 
+### `disable_tipbox`
+
+```
+Usage: disable_tipbox [-h] name
+
+Stop drawing tips from a box (e.g. one not on the deck), keeping its place in
+the draw order and its tip state.
+
+Positional Arguments:
+  name        Tipbox location name
+
+Options:
+  -h, --help  show this help message and exit
+```
+
+### `enable_tipbox`
+
+```
+Usage: enable_tipbox [-h] name
+
+Draw tips from a disabled box again.
+
+Positional Arguments:
+  name        Tipbox location name
+
+Options:
+  -h, --help  show this help message and exit
+```
+
 ### `reset_tips_all`
 
 ```

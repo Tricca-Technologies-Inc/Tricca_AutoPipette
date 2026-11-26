@@ -397,6 +397,17 @@ class TestTipsEndpoints:
     positions present by default) to report or mutate.
     """
 
+    def test_disable_then_enable_a_box(
+        self, kiosk_client_with_plates: TestClient
+    ) -> None:
+        off = kiosk_client_with_plates.post("/tips/disable", json={"name": "tipbox"})
+        assert off.json()["ok"] is True
+        listed = kiosk_client_with_plates.get("/tips").json()["data"]["boxes"]
+        assert listed[0]["enabled"] is False
+
+        on = kiosk_client_with_plates.post("/tips/enable", json={"name": "tipbox"})
+        assert on.json()["ok"] is True
+
     def test_list_reports_the_registered_tipbox(
         self, kiosk_client_with_plates: TestClient
     ) -> None:

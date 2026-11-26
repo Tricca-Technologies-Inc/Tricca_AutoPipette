@@ -72,6 +72,7 @@ logger = logging.getLogger(__name__)
 KEY_NUM_ROW = "num_row"
 KEY_NUM_COL = "num_col"
 KEY_SLOTS = "slots"
+KEY_ENABLED = "enabled"
 #: Pre-#15 records stored a ``list[bool]`` here; `restore` still reads it.
 KEY_LEGACY_PRESENT = "present"
 
@@ -104,6 +105,9 @@ class TipBoxManager:
     def __init__(self) -> None:
         """Initialize an empty manager with no tipboxes registered."""
         self.boxes: dict[str, TipBox] = {}
+        # Boxes kept registered (place and state intact) but not drawn from,
+        # e.g. one not physically on the deck (Scott's dd331b7).
+        self.disabled: set[str] = set()
 
     # ==================== Registration ====================
 
@@ -148,11 +152,30 @@ class TipBoxManager:
             ``manager.unregister("tipbox_a")`` returns ``True`` when a box
             named ``"tipbox_a"`` was registered and is now removed.
         """
+        self.disabled.discard(name)
         return self.boxes.pop(name, None) is not None
 
     def clear(self) -> None:
         """Remove every registered tipbox."""
         self.boxes.clear()
+        self.disabled.clear()
+
+    def set_enabled(self, name: str, enabled: bool) -> None:
+        """Enable or disable drawing from a box, keeping its place and state.
+
+        Args:
+            name: Location name of the box.
+            enabled: False to stop drawing from it, True to resume.
+
+        Raises:
+            NotALocationError: If no tipbox is registered under that name.
+        """  # ruff: ignore[docstring-extraneous-exception]
+        self._require(name)
+        if enabled:
+            self.disabled.discard(name)
+        else:
+            self.disabled.add(name)
+        logger.info("Tipbox %r %s", name, "enabled" if enabled else "disabled")
 
     def has_boxes(self) -> bool:
         """Report whether any tipbox is registered.
@@ -179,7 +202,11 @@ class TipBoxManager:
         Returns:
             Sum of every registered box's remaining tip count.
         """
-        return sum(box.remaining for box in self.boxes.values())
+        return sum(
+            box.remaining
+            for name, box in self.boxes.items()
+            if name not in self.disabled
+        )
 
     @property
     def capacity(self) -> int:
@@ -188,7 +215,11 @@ class TipBoxManager:
         Returns:
             Sum of every registered box's eligible position count.
         """
-        return sum(box.capacity for box in self.boxes.values())
+        return sum(
+            box.capacity
+            for name, box in self.boxes.items()
+            if name not in self.disabled
+        )
 
     def next_tip(
         self, name: str | list[str] | None = None
@@ -241,11 +272,16 @@ class TipBoxManager:
             name: One box, boxes in order, or None for every box.
 
         Returns:
-            Box names to try, in order.
+            Box names to try, in order, disabled boxes left out.
         """
-        if name is None:
-            return list(self.boxes)
-        return [name] if isinstance(name, str) else list(name)
+        names = (
+            list(self.boxes)
+            if name is None
+            else [name]
+            if isinstance(name, str)
+            else list(name)
+        )
+        return [n for n in names if n not in self.disabled]
 
     def return_tip(self, name: str, index: int) -> TipBox:
         """Record that a used tip went back into its origin slot.
@@ -376,6 +412,7 @@ class TipBoxManager:
                 KEY_NUM_ROW: box.num_row,
                 KEY_NUM_COL: box.num_col,
                 KEY_SLOTS: [slot.value for slot in box.slots],
+                KEY_ENABLED: name not in self.disabled,
             }
             for name, box in self.boxes.items()
         }
@@ -406,9 +443,13 @@ class TipBoxManager:
         skipped: list[str] = []
 
         for name, box in self.boxes.items():
-            record = data.get(name)
+            record: object = data.get(name)
             if record is None:
                 continue
+            if self._stored_enabled(record):
+                self.disabled.discard(name)
+            else:
+                self.disabled.add(name)
 
             slots = self._validate_record(name, box, record)
             if slots is None:
@@ -419,6 +460,20 @@ class TipBoxManager:
             box.set_slots(slots)
 
         return skipped
+
+    @staticmethod
+    def _stored_enabled(record: object) -> bool:
+        """Read a persisted record's enabled flag; records before it are enabled.
+
+        Args:
+            record: The stored record, of unverified shape.
+
+        Returns:
+            False only if the record explicitly says the box is disabled.
+        """
+        if not isinstance(record, dict):
+            return True
+        return cast("dict[str, Any]", record).get(KEY_ENABLED) is not False
 
     def _validate_record(
         self, name: str, box: TipBox, record: object
@@ -516,6 +571,7 @@ class TipBoxManager:
 
         return {
             "name": name,
+            "enabled": name not in self.disabled,
             "num_row": box.num_row,
             "num_col": box.num_col,
             "capacity": box.capacity,
