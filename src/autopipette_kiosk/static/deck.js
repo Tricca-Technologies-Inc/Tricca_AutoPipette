@@ -52,7 +52,8 @@
       // daemon reports the latter as ok=false too, e.g. "No locations
       // defined.") -- either way an operator needs a reason, not a blank
       // square indistinguishable from "the page is just broken".
-      container.innerHTML = `<div class="tips-empty">${locationsResult.message}</div>`;
+      container.innerHTML = '<div class="tips-empty"></div>';
+      container.firstChild.textContent = locationsResult.message;
       return;
     }
     container.innerHTML = '';
@@ -207,14 +208,29 @@
       t.classList.toggle('selected', t.dataset.name === loc.name);
     });
 
-    document.getElementById('deckInfo').innerHTML = `
-      <div class="deck-info-name">${loc.name}</div>
-      <div class="deck-info-row"><span>Type</span><span>${loc.type}</span></div>
-      <div class="deck-info-row"><span>X</span><span>${loc.x}</span></div>
-      <div class="deck-info-row"><span>Y</span><span>${loc.y}</span></div>
-      <div class="deck-info-row"><span>Z</span><span>${loc.z}</span></div>
-      ${loc.details ? `<div class="deck-info-details">${loc.details}</div>` : ''}
-    `;
+    // textContent throughout: names and details come from config files.
+    const info = document.getElementById('deckInfo');
+    const line = (cls, text) => {
+      const el = document.createElement('div');
+      el.className = cls;
+      el.textContent = text;
+      return el;
+    };
+    const row = (key, value) => {
+      const el = document.createElement('div');
+      el.className = 'deck-info-row';
+      const k = document.createElement('span');
+      k.textContent = key;
+      const v = document.createElement('span');
+      v.textContent = String(value);
+      el.append(k, v);
+      return el;
+    };
+    info.replaceChildren(
+      line('deck-info-name', loc.name),
+      row('Type', loc.type), row('X', loc.x), row('Y', loc.y), row('Z', loc.z),
+    );
+    if (loc.details) info.appendChild(line('deck-info-details', loc.details));
 
     if (loc.type === 'TipBox') {
       App.switchTo('tips');

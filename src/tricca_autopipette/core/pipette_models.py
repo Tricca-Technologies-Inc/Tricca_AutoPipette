@@ -8,6 +8,7 @@ configuration.
 from __future__ import annotations
 
 import itertools
+import math
 from enum import IntEnum, StrEnum
 from typing import Any, Literal, Self, cast
 
@@ -858,7 +859,7 @@ class DeckGrid(BaseModel):
     @field_validator("x_edges", "y_edges")
     @classmethod
     def _ascending(cls, edges: list[float]) -> list[float]:
-        """Refuse edges that aren't strictly ascending.
+        """Refuse edges that aren't finite and strictly ascending.
 
         Args:
             edges: The configured boundaries.
@@ -867,8 +868,11 @@ class DeckGrid(BaseModel):
             ``edges``, unchanged.
 
         Raises:
-            ValueError: If any edge isn't above the one before it.
+            ValueError: If an edge isn't finite, or isn't above the one
+                before it.
         """
+        if not all(math.isfinite(e) for e in edges):
+            raise ValueError(f"deck_grid edges must be finite: {edges}")
         if any(b <= a for a, b in itertools.pairwise(edges)):
             raise ValueError(f"deck_grid edges must be ascending: {edges}")
         return edges

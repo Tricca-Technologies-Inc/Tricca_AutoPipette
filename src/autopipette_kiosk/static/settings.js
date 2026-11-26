@@ -45,7 +45,8 @@
       const res = await fetch('/settings');
       const result = await res.json();
       if (!result.ok) {
-        root.innerHTML = `<div class="tips-empty">${result.message || 'Failed to load settings'}</div>`;
+        root.innerHTML = '<div class="tips-empty"></div>';
+        root.firstChild.textContent = result.message || 'Failed to load settings';
         return;
       }
       render(result.data);
@@ -72,7 +73,8 @@
     const el = document.createElement('div');
     el.className = 'move-panel settings-panel';
     el.id = id;
-    el.innerHTML = `<div class="panel-header">${title}</div>`;
+    el.innerHTML = '<div class="panel-header"></div>';
+    el.firstChild.textContent = title;
     return el;
   }
 
@@ -154,8 +156,11 @@
       card.dataset.liquid = liquid.name;
       const head = document.createElement('div');
       head.className = 'settings-liquid-head';
-      head.innerHTML = `<span class="tipbox-name">${liquid.name}</span>` +
-        (liquid.active ? '<span class="settings-active">active</span>' : '');
+      const nameEl = document.createElement('span');
+      nameEl.className = 'tipbox-name';
+      nameEl.textContent = liquid.name;
+      head.appendChild(nameEl);
+      if (liquid.active) head.insertAdjacentHTML('beforeend', '<span class="settings-active">active</span>');
       card.appendChild(head);
       liquid.fields.forEach(f => card.appendChild(fieldRow(f)));
       grid.appendChild(card);

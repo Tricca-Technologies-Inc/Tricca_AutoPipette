@@ -101,7 +101,7 @@
     nameEl.textContent = stem(filename);
     nameEl.classList.remove('placeholder');
     document.getElementById('checkBtn').disabled = false;
-    document.getElementById('loadBtn').disabled = false;
+    document.getElementById('loadBtn').disabled = App.isRunActive(App.getStatus().status);
     document.getElementById('findingsList').innerHTML = '';
   }
 
@@ -119,9 +119,12 @@
   // ── load: dry-run, then show what the protocol does and needs ─────────
   // A tip shortfall is a warning, not a block: Check never disables Run
   // (issue #88), and an empty tipbox pauses the run for a reload anyway.
+  let loadSeq = 0; // a slow answer for an earlier Load must not win
+
   document.getElementById('loadBtn').addEventListener('click', async () => {
-    if (!selected) return;
+    if (!selected || App.isRunActive(App.getStatus().status)) return;
     loaded = selected;
+    const seq = ++loadSeq;
     document.getElementById('runProtocolName').textContent = stem(loaded);
     const card = document.getElementById('protocolInfoCard');
     const desc = document.getElementById('protocolInfoDescription');
@@ -133,6 +136,7 @@
     App.switchTo('run');
     try {
       const data = await validate(loaded);
+      if (seq !== loadSeq) return;
       desc.textContent = data.description || '';
       desc.hidden = !data.description;
       const tips = Object.entries(data.tips || {});
@@ -143,12 +147,16 @@
         row.textContent = `${short ? '✗' : '✓'} ${box}: needs ${t.needed}, has ${t.left}`;
         return row;
       }));
-      card.hidden = !data.description && !tips.length;
+      // Errors and warnings only: info findings (a break line) aren't news.
+      const serious = (data.findings || []).filter(f => f.severity !== 'info');
+      tipsEl.append(...findingItems(serious));
+      card.hidden = !data.description && !tips.length && !serious.length;
       if (tips.some(([, t]) => t.needed > t.left)) {
         error.textContent = 'Not enough tips: reload the tipbox and reset it on the Tips tab.';
         error.hidden = false;
       }
     } catch (e) {
+      if (seq !== loadSeq) return;
       error.textContent = `Could not check the protocol: ${e.message}`;
       error.hidden = false;
     }
@@ -208,30 +216,46 @@
     }
   });
 
+  // Built with textContent: a finding's message can quote the protocol
+  // file (a location name), so it must never be parsed as HTML.
+  function findingItem(severity, parts) {
+    const item = document.createElement('div');
+    item.className = `finding-item ${severity}`;
+    parts.forEach(([cls, text]) => {
+      const span = document.createElement('span');
+      span.className = cls;
+      span.textContent = text;
+      item.appendChild(span);
+    });
+    return item;
+  }
+
+  const findingItems = findings => findings.map(f => findingItem(f.severity, [
+    ['finding-severity', f.severity],
+    ['finding-line', `line ${f.line_number}`],
+    ['finding-message', f.message],
+  ]));
+
   function renderFindings(findings) {
     const list = document.getElementById('findingsList');
     if (!findings.length) {
       list.innerHTML = '<div class="empty-state">No issues found</div>';
       return;
     }
-    list.innerHTML = findings.map(f => `
-      <div class="finding-item ${f.severity}">
-        <span class="finding-severity">${f.severity}</span>
-        <span class="finding-line">line ${f.line_number}</span>
-        <span class="finding-message">${f.message}</span>
-      </div>
-    `).join('');
+    list.replaceChildren(...findingItems(findings));
   }
 
   // Tips each box must supply, so an operator can top a box up before Run.
   function renderTips(tips) {
     const list = document.getElementById('findingsList');
-    list.insertAdjacentHTML('beforeend', Object.entries(tips).map(([box, t]) => `
-      <div class="finding-item info tip-count">
-        <span class="finding-severity">tips</span>
-        <span class="finding-message">${box}: needs ${t.needed} of ${t.left} left</span>
-      </div>
-    `).join(''));
+    Object.entries(tips).forEach(([box, t]) => {
+      const item = findingItem('info', [
+        ['finding-severity', 'tips'],
+        ['finding-message', `${box}: needs ${t.needed} of ${t.left} left`],
+      ]);
+      item.classList.add('tip-count');
+      list.appendChild(item);
+    });
   }
 
   // ── time left: elapsed running time over progress made, extrapolated.
@@ -304,6 +328,8 @@
       'd', active && !paused ? 'M6 4h4v16H6zM14 4h4v16h-4z' : 'M8 5v14l11-7z');
     document.getElementById('runBtn').disabled = !active && !loaded;
     document.getElementById('cancelBtn').disabled = !active;
+    // Loading another protocol mid-run would relabel the Run page.
+    document.getElementById('loadBtn').disabled = active || !selected;
   }
 
   App.onStatus(renderStatusCard);

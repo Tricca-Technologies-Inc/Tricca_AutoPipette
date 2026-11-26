@@ -205,3 +205,45 @@ def test_check_button_lists_findings_without_disabling_run(
     expect(page.locator("#loadBtn")).to_be_enabled()
     page.click("#loadBtn")
     expect(page.locator("#runBtn")).to_be_enabled()
+
+
+def test_finding_text_is_rendered_as_text_not_html(
+    page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
+) -> None:
+    # The finding's message names the location, which came from the file.
+    (protocols_dir / "a.pipette").write_text("move_loc '<b>x</b>'\n")
+    _open_protocols(page, live_kiosk_server)
+    page.click(".protocol-item")
+
+    page.click("#checkBtn")
+
+    expect(page.locator(".finding-item.error")).to_contain_text("<b>x</b>")
+    expect(page.locator("#findingsList b")).to_have_count(0)
+
+
+def test_load_shows_error_findings_on_the_run_page(
+    page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
+) -> None:
+    (protocols_dir / "a.pipette").write_text("move_loc missing\n")
+    _open_protocols(page, live_kiosk_server)
+
+    _load(page)
+
+    expect(page.locator("#protocolInfoCard .finding-item.error")).to_contain_text(
+        "missing"
+    )
+    expect(page.locator("#runBtn")).to_be_enabled()  # still advisory
+
+
+def test_load_is_disabled_while_a_run_is_active(
+    page: Page, live_kiosk_server: LiveKioskServer, protocols_dir: Path
+) -> None:
+    (protocols_dir / "a.pipette").write_text('gcode_print "hi"\n')
+    _open_protocols(page, live_kiosk_server)
+    _load(page)
+    page.click("#runBtn")
+    expect(page.locator("#statusState")).to_have_text("Running")
+
+    page.click('.tab-btn[data-page="protocols"]')
+
+    expect(page.locator("#loadBtn")).to_be_disabled()
