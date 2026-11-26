@@ -297,6 +297,7 @@ HIGH_RISK_BOUNDS: dict[tuple[type[BaseModel], str], tuple[float, float]] = {
     (PipetteSyringeKinematics, "accel_move"): (2.5, 200),  # mm/s²
     (PipetteSyringeKinematics, "wait_aspirate_ms"): (0, 10000),
     (PipetteSyringeKinematics, "wait_dispense_ms"): (0, 10000),
+    (PipetteSyringeKinematics, "prewet_raise_mm"): (0, 100),
     # Tip pickup press: past ~10 mm the "slow press" is the whole descent.
     (PipetteModel, "tip_press_mm"): (0, 10),
     (PipetteModel, "tip_press_feedrate"): (10, 12000),  # mm/min

@@ -30,7 +30,7 @@ MANUAL_STEPPER STEPPER=pipette_stepper SET_POSITION=0
 MANUAL_STEPPER STEPPER=pipette_stepper SET_POSITION=0 MOVE=120.0 SPEED=50.0 ACCEL=200.0 STOP_ON_ENDSTOP=home
 MANUAL_STEPPER STEPPER=pipette_stepper SET_POSITION=0
 ; Transferring 20μL from 'plate_a' to 'plate_a' (1 chunk(s))
-; Aspirating 20μL from 'plate_a' (pre_air_gap=0μL[explicit flag], post_air_gap=0μL[explicit flag], prewet=0x10μL[explicit flag/explicit flag])
+; Aspirating 20μL from 'plate_a' (pre_air_gap=0μL[explicit flag], post_air_gap=0μL[explicit flag], prewet=0x20μL[explicit flag/aspirate volume])
 G1 X100.0 Y100.0 F38000.0
 G1 Z5.0 F12000.0
 MANUAL_STEPPER STEPPER=pipette_stepper SET_POSITION=0 MOVE=120.0 SPEED=50.0 ACCEL=200.0 STOP_ON_ENDSTOP=home
