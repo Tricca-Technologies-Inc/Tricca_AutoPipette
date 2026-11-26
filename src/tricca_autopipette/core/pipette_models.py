@@ -210,6 +210,15 @@ class GantryKinematics(BaseModel):
         default=5000.0, gt=0, description="Maximum gantry acceleration in mm/s²"
     )
 
+    # Hand jogging (the kiosk D-pad, `move_rel --jog`): protocol speeds are
+    # too fast to control by touch (Scott's 29f93fb, tuned on Tyson).
+    jog_speed_xy: float = Field(
+        default=3000.0, gt=0, description="XY jog speed in mm/min"
+    )
+    jog_speed_z: float = Field(
+        default=1000.0, gt=0, description="Z jog speed in mm/min"
+    )
+
     wait_dip_ms: int = Field(
         default=50, ge=0, description="Settle time after each dip or return, in ms"
     )

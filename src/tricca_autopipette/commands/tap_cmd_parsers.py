@@ -139,11 +139,14 @@ class MoveRelArgs:
         x: X-axis offset in millimeters.
         y: Y-axis offset in millimeters.
         z: Z-axis offset in millimeters.
+        jog: Move at the gantry's jog speeds rather than its protocol speeds,
+            for hand jogging (the kiosk D-pad).
     """
 
     x: float
     y: float
     z: float
+    jog: bool = False
 
 
 @dataclass
@@ -665,6 +668,11 @@ class TAPCmdParsers:
     )
     parser_move_rel.add_argument(
         "--z", default=0.0, type=finite_float, help="Z-axis offset in mm (default: 0)"
+    )
+    parser_move_rel.add_argument(
+        "--jog",
+        action="store_true",
+        help="Move at the gantry's jog speeds (jog_speed_xy/jog_speed_z)",
     )
 
     parser_plate_move: Cmd2ArgumentParser = Cmd2ArgumentParser(
