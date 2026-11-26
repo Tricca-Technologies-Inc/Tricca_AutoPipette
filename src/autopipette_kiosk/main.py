@@ -189,6 +189,7 @@ class MoveRelRequest(BaseModel):
     x: float = 0.0
     y: float = 0.0
     z: float = 0.0
+    jog: bool = False
 
 
 class MoveResult(BaseModel):
@@ -652,7 +653,9 @@ async def move_rel(req: MoveRelRequest) -> MoveResult:
     try:
         response = await asyncio.to_thread(
             _control_client.send_jsonrpc,
-            _control_requests.move_rel(MoveRelArgs(x=req.x, y=req.y, z=req.z)),
+            _control_requests.move_rel(
+                MoveRelArgs(x=req.x, y=req.y, z=req.z, jog=req.jog)
+            ),
         )
     except JsonRpcError as exc:
         raise _translate_move_error(exc) from exc

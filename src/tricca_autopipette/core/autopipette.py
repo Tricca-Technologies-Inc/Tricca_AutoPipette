@@ -876,18 +876,20 @@ class AutoPipette:
                     f"{axis.upper()}={value} is outside the gantry's limits {bound}"
                 )
 
-    def move_to(self, coordinate: Coordinate) -> None:
+    def move_to(self, coordinate: Coordinate, *, jog: bool = False) -> None:
         """Move the pipette to the specified coordinate.
 
         Args:
             coordinate: Target position in 3D space.
+            jog: Use the gantry's jog speeds instead of its protocol speeds.
 
         Raises:
             ValueError: If an absolute target is outside the gantry's limits.
         """  # ruff: ignore[docstring-extraneous-exception]
         self._check_limits(coordinate)
-        speed_xy = self.gantry.speed_xy
-        speed_z = self.gantry.speed_z
+        gantry = self.gantry
+        speed_xy = gantry.jog_speed_xy if jog else gantry.speed_xy
+        speed_z = gantry.jog_speed_z if jog else gantry.speed_z
         self.logger.debug(
             "G-code move: X=%s Y=%s Z=%s (speed_xy=%s speed_z=%s)",
             coordinate.x,

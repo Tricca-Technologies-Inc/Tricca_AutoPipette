@@ -76,7 +76,7 @@ Options:
 ### `move_rel`
 
 ```
-Usage: move_rel [-h] [--x X] [--y Y] [--z Z]
+Usage: move_rel [-h] [--x X] [--y Y] [--z Z] [--jog]
 
 Move relative to the current position.
 
@@ -85,6 +85,7 @@ Options:
   --x X       X-axis offset in mm (default: 0)
   --y Y       Y-axis offset in mm (default: 0)
   --z Z       Z-axis offset in mm (default: 0)
+  --jog       Move at the gantry's jog speeds (jog_speed_xy/jog_speed_z)
 ```
 
 ### `plate_move`
