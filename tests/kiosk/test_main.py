@@ -731,6 +731,7 @@ class TestWebSocketStatusBroadcast:
             "started": False,
             "last_job": None,
             "toolhead": {"position": None, "homed_axes": None},
+            "plate_axes": {"positions": {}, "homed": {}},
             "config_locked": False,
             "homing_invalidated": False,
         }

@@ -69,6 +69,7 @@ def kiosk_client(
     monkeypatch.setattr(
         kiosk_main, "_current_toolhead", {"position": None, "homed_axes": None}
     )
+    monkeypatch.setattr(kiosk_main, "_live_axes", {})
     monkeypatch.setattr(kiosk_main, "_ws_clients", empty_clients)
 
     with TestClient(kiosk_main.app) as client:
@@ -105,6 +106,7 @@ def kiosk_client_with_moonraker(
     monkeypatch.setattr(
         kiosk_main, "_current_toolhead", {"position": None, "homed_axes": None}
     )
+    monkeypatch.setattr(kiosk_main, "_live_axes", {})
     monkeypatch.setattr(kiosk_main, "_ws_clients", empty_clients)
 
     with TestClient(kiosk_main.app) as client:
@@ -135,6 +137,7 @@ def kiosk_client_with_plates(
     monkeypatch.setattr(
         kiosk_main, "_current_toolhead", {"position": None, "homed_axes": None}
     )
+    monkeypatch.setattr(kiosk_main, "_live_axes", {})
     monkeypatch.setattr(kiosk_main, "_ws_clients", empty_clients)
 
     with TestClient(kiosk_main.app) as client:

@@ -35,11 +35,19 @@ from tricca_autopipette.commands.tap_cmd_parsers import (
     MoveArgs,
     MoveLocArgs,
     MoveRelArgs,
+    PlateMoveArgs,
     ResetTipsArgs,
     SetTipsArgs,
     TipsArgs,
 )
 from tricca_autopipette.daemon.control_requests import ControlRequests
+from tricca_autopipette.daemon.moonraker_state import (
+    GCODE_MOVE_OBJECT,
+    PLATE_STATE_OBJECT,
+    live_axis_position,
+    live_plate_homed,
+    merge_live_axes,
+)
 from tricca_autopipette.moonraker.websocket_client import (
     JsonRpcError,
     WebSocketClient,
@@ -197,6 +205,15 @@ class MoveRelRequest(BaseModel):
     jog: bool = False
 
 
+class PlateMoveRequest(BaseModel):
+    """Request body for `POST /plate_move` (mirrors `PlateMoveArgs`)."""
+
+    plate: str
+    target: str
+    speed: float | None = None
+    rel: bool = False
+
+
 class MoveResult(BaseModel):
     """Response body for `POST /move`, `/move_loc`, `/move_rel`.
 
@@ -232,6 +249,10 @@ _homing_invalidated: bool = False
 # arrives (there's no synchronous initial value here, unlike the daemon's
 # own `MoonrakerStateTracker.start()`).
 _current_toolhead: dict[str, Any] = {"position": None, "homed_axes": None}
+# Live plate state (Move page plate jog, issue #215): the relayed pushes'
+# gcode_move / _PLATE_STATE / stepper_enable fields, merged the same way the
+# daemon's own MoonrakerStateTracker merges them.
+_live_axes: dict[str, dict[str, Any]] = {}
 _ws_clients: set[WebSocket] = set()
 
 
@@ -669,6 +690,74 @@ async def move_rel(req: MoveRelRequest) -> MoveResult:
 
     result: dict[str, Any] = response.get("result", {})
     return MoveResult(message=str(result.get("message", "")))
+
+
+async def _send_move(request: dict[str, Any]) -> MoveResult:
+    """Send a `movement.*` request that reports failure by raising.
+
+    Args:
+        request: The `ControlRequests` builder's result.
+
+    Returns:
+        The move's message.
+
+    Raises:
+        HTTPException: 503 if the control daemon isn't connected, the
+            daemon error's status (see `_translate_move_error`), or 500 for
+            any other dispatch failure.
+    """  # ruff: ignore[docstring-missing-exception]
+    if _control_client is None:
+        raise HTTPException(status_code=503, detail="Control daemon not connected")
+    try:
+        response = await asyncio.to_thread(_control_client.send_jsonrpc, request)
+    except JsonRpcError as exc:
+        raise _translate_move_error(exc) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    result: dict[str, Any] = response.get("result", {})
+    return MoveResult(message=str(result.get("message", "")))
+
+
+@app.post("/plate_move", response_model=MoveResult)
+async def plate_move(req: PlateMoveRequest) -> MoveResult:
+    """Move a plate drawer via `movement.plate_move` (Move page, issue #215).
+
+    The page's plate jog sends `rel` with a signed step: negative is in.
+    Routing only; the daemon checks travel, homing and the tip height.
+
+    Returns:
+        The move's message.
+    """
+    return await _send_move(
+        _control_requests.plate_move(
+            PlateMoveArgs(
+                plate=req.plate, target=req.target, speed=req.speed, rel=req.rel
+            )
+        )
+    )
+
+
+@app.post("/plates_in", response_model=MoveResult)
+async def plates_in() -> MoveResult:
+    """Move every plate drawer in via `movement.plates_in` (issue #215).
+
+    Returns:
+        The move's message.
+    """
+    return await _send_move(_control_requests.plates_in())
+
+
+@app.get("/plates", response_model=CommandResultResponse)
+async def plates() -> CommandResultResponse:
+    """Report each plate drawer's state via `movement.plates` (issue #215).
+
+    Routing only; `ok=False` when no plates are configured, which the Move
+    page reads as "hide the plate column".
+
+    Returns:
+        `CommandResultResponse` with `data["plates"]`.
+    """
+    return await _dispatch_control_request(_control_requests.plates())
 
 
 async def _run_control(request: dict[str, Any]) -> RunStatus:
@@ -1137,9 +1226,10 @@ def _on_raw_event_notification(params: Any) -> None:  # ruff:ignore[any-type]
     if status is None:
         return
     toolhead = status.get("toolhead")
-    if not isinstance(toolhead, dict):
-        return
-    updated = _apply_toolhead_update(cast("dict[str, Any]", toolhead))
+    updated = isinstance(toolhead, dict) and _apply_toolhead_update(
+        cast("dict[str, Any]", toolhead)
+    )
+    updated = merge_live_axes(_live_axes, status) or updated
     if updated and _main_loop is not None:
         asyncio.run_coroutine_threadsafe(_broadcast_status(), _main_loop)
 
@@ -1177,6 +1267,27 @@ def _apply_toolhead_update(toolhead: dict[str, Any]) -> bool:
     return changed
 
 
+def _plate_axes_payload() -> dict[str, Any]:
+    """Live plate positions and homed state, for the Move page (issue #215).
+
+    Returns:
+        `{"positions": {axis letter: mm}, "homed": {plate name: bool}}`,
+        over every letter Klipper's `axis_map` binds and every plate
+        `_PLATE_STATE` names; both empty until a push carries them.
+    """
+    letters = _live_axes.get(GCODE_MOVE_OBJECT, {}).get("axis_map")
+    plate_names = _live_axes.get(PLATE_STATE_OBJECT, {})
+    return {
+        "positions": {
+            str(letter): live_axis_position(_live_axes, str(letter))
+            for letter in (
+                cast("dict[str, Any]", letters) if isinstance(letters, dict) else {}
+            )
+        },
+        "homed": {name: live_plate_homed(_live_axes, name) for name in plate_names},
+    }
+
+
 def _status_payload() -> dict[str, Any]:
     """Build the JSON payload pushed over `/ws/status`.
 
@@ -1184,12 +1295,14 @@ def _status_payload() -> dict[str, Any]:
         The current `RunStatus` fields (`paused` included) plus
         `toolhead` (`{"position", "homed_axes"}`, either possibly still
         None if no live update has arrived yet -- see
-        `_on_raw_event_notification`), `config_locked` and
+        `_on_raw_event_notification`), `plate_axes`
+        (`_plate_axes_payload`), `config_locked` and
         `homing_invalidated`.
     """
     return {
         **_current_run.model_dump(),
         "toolhead": dict(_current_toolhead),
+        "plate_axes": _plate_axes_payload(),
         "config_locked": _config_locked,
         "homing_invalidated": _homing_invalidated,
     }

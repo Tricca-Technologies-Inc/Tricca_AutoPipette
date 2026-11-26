@@ -18,6 +18,7 @@ from support.live_control_plane import LiveControlPlane
 
 from autopipette_kiosk import main as kiosk_main
 from tricca_autopipette.core.coordinate import Coordinate
+from tricca_autopipette.daemon.moonraker_state import AxisConfig, PlateAxis
 
 
 def _set_homed(plane: LiveControlPlane, *, homed: bool = True) -> None:
@@ -292,3 +293,168 @@ class TestToolheadRelay:
             )
             pushed = ws.receive_json()
             assert pushed["toolhead"]["position"] == [9.0, 9.0, 9.0, 0.0]
+
+
+#: Two plates, as Klipper's config would describe them (issue #215).
+PLATE_AXES = AxisConfig(
+    plates=(
+        PlateAxis("plate1", "U", 0.0, 350.0, (0.0, 350.0)),
+        PlateAxis("plate2", "V", 0.0, 350.0, (0.0, 350.0)),
+    ),
+    z_safe=0.0,
+    park_tol=0.1,
+)
+
+
+def _with_plates(plane: LiveControlPlane, **positions: float) -> FakeMoonrakerState:
+    fake = plane.service.moonraker_state
+    assert isinstance(fake, FakeMoonrakerState)
+    fake.axis_config = PLATE_AXES  # type: ignore[misc]
+    fake.set_homed(True)
+    fake.homed_plates = {"plate1", "plate2"}
+    fake.positions = dict(positions)
+    return fake
+
+
+class TestPlateEndpoints:
+    """`/plate_move`, `/plates_in`, `/plates` (issue #215, the plate jog)."""
+
+    def test_a_relative_plate_move_reaches_the_daemon(
+        self,
+        kiosk_client: TestClient,
+        live_control_plane: LiveControlPlane,
+    ) -> None:
+        _with_plates(live_control_plane, V=120.0, Z=0.0)
+
+        response = kiosk_client.post(
+            "/plate_move", json={"plate": "plate2", "target": "-10", "rel": True}
+        )
+
+        assert response.status_code == 200
+        assert "110" in response.json()["message"]
+
+    def test_an_out_of_range_jog_is_a_400_with_the_daemons_reason(
+        self, kiosk_client: TestClient, live_control_plane: LiveControlPlane
+    ) -> None:
+        _with_plates(live_control_plane, V=5.0)
+
+        response = kiosk_client.post(
+            "/plate_move", json={"plate": "V", "target": "-10", "rel": True}
+        )
+
+        assert response.status_code == 400
+        assert "outside" in response.json()["detail"]
+
+    def test_an_unhomed_plate_is_a_409(
+        self, kiosk_client: TestClient, live_control_plane: LiveControlPlane
+    ) -> None:
+        _with_plates(live_control_plane, V=120.0).homed_plates = {"plate1"}
+
+        response = kiosk_client.post(
+            "/plate_move", json={"plate": "V", "target": "1", "rel": True}
+        )
+
+        assert response.status_code == 409
+
+    def test_plates_in(
+        self, kiosk_client: TestClient, live_control_plane: LiveControlPlane
+    ) -> None:
+        _with_plates(live_control_plane)
+
+        response = kiosk_client.post("/plates_in")
+
+        assert response.status_code == 200
+        assert "in" in response.json()["message"]
+
+    def test_plates_in_without_plates_is_a_400(
+        self, kiosk_client: TestClient, live_control_plane: LiveControlPlane
+    ) -> None:
+        _set_homed(live_control_plane)
+
+        response = kiosk_client.post("/plates_in")
+
+        assert response.status_code == 400
+
+    def test_plates_forwards_the_daemons_result(
+        self, kiosk_client: TestClient, live_control_plane: LiveControlPlane
+    ) -> None:
+        _with_plates(live_control_plane, V=350.0)
+
+        body = kiosk_client.get("/plates").json()
+
+        assert body["ok"] is True
+        plate2 = body["data"]["plates"][1]
+        assert (plate2["name"], plate2["position"], plate2["stop"]) == (
+            "plate2",
+            350.0,
+            "out",
+        )
+
+    def test_plates_without_plates_is_ok_false_not_an_http_error(
+        self, kiosk_client: TestClient, live_control_plane: LiveControlPlane
+    ) -> None:
+        del live_control_plane
+
+        response = kiosk_client.get("/plates")
+
+        assert response.status_code == 200
+        assert response.json()["ok"] is False
+
+    @pytest.mark.parametrize(
+        ("method", "path"),
+        [("post", "/plate_move"), ("post", "/plates_in"), ("get", "/plates")],
+    )
+    def test_returns_503_when_the_daemon_is_not_connected(
+        self, monkeypatch: pytest.MonkeyPatch, method: str, path: str
+    ) -> None:
+        monkeypatch.setattr(kiosk_main, "_control_client", None)
+
+        client = TestClient(kiosk_main.app)
+        if method == "get":
+            response = client.get(path)
+        else:
+            response = client.post(
+                path, json={"plate": "V", "target": "1", "rel": True}
+            )
+
+        assert response.status_code == 503
+
+
+class TestPlateRelay:
+    def test_ws_status_carries_live_plate_positions_and_homed_state(
+        self,
+        kiosk_client_with_moonraker: TestClient,
+        live_control_plane: LiveControlPlane,
+    ) -> None:
+        client = live_control_plane.service.client
+        assert isinstance(client, FakeWebSocketClient)
+
+        with kiosk_client_with_moonraker.websocket_connect("/ws/status") as ws:
+            assert ws.receive_json()["plate_axes"] == {"positions": {}, "homed": {}}
+
+            client.trigger_notification(
+                "notify_status_update",
+                [
+                    {
+                        "gcode_move": {
+                            "position": [0.0, 0.0, 0.0, 0.0, 42.5],
+                            "axis_map": {"X": 0, "Y": 1, "Z": 2, "E": 3, "V": 4},
+                        },
+                        "gcode_macro _PLATE_STATE": {"plate2": True},
+                        "stepper_enable": {"steppers": {"manual_stepper plate2": True}},
+                    },
+                    1.0,
+                ],
+            )
+            pushed = ws.receive_json()["plate_axes"]
+            assert pushed["positions"]["V"] == pytest.approx(42.5)
+            assert pushed["homed"] == {"plate2": True}
+
+            # Only the changed field arrives next; homed state is kept.
+            client.trigger_notification(
+                "notify_status_update",
+                [{"gcode_move": {"position": [0.0, 0.0, 0.0, 0.0, 40.0]}}, 2.0],
+            )
+            pushed = ws.receive_json()["plate_axes"]
+            assert pushed["positions"]["V"] == pytest.approx(40.0)
+            assert pushed["homed"] == {"plate2": True}

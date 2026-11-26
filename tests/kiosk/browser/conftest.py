@@ -45,6 +45,7 @@ def _start_live_kiosk(
     monkeypatch.setattr(
         kiosk_main, "_current_toolhead", {"position": None, "homed_axes": None}
     )
+    monkeypatch.setattr(kiosk_main, "_live_axes", {})
     monkeypatch.setattr(kiosk_main, "_ws_clients", empty_clients)
 
     server = LiveKioskServer(kiosk_main.app)

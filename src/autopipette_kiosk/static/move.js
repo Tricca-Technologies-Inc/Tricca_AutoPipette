@@ -1,6 +1,8 @@
 // Move page (issue #86): D-pad jog, absolute-coordinate move, and
 // named-location move -- three thin adapters over the daemon's
 // movement.move/move_loc/move_rel RPCs (via /move, /move_loc, /move_rel),
+// a plate drawer jog column beside Z (issue #215: /plate_move with --rel,
+// /plates_in, /plates; hidden with no plates configured),
 // plus the live position/homed banner relayed over the shared /ws/status
 // stream app.js already owns (App.onStatus).
 //
@@ -13,6 +15,14 @@
   // {name -> {type, x, y, z, details}}, loaded once per onShow -- the
   // dropdown doesn't need to react to the deck changing live.
   let locationsByName = {};
+  // From GET /plates: [{name, letter, homed, position, stop, ...}].
+  let plates = [];
+  let selectedPlate = null;
+  // Remembered across reloads; guarded, since storage can be unavailable.
+  const PLATE_KEY = 'move.plate';
+  function rememberedPlate() {
+    try { return localStorage.getItem(PLATE_KEY); } catch (e) { return null; }
+  }
 
   // ── homed-axes check: mirrors daemon/moonraker_state.py's
   // REQUIRED_HOMED_AXES (x/y/z all reported homed) -- client-side only for
@@ -62,6 +72,7 @@
     const toolhead = data.toolhead || {};
     renderNotHomedBanner(toolhead.homed_axes, !!data.homing_invalidated);
     renderLivePosition(toolhead.position);
+    renderPlateLive(data.plate_axes);
   });
 
   // ── shared POST-and-report helper (mirrors app.js's home()) ───────────
@@ -81,6 +92,7 @@
       } else {
         feedbackEl.textContent = data.message || 'Done';
       }
+      return res.ok;
     } catch (e) {
       feedbackEl.classList.add('error');
       feedbackEl.textContent = e.message;
@@ -108,6 +120,90 @@
     const body = { x: 0, y: 0, z: 0, jog: true };
     body[axis] = offset;
     postMove('/move_rel', body, document.getElementById('moveJogFeedback'));
+  });
+
+  // ── plate drawer jog (issue #215) ──────────────────────────────────────
+  // 0 is "in": the top arrow jogs in (a negative offset), the bottom out.
+  function selected() {
+    return plates.find(p => p.name === selectedPlate);
+  }
+
+  function renderPlateReadout(position, homed) {
+    const plate = selected();
+    document.getElementById('platePosLive').textContent =
+      typeof position === 'number' ? position.toFixed(2) : '--';
+    document.getElementById('plateHomedLive').textContent =
+      homed === undefined ? '' : (homed ? 'Homed' : 'Not homed');
+    document.getElementById('plateStopLive').textContent = (plate && plate.stop) || '';
+  }
+
+  // Live position/homed from the /ws/status push (gcode_move/_PLATE_STATE).
+  function renderPlateLive(axes) {
+    const plate = selected();
+    if (!plate || !axes) return;
+    const position = (axes.positions || {})[plate.letter];
+    const homed = (axes.homed || {})[plate.name];
+    if (position === undefined && homed === undefined) return;
+    renderPlateReadout(
+      position === undefined ? plate.position : position,
+      homed === undefined ? plate.homed : homed);
+  }
+
+  function renderPlateSelector() {
+    const selector = document.getElementById('plateSelector');
+    selector.replaceChildren(...plates.map(p => {
+      const btn = document.createElement('button');
+      btn.className = 'plate-sel-btn';
+      btn.classList.toggle('active', p.name === selectedPlate);
+      btn.dataset.plate = p.name;
+      btn.textContent = p.name;
+      return btn;
+    }));
+    const plate = selected();
+    if (plate) renderPlateReadout(plate.position, plate.homed);
+  }
+
+  async function loadPlates() {
+    const col = document.getElementById('movePlateCol');
+    try {
+      const res = await fetch('/plates');
+      const result = await res.json();
+      plates = (res.ok && result.ok && result.data && result.data.plates) || [];
+    } catch (e) {
+      plates = [];
+    }
+    col.hidden = plates.length === 0;
+    if (!plates.some(p => p.name === selectedPlate)) {
+      const saved = rememberedPlate();
+      selectedPlate = plates.some(p => p.name === saved) ? saved
+        : (plates.length ? plates[0].name : null);
+    }
+    renderPlateSelector();
+  }
+
+  document.getElementById('plateSelector').addEventListener('click', e => {
+    const btn = e.target.closest('.plate-sel-btn');
+    if (!btn) return;
+    selectedPlate = btn.dataset.plate;
+    try { localStorage.setItem(PLATE_KEY, selectedPlate); } catch (err) { /* no storage */ }
+    renderPlateSelector();
+  });
+
+  document.querySelectorAll('.plate-jog-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (running || !selectedPlate) return;
+      const offset = parseFloat(btn.dataset.dir) * stepSize;
+      // No speed: the daemon uses the gantry's plate_jog_speed.
+      const body = { plate: selectedPlate, target: String(offset), rel: true };
+      await postMove('/plate_move', body, document.getElementById('moveJogFeedback'));
+      loadPlates();
+    });
+  });
+
+  document.getElementById('platesInBtn').addEventListener('click', async () => {
+    if (running) return;
+    await postMove('/plates_in', {}, document.getElementById('moveJogFeedback'));
+    loadPlates();
   });
 
   // ── absolute move ───────────────────────────────────────────────────────
@@ -170,5 +266,5 @@
     postMove('/move_loc', body, document.getElementById('moveLocFeedback'));
   });
 
-  App.registerPage('move', { onShow: loadLocations });
+  App.registerPage('move', { onShow: () => { loadLocations(); loadPlates(); } });
 })();
