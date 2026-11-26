@@ -155,8 +155,11 @@ def test_dpad_click_when_not_homed_shows_the_real_daemon_error(
 @pytest.mark.parametrize(
     ("button", "axis", "sign"),
     [
-        # X0 is the machine's right edge and X grows to the left (deck.js's
-        # map draws it that way); Z0 is fully raised and Z grows downward.
+        # X0 is the machine's right edge and X grows to the left, Y0 is the
+        # back and Y grows toward the operator (deck.js's map draws both that
+        # way); Z0 is fully raised and Z grows downward.
+        (".dpad-yplus", "y", -1),  # ▲ moves back
+        (".dpad-yminus", "y", 1),  # ▼ moves to the front
         (".dpad-xminus", "x", 1),  # ◀ moves left
         (".dpad-xplus", "x", -1),  # ▶ moves right
         (".dpad-zplus", "z", -1),  # Z ▲ raises
