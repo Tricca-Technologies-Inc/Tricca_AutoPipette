@@ -85,6 +85,15 @@ class TestTipCounts:
         assert result.data is not None
         assert result.data["tips"] == {"tipbox": {"needed": 1, "left": 2}}
 
+    def test_counts_every_pickup_when_the_box_runs_out(
+        self, service_with_plates: AutoPipetteService
+    ) -> None:
+        # A real run pauses for a reload at the third; the count must say 3.
+        result = service_with_plates.validate_protocol("three_tips.pipette")
+
+        assert result.data is not None
+        assert result.data["tips"] == {"tipbox": {"needed": 3, "left": 2}}
+
     def test_a_protocol_taking_no_tips_reports_none(
         self, service_with_plates: AutoPipetteService
     ) -> None:

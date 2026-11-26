@@ -4266,6 +4266,8 @@ class AutoPipetteService:
                 interlock = self._interlock_model()
                 boxes = self._autopipette.location_manager.tipbox_manager.boxes
                 left = {name: box.remaining for name, box in boxes.items()}
+                taken = self._autopipette.tips_taken
+                taken.clear()
                 for line_number, raw_line in enumerate(lines, start=1):
                     line = raw_line.strip()
                     if not line or line.startswith("#"):
@@ -4273,12 +4275,11 @@ class AutoPipetteService:
                     self._dispatch_protocol_line_for_validation(
                         line, line_number, findings, warning_capture, interlock
                     )
-                # ponytail: a reset_tips mid-protocol undercounts; count
-                # pickups in next_tip if that ever matters.
+                # Pickups, not left - remaining: a box that runs out is
+                # modelled as reloaded, so remaining would undercount.
                 tips = {
-                    name: {"needed": left[name] - box.remaining, "left": left[name]}
-                    for name, box in boxes.items()
-                    if name in left and left[name] > box.remaining
+                    name: {"needed": count, "left": left.get(name, 0)}
+                    for name, count in taken.items()
                 }
         finally:
             autopipette_logger.removeHandler(warning_capture)
