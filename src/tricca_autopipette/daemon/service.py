@@ -36,7 +36,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from cmd2 import Cmd2ArgumentParser
 from pydantic import BaseModel
@@ -124,7 +124,11 @@ from tricca_autopipette.daemon.moonraker_state import (
     PlateAxis,
 )
 from tricca_autopipette.moonraker.moonraker_requests import MoonrakerRequests
-from tricca_autopipette.moonraker.websocket_client import JsonRpcError, WebSocketClient
+from tricca_autopipette.moonraker.websocket_client import (
+    JsonRpcError,
+    WebSocketClient,
+    as_dict,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -235,12 +239,10 @@ class _PendingJob:
     Attributes:
         filename: The uploaded G-code file's name.
         on_complete: Run if the job completes, or None.
-        printing: Whether Klipper has reported it printing yet.
     """
 
     filename: str
     on_complete: Callable[[], None] | None
-    printing: bool = False
 
 
 @dataclass
@@ -799,6 +801,11 @@ class AutoPipetteService:
                     "WebSocketClient will keep retrying in the background"
                 )
 
+        if self.client is not None:
+            # How each immediate job ended (issue #187).
+            self.client.register_handler(
+                "notify_history_changed", self._handle_history_changed
+            )
         if self.moonraker_state is not None:
             self.moonraker_state.start()
             self.moonraker_state.on_print_state_change(self._handle_print_state_change)
@@ -2822,9 +2829,10 @@ class AutoPipetteService:
         Operates in two modes based on ``GCodeManager`` state:
         1. Batch mode: appends to the buffer for later combined upload.
         2. Immediate mode: writes to file and uploads/executes immediately,
-           as the pending immediate job: how it ends (``print_stats``) is
-           reported as ``last_job`` (issue #187), which is None again
-           while the next job is pending.
+           as the pending immediate job: how it ends (Moonraker's job
+           history, ``notify_history_changed``) is reported as
+           ``last_job`` (issue #187), None again while the next job is
+           pending.
 
         Args:
             gcode: List of G-code command strings.
@@ -2864,6 +2872,13 @@ class AutoPipetteService:
 
         file_path = self.gcode_manager.write_gcode_file(gcode, filename, append_header)
         self.upload_and_execute_gcode(file_path.name, file_path, delete_file=True)
+        if self._pending_job is not None:
+            logger.warning(
+                "Starting %s while %s is still pending: Moonraker never "
+                "reported how it finished.",
+                file_path.name,
+                self._pending_job.filename,
+            )
         self._pending_job = _PendingJob(file_path.name, on_complete)
         if self._last_job is not None:
             self._last_job = None
@@ -4796,10 +4811,7 @@ class AutoPipetteService:
         """
         async with self._lock:
             if self._current.status != "running":
-                self._apply_immediate_job_state(new_state, message)
                 return
-            # A run's print replaced any job still pending: it can't settle.
-            self._pending_job = None
             if new_state == "paused":
                 self._current = replace(
                     self._current,
@@ -4839,37 +4851,56 @@ class AutoPipetteService:
                 return
             self._broadcast_status()
 
-    def _apply_immediate_job_state(self, new_state: str, message: str) -> None:
-        """Settle the pending immediate job on a terminal ``print_stats`` state.
+    def _handle_history_changed(self, params: Any) -> None:  # ruff:ignore[any-type]
+        """Marshal a Moonraker ``notify_history_changed`` push onto the loop.
 
-        A terminal state before the job was seen printing may be the
-        previous job's, arriving late, so a ``complete`` then is ignored.
-        A failure is still reported: a job that fails at once can end
-        before Klipper's next status push shows it printing.
+        Needs Moonraker's ``[history]`` component. Only ``finished`` entries
+        matter: each names the job's file and how it ended, one per job, so
+        back-to-back short jobs can't be missed the way ``print_stats``
+        diffs can.
 
         Args:
-            new_state: New Klipper ``print_stats.state`` value.
-            message: Klipper's ``print_stats.message``.
+            params: ``[{"action", "job": {"filename", "status", ...}}]``.
         """
-        job = self._pending_job
-        if job is None:
+        if self._loop is None or not params:
             return
-        if new_state == "printing":
-            job.printing = True
-            return
-        if new_state not in ("complete", "error", "cancelled") or (
-            new_state == "complete" and not job.printing
+        entry = as_dict(
+            cast("list[Any]", params)[0] if isinstance(params, list) else params
+        )
+        job = as_dict(entry.get("job"))
+        filename, status = job.get("filename"), job.get("status")
+        if (
+            entry.get("action") == "finished"
+            and isinstance(filename, str)
+            and isinstance(status, str)
         ):
-            return
-        self._pending_job = None
-        self._last_job = {
-            "filename": job.filename,
-            "state": new_state,
-            "message": message,
-        }
-        if new_state == "complete" and job.on_complete is not None:
-            job.on_complete()
-        self._broadcast_status()
+            asyncio.run_coroutine_threadsafe(
+                self._apply_job_finished(filename, status), self._loop
+            )
+
+    async def _apply_job_finished(self, filename: str, status: str) -> None:
+        """Settle the pending immediate job, if this finished job is it.
+
+        Args:
+            filename: The finished job's file, as Moonraker's history has it.
+            status: Its history status: ``completed`` runs the job's
+                ``on_complete``; anything else (``cancelled``, ``error``,
+                ``klippy_shutdown``, ...) is a failure.
+        """
+        async with self._lock:
+            job = self._pending_job
+            if job is None or job.filename != filename:
+                return
+            self._pending_job = None
+            state = self.moonraker_state
+            self._last_job = {
+                "filename": filename,
+                "state": status,
+                "message": state.print_message if state is not None else "",
+            }
+            if status == "completed" and job.on_complete is not None:
+                job.on_complete()
+            self._broadcast_status()
 
     def _broadcast_status(self) -> None:
         """Push the current run status to control-plane clients, if wired up."""

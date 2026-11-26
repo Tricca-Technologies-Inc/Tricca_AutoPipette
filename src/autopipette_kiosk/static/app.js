@@ -90,7 +90,7 @@ const App = (() => {
     const label = document.getElementById('statusPillLabel');
     const s = status.status || 'idle';
     const job = status.last_job;
-    const failed = !isRunActive(s) && job && job.state !== 'complete';
+    const failed = !isRunActive(s) && job && job.state !== 'completed';
     pill.className = `status-pill ${failed ? 'error' : s}`;
     label.textContent = failed
       ? (job.message || `Job ${job.state}`)

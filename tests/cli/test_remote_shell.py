@@ -309,7 +309,7 @@ class TestLastJobAlert:
 
         shell._on_run_status({
             **idle,
-            "last_job": {"filename": "a.gcode", "state": "complete", "message": ""},
+            "last_job": {"filename": "a.gcode", "state": "completed", "message": ""},
         })
         shell._on_run_status({**idle, "last_job": None})
 

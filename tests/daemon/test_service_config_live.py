@@ -154,9 +154,8 @@ class TestForcedRehome:
         svc.client = FakeWebSocketClient()  # type: ignore[assignment]
 
         svc.init()
-        # Only once Klipper reports the home completed (issue #187).
-        for state in ("printing", "complete"):
-            asyncio.run(svc._apply_print_state_change(state))
+        # Only once Moonraker reports the home completed (issue #187).
+        asyncio.run(svc._apply_job_finished("home_all.gcode", "completed"))
 
         assert svc.move(MoveArgs(x=1.0, y=1.0, z=1.0)).ok
 

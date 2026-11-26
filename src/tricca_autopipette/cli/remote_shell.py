@@ -167,7 +167,7 @@ class RemoteTapShell(Cmd):
         if job == self._last_job:
             return
         self._last_job = job
-        if job and job.get("state") != "complete":
+        if job and job.get("state") != "completed":
             self.add_alert(
                 msg=f"[job] {job.get('filename')} {job.get('state')}: "
                 f"{job.get('message')}"

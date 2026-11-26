@@ -54,7 +54,7 @@ def test_a_completed_job_leaves_the_pill_alone(
 
     _push_last_job(live_control_plane, "cancelled", "Endstop z3 still triggered")
     expect(page.locator("#statusPill")).to_have_class(re.compile(r"\berror\b"))
-    _push_last_job(live_control_plane, "complete", "")
+    _push_last_job(live_control_plane, "completed", "")
 
     expect(page.locator("#statusPillLabel")).to_have_text("Idle")
     expect(page.locator("#statusPill")).to_have_class(re.compile(r"\bidle\b"))
