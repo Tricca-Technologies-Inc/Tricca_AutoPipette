@@ -86,6 +86,8 @@ class RunStatus(BaseModel):
     paused: bool = False
     # How far through its G-code the print is, 0 to 1; None before it starts.
     progress: float | None = None
+    # Klipper has reported the print started; before that only Cancel applies.
+    started: bool = False
 
 
 class CommandRequest(BaseModel):
@@ -691,6 +693,7 @@ async def _run_control(request: dict[str, Any]) -> RunStatus:
         message=result.get("message", ""),
         paused=bool(result.get("paused")),
         progress=result.get("progress"),
+        started=bool(result.get("started")),
     )
 
 
@@ -1073,6 +1076,7 @@ def _on_run_status_notification(params: Any) -> None:  # ruff:ignore[any-type]
         message=notification.get("message", ""),
         paused=bool(notification.get("paused")),
         progress=notification.get("progress"),
+        started=bool(notification.get("started")),
     )
     if _main_loop is not None:
         asyncio.run_coroutine_threadsafe(_broadcast_status(), _main_loop)

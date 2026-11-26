@@ -660,6 +660,18 @@ class TestRunResumeAndCancel:
 
             assert ws.receive_json()["progress"] == pytest.approx(0.42)
 
+    def test_started_reaches_the_browser(self, kiosk_client: TestClient) -> None:
+        with kiosk_client.websocket_connect("/ws/status") as ws:
+            assert ws.receive_json()["started"] is False
+
+            kiosk_main._on_run_status_notification({
+                "status": "running",
+                "message": "Running a.pipette",
+                "started": True,
+            })
+
+            assert ws.receive_json()["started"] is True
+
 
 class TestStatusEndpoint:
     def test_idle_by_default(self, kiosk_client: TestClient) -> None:
@@ -670,6 +682,7 @@ class TestStatusEndpoint:
             "message": "",
             "paused": False,
             "progress": None,
+            "started": False,
         }
 
     def test_reflects_the_real_status_after_a_run_starts(
@@ -695,6 +708,7 @@ class TestWebSocketStatusBroadcast:
             "message": "",
             "paused": False,
             "progress": None,
+            "started": False,
             "toolhead": {"position": None, "homed_axes": None},
             "config_locked": False,
             "homing_invalidated": False,

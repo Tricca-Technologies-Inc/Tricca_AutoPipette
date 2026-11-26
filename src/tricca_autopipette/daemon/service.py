@@ -28,6 +28,7 @@ import functools
 import logging
 import math
 import shlex
+import threading
 import time
 import uuid
 from collections.abc import Callable, Generator, Iterable
@@ -179,6 +180,10 @@ class RunAlreadyActiveError(Exception):
     """Raised when a run is requested while another run is in progress."""
 
 
+class RunCancelledError(Exception):
+    """Raised when a run is cancelled before its G-code reaches Moonraker."""
+
+
 @dataclass
 class RunStatus:
     """Status of the daemon's current (or most recent) protocol run.
@@ -194,6 +199,9 @@ class RunStatus:
             or an empty tipbox, waiting for Resume.
         progress: How far through the uploaded G-code the print is, 0 to 1
             (Klipper's ``virtual_sdcard.progress``), or None before it starts.
+        started: Whether Klipper has reported this run's print as printing.
+            False while tapd is still preparing the G-code, when there is
+            no print to pause yet.
     """
 
     status: Literal["idle", "running", "done", "error"]
@@ -203,6 +211,7 @@ class RunStatus:
     refusal: InterlockRefusal | None = None
     paused: bool = False
     progress: float | None = None
+    started: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         """The JSON shape of ``run.status`` and ``notify_run_status``.
@@ -659,6 +668,12 @@ class AutoPipetteService:
 
         self._lock = asyncio.Lock()
         self._current = RunStatus(status="idle")
+        # Makes a Cancel and the hand-off of a run's G-code to Moonraker
+        # mutually exclusive: a Cancel before it stops the run in tapd, one
+        # after it goes to Moonraker (issue #184).
+        self._handoff_lock = threading.Lock()
+        self._cancel_requested = False
+        self._handed_off = False
         self._loop: asyncio.AbstractEventLoop | None = None
         self._broadcast_callback: Callable[[str, dict[str, Any]], None] | None = None
         self._background_tasks: set[asyncio.Task[None]] = set()
@@ -3744,6 +3759,9 @@ class AutoPipetteService:
                 raise FileNotFoundError(f"Protocol not found: {e}") from e
 
             run_id = str(uuid.uuid4())
+            with self._handoff_lock:
+                self._cancel_requested = False
+                self._handed_off = False
             self._current = RunStatus(
                 status="running",
                 message=f"Running {filename}",
@@ -3781,6 +3799,14 @@ class AutoPipetteService:
         async with self._lock:
             try:
                 await asyncio.to_thread(self._run_protocol_sync, filename)
+            except RunCancelledError:
+                self._current = RunStatus(
+                    status="error",
+                    message="Protocol cancelled before it started",
+                    run_id=run_id,
+                    filename=filename,
+                )
+                self._broadcast_status()
             except Exception as exc:
                 self._current = RunStatus(
                     status="error",
@@ -3988,6 +4014,9 @@ class AutoPipetteService:
 
         Raises:
             ValueError: If the file can't be decoded as UTF-8.
+            RunCancelledError: If the run was cancelled before its G-code
+                was handed to Moonraker (rolled back, like a compile-time
+                failure).
             Exception: Whatever a dispatched line's service method itself
                 raises (e.g. ``NotALocationError``, a not-homed
                 ``RuntimeError``) -- propagates uncaught, aborting the rest
@@ -4006,6 +4035,7 @@ class AutoPipetteService:
             return
 
         gcode_manager = self.gcode_manager
+        handoff_held = False
         try:
             # domain_state_snapshot wraps exactly the dispatch loop, not the
             # upload below it -- see its docstring for why that boundary is
@@ -4020,6 +4050,13 @@ class AutoPipetteService:
                 self._seed_drawer_model()
                 for line in commands:
                     self._dispatch_protocol_line(line)
+                # Held from here until the upload has started the print, so
+                # a Cancel either lands before (raised inside the snapshot,
+                # so nothing compiled is kept) or waits and goes to Moonraker.
+                self._handoff_lock.acquire()
+                handoff_held = True
+                if self._cancel_requested:
+                    raise RunCancelledError(filename)
 
             gcode_buffer = gcode_manager.get_buffer()
             if not gcode_buffer:
@@ -4039,7 +4076,10 @@ class AutoPipetteService:
                 logger.error("Cannot upload G-code: no WebSocket client configured.")
                 return
             self.upload_and_execute_gcode(output_filename, file_path, delete_file=True)
+            self._handed_off = True
         finally:
+            if handoff_held:
+                self._handoff_lock.release()
             gcode_manager.clear_buffer()
 
     @contextmanager
@@ -4504,10 +4544,28 @@ class AutoPipetteService:
         Returns:
             The current run status (not necessarily yet reflecting the
             cancellation — real state updates happen later via Moonraker's
-            print_stats transition).
+            print_stats transition, or, for a run still being prepared,
+            when its replay stops before the upload).
         """
-        await asyncio.to_thread(self.send_cancel)
+        if not await asyncio.to_thread(self._cancel_before_hand_off):
+            await asyncio.to_thread(self.send_cancel)
         return self._current
+
+    def _cancel_before_hand_off(self) -> bool:
+        """Cancel a run whose G-code hasn't reached Moonraker yet.
+
+        Waits for an upload already under way, so the cancel then goes to
+        the print it started rather than racing it (issue #184).
+
+        Returns:
+            True if a run being prepared was cancelled here, False if
+            there's no such run and the cancel should go to Moonraker.
+        """
+        with self._handoff_lock:
+            if self._current.status != "running" or self._handed_off:
+                return False
+            self._cancel_requested = True
+            return True
 
     async def pause_run(self) -> RunStatus:
         """Pause the active run.
@@ -4696,8 +4754,11 @@ class AutoPipetteService:
                 self._current = replace(
                     self._current,
                     paused=False,
+                    started=True,
                     message=f"Running {self._current.filename}",
                 )
+            elif new_state == "printing":
+                self._current = replace(self._current, started=True)
             elif new_state == "complete":
                 self._current = RunStatus(
                     status="done",
