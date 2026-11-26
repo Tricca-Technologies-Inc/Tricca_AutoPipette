@@ -1,2 +1,114 @@
 #First step of Prime panel B Serum, adding 10uL ISTD into each flip top tube
 
+load_pipette TysonP100.json
+home all
+#
+# This protocol uses the Tyson1000 liquid profile's air gaps
+
+
+pipette 10.0 --tip_end keep PBISTD --dest_row 0 --dest_col 1 STANS1_FULL --prewet 5
+pipette 10.0 --tip_end keep PBISTD --dest_row 0 --dest_col 2 STANS1_FULL
+pipette 10.0 --tip_end keep PBISTD --dest_row 0 --dest_col 3 STANS1_FULL
+pipette 10.0 --tip_end keep PBISTD --dest_row 0 --dest_col 4 STANS1_FULL
+pipette 10.0 --tip_end keep PBISTD --dest_row 0 --dest_col 5 STANS1_FULL
+pipette 10.0 --tip_end keep PBISTD --dest_row 0 --dest_col 6 STANS1_FULL
+pipette 10.0 --tip_end keep PBISTD --dest_row 0 --dest_col 7 STANS1_FULL
+
+pipette 10.0 --tip_end keep PBISTD --dest_row 1 --dest_col 0 STANS1_FULL
+pipette 10.0 --tip_end keep PBISTD --dest_row 1 --dest_col 1 STANS1_FULL
+pipette 10.0 --tip_end keep PBISTD --dest_row 1 --dest_col 2 STANS1_FULL
+pipette 10.0 --tip_end keep PBISTD --dest_row 1 --dest_col 3 STANS1_FULL
+pipette 10.0 --tip_end keep PBISTD --dest_row 1 --dest_col 4 STANS1_FULL
+pipette 10.0 --tip_end keep PBISTD --dest_row 1 --dest_col 5 STANS1_FULL
+pipette 10.0 --tip_end keep PBISTD --dest_row 1 --dest_col 6 STANS1_FULL
+pipette 10.0 --tip_end keep PBISTD --dest_row 1 --dest_col 7 STANS1_FULL
+
+pipette 10.0 --tip_end keep PBISTD --dest_row 2 --dest_col 0 STANS1_FULL
+pipette 10.0 --tip_end keep PBISTD --dest_row 2 --dest_col 1 STANS1_FULL
+pipette 10.0 --tip_end keep PBISTD --dest_row 2 --dest_col 2 STANS1_FULL
+pipette 10.0 --tip_end keep PBISTD --dest_row 2 --dest_col 3 STANS1_FULL
+pipette 10.0 --tip_end keep PBISTD --dest_row 2 --dest_col 4 STANS1_FULL
+pipette 10.0 --tip_end keep PBISTD --dest_row 2 --dest_col 5 STANS1_FULL
+pipette 10.0 --tip_end keep PBISTD --dest_row 2 --dest_col 6 STANS1_FULL
+pipette 10.0 --tip_end keep PBISTD --dest_row 2 --dest_col 7 STANS1_FULL
+
+pipette 10.0 --tip_end keep PBISTD --dest_row 3 --dest_col 0 STANS1_FULL
+pipette 10.0 --tip_end keep PBISTD --dest_row 3 --dest_col 1 STANS1_FULL
+pipette 10.0 --tip_end keep PBISTD --dest_row 3 --dest_col 2 STANS1_FULL
+pipette 10.0 --tip_end keep PBISTD --dest_row 3 --dest_col 3 STANS1_FULL
+pipette 10.0 --tip_end keep PBISTD --dest_row 3 --dest_col 4 STANS1_FULL
+pipette 10.0 --tip_end keep PBISTD --dest_row 3 --dest_col 5 STANS1_FULL
+pipette 10.0 --tip_end keep PBISTD --dest_row 3 --dest_col 6 STANS1_FULL
+pipette 10.0 --tip_end keep PBISTD --dest_row 3 --dest_col 7 STANS1_FULL
+
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+pipette 10.0 --tip_end keep PBISTD STANS2
+
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 --tip_end keep PBISTD STANS3
+
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 --tip_end keep PBISTD STANS3
+
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 --tip_end keep PBISTD STANS3
+
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 --tip_end keep PBISTD STANS3
+pipette 10.0 PBISTD STANS3
