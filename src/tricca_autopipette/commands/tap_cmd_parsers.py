@@ -12,7 +12,9 @@ field names must always match the argparse ``dest`` values so that
 
 from __future__ import annotations
 
+import argparse
 import dataclasses
+import math
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
@@ -26,6 +28,34 @@ _AIR_GAP_RISE_HELP = (
     "the well's clearance height, as one G1 Z P move each (0 = stationary; "
     "default: active liquid profile)"
 )
+
+
+def finite_float(text: str) -> float:
+    """Argparse type: a float that is not NaN or infinite.
+
+    Plain ``float`` accepts ``nan``/``inf``, and a NaN passes every ``<``/``>``
+    bounds check after it, so every numeric argument goes through this.
+
+    Args:
+        text: The argument as typed.
+
+    Returns:
+        The parsed value.
+
+    Raises:
+        ArgumentTypeError: If ``text`` isn't a finite number.
+
+    Example:
+        >>> finite_float("1.5")
+        1.5
+    """
+    try:
+        value = float(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"not a number: {text!r}") from None
+    if not math.isfinite(value):
+        raise argparse.ArgumentTypeError(f"must be a finite number: {text!r}")
+    return value
 
 
 def args_from_namespace[ArgsT](
@@ -609,9 +639,9 @@ class TAPCmdParsers:
     parser_move: Cmd2ArgumentParser = Cmd2ArgumentParser(
         description="Move to absolute XYZ coordinates."
     )
-    parser_move.add_argument("x", type=float, help="X-coordinate in mm")
-    parser_move.add_argument("y", type=float, help="Y-coordinate in mm")
-    parser_move.add_argument("z", type=float, help="Z-coordinate in mm")
+    parser_move.add_argument("x", type=finite_float, help="X-coordinate in mm")
+    parser_move.add_argument("y", type=finite_float, help="Y-coordinate in mm")
+    parser_move.add_argument("z", type=finite_float, help="Z-coordinate in mm")
 
     parser_move_loc: Cmd2ArgumentParser = Cmd2ArgumentParser(
         description="Move to a named location."
@@ -628,13 +658,13 @@ class TAPCmdParsers:
         description="Move relative to the current position."
     )
     parser_move_rel.add_argument(
-        "--x", default=0.0, type=float, help="X-axis offset in mm (default: 0)"
+        "--x", default=0.0, type=finite_float, help="X-axis offset in mm (default: 0)"
     )
     parser_move_rel.add_argument(
-        "--y", default=0.0, type=float, help="Y-axis offset in mm (default: 0)"
+        "--y", default=0.0, type=finite_float, help="Y-axis offset in mm (default: 0)"
     )
     parser_move_rel.add_argument(
-        "--z", default=0.0, type=float, help="Z-axis offset in mm (default: 0)"
+        "--z", default=0.0, type=finite_float, help="Z-axis offset in mm (default: 0)"
     )
 
     parser_plate_move: Cmd2ArgumentParser = Cmd2ArgumentParser(
@@ -652,7 +682,10 @@ class TAPCmdParsers:
         help="A stop from the locations file's drawers block, or mm (0 = in)",
     )
     parser_plate_move.add_argument(
-        "--speed", default=None, type=float, help="Speed in mm/s (default: Klipper's)"
+        "--speed",
+        default=None,
+        type=finite_float,
+        help="Speed in mm/s (default: Klipper's)",
     )
 
     # -----------------------------------------------------------------------
@@ -663,7 +696,7 @@ class TAPCmdParsers:
         description="Aspirate liquid from a source location."
     )
     parser_aspirate.add_argument(
-        "vol_ul", type=float, help="Volume to aspirate in microliters"
+        "vol_ul", type=finite_float, help="Volume to aspirate in microliters"
     )
     parser_aspirate.add_argument("source", type=str, help="Source location name")
     parser_aspirate.add_argument(
@@ -682,14 +715,14 @@ class TAPCmdParsers:
         "--pre_air_gap",
         dest="pre_air_gap_ul",
         default=None,
-        type=float,
+        type=finite_float,
         help="Air drawn before the liquid in μL (default: active liquid profile)",
     )
     parser_aspirate.add_argument(
         "--post_air_gap",
         dest="post_air_gap_ul",
         default=None,
-        type=float,
+        type=finite_float,
         help="Air drawn after the liquid in μL (default: active liquid profile)",
     )
     parser_aspirate.add_argument(
@@ -703,14 +736,14 @@ class TAPCmdParsers:
         "--prewet_vol",
         dest="prewet_vol_ul",
         default=None,
-        type=float,
+        type=finite_float,
         help="Volume per prewet cycle in μL (default: active liquid profile)",
     )
     parser_aspirate.add_argument(
         "--air_gap_rise",
         dest="air_gap_rise_mm",
         default=None,
-        type=float,
+        type=finite_float,
         help=_AIR_GAP_RISE_HELP,
     )
 
@@ -722,7 +755,7 @@ class TAPCmdParsers:
         "--volume",
         "-v",
         default=None,
-        type=float,
+        type=finite_float,
         help="Volume to dispense in μL (default: all remaining liquid)",
     )
     parser_dispense.add_argument(
@@ -756,7 +789,7 @@ class TAPCmdParsers:
         description="Transfer liquid from source to destination."
     )
     parser_pipette.add_argument(
-        "vol_ul", type=float, help="Volume to aspirate in microliters"
+        "vol_ul", type=finite_float, help="Volume to aspirate in microliters"
     )
     parser_pipette.add_argument("source", type=str, help="Source location name")
     parser_pipette.add_argument("dest", type=str, help="Destination location name")
@@ -765,7 +798,7 @@ class TAPCmdParsers:
         "-d",
         dest="disp_vol_ul",
         default=None,
-        type=float,
+        type=finite_float,
         help="Volume to dispense if different from the aspirate volume",
     )
     parser_pipette.add_argument(
@@ -803,14 +836,14 @@ class TAPCmdParsers:
         "--pre_air_gap",
         dest="pre_air_gap_ul",
         default=None,
-        type=float,
+        type=finite_float,
         help="Air drawn before the liquid in μL (default: active liquid profile)",
     )
     parser_pipette.add_argument(
         "--post_air_gap",
         dest="post_air_gap_ul",
         default=None,
-        type=float,
+        type=finite_float,
         help="Air drawn after the liquid in μL (default: active liquid profile)",
     )
     parser_pipette.add_argument(
@@ -824,14 +857,14 @@ class TAPCmdParsers:
         "--prewet_vol",
         dest="prewet_vol_ul",
         default=None,
-        type=float,
+        type=finite_float,
         help="Volume per prewet cycle in μL (default: active liquid profile)",
     )
     parser_pipette.add_argument(
         "--air_gap_rise",
         dest="air_gap_rise_mm",
         default=None,
-        type=float,
+        type=finite_float,
         help=_AIR_GAP_RISE_HELP,
     )
     parser_pipette.add_argument(
@@ -889,15 +922,15 @@ class TAPCmdParsers:
         type=str,
         help="Variable name: SPEED_FACTOR, VELOCITY_MAX, ACCEL_MAX",
     )
-    parser_set.add_argument("value", type=float, help="Numeric value to assign")
+    parser_set.add_argument("value", type=finite_float, help="Numeric value to assign")
 
     parser_coor: Cmd2ArgumentParser = Cmd2ArgumentParser(
         description="Define a named coordinate location."
     )
     parser_coor.add_argument("name", type=str, help="Name for the location")
-    parser_coor.add_argument("x", type=float, help="X-coordinate in mm")
-    parser_coor.add_argument("y", type=float, help="Y-coordinate in mm")
-    parser_coor.add_argument("z", type=float, help="Z-coordinate in mm")
+    parser_coor.add_argument("x", type=finite_float, help="X-coordinate in mm")
+    parser_coor.add_argument("y", type=finite_float, help="Y-coordinate in mm")
+    parser_coor.add_argument("z", type=finite_float, help="Z-coordinate in mm")
 
     parser_plate: Cmd2ArgumentParser = Cmd2ArgumentParser(
         description="Define a plate at a named location."
@@ -910,19 +943,25 @@ class TAPCmdParsers:
     )
     parser_plate.add_argument("num_row", type=int, help="Number of rows")
     parser_plate.add_argument("num_col", type=int, help="Number of columns")
-    parser_plate.add_argument("x", type=float, help="X-coordinate of first well in mm")
-    parser_plate.add_argument("y", type=float, help="Y-coordinate of first well in mm")
-    parser_plate.add_argument("z", type=float, help="Z-coordinate of first well in mm")
+    parser_plate.add_argument(
+        "x", type=finite_float, help="X-coordinate of first well in mm"
+    )
+    parser_plate.add_argument(
+        "y", type=finite_float, help="Y-coordinate of first well in mm"
+    )
+    parser_plate.add_argument(
+        "z", type=finite_float, help="Z-coordinate of first well in mm"
+    )
     parser_plate.add_argument(
         "--dip_top",
         default=0.0,
-        type=float,
+        type=finite_float,
         help="Z distance above well to begin dipping in mm (default: 0.0)",
     )
     parser_plate.add_argument(
         "--dip_btm",
         default=None,
-        type=float,
+        type=finite_float,
         help="Z distance for full-depth dip in mm (enables linear strategy)",
     )
     parser_plate.add_argument(
@@ -934,19 +973,19 @@ class TAPCmdParsers:
     parser_plate.add_argument(
         "--well_diameter",
         default=None,
-        type=float,
+        type=finite_float,
         help="Well diameter in mm (required for some dipping strategies)",
     )
     parser_plate.add_argument(
         "--spacing_row",
         default=9.0,
-        type=float,
+        type=finite_float,
         help="Row-to-row spacing in mm (default: 9.0)",
     )
     parser_plate.add_argument(
         "--spacing_col",
         default=9.0,
-        type=float,
+        type=finite_float,
         help="Column-to-column spacing in mm (default: 9.0)",
     )
 
@@ -1049,7 +1088,9 @@ class TAPCmdParsers:
     parser_wait: Cmd2ArgumentParser = Cmd2ArgumentParser(
         description="Insert a timed pause into the G-code output."
     )
-    parser_wait.add_argument("ms", type=float, help="Duration to wait in milliseconds")
+    parser_wait.add_argument(
+        "ms", type=finite_float, help="Duration to wait in milliseconds"
+    )
 
     # -----------------------------------------------------------------------
     # Utility / diagnostics
@@ -1063,7 +1104,9 @@ class TAPCmdParsers:
     parser_vol_to_mm: Cmd2ArgumentParser = Cmd2ArgumentParser(
         description="Convert a volume in μL to plunger travel in mm."
     )
-    parser_vol_to_mm.add_argument("vol", type=float, help="Volume in microliters")
+    parser_vol_to_mm.add_argument(
+        "vol", type=finite_float, help="Volume in microliters"
+    )
 
     parser_trigger: Cmd2ArgumentParser = Cmd2ArgumentParser(
         description=(
@@ -1114,7 +1157,7 @@ class TAPCmdParsers:
     _calibrate_start.add_argument(
         "--volumes",
         dest="volumes_ul",
-        type=float,
+        type=finite_float,
         nargs="+",
         default=None,
         help="Target volumes in uL (default: 10/30/50/70/90%% of usable capacity)",
@@ -1123,7 +1166,9 @@ class TAPCmdParsers:
     _calibrate_record = _calibrate_actions.add_parser(
         "record", help="Record the weighed mass of the last dispense"
     )
-    _calibrate_record.add_argument("mass_g", type=float, help="Measured mass in grams")
+    _calibrate_record.add_argument(
+        "mass_g", type=finite_float, help="Measured mass in grams"
+    )
     _calibrate_actions.add_parser("status", help="Show the session's progress")
     _calibrate_actions.add_parser(
         "preview", help="Show the fitted line against the current curve"

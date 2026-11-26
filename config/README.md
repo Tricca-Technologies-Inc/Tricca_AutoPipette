@@ -63,6 +63,28 @@ This split is deliberately provisional for all six union categories except
 `plates/` is not yet well understood, and a future pass may cull those back
 to shared-only. Don't read the current scope as a permanent shape.
 
+### Pipette homing speed
+
+`syringe.speed_home` in a pipette file is the plunger homing speed in mm/s.
+Omitted or `null`, homing uses the effective dispense speed, as before. It
+doesn't change dispense or syringe-clearing speed. On a stage-2 plunger it
+sets the speed of the move back to zero; physical `G28` homing is set by
+Klipper's own configuration.
+
+### Gantry speed units
+
+Gantry `speed_xy`, `speed_z` and `speed_max` are **mm/min**; accelerations
+are **mm/s²**. On `init` or `home all`, `speed_max` is converted to mm/s and
+sent to Klipper as `SET_VELOCITY_LIMIT VELOCITY`, and `accel_max` as
+`ACCEL`. These override Klipper's configured limits, so check both against
+the machine. `accel_xy` and `accel_z` don't set per-axis limits.
+
+Before #196, `speed_max` was sent as mm/s unconverted. A local gantry file
+tuned around that must be multiplied by 60 to keep the same limit (500
+becomes 30000 for 500 mm/s); confirm the intended limit first, since local
+files aren't migrated. The shared templates' `99999` is 1666.65 mm/s, which
+may exceed a rig's safe speed.
+
 ### Runtime writes always land in the local root
 
 `tap`'s `set_config <category> <file> <key.path> <value>` (RPC
