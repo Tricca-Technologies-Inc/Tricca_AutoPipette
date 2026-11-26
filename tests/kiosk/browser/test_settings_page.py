@@ -166,3 +166,38 @@ def test_a_low_risk_liquid_edit_round_trips(
     )
     viscosity = next(f for f in water["fields"] if f["key"] == "viscosity_cP")
     assert viscosity["value"] == 1.7  # ruff:ignore[float-equality-comparison]
+
+
+@pytest.mark.usefixtures("local")
+def test_the_header_pill_follows_a_swap_made_elsewhere(
+    page: Page, live_kiosk_server: LiveKioskServer
+) -> None:
+    page.goto(live_kiosk_server.url)
+    pill = page.locator("#pipettePill")
+    expect(pill).to_contain_text("p100_vertical")
+
+    # As `tap load_pipette` would: straight to the daemon, not via the pill.
+    request = urllib.request.Request(
+        f"{live_kiosk_server.url}/settings/load_pipette",
+        data=json.dumps({"filename": "default_pipette.json"}).encode(),
+        headers={"Content-Type": "application/json"},
+    )
+    urllib.request.urlopen(request, timeout=5).close()
+
+    expect(pill).to_contain_text("default_pipette")
+
+
+@pytest.mark.usefixtures("local")
+def test_a_pill_swap_rerenders_the_open_settings_page(
+    page: Page, live_kiosk_server: LiveKioskServer
+) -> None:
+    _open_settings(page, live_kiosk_server)
+    speed = page.locator('#settingsPipette [data-key="syringe.speed_dispense"]')
+    expect(speed).to_contain_text("50")
+
+    page.click("#pipettePill")
+    page.locator("#pipetteSwitcher").get_by_role(
+        "button", name="default_pipette"
+    ).click()
+
+    expect(speed).to_contain_text("25")

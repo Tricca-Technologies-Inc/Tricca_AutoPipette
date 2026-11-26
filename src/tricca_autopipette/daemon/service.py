@@ -2228,6 +2228,8 @@ class AutoPipetteService:
         change()
         ap.apply_config()
         if (ap.pipette_model, ap.gantry) != before:
+            if self._homing_invalidated:
+                self._broadcast_status()  # the setter only pushes a flip
             self._homing_invalidated = True
         if ap.system_config.locations != before_locations:
             with self._preserving_deck_state():
