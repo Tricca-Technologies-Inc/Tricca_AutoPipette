@@ -1101,13 +1101,6 @@ header {
 .settings-field-line { display: flex; align-items: center; gap: 8px; }
 .settings-field-line .coord-input { flex: 1; min-width: 0; height: 40px; }
 
-.settings-range {
-  font-size: 11px;
-  font-family: var(--mono);
-  color: var(--muted);
-  white-space: nowrap;
-}
-
 .settings-btn {
   height: 40px;
   padding: 0 16px;
@@ -1121,12 +1114,9 @@ header {
 }
 
 .settings-btn:hover:not(:disabled) { background: var(--accent-dim); }
-.settings-btn.subtle { background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
-.settings-btn.confirm { background: var(--running); color: #000; margin-left: 6px; }
 .settings-btn:disabled,
 .settings-panel input:disabled,
 .settings-panel select:disabled { opacity: 0.5; cursor: not-allowed; }
-.move-feedback .settings-btn { height: 32px; margin-left: 6px; }
 
 .settings-liquids {
   display: grid;
@@ -1175,3 +1165,65 @@ header {
 
 .cal-fit { font-family: var(--mono); font-size: 13px; display: flex; flex-direction: column; gap: 4px; }
 .cal-fit-label { display: inline-block; width: 64px; color: var(--muted); }
+
+/* ── Header pipette pill + switcher (pipette.js) ── */
+.pipette-pill {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: monospace;
+  cursor: pointer;
+  white-space: nowrap;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pipette-pill:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Fixed, so it isn't a cell of the .shell grid. */
+.pipette-switcher {
+  display: none;
+  position: fixed;
+  top: 52px;
+  right: 12px;
+  z-index: 100;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 200px;
+  padding: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+.pipette-switcher.open { display: flex; }
+
+.pipette-switcher-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.pipette-option {
+  height: 44px;
+  padding: 0 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  font-size: 14px;
+  font-family: monospace;
+  text-align: left;
+  cursor: pointer;
+}
+.pipette-option.active { border-color: var(--accent); color: var(--accent); }
+.pipette-option.active::after { content: " ✓"; }
+
+.pipette-switcher-note { font-size: 11px; color: var(--muted); }
