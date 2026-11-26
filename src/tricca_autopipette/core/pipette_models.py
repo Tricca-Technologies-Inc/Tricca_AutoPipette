@@ -812,6 +812,20 @@ class LiquidProfile(BaseModel):
 # ============================================================================
 
 
+def _with_json_suffix(source: object) -> object:
+    """Add ``.json`` to a locations filename given as a bare stem.
+
+    Args:
+        source: One ``locations`` entry: a filename or an inline payload.
+
+    Returns:
+        The entry, a bare-stem filename with ``.json`` added.
+    """
+    if isinstance(source, str) and "." not in source.rsplit("/", 1)[-1]:
+        return f"{source}.json"
+    return source
+
+
 class LocationsConfig(BaseModel):
     """The deck layout a system config declares, as an ordered source list.
 
@@ -868,9 +882,9 @@ class LocationsConfig(BaseModel):
         if value is None:
             return {"sources": []}
         if isinstance(value, str):
-            return {"sources": [value]}
+            return {"sources": [_with_json_suffix(value)]}
         if isinstance(value, list):
-            return {"sources": cast("list[Any]", value)}
+            return {"sources": [_with_json_suffix(v) for v in cast("list[Any]", value)]}
         if isinstance(value, dict):
             typed = cast("dict[str, Any]", value)
             # An empty mapping means "nothing declared". Treating it as one

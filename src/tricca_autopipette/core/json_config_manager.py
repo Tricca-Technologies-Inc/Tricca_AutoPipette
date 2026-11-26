@@ -47,6 +47,39 @@ DEFAULT_PIPETTE_REF = "p100_vertical"
 logger = logging.getLogger(__name__)
 
 
+def _ref_filename(ref: str) -> str:
+    """Name the file a system-file reference points at.
+
+    Args:
+        ref: A config file's stem or full filename, e.g. ``"Tyson_gantry"``.
+
+    Returns:
+        The filename, with ``.json`` added to a bare stem.
+    """
+    return ref if ref.endswith(".json") else f"{ref}.json"
+
+
+def _read_ref(category: str, ref: str) -> dict[str, Any]:
+    """Read the config file a system-file reference points at.
+
+    Args:
+        category: Config category, e.g. ``"gantry"``.
+        ref: The file's stem or full filename.
+
+    Returns:
+        The file's JSON object.
+
+    Raises:
+        FileNotFoundError: If no such file exists in either root.
+        ValueError: If the file isn't a JSON object.
+    """  # ruff: ignore[docstring-extraneous-exception]
+    path = LocalConfigRoots.resolve(category, _ref_filename(ref))
+    data: object = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError(f"{path} must contain a JSON object")
+    return cast("dict[str, Any]", data)
+
+
 class JsonConfigManager:
     """Manages JSON-based configuration loading and merging.
 
@@ -232,14 +265,19 @@ class JsonConfigManager:
 
         Raises:
             ValueError: If the pipette reference is unknown or data is invalid.
-        """
+            FileNotFoundError: If a gantry or liquids file reference doesn't
+                exist.
+        """  # ruff: ignore[docstring-extraneous-exception]
         # 1. Load defaults
         default_gantry = self._load_default_gantry()
         default_pipettes = self._load_default_pipettes()
         default_liquids = self._load_default_liquids()
 
         # 3. Merge gantry config (user overrides defaults)
-        gantry_data = {**default_gantry.model_dump(), **user_data.get("gantry", {})}
+        gantry_override = user_data.get("gantry", {})
+        if isinstance(gantry_override, str):
+            gantry_override = _read_ref("gantry", gantry_override)
+        gantry_data = {**default_gantry.model_dump(), **gantry_override}
         merged_gantry = GantryKinematics(**gantry_data)
 
         # 4. Resolve pipette (reference or full config)
@@ -265,17 +303,20 @@ class JsonConfigManager:
 
         # 5. Merge liquid profiles (user overrides defaults)
         merged_liquids: dict[str, LiquidProfile] = {}
+        user_liquids = user_data.get("liquids", {})
+        if isinstance(user_liquids, str):
+            data = _read_ref("liquids", user_liquids)
+            user_liquids = {LiquidProfile(**data).name: data}
 
         # Start with all default liquids
         for liquid_name, default_liquid in default_liquids.items():
-            user_override = user_data.get("liquids", {}).get(liquid_name, {})
+            user_override = user_liquids.get(liquid_name, {})
 
             # Merge default with user override
             liquid_data = {**default_liquid.model_dump(), **user_override}
             merged_liquids[liquid_name] = LiquidProfile(**liquid_data)
 
         # Add any user-only liquids (not in defaults)
-        user_liquids = user_data.get("liquids", {})
         for liquid_name, liquid_data in user_liquids.items():
             if liquid_name not in merged_liquids:
                 merged_liquids[liquid_name] = LiquidProfile(**liquid_data)
@@ -632,6 +673,8 @@ class JsonConfigManager:
             if self._gantry_file is not None:
                 return "gantry", self._gantry_file, ""
             found = self._system_chain_source("gantry")
+            if found is not None and isinstance(found[1], str):
+                return "gantry", _ref_filename(found[1]), ""
             if found is not None:
                 return "system", found[0], "gantry."
             return "gantry", CONFIG_GANTRY, ""
