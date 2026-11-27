@@ -91,7 +91,7 @@ Options:
 ### `plate_move`
 
 ```
-Usage: plate_move [-h] [--speed SPEED] plate target
+Usage: plate_move [-h] [--speed SPEED] [--rel] plate target
 
 Move a plate drawer to a named stop or a position in mm. Needs Z and the plate
 homed; raises the tip to z_safe first if it is below it.
@@ -103,7 +103,9 @@ Positional Arguments:
 
 Options:
   -h, --help     show this help message and exit
-  --speed SPEED  Speed in mm/s (default: Klipper's)
+  --speed SPEED  Speed in mm/s (default: Klipper's, or plate_jog_speed with
+                 --rel)
+  --rel          Move by target mm from the current position (negative = in)
 ```
 
 ### `plates_in`

@@ -155,13 +155,17 @@ class PlateMoveArgs:
 
     Attributes:
         plate: Plate name (``plate1``...) or its axis letter.
-        target: A named stop from the ``drawers`` block, or a position in mm.
-        speed: Move speed in mm/s, or None for Klipper's plate limit.
+        target: A named stop from the ``drawers`` block, or a position in mm;
+            with ``rel``, an offset in mm (negative = in).
+        speed: Move speed in mm/s, or None for Klipper's plate limit (with
+            ``rel``, the gantry's ``plate_jog_speed``).
+        rel: Move by ``target`` mm from the current position (issue #215).
     """
 
     plate: str
     target: str
     speed: float | None
+    rel: bool = False
 
 
 # ===========================================================================
@@ -693,7 +697,12 @@ class TAPCmdParsers:
         "--speed",
         default=None,
         type=finite_float,
-        help="Speed in mm/s (default: Klipper's)",
+        help="Speed in mm/s (default: Klipper's, or plate_jog_speed with --rel)",
+    )
+    parser_plate_move.add_argument(
+        "--rel",
+        action="store_true",
+        help="Move by target mm from the current position (negative = in)",
     )
 
     # -----------------------------------------------------------------------

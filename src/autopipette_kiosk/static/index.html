@@ -161,6 +161,18 @@
               <button class="dpad-btn dpad-zplus" data-axis="z" data-dir="-1" title="Raise (Z-)">Z ▲</button>
               <button class="dpad-btn dpad-zminus" data-axis="z" data-dir="1" title="Lower (Z+)">Z ▼</button>
             </div>
+            <!-- Plate drawer jog (issue #215); hidden with no plates configured -->
+            <div class="dpad-plate" id="movePlateCol" hidden>
+              <div class="plate-selector" id="plateSelector"></div>
+              <button class="plate-jog-btn plate-in" data-dir="-1" title="Plate in (toward 0)">▲</button>
+              <button class="plate-jog-btn plate-out" data-dir="1" title="Plate out">▼</button>
+              <div class="plate-readout">
+                <div><span id="platePosLive">--</span> mm</div>
+                <div id="plateStopLive"></div>
+                <div id="plateHomedLive"></div>
+              </div>
+              <button class="plates-in-btn" id="platesInBtn">Plates in</button>
+            </div>
           </div>
           <div class="move-feedback" id="moveJogFeedback"></div>
         </div>

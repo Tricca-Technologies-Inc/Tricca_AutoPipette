@@ -75,6 +75,73 @@ SUBSCRIBED_OBJECTS: dict[str, list[str] | None] = {
 }
 
 
+#: The live objects :func:`merge_live_axes` keeps.
+LIVE_AXIS_OBJECTS = (
+    PLATE_STATE_OBJECT,
+    PIPETTE_STATE_OBJECT,
+    STEPPER_ENABLE_OBJECT,
+    GCODE_MOVE_OBJECT,
+)
+
+
+def merge_live_axes(live: dict[str, dict[str, Any]], status: dict[str, Any]) -> bool:
+    """Merge one status push's extra-axis objects into ``live``, field by field.
+
+    Moonraker only sends fields that changed, so nothing is replaced
+    wholesale. Shared by :class:`MoonrakerStateTracker` and the kiosk's
+    Move-page relay (issue #215), so both read Klipper the same way.
+
+    Args:
+        live: Last-known fields per object, updated in place.
+        status: Object name to its updated fields, from one push.
+
+    Returns:
+        True if ``status`` carried any of :data:`LIVE_AXIS_OBJECTS`.
+    """
+    changed = False
+    for name in LIVE_AXIS_OBJECTS:
+        if name in status:
+            live.setdefault(name, {}).update(as_dict(status[name]))
+            changed = True
+    return changed
+
+
+def live_plate_homed(live: dict[str, dict[str, Any]], plate: str) -> bool:
+    """Klipper's homed test for one plate, over merged live state.
+
+    Args:
+        live: Merged live state (:func:`merge_live_axes`).
+        plate: Plate name (``plate1``...).
+
+    Returns:
+        True only if ``_PLATE_STATE`` flags it homed and its
+        ``manual_stepper`` is still enabled.
+    """
+    flag = live.get(PLATE_STATE_OBJECT, {}).get(plate)
+    steppers = as_dict(live.get(STEPPER_ENABLE_OBJECT, {}).get("steppers"))
+    return bool(flag) and bool(steppers.get(f"manual_stepper {plate}"))
+
+
+def live_axis_position(live: dict[str, dict[str, Any]], letter: str) -> float | None:
+    """Live raw position of a G-code axis, over merged live state.
+
+    Args:
+        live: Merged live state (:func:`merge_live_axes`).
+        letter: G-code axis letter (``V``, ``P``...).
+
+    Returns:
+        ``gcode_move.position`` at the letter's ``axis_map`` index, or None
+        while the letter isn't bound (or nothing was reported yet).
+    """
+    move = live.get(GCODE_MOVE_OBJECT, {})
+    index = as_dict(move.get("axis_map")).get(letter)
+    position = move.get("position")
+    if not isinstance(index, int) or not isinstance(position, list):
+        return None
+    values = cast("list[Any]", position)
+    return float(values[index]) if index < len(values) else None
+
+
 @dataclass(frozen=True)
 class PlateAxis:
     """One plate drawer, as Klipper configures it.
@@ -270,8 +337,7 @@ class MoonrakerStateTracker:
             True only if ``_PLATE_STATE`` flags it homed and its stepper is
             still enabled. False for a plate Klipper doesn't know.
         """
-        flag = self._live.get(PLATE_STATE_OBJECT, {}).get(plate)
-        return bool(flag) and self._stepper_enabled(f"manual_stepper {plate}")
+        return live_plate_homed(self._live, plate)
 
     def is_plunger_homed(self) -> bool:
         """Check Klipper's live homed state for the plunger (issue #140).
@@ -293,13 +359,7 @@ class MoonrakerStateTracker:
             ``gcode_move.position`` at the letter's ``axis_map`` index, or
             None while the letter isn't bound (or nothing was reported yet).
         """
-        move = self._live.get(GCODE_MOVE_OBJECT, {})
-        index = as_dict(move.get("axis_map")).get(letter)
-        position = move.get("position")
-        if not isinstance(index, int) or not isinstance(position, list):
-            return None
-        values = cast("list[Any]", position)
-        return float(values[index]) if index < len(values) else None
+        return live_axis_position(self._live, letter)
 
     @property
     def axis_config(self) -> AxisConfig:
@@ -410,14 +470,7 @@ class MoonrakerStateTracker:
                 str(axis) for axis in cast("list[Any]", homed_axes)
             )
 
-        for name in (
-            PLATE_STATE_OBJECT,
-            PIPETTE_STATE_OBJECT,
-            STEPPER_ENABLE_OBJECT,
-            GCODE_MOVE_OBJECT,
-        ):
-            if name in status:
-                self._live.setdefault(name, {}).update(as_dict(status[name]))
+        merge_live_axes(self._live, status)
 
         # Before print_stats: a pause's reason arrives with or before it.
         display = as_dict(status.get("display_status")).get("message")

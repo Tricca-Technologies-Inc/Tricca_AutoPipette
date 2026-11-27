@@ -59,6 +59,10 @@ limits:
   lands. That issue then removes this exception, and this ADR gets amended to
   say so.
 
+*Amendment (2026-11-26, #215):* Move-page plate moves (`plate_move`,
+including its `--rel` jog, `plates_in` and `plates`) are no longer exempt
+from client parity; the rest of #152 stays deferred.
+
 **4. Context: the EBB42 toolboard is deferred (addendum D35).** Rev L moved
 the plunger and servo onto an EBB42 CAN board. The owner deferred that: the
 plunger (`pipette_stepper`) and servo stay on the M8P on today's pins, with no

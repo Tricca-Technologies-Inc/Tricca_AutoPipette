@@ -299,3 +299,10 @@ html.desktop-mode .command-result pre { font-size: 12px; }
 /* ── Shared banners ── */
 html.desktop-mode .settings-banner { padding: 12px 18px; font-size: 13px; border-radius: 12px; }
 html.desktop-mode .move-not-homed-banner { padding: 12px 18px; font-size: 13px; }
+
+/* Plate jog column (issue #215), sized like the desktop D-pad. */
+html.desktop-mode .plate-jog-btn { width: 44px; height: 44px; font-size: 15px; }
+html.desktop-mode .plate-sel-btn,
+html.desktop-mode .plates-in-btn { min-height: 32px; height: 32px; font-size: 12px; }
+html.desktop-mode .plate-sel-btn { padding: 0 5px; }
+html.desktop-mode .dpad:has(.dpad-plate:not([hidden])) { gap: 10px; }

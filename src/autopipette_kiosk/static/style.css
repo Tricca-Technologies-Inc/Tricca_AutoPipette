@@ -2030,3 +2030,63 @@ html.desktop-mode .layout-toggle-btn {
 .pipette-option.active::after { content: " ✓"; }
 
 .pipette-switcher-note { font-size: 11px; color: var(--muted); }
+
+/* ── Move page: plate drawer jog column, beside Z (issue #215) ── */
+.dpad-plate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.dpad-plate[hidden] { display: none; }
+
+/* Three per row: six plates take two rows above the arrows. */
+.plate-selector {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  gap: 4px;
+}
+
+.plate-sel-btn {
+  min-height: var(--tap-min);
+  padding: 0 8px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.plate-sel-btn.active {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  color: var(--accent);
+}
+
+.plate-jog-btn,
+.plates-in-btn {
+  height: var(--tap-lg);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.plate-jog-btn { width: var(--tap-lg); font-size: 20px; }
+.plates-in-btn { height: var(--tap-min); padding: 0 12px; font-size: 13px; font-weight: 600; }
+
+.plate-jog-btn:active,
+.plates-in-btn:active { background: var(--border); }
+
+.plate-readout {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+}
