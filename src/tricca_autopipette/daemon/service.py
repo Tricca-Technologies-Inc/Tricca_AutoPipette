@@ -37,7 +37,7 @@ from contextvars import ContextVar
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any, Literal, cast
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit
 
 from cmd2 import Cmd2ArgumentParser
 from pydantic import BaseModel
@@ -2734,8 +2734,10 @@ class AutoPipetteService:
 
         Asks Moonraker's ``server.webcams.list`` and takes the first enabled
         webcam. Moonraker may report a URL as a path relative to its own
-        host, so a relative URL is resolved against the system config's
-        hostname.
+        host, so a relative URL is resolved against the host tapd reaches
+        Moonraker at: ``localhost`` under ``--local-connect`` (where the
+        system config's hostname is unused, and may be a placeholder),
+        else that hostname.
 
         Returns:
             Result with the stream URL in ``message`` and ``data["url"]``,
@@ -2762,7 +2764,7 @@ class AutoPipetteService:
         cam = next((c for c in webcams if c.get("enabled")), None)
         if cam is None:
             return no_camera
-        base = f"http://{self.hostname}/"
+        base = f"http://{urlsplit(self.uri).netloc}/"
         url = urljoin(base, str(cam["stream_url"]))
         snapshot = str(cam.get("snapshot_url") or "")
         data: dict[str, Any] = {
