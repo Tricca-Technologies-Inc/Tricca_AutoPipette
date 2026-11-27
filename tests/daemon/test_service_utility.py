@@ -166,6 +166,23 @@ class TestWebcamUrl:
         }
         assert result.message == f"{base}/webcam/?action=stream"
 
+    def test_resolves_against_the_host_tapd_connects_to(
+        self, service: AutoPipetteService
+    ) -> None:
+        # --local-connect, as on every CB1: the system file's hostname is
+        # never used to reach Moonraker, and may still be the placeholder.
+        service.hostname = "CHANGE-ME.local"
+        service.uri = "ws://localhost/websocket"
+        _wire_webcams(service, _cam())
+
+        result = service.webcam_url()
+
+        assert result.message == "http://localhost/webcam/?action=stream"
+        assert result.data is not None
+        assert result.data["snapshot_url"] == (
+            "http://localhost/webcam/?action=snapshot"
+        )
+
     def test_keeps_an_absolute_url(self, service: AutoPipetteService) -> None:
         _wire_webcams(
             service,
