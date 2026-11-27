@@ -202,6 +202,34 @@ class TestWebcamUrl:
         assert result.ok is False
         assert result.message == "No camera configured"
 
+    def test_a_moonraker_error_is_not_ok(self, service: AutoPipetteService) -> None:
+        client = FakeWebSocketClient(connected=True)
+        client.queue_response({
+            "error": {"code": -32601, "message": "Method not found"}
+        })
+        service.client = client  # type: ignore[assignment]
+
+        result = service.webcam_url()
+
+        assert result.ok is False
+        assert result.message == "Camera lookup failed: Method not found"
+
+    def test_a_timeout_is_not_ok(
+        self, service: AutoPipetteService, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        client = FakeWebSocketClient(connected=True)
+        service.client = client  # type: ignore[assignment]
+
+        def timeout(payload: dict[str, Any], timeout: float = 5.0) -> dict[str, Any]:
+            raise TimeoutError("no response in 5.0s")
+
+        monkeypatch.setattr(client, "send_jsonrpc", timeout)
+
+        result = service.webcam_url()
+
+        assert result.ok is False
+        assert result.message == "Camera lookup failed: no response in 5.0s"
+
     def test_unconnected_is_not_ok(self, service: AutoPipetteService) -> None:
         result = service.webcam_url()
 

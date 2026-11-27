@@ -2733,12 +2733,22 @@ class AutoPipetteService:
             Result with the stream URL in ``message`` and ``data["url"]``,
             plus ``data["snapshot_url"]`` (None if the camera has none) and
             ``data["name"]``. ``ok=False`` with "No camera configured" when
-            no webcam is enabled or Moonraker isn't connected.
+            no webcam is enabled or Moonraker isn't connected, and with
+            "Camera lookup failed: <reason>" when the Moonraker call errors
+            or times out.
         """
         no_camera = CommandResult(ok=False, message="No camera configured")
         if self.client is None or not self.client.is_connected():
             return no_camera
-        response = self.client.send_jsonrpc(self.mrr.server_webcams_list())
+        try:
+            response = self.client.send_jsonrpc(self.mrr.server_webcams_list())
+        except JsonRpcError as exc:
+            reason = str(exc.error.get("message") or exc)
+            return CommandResult(ok=False, message=f"Camera lookup failed: {reason}")
+        except (RuntimeError, TimeoutError) as exc:
+            # What send_jsonrpc raises besides JsonRpcError: a dropped
+            # connection (RuntimeError) or no reply in time.
+            return CommandResult(ok=False, message=f"Camera lookup failed: {exc}")
         result = cast("dict[str, Any]", response.get("result") or {})
         webcams = cast("list[dict[str, Any]]", result.get("webcams") or [])
         cam = next((c for c in webcams if c.get("enabled")), None)
