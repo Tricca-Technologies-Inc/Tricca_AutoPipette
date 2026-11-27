@@ -968,6 +968,12 @@ class TAPCmdParsers:
         help="Column-to-column spacing in mm (default: 9.0)",
     )
 
+    parser_reset_dip: Cmd2ArgumentParser = Cmd2ArgumentParser(
+        prog="reset_dip",
+        description="Reset a singleton well's cylinder dip tracker to dip_top.",
+    )
+    parser_reset_dip.add_argument("name", type=str, help="Singleton well location name")
+
     parser_reset_plate: Cmd2ArgumentParser = Cmd2ArgumentParser(
         description="Reset a plate's current position to the origin well."
     )

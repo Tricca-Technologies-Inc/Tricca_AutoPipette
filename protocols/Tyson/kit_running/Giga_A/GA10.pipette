@@ -5,6 +5,7 @@ disable_tipbox tipbox_p100_c
 enable_tipbox tipbox_p100
 enable_tipbox tipbox_p100_b
 
+reset_dip PITC1
 load_pipette TysonP100.json
 home all
 

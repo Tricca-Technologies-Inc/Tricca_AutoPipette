@@ -2219,6 +2219,30 @@ class AutoPipetteService:
             ok=True, message=f"Reset plate '{args.name}' to position 0"
         )
 
+    def reset_dip(self, args: ResetPlateArgs) -> CommandResult:
+        """Reset a singleton well's cylinder dip tracker back to ``dip_top``.
+
+        The cylinder strategy advances ``dip_curr`` toward ``dip_btm`` as
+        liquid is removed.  Call this at the start of a protocol that uses a
+        reagent vial (e.g. PITC1) so the depth tracking starts fresh rather
+        than continuing from where the previous run left off.
+
+        Args:
+            args: Name of the singleton well location to reset.
+
+        Returns:
+            Result describing the reset, or ``ok=False`` if the name doesn't
+            exist or isn't a singleton Well.
+        """
+        loc_mgr = self._autopipette.location_manager
+        if not loc_mgr.has_location(args.name):
+            return CommandResult(ok=False, message=f"Location '{args.name}' not found.")
+        location = loc_mgr.locations[args.name]
+        if not isinstance(location, Well):
+            return CommandResult(ok=False, message=f"'{args.name}' is not a singleton well.")
+        location.dip_curr = location.dip_top
+        return CommandResult(ok=True, message=f"Reset '{args.name}' dip tracker to {location.dip_top} mm.")
+
     def reset_plates(self) -> CommandResult:
         """Reset all plates to their origin well.
 
@@ -4098,6 +4122,7 @@ class AutoPipetteService:
         membership_snapshot = location_manager.snapshot_membership()
         tip_presence_snapshot = tipbox_manager.snapshot()
         cursor_snapshot = location_manager.snapshot_cursors()
+        dip_state_snapshot = location_manager.snapshot_dip_state()
         drawer_positions_snapshot = dict(location_manager.drawer_positions)
         disabled_tipboxes_snapshot = dict(self._disabled_tipboxes)
         state = autopipette.state
@@ -4130,6 +4155,7 @@ class AutoPipetteService:
             location_manager.restore_membership(membership_snapshot)
             tipbox_manager.restore(tip_presence_snapshot)
             location_manager.restore_cursors(cursor_snapshot)
+            location_manager.restore_dip_state(dip_state_snapshot)
             location_manager.drawer_positions = drawer_positions_snapshot
             self._disabled_tipboxes = dict(disabled_tipboxes_snapshot)
 
@@ -5339,6 +5365,9 @@ _LINE_DISPATCH: dict[str, _LineCommand] = {
     "coor": _LineCommand(TAPCmdParsers.parser_coor, CoorArgs, AutoPipetteService.coor),
     "plate": _LineCommand(
         TAPCmdParsers.parser_plate, PlateArgs, AutoPipetteService.plate
+    ),
+    "reset_dip": _LineCommand(
+        TAPCmdParsers.parser_reset_dip, ResetPlateArgs, AutoPipetteService.reset_dip
     ),
     "reset_plate": _LineCommand(
         TAPCmdParsers.parser_reset_plate, ResetPlateArgs, AutoPipetteService.reset_plate

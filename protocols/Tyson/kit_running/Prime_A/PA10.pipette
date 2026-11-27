@@ -1,6 +1,9 @@
 # Prime Panel A — adding PITC to each well of the plate
 # Uses P100
+# reset_dip resets PITC1's cylinder dip tracker back to dip_top so it
+# always starts at the correct depth regardless of previous run state.
 
+reset_dip PITC1
 load_pipette TysonP100.json
 home all
 

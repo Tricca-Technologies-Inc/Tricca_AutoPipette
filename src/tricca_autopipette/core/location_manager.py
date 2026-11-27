@@ -584,6 +584,37 @@ class LocationManager:
             location.curr = curr
         return skipped
 
+    def snapshot_dip_state(self) -> dict[str, float]:
+        """Capture every singleton Well's current dip depth (``dip_curr``).
+
+        Only locations whose dip depth is tracked dynamically (i.e. those
+        using the cylinder strategy, where ``dip_curr`` drifts from
+        ``dip_top`` toward ``dip_btm`` as liquid is removed) need this.
+        Plate-type locations use a fixed ``dip_top`` per well and are not
+        included.
+
+        Returns:
+            Mapping of location name to its current ``dip_curr`` value.
+        """
+        return {
+            name: location.dip_curr
+            for name, location in self.locations.items()
+            if isinstance(location, Well) and location.dip_curr != location.dip_top
+        }
+
+    def restore_dip_state(self, dip_state: dict[str, float]) -> None:
+        """Reapply a ``snapshot_dip_state`` mapping to live singleton wells.
+
+        Args:
+            dip_state: A mapping previously produced by ``snapshot_dip_state``.
+                Entries naming a location that is no longer registered or is
+                no longer a singleton Well are silently ignored.
+        """
+        for name, dip_curr in dip_state.items():
+            location = self.locations.get(name)
+            if isinstance(location, Well):
+                location.dip_curr = dip_curr
+
     def snapshot_membership(self) -> LocationMembershipSnapshot:
         """Capture exactly which locations/tipboxes are registered.
 
