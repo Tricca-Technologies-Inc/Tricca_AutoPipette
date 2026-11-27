@@ -1,5 +1,10 @@
 # Putting 50uL into the LC plate for Mega Panel A, with no prewetting
 #
+# Lock in the tipbox config for this protocol
+disable_tipbox tipbox_p100_c
+enable_tipbox tipbox_p100
+enable_tipbox tipbox_p100_b
+
 load_pipette TysonP100.json
 home all
 #

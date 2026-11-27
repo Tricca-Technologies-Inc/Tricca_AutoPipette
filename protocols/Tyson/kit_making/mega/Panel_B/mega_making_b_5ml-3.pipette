@@ -1,4 +1,7 @@
 #Third of four parts making 5mL of cal 7 for mega panel b ingredients 57-84
+enable_tipbox tipbox_p100
+enable_tipbox tipbox_p100_b
+disable_tipbox tipbox_p100_c
 
 load_pipette TysonP100.json
 home all

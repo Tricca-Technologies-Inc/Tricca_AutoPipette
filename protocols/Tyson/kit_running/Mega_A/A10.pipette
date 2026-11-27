@@ -1,5 +1,9 @@
 # MEGA Panel A — adding PITC to each well of the plate
 # Uses P100
+# Lock in the tipbox config for this protocol
+disable_tipbox tipbox_p100_c
+enable_tipbox tipbox_p100
+enable_tipbox tipbox_p100_b
 
 load_pipette TysonP100.json
 home all

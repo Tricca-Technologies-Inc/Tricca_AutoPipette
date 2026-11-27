@@ -1,4 +1,8 @@
 # Protocol for the second part of making cal 7 5mL for Mega Panel A with the remaining 41 ingredients (L-Glutamine to L-Glutamic acid)
+enable_tipbox tipbox_p100
+enable_tipbox tipbox_p100_c
+disable_tipbox tipbox_p100_b
+
 load_pipette TysonP100.json
 home all
 

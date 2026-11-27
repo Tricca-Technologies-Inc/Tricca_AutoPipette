@@ -1,4 +1,7 @@
 #fourth and final part of making cal 7 for mega panel b ingredients 85-101
+enable_tipbox tipbox_p100
+enable_tipbox tipbox_p100_b
+disable_tipbox tipbox_p100_c
 
 load_pipette TysonP100.json
 home all

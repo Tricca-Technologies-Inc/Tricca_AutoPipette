@@ -1,4 +1,10 @@
 #Prime Panel B: Adding 75uL of Reagent ABC to each well of the plate
+
+# Lock in the tipbox config for this protocol
+disable_tipbox tipbox_p100_b
+enable_tipbox tipbox_p100
+enable_tipbox tipbox_p100_c
+
 load_pipette TysonP100.json
 home all
 #

@@ -1,4 +1,7 @@
 #first of four parts of making cal 7 for Mega Panel B. One rack at a time to reduce evaporation
+enable_tipbox tipbox_p100
+enable_tipbox tipbox_p100_b
+disable_tipbox tipbox_p100_c
 
 load_pipette TysonP100.json
 home all
