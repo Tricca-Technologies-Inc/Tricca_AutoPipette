@@ -7,7 +7,9 @@
 // Pipette and gantry values are shown read-only: they change by switching
 // the system profile here, or the pipette from the header pill (pipette.js).
 // `tap`'s `set_config` still edits them. Liquid fields save on change, no
-// confirm. While `config_locked` is set on the shared status stream, every
+// confirm. The Liquids panel loads any liquid file (an already-loaded one
+// is re-read, for an edit made on disk) and unloads any loaded liquid but
+// the active one. While `config_locked` is set on the shared status stream, every
 // control is disabled with the reason shown.
 (() => {
   const LOCK_REASON = 'Locked while a protocol is running.';
@@ -26,7 +28,9 @@
   // banner, anything else its own message.
   function resultMessage(result) {
     if (result.data && result.data.reason === 'run_active') return LOCK_REASON;
-    return result.message || 'Failed';
+    // A raised daemon error (e.g. a load_liquid file gone) arrives as
+    // FastAPI's {detail}.
+    return result.message || result.detail || 'Failed';
   }
 
   function showMsg(el, text, isError) {
@@ -104,16 +108,17 @@
     return wrap;
   }
 
-  // A profile switch re-renders on success, since the whole payload
-  // (values, targets) can change, and invalidates homing.
-  async function runAction(url, body, msg) {
+  // An action re-renders on success, since the whole payload (values,
+  // targets, loaded liquids) can change. A profile switch also
+  // invalidates homing; a liquid load/unload doesn't.
+  async function runAction(url, body, msg, invalidatesHoming = true) {
     try {
       const result = await post(url, body);
       if (!result.ok) {
         showMsg(msg, resultMessage(result), true);
         return;
       }
-      showHomeRequired();
+      if (invalidatesHoming) showHomeRequired();
       await loadSettings();
       PipettePill.refresh();
     } catch (e) {
@@ -148,6 +153,8 @@
 
   function renderLiquids(liquids) {
     const el = panel('Liquids', 'settingsLiquids');
+    el.appendChild(picker('settingsLiquidSelect', liquids.files, null, 'Load',
+      (filename, msg) => runAction('/settings/load_liquid', { filename }, msg, false)));
     const grid = document.createElement('div');
     grid.className = 'settings-liquids';
     liquids.loaded.forEach(liquid => {
@@ -161,7 +168,17 @@
       nameEl.textContent = liquid.name;
       head.appendChild(nameEl);
       if (liquid.active) head.insertAdjacentHTML('beforeend', '<span class="settings-active">active</span>');
-      card.appendChild(head);
+      const msg = document.createElement('div');
+      msg.className = 'move-feedback';
+      const unload = document.createElement('button');
+      unload.className = 'settings-btn subtle';
+      unload.textContent = 'Unload';
+      // The daemon refuses the active liquid anyway; don't offer it.
+      if (liquid.active) unload.dataset.keepDisabled = '';
+      unload.addEventListener('click', () =>
+        runAction('/settings/unload_liquid', { name: liquid.name }, msg, false));
+      head.appendChild(unload);
+      card.append(head, msg);
       liquid.fields.forEach(f => card.appendChild(fieldRow(f)));
       grid.appendChild(card);
     });
@@ -227,7 +244,9 @@
   // ── run-lock: disable everything, say why ────────────────────────────
   function applyLock() {
     const page = document.getElementById('page-settings');
-    page.querySelectorAll('input, select, button').forEach(el => { el.disabled = locked; });
+    page.querySelectorAll('input, select, button').forEach(el => {
+      el.disabled = locked || 'keepDisabled' in el.dataset;
+    });
     document.getElementById('settingsLockBanner').classList.toggle('active', locked);
   }
 
