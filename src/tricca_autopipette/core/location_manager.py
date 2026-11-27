@@ -596,7 +596,6 @@ class LocationManager:
             Mapping of location name to a list of ``dip_curr`` values, one per
             well, in well order.
         """
-        from tricca_autopipette.core.plates import TipBox
         return {
             name: [w.dip_curr for w in location.wells]
             for name, location in self.locations.items()
@@ -613,7 +612,6 @@ class LocationManager:
                 Entries naming a location that is no longer registered or is
                 no longer a plate are silently ignored.
         """
-        from tricca_autopipette.core.plates import TipBox
         for name, dip_values in dip_state.items():
             location = self.locations.get(name)
             if isinstance(location, Plate) and not isinstance(location, TipBox):
