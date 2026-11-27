@@ -4,7 +4,9 @@
 // findings, issue #88), and Load, which dry-runs the protocol and opens the
 // Run page with its description and tip needs. Run (page-run): the loaded
 // protocol, the detailed status card, progress, and one Run button that
-// becomes Pause and Resume during a run, plus Cancel.
+// becomes Pause and Resume during a run, plus Cancel. Beside the protocol's
+// description sits the deck camera (issue #242), streamed only while the
+// Run page is showing: the kiosk's Chromium shares the CB1's CPU.
 //
 // Subscribes to App.onStatus rather than owning any WebSocket connection or
 // run-status state itself (app.js owns both, since the header's compact
@@ -335,9 +337,35 @@
     document.getElementById('loadBtn').disabled = active || !selected;
   }
 
+  // ── deck camera (issue #242) ───────────────────────────────────────────
+  // Re-fetched on every show, so a camera registered (or lost) later shows
+  // up without a reload. The MJPEG stream only runs while `src` is set.
+  async function showCamera() {
+    let url = null;
+    try {
+      const body = await (await fetch('/webcam')).json();
+      if (body.ok) url = body.data.url;
+    } catch (_) { /* no daemon: treat as no camera */ }
+    const panel = document.getElementById('cameraPanel');
+    panel.hidden = !url;
+    // The operator may have left the Run page while the fetch was out.
+    if (url && document.getElementById('page-run').classList.contains('active')) {
+      document.getElementById('cameraImg').src = url;
+    }
+  }
+
+  function hideCamera() {
+    document.getElementById('cameraImg').removeAttribute('src');
+    document.getElementById('cameraPanel').classList.remove('fullscreen');
+  }
+
+  document.getElementById('cameraPanel').addEventListener('click', e => {
+    e.currentTarget.classList.toggle('fullscreen');
+  });
+
   App.onStatus(renderStatusCard);
   App.registerPage('protocols', {});
-  App.registerPage('run', {});
+  App.registerPage('run', { onShow: showCamera, onHide: hideCamera });
 
   loadProtocols();
 })();

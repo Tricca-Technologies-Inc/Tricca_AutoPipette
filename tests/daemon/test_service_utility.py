@@ -127,15 +127,114 @@ class TestGcodePrint:
         assert "Protocol started" in result.message
 
 
+def _cam(**overrides: Any) -> dict[str, Any]:
+    cam: dict[str, Any] = {
+        "name": "deck",
+        "enabled": True,
+        "service": "mjpegstreamer",
+        "stream_url": "/webcam/?action=stream",
+        "snapshot_url": "/webcam/?action=snapshot",
+    }
+    cam.update(overrides)
+    return cam
+
+
+def _wire_webcams(
+    service: AutoPipetteService, *webcams: dict[str, Any]
+) -> FakeWebSocketClient:
+    client = FakeWebSocketClient(connected=True)
+    client.queue_response({"result": {"webcams": list(webcams)}})
+    service.client = client  # type: ignore[assignment]
+    return client
+
+
 class TestWebcamUrl:
-    def test_builds_a_url_from_hostname(self, service: AutoPipetteService) -> None:
+    def test_resolves_a_registered_webcams_urls_against_the_hostname(
+        self, service: AutoPipetteService
+    ) -> None:
+        client = _wire_webcams(service, _cam())
+
         result = service.webcam_url()
 
+        assert client.sent_requests[0]["method"] == "server.webcams.list"
         assert result.ok is True
+        base = f"http://{service.hostname}"
+        assert result.data == {
+            "url": f"{base}/webcam/?action=stream",
+            "snapshot_url": f"{base}/webcam/?action=snapshot",
+            "name": "deck",
+        }
+        assert result.message == f"{base}/webcam/?action=stream"
+
+    def test_keeps_an_absolute_url(self, service: AutoPipetteService) -> None:
+        _wire_webcams(
+            service,
+            _cam(stream_url="http://cam.lan/s", snapshot_url="http://cam.lan/p"),
+        )
+
+        result = service.webcam_url()
+
         assert result.data is not None
-        assert result.data["url"].startswith("http://")
-        assert result.data["url"].endswith("/webcam/?action=stream")
-        assert result.message == result.data["url"]
+        assert result.data["url"] == "http://cam.lan/s"
+        assert result.data["snapshot_url"] == "http://cam.lan/p"
+
+    def test_no_snapshot_url_reads_as_none(self, service: AutoPipetteService) -> None:
+        _wire_webcams(service, _cam(snapshot_url=""))
+
+        result = service.webcam_url()
+
+        assert result.data is not None
+        assert result.data["snapshot_url"] is None
+
+    def test_skips_a_disabled_webcam(self, service: AutoPipetteService) -> None:
+        _wire_webcams(service, _cam(name="off", enabled=False), _cam(name="on"))
+
+        result = service.webcam_url()
+
+        assert result.data is not None
+        assert result.data["name"] == "on"
+
+    def test_none_registered_is_not_ok(self, service: AutoPipetteService) -> None:
+        _wire_webcams(service, _cam(enabled=False))
+
+        result = service.webcam_url()
+
+        assert result.ok is False
+        assert result.message == "No camera configured"
+
+    def test_a_moonraker_error_is_not_ok(self, service: AutoPipetteService) -> None:
+        client = FakeWebSocketClient(connected=True)
+        client.queue_response({
+            "error": {"code": -32601, "message": "Method not found"}
+        })
+        service.client = client  # type: ignore[assignment]
+
+        result = service.webcam_url()
+
+        assert result.ok is False
+        assert result.message == "Camera lookup failed: Method not found"
+
+    def test_a_timeout_is_not_ok(
+        self, service: AutoPipetteService, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        client = FakeWebSocketClient(connected=True)
+        service.client = client  # type: ignore[assignment]
+
+        def timeout(payload: dict[str, Any], timeout: float = 5.0) -> dict[str, Any]:
+            raise TimeoutError("no response in 5.0s")
+
+        monkeypatch.setattr(client, "send_jsonrpc", timeout)
+
+        result = service.webcam_url()
+
+        assert result.ok is False
+        assert result.message == "Camera lookup failed: no response in 5.0s"
+
+    def test_unconnected_is_not_ok(self, service: AutoPipetteService) -> None:
+        result = service.webcam_url()
+
+        assert result.ok is False
+        assert result.message == "No camera configured"
 
 
 class TestVolToMm:

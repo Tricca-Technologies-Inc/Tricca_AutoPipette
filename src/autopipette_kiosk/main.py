@@ -969,6 +969,21 @@ async def list_locations() -> CommandResultResponse:
     return await _dispatch_control_request(_control_requests.list_locations())
 
 
+@app.get("/webcam", response_model=CommandResultResponse)
+async def get_webcam() -> CommandResultResponse:
+    """Report the deck camera's stream URL, for the Run tab (issue #242).
+
+    Routing only -- `AutoPipetteService.webcam_url` (via `util.webcam_url`)
+    looks the camera up in Moonraker. `ok=False` means no camera, and the
+    Run tab hides its camera panel.
+
+    Returns:
+        `CommandResultResponse` with `data["url"]`/`data["snapshot_url"]`/
+        `data["name"]`.
+    """
+    return await _dispatch_control_request(_control_requests.webcam_url())
+
+
 @app.get("/settings", response_model=CommandResultResponse)
 async def get_settings() -> CommandResultResponse:
     """Report every editable setting, for the Settings page (issue #33).

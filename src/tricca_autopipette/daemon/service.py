@@ -37,6 +37,7 @@ from contextvars import ContextVar
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any, Literal, cast
+from urllib.parse import urljoin
 
 from cmd2 import Cmd2ArgumentParser
 from pydantic import BaseModel
@@ -2729,13 +2730,47 @@ class AutoPipetteService:
         return CommandResult(ok=True, message=f"Display message queued: {args.msg}")
 
     def webcam_url(self) -> CommandResult:
-        """Build the webcam stream URL for this pipette.
+        """Look up the deck camera's stream URL in Moonraker (issue #242).
+
+        Asks Moonraker's ``server.webcams.list`` and takes the first enabled
+        webcam. Moonraker may report a URL as a path relative to its own
+        host, so a relative URL is resolved against the system config's
+        hostname.
 
         Returns:
-            Result with the URL both in ``message`` and ``data["url"]``.
+            Result with the stream URL in ``message`` and ``data["url"]``,
+            plus ``data["snapshot_url"]`` (None if the camera has none) and
+            ``data["name"]``. ``ok=False`` with "No camera configured" when
+            no webcam is enabled or Moonraker isn't connected, and with
+            "Camera lookup failed: <reason>" when the Moonraker call errors
+            or times out.
         """
-        url = f"http://{self.hostname}/webcam/?action=stream"
-        return CommandResult(ok=True, message=url, data={"url": url})
+        no_camera = CommandResult(ok=False, message="No camera configured")
+        if self.client is None or not self.client.is_connected():
+            return no_camera
+        try:
+            response = self.client.send_jsonrpc(self.mrr.server_webcams_list())
+        except JsonRpcError as exc:
+            reason = str(exc.error.get("message") or exc)
+            return CommandResult(ok=False, message=f"Camera lookup failed: {reason}")
+        except (RuntimeError, TimeoutError) as exc:
+            # What send_jsonrpc raises besides JsonRpcError: a dropped
+            # connection (RuntimeError) or no reply in time.
+            return CommandResult(ok=False, message=f"Camera lookup failed: {exc}")
+        result = cast("dict[str, Any]", response.get("result") or {})
+        webcams = cast("list[dict[str, Any]]", result.get("webcams") or [])
+        cam = next((c for c in webcams if c.get("enabled")), None)
+        if cam is None:
+            return no_camera
+        base = f"http://{self.hostname}/"
+        url = urljoin(base, str(cam["stream_url"]))
+        snapshot = str(cam.get("snapshot_url") or "")
+        data: dict[str, Any] = {
+            "url": url,
+            "snapshot_url": urljoin(base, snapshot) if snapshot else None,
+            "name": cam.get("name"),
+        }
+        return CommandResult(ok=True, message=url, data=data)
 
     @refuse_while_running
     def command(self, line: str) -> CommandResult:

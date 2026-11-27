@@ -516,6 +516,64 @@ class TestLocationsEndpoint:
         assert response.status_code == 503
 
 
+class TestWebcamEndpoint:
+    """`GET /webcam` (issue #242): a thin proxy over `util.webcam_url`."""
+
+    def test_forwards_the_camera_moonraker_reports(
+        self,
+        kiosk_client_with_moonraker: TestClient,
+        live_control_plane: LiveControlPlane,
+    ) -> None:
+        fake = live_control_plane.service.client
+        assert isinstance(fake, FakeWebSocketClient)
+        fake.queue_response({
+            "result": {
+                "webcams": [
+                    {
+                        "name": "deck",
+                        "enabled": True,
+                        "stream_url": "/webcam/?action=stream",
+                        "snapshot_url": "/webcam/?action=snapshot",
+                    }
+                ]
+            }
+        })
+
+        response = kiosk_client_with_moonraker.get("/webcam")
+
+        assert response.status_code == 200
+        body = response.json()
+        host = live_control_plane.service.hostname
+        assert body["ok"] is True
+        assert body["data"] == {
+            "url": f"http://{host}/webcam/?action=stream",
+            "snapshot_url": f"http://{host}/webcam/?action=snapshot",
+            "name": "deck",
+        }
+
+    def test_a_failed_lookup_forwards_ok_false(
+        self,
+        kiosk_client_with_moonraker: TestClient,
+        live_control_plane: LiveControlPlane,
+    ) -> None:
+        fake = live_control_plane.service.client
+        assert isinstance(fake, FakeWebSocketClient)
+        fake.queue_response({"error": {"code": -32601, "message": "Method not found"}})
+
+        response = kiosk_client_with_moonraker.get("/webcam")
+
+        assert response.status_code == 200
+        assert response.json()["ok"] is False
+        assert response.json()["message"] == "Camera lookup failed: Method not found"
+
+    def test_without_a_camera_forwards_ok_false(self, kiosk_client: TestClient) -> None:
+        response = kiosk_client.get("/webcam")
+
+        assert response.status_code == 200
+        assert response.json()["ok"] is False
+        assert response.json()["message"] == "No camera configured"
+
+
 class TestValidateEndpoint:
     """Tests for `POST /validate` (issue #88): a thin proxy over
     `run.validate`, for the Run tab's pre-flight "Check" button.

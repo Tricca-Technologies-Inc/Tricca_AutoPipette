@@ -106,9 +106,16 @@
           <div class="selection-name" id="runProtocolName">Load one from the Protocols tab</div>
         </div>
 
-        <div class="protocol-info-card" id="protocolInfoCard" hidden>
-          <div class="protocol-info-description" id="protocolInfoDescription"></div>
-          <div class="protocol-info-tips" id="protocolInfoTips"></div>
+        <div class="run-info-row">
+          <div class="protocol-info-card" id="protocolInfoCard" hidden>
+            <div class="protocol-info-description" id="protocolInfoDescription"></div>
+            <div class="protocol-info-tips" id="protocolInfoTips"></div>
+          </div>
+          <!-- Deck camera (issue #242): hidden without one; tap for full screen. -->
+          <button type="button" class="camera-panel" id="cameraPanel" hidden
+                  aria-label="Deck camera: tap for full screen">
+            <img id="cameraImg" alt="Deck camera">
+          </button>
         </div>
         <div class="protocol-info-error" id="protocolInfoError" hidden></div>
 

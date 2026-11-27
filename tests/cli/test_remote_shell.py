@@ -28,6 +28,7 @@ from pathlib import Path
 
 import pytest
 from fakes.fake_moonraker_state import FakeMoonrakerState
+from fakes.fake_websocket_client import FakeWebSocketClient
 from support.live_control_plane import LiveControlPlane
 from support.polling import poll_until
 
@@ -453,12 +454,33 @@ class TestRpcErrorSurfacing:
 
 
 class TestUtilityCommands:
-    def test_webcam_prints_a_url_built_from_the_real_hostname(
-        self, shell: RemoteTapShell
+    def test_webcam_prints_the_url_moonraker_reports(
+        self, shell: RemoteTapShell, live_control_plane: LiveControlPlane
     ) -> None:
+        client = FakeWebSocketClient(connected=True)
+        client.queue_response({
+            "result": {
+                "webcams": [
+                    {
+                        "name": "deck",
+                        "enabled": True,
+                        "stream_url": "/webcam/?action=stream",
+                        "snapshot_url": "",
+                    }
+                ]
+            }
+        })
+        live_control_plane.service.client = client  # type: ignore[assignment]
+
         shell.onecmd_plus_hooks("webcam")
 
-        assert "/webcam/" in _output(shell)
+        hostname = live_control_plane.service.hostname
+        assert f"http://{hostname}/webcam/?action=stream" in _output(shell)
+
+    def test_webcam_without_a_camera_says_so(self, shell: RemoteTapShell) -> None:
+        shell.onecmd_plus_hooks("webcam")
+
+        assert "No camera configured" in _output(shell)
 
     def test_mm_to_vol_rejects_a_non_numeric_argument_locally(
         self, shell: RemoteTapShell, capsys: pytest.CaptureFixture[str]
