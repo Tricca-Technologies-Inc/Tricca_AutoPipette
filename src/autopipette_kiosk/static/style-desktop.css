@@ -69,6 +69,10 @@ html.desktop-mode .bp-btn {
 }
 
 /* ── Run page ── */
+html.desktop-mode .camera-panel:not(.fullscreen) {
+  width: 400px;
+}
+
 html.desktop-mode .run-panel {
   padding: 32px 36px;
   gap: 28px;
