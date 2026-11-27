@@ -584,36 +584,41 @@ class LocationManager:
             location.curr = curr
         return skipped
 
-    def snapshot_dip_state(self) -> dict[str, float]:
-        """Capture every singleton Well's current dip depth (``dip_curr``).
+    def snapshot_dip_state(self) -> dict[str, list[float]]:
+        """Capture every non-tipbox plate well's current dip depth (``dip_curr``).
 
-        Only locations whose dip depth is tracked dynamically (i.e. those
-        using the cylinder strategy, where ``dip_curr`` drifts from
-        ``dip_top`` toward ``dip_btm`` as liquid is removed) need this.
-        Plate-type locations use a fixed ``dip_top`` per well and are not
-        included.
+        Singleton locations (type "singleton") and any other plate whose wells
+        use the cylinder strategy store a live ``dip_curr`` that drifts from
+        ``dip_top`` as liquid is removed.  Tipboxes are excluded — their state
+        is managed separately by ``TipBoxManager``.
 
         Returns:
-            Mapping of location name to its current ``dip_curr`` value.
+            Mapping of location name to a list of ``dip_curr`` values, one per
+            well, in well order.
         """
+        from tricca_autopipette.core.plates import TipBox
         return {
-            name: location.dip_curr
+            name: [w.dip_curr for w in location.wells]
             for name, location in self.locations.items()
-            if isinstance(location, Well) and location.dip_curr != location.dip_top
+            if isinstance(location, Plate)
+            and not isinstance(location, TipBox)
+            and any(w.dip_curr != w.dip_top for w in location.wells)
         }
 
-    def restore_dip_state(self, dip_state: dict[str, float]) -> None:
-        """Reapply a ``snapshot_dip_state`` mapping to live singleton wells.
+    def restore_dip_state(self, dip_state: dict[str, list[float]]) -> None:
+        """Reapply a ``snapshot_dip_state`` mapping to live plate wells.
 
         Args:
             dip_state: A mapping previously produced by ``snapshot_dip_state``.
                 Entries naming a location that is no longer registered or is
-                no longer a singleton Well are silently ignored.
+                no longer a plate are silently ignored.
         """
-        for name, dip_curr in dip_state.items():
+        from tricca_autopipette.core.plates import TipBox
+        for name, dip_values in dip_state.items():
             location = self.locations.get(name)
-            if isinstance(location, Well):
-                location.dip_curr = dip_curr
+            if isinstance(location, Plate) and not isinstance(location, TipBox):
+                for well, dip_curr in zip(location.wells, dip_values):
+                    well.dip_curr = dip_curr
 
     def snapshot_membership(self) -> LocationMembershipSnapshot:
         """Capture exactly which locations/tipboxes are registered.

@@ -111,7 +111,7 @@ from tricca_autopipette.core.pipette_models import (
     SystemConfig,
     TipState,
 )
-from tricca_autopipette.core.plates import Plate, PlateParams
+from tricca_autopipette.core.plates import Plate, PlateParams, TipBox
 from tricca_autopipette.core.splits import parse_splits_spec
 from tricca_autopipette.core.traversal import parse_well_ranges
 from tricca_autopipette.core.volume_converter import VolumeConverter
@@ -4331,14 +4331,15 @@ class AutoPipetteService:
                 # Seed the stage-2 plunger model once, at protocol start.
                 self._sync_plunger()
                 self._seed_drawer_model()
-                # Reset all singleton well dip trackers to dip_top.
+                # Reset all non-tipbox plate well dip trackers to dip_top.
                 # Every run assumes fresh stocks — the cylinder strategy's
                 # dip_curr must not carry over from a previous run.
                 # Tipboxes are excluded (they track real consumed tip state).
                 loc_mgr = self._autopipette.location_manager
                 for location in loc_mgr.locations.values():
-                    if isinstance(location, Well):
-                        location.dip_curr = location.dip_top
+                    if isinstance(location, Plate) and not isinstance(location, TipBox):
+                        for well in location.wells:
+                            well.dip_curr = well.dip_top
                 for line in commands:
                     check_canceled()
                     while True:
