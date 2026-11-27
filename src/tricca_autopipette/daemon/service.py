@@ -4135,6 +4135,7 @@ class AutoPipetteService:
             state.tip_state,
             state.tip_origin,
             state.has_liquid,
+            state.tip_dry,
             autopipette.active_liquid,
         )
         # The stage-2 plunger model and the gantry accel its moves restore
@@ -4168,10 +4169,13 @@ class AutoPipetteService:
             location_manager.drawer_positions = drawer_positions_snapshot
             self._disabled_tipboxes = dict(disabled_tipboxes_snapshot)
 
-            tip_state, tip_origin, has_liquid, active_liquid = pipette_state_snapshot
+            tip_state, tip_origin, has_liquid, tip_dry, active_liquid = (
+                pipette_state_snapshot
+            )
             state.tip_state = tip_state
             state.tip_origin = tip_origin
             state.has_liquid = has_liquid
+            state.tip_dry = tip_dry
             autopipette.plunger, autopipette.toolhead, autopipette.gantry_accel = (
                 motion_snapshot
             )

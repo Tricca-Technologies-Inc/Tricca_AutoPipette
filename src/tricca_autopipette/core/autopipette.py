@@ -29,6 +29,7 @@ Example:
 
 from __future__ import annotations
 
+import itertools
 import logging
 import math
 from collections.abc import Sequence
@@ -733,33 +734,71 @@ class AutoPipette:
             if value is not None:
                 setattr(self.toolhead, axis, value if absolute else None)
 
-    def _travel_homing_plunger(self, coordinate: Coordinate) -> bool:
-        """``move_to(coordinate)``, homing the stage-2 plunger on the way.
+    def _ride_pre_aspirate(
+        self, coor_source: Coordinate, pre_air_gap_ul: float
+    ) -> bool:
+        """Travel to the source with the pre-aspirate home and air gap riding.
 
-        Homing before an aspirate is a dispense-direction move of air only,
-        so with no tip on (and so no liquid) it can happen anywhere. Here it
-        rides the XY leg and then the Z leg of the travel, split in
-        proportion to how long each leg takes on its own, so the plunger
-        reaches 0 as the head arrives. Each leg keeps both the plunger and
-        the gantry within their own speed/accel (``move_plunger_to``). The
-        plunger then makes exactly the moves it made before, in the same
-        order and direction, only earlier.
+        Only with a dry, freshly picked-up tip and nothing in it: the home
+        and the gap are then air only, so drawing them on the way is the
+        same as drawing them over the well. The plunger ends where it would
+        have after ``home_pipette_stepper`` + the gap, and its last move is
+        still in the aspirate direction.
+
+        Args:
+            coor_source: The source well's clearance coordinate.
+            pre_air_gap_ul: The (already fitted) pre-aspirate gap.
+
+        Returns:
+            True if the travel, home and gap were emitted; False if nothing
+            was, and the caller should do them the old way.
+        """
+        if self.plunger is None or not self.state.tip_dry:
+            return False
+        moves = [(0.0, self.syringe.speed_dispense, self.syringe.accel_home)]
+        if pre_air_gap_ul:
+            travel = self.volume_converter.vol_to_mm(pre_air_gap_ul)
+            if travel < 0:
+                return False  # let operate_syringe refuse it as before
+            gap_mm = (
+                travel * FluidDisplacement.aspiration * self.syringe.motor_orientation
+            )
+            # Same speed/accel as this branch's own pre-gap draw.
+            moves.append((gap_mm, self.syringe.speed_dispense, self.syringe.accel_move))
+        return self._travel_with_plunger(coor_source, moves)
+
+    def _travel_with_plunger(
+        self,
+        coordinate: Coordinate,
+        moves: Sequence[tuple[float, float, float]],
+    ) -> bool:
+        """``move_to(coordinate)`` with stage-2 plunger moves riding the travel.
+
+        The caller vouches that the plunger moves are air only (no tip, or a
+        dry tip with no liquid), so where they happen doesn't matter. They
+        are done in order, each at no more than its own speed/accel: the
+        travel (XY leg, then Z leg, as ``move_to``) is cut where one plunger
+        move ends and the next begins, in proportion to how long each takes
+        on its own, and every piece is a ``G1 ... P`` scaled by
+        ``move_plunger_to`` so neither the plunger nor the gantry exceeds
+        its limits. Klipper's junction handling covers the plunger at the
+        cuts (it limits each extra axis's velocity change at a junction).
 
         Args:
             coordinate: Where ``move_to`` would have gone.
+            moves: ``(target_mm, speed, accel)`` plunger moves, in order.
 
         Returns:
-            True if the travel was emitted (the plunger is now at 0); False
-            if it wasn't safe or known enough to ride, in which case nothing
-            was emitted and the caller should ``move_to`` as usual.
+            True if the travel was emitted with the plunger moves on it (the
+            plunger is then at the last target); False if riding wasn't safe
+            or the move lengths aren't known, in which case nothing was
+            emitted and the caller should do both the old way.
         """
         plunger = self.plunger
         head = self.toolhead
         if (
             plunger is None
             or plunger.position_mm is None
-            or abs(plunger.position_mm) <= _PLUNGER_EPS_MM
-            or self.state.tip_state is not TipState.DETACHED
             or self.state.has_liquid
             or self._coor_sys is not CoordinateSystem.ABSOLUTE
             or head.x is None
@@ -768,33 +807,91 @@ class AutoPipette:
         ):
             return False
         self._check_limits(coordinate)
-        x0, y0, z0 = head.x, head.y, head.z
-        xy_mm = math.hypot(coordinate.x - x0, coordinate.y - y0)
-        z_mm = abs(coordinate.z - z0)
-        if xy_mm <= _CARRIER_EPS_MM:
-            xy_mm = 0.0
-        if z_mm <= _CARRIER_EPS_MM:
-            z_mm = 0.0
-        t_xy = _move_time_s(xy_mm, self.gantry.speed_xy / 60, self.gantry_accel)
-        t_z = _move_time_s(z_mm, self.gantry.speed_z / 60, self.gantry_accel)
-        if t_xy + t_z <= 0:
+
+        # Plunger segments (start, end, speed, accel, natural duration).
+        segments: list[tuple[float, float, float, float, float]] = []
+        pos = plunger.position_mm
+        for target, speed, accel in moves:
+            if abs(target - pos) > _PLUNGER_EPS_MM:
+                duration = _move_time_s(abs(target - pos), speed, accel)
+                segments.append((pos, target, speed, accel, duration))
+                pos = target
+        if not segments:
             return False
 
-        # Same speed/accel as `home_pipette_stepper`'s own move.
-        speed = self.syringe.speed_dispense
-        accel = self.syringe.accel_home
-        start = plunger.position_mm
+        # Carrier legs (start xyz, end xyz, natural duration).
+        start = (head.x, head.y, head.z)
+        mid = (coordinate.x, coordinate.y, head.z)
+        end = (coordinate.x, coordinate.y, coordinate.z)
+        legs: list[
+            tuple[tuple[float, float, float], tuple[float, float, float], float]
+        ] = []
+        xy_mm = math.dist(start, mid)
+        z_mm = math.dist(mid, end)
+        if xy_mm > _CARRIER_EPS_MM:
+            t = _move_time_s(xy_mm, self.gantry.speed_xy / 60, self.gantry_accel)
+            legs.append((start, mid, t))
+        if z_mm > _CARRIER_EPS_MM:
+            t = _move_time_s(z_mm, self.gantry.speed_z / 60, self.gantry_accel)
+            legs.append((mid, end, t))
+        if not legs:
+            return False
+
+        # Cut both timelines (as fractions of their totals) at every boundary.
+        carrier_total = sum(leg[2] for leg in legs)
+        plunger_total = sum(seg[4] for seg in segments)
+        leg_cuts = [0.0]
+        for leg in legs:
+            leg_cuts.append(leg_cuts[-1] + leg[2] / carrier_total)
+        seg_cuts = [0.0]
+        for seg in segments:
+            seg_cuts.append(seg_cuts[-1] + seg[4] / plunger_total)
+        leg_cuts[-1] = seg_cuts[-1] = 1.0
+        cuts = sorted({*leg_cuts, *seg_cuts})
+
+        def where(frac: float, cuts_: list[float]) -> tuple[int, float]:
+            # Index of the span containing `frac`, and how far through it.
+            for i in range(len(cuts_) - 1):
+                if frac <= cuts_[i + 1] + 1e-12:
+                    span = cuts_[i + 1] - cuts_[i]
+                    return i, 0.0 if span <= 0 else (frac - cuts_[i]) / span
+            return len(cuts_) - 2, 1.0
+
+        def lerp(
+            a: tuple[float, ...], b: tuple[float, ...], f: float
+        ) -> tuple[float, ...]:
+            return tuple(x + (y - x) * f for x, y in zip(a, b, strict=True))
+
         self.note_action(
-            f"Homing the plunger from P{start:g} during travel to "
-            f"(X:{coordinate.x:.2f}, Y:{coordinate.y:.2f}) (no tip on)"
+            f"Moving the plunger P{plunger.position_mm:g} -> P{pos:g} (air only) "
+            f"during travel to (X:{coordinate.x:.2f}, Y:{coordinate.y:.2f})"
         )
-        if xy_mm:
-            after_xy = 0.0 if not z_mm else start * t_z / (t_xy + t_z)
-            self.move_plunger_to(
-                after_xy, speed, accel, xy_move=((x0, y0), (coordinate.x, coordinate.y))
-            )
-        if z_mm:
-            self.move_plunger_to(0.0, speed, accel, z_move=(z0, coordinate.z))
+        for lo, hi in itertools.pairwise(cuts):
+            if hi - lo <= 1e-12:
+                continue
+            centre = (lo + hi) / 2
+            leg_i, _ = where(centre, leg_cuts)
+            seg_i, _ = where(centre, seg_cuts)
+            leg_start, leg_end, _ = legs[leg_i]
+            seg_start, seg_end, speed, accel, _ = segments[seg_i]
+            span_leg = leg_cuts[leg_i + 1] - leg_cuts[leg_i]
+            span_seg = seg_cuts[seg_i + 1] - seg_cuts[seg_i]
+            a = lerp(leg_start, leg_end, (lo - leg_cuts[leg_i]) / span_leg)
+            b = lerp(leg_start, leg_end, (hi - leg_cuts[leg_i]) / span_leg)
+            if hi >= seg_cuts[seg_i + 1] - 1e-12:
+                p_target = seg_end  # land exactly on each move's target
+            else:
+                p_target = seg_start + (seg_end - seg_start) * (
+                    (hi - seg_cuts[seg_i]) / span_seg
+                )
+            if math.dist(a, b) <= _CARRIER_EPS_MM:
+                self.move_plunger_to(p_target, speed, accel)
+            elif a[2] == b[2]:
+                self.move_plunger_to(
+                    p_target, speed, accel, xy_move=((a[0], a[1]), (b[0], b[1]))
+                )
+            else:
+                self.move_plunger_to(p_target, speed, accel, z_move=(a[2], b[2]))
         return True
 
     def home_plates(self, plates: dict[str, str]) -> None:
@@ -1186,7 +1283,11 @@ class AutoPipette:
         self._check_limits(Coordinate(x=loc_tip.x, y=loc_tip.y, z=dip_z), "z")
         # No tip on yet, so the plunger can home on the way here; the
         # aspirate's own home is then a no-op.
-        if not self._travel_homing_plunger(loc_tip):
+        rides = self.state.tip_state is TipState.DETACHED and self._travel_with_plunger(
+            loc_tip,
+            [(0.0, self.syringe.speed_dispense, self.syringe.accel_home)],
+        )
+        if not rides:
             self.move_to(loc_tip)
         self.dip_z_down(loc_tip, dip_z - 2)
         self.gcode_buffers.add(self.gcode_commands.linear_move(z=dip_z, feedrate=100))
@@ -1195,6 +1296,7 @@ class AutoPipette:
         self.dip_z_return(loc_tip)
         self.state.tip_state = TipState.ATTACHED
         self.state.tip_origin = (name, index)
+        self.state.tip_dry = True
 
     def eject_tip(self) -> None:
         """Eject the current pipette tip."""
@@ -1211,6 +1313,7 @@ class AutoPipette:
 
         self.state.tip_state = TipState.DETACHED
         self.state.tip_origin = None
+        self.state.tip_dry = False
 
     def dispose_tip(self) -> None:
         """Eject the current tip into the waste container.
@@ -1366,6 +1469,7 @@ class AutoPipette:
                 tipbox dips (tipbox coordinates are absolute and already
                 account for the physical tip height).
         """
+        self.state.tip_dry = False  # whatever is below may be liquid
         if apply_deck_offset:
             off = self.pipette_model.deck_offset
             adjusted = max(0.0, distance + off.z) if off.z != 0.0 else distance
@@ -1765,13 +1869,17 @@ class AutoPipette:
             f"prewet={prewet_cycles}x{prewet_vol_ul:g}μL[{sources[2]}/{sources[3]}])"
         )
 
-        self.move_to(coor_source)
-        self.home_pipette_stepper()
+        # With a fresh, dry tip the home and pre-aspirate gap are air only,
+        # so they ride the trip here instead of running with the head stopped.
+        gap_in = self._ride_pre_aspirate(coor_source, pre_air_gap_ul)
+        if not gap_in:
+            self.move_to(coor_source)
+            self.home_pipette_stepper()
         dip_z = loc_source.get_dip_distance(volume)
 
         # Prewetting cycle
         if prewet_cycles and prewet_vol_ul > PhysicalConstants.VOLUME_TOLERANCE_UL:
-            if pre_air_gap_ul:
+            if pre_air_gap_ul and not gap_in:
                 self.operate_syringe(
                     FluidDisplacement.aspiration, pre_air_gap_ul,
                     speed=self.syringe.speed_dispense,
@@ -1807,8 +1915,9 @@ class AutoPipette:
 
             if pre_air_gap_ul:
                 self.operate_syringe(FluidDisplacement.dispense, pre_air_gap_ul)
+            gap_in = False  # pushed back out after the prewet; draw it again
 
-        if pre_air_gap_ul:
+        if pre_air_gap_ul and not gap_in:
             self.operate_syringe(
                 FluidDisplacement.aspiration, pre_air_gap_ul,
                 speed=self.syringe.speed_dispense,

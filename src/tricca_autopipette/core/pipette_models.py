@@ -64,6 +64,9 @@ class PipetteState:
             picked up from, or None when no tip is attached or its origin
             is unknown (e.g. a tip still on after a daemon restart). What
             lets a used tip go back to its own slot.
+        tip_dry: True only for a tip picked up by tapd that hasn't been
+            dipped into anything since. Moving the plunger (air only) while
+            travelling is allowed with such a tip; False whenever unsure.
 
     Example:
         >>> state = PipetteState()
@@ -78,6 +81,7 @@ class PipetteState:
     has_liquid: bool = False
     homed: bool = False
     tip_origin: tuple[str, int] | None = None
+    tip_dry: bool = False
 
     # Helper properties for backwards compatibility
     @property
