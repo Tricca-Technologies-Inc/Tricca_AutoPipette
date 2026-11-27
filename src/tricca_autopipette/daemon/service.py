@@ -2839,6 +2839,7 @@ class AutoPipetteService:
         """Write G-code to file and upload for execution.
 
         Operates in two modes based on ``GCodeManager`` state:
+
         1. Batch mode: appends to the buffer for later combined upload.
         2. Immediate mode: writes to file and uploads/executes immediately,
            as the pending immediate job: how it ends (Moonraker's job
