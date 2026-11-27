@@ -46,19 +46,21 @@ discipline is already established in this repo; keep it.
 
 ## Frontend (kiosk JS)
 
-`static/*.js` has no test tooling at all yet (issue #78 — no
-`package.json`, no Jest/Vitest/Playwright, nothing exercises `app.js`/
-`run.js`/`tips.js`). That's a tooling gap, not a license to skip testing
-indefinitely: it needs its own `/grill-me` session to pick an approach
-(pure-logic extraction under `node:test`, `pytest-playwright`, or another
-option) before a red-green loop can run there. Until that lands, don't
-silently ship new non-trivial JS logic untested — call it out explicitly in
-the PR description so it's a visible, tracked gap rather than an invisible
-one, the way `tips.js`'s toggle math was flagged after the fact in PR #77.
+`static/*.js` is tested in a real browser with `pytest-playwright` (issue
+#78), under `tests/kiosk/browser/`, against a real kiosk and control plane
+with only the Moonraker client faked (`tests/support/live_control_plane.py`,
+`tests/support/live_kiosk_server.py`). Install it with
+`uv sync --extra dev --extra browser-test` and
+`uv run playwright install chromium`; CI runs the suite in the
+`test-browser` job. `tests/kiosk/browser/capture_screenshot.py` saves a
+screenshot of a page for checking layout by eye (see its docstring).
 
-Per the skill's own guidance, once browser/e2e tooling exists, don't write
-those tests first — they're slow enough that the red-green loop stops paying
-for itself. Write the behavior, then the browser test.
+New kiosk JS behavior gets a browser test. Per the skill's own guidance,
+don't write those tests first — they're slow enough that the red-green loop
+stops paying for itself. Write the behavior, then the browser test, and
+check that it fails with the behavior removed. Logic with a concrete input
+and output (like `tips.js`'s toggle math) can still be pulled into a pure
+function and driven red-green from a browser test.
 
 ## What this replaces
 
