@@ -544,6 +544,27 @@ class PipetteModel(BaseModel):
         ),
     )
 
+    # Per-pipette air gap overrides (None = use syringe default).
+    # These sit between liquid profile and syringe default in the merge chain:
+    # liquid profile → pipette model → syringe default.
+    pre_air_gap_ul: float | None = Field(
+        default=None,
+        ge=0,
+        description=(
+            "Per-pipette default pre-aspirate air gap in μL. "
+            "Overrides the syringe default; a liquid profile can still override this."
+        ),
+    )
+
+    post_air_gap_ul: float | None = Field(
+        default=None,
+        ge=0,
+        description=(
+            "Per-pipette default post-aspirate air gap in μL. "
+            "Overrides the syringe default; a liquid profile can still override this."
+        ),
+    )
+
 # ============================================================================
 # LIQUID PROFILES
 # ============================================================================
