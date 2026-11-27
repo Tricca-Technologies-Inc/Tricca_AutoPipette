@@ -189,17 +189,17 @@
           <div class="coord-fields">
             <div class="coord-field">
               <label for="moveXInput">X</label>
-              <input type="number" step="any" class="coord-input" id="moveXInput">
+              <input type="number" inputmode="decimal" step="any" class="coord-input" id="moveXInput">
               <div class="coord-live" id="moveXLive">--</div>
             </div>
             <div class="coord-field">
               <label for="moveYInput">Y</label>
-              <input type="number" step="any" class="coord-input" id="moveYInput">
+              <input type="number" inputmode="decimal" step="any" class="coord-input" id="moveYInput">
               <div class="coord-live" id="moveYLive">--</div>
             </div>
             <div class="coord-field">
               <label for="moveZInput">Z</label>
-              <input type="number" step="any" class="coord-input" id="moveZInput">
+              <input type="number" inputmode="decimal" step="any" class="coord-input" id="moveZInput">
               <div class="coord-live" id="moveZLive">--</div>
             </div>
           </div>
@@ -213,8 +213,8 @@
             <option value="">Select a location…</option>
           </select>
           <div class="move-loc-rowcol" id="moveLocRowCol">
-            <label>Row <input type="number" id="moveLocRow" value="0" min="0"></label>
-            <label>Col <input type="number" id="moveLocCol" value="0" min="0"></label>
+            <label>Row <input type="number" inputmode="numeric" id="moveLocRow" value="0" min="0"></label>
+            <label>Col <input type="number" inputmode="numeric" id="moveLocCol" value="0" min="0"></label>
           </div>
           <button class="move-go-btn" id="moveLocGoBtn">Go</button>
           <div class="move-feedback" id="moveLocFeedback"></div>
@@ -335,7 +335,7 @@
         <div class="cal-actions">
           <button class="move-go-btn" id="calDispenseBtn">Dispense</button>
           <div class="settings-field-line" id="calRecordRow">
-            <input type="number" step="any" min="0" class="coord-input" id="calMassInput" placeholder="mass in grams">
+            <input type="number" inputmode="decimal" step="any" min="0" class="coord-input" id="calMassInput" placeholder="mass in grams">
             <button class="move-go-btn" id="calRecordBtn">Record</button>
           </div>
           <button class="move-go-btn" id="calPreviewBtn">Preview fit</button>

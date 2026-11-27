@@ -196,6 +196,7 @@
     label.textContent = field.key;
     const input = document.createElement('input');
     input.type = 'number';
+    input.inputMode = 'decimal';
     input.step = 'any';
     input.className = 'coord-input';
     input.value = field.value === null ? '' : field.value;
