@@ -11,14 +11,18 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from typing import Any, cast
 
 import pytest
 from fakes.fake_moonraker_state import FakeMoonrakerState
 from fakes.fake_websocket_client import FakeWebSocketClient
 
-from tricca_autopipette.commands.tap_cmd_parsers import HomeArgs, MoveArgs
+from tricca_autopipette.commands.tap_cmd_parsers import (
+    HomeArgs,
+    MoveArgs,
+    PlateMoveArgs,
+)
 from tricca_autopipette.daemon.moonraker_state import AxisConfig, PlateAxis
 from tricca_autopipette.daemon.service import AutoPipetteService
 
@@ -250,3 +254,83 @@ def test_a_protocol_run_home_still_applies_at_once(svc: AutoPipetteService) -> N
 
     assert svc._homing_invalidated is False
     assert _drawers(svc) == {"plate1": 0.0}
+
+
+@pytest.fixture
+def plates_ready(svc: AutoPipetteService) -> AutoPipetteService:
+    # Gantry and plate1 homed, plate1 live at 10 mm (issue #241).
+    state = cast("FakeMoonrakerState", svc.moonraker_state)
+    state.set_homed(True)
+    state.homed_plates = {"plate1"}
+    state.positions = {"U": 10.0}
+    svc._homing_invalidated = False
+    return svc
+
+
+PLATE_COMMANDS: dict[
+    str, tuple[Callable[[AutoPipetteService], object], dict[str, float]]
+] = {
+    "plate_move": (
+        lambda s: s.plate_move(PlateMoveArgs("plate1", "42", None)),
+        {"plate1": 42.0},
+    ),
+    "plate_move --rel": (
+        lambda s: s.plate_move(PlateMoveArgs("plate1", "5", None, rel=True)),
+        {"plate1": 15.0},
+    ),
+    "plates_in": (lambda s: s.plates_in(), {"plate1": 0.0}),
+}
+
+
+@pytest.mark.parametrize("command", PLATE_COMMANDS)
+def test_a_plate_move_models_the_drawer_only_once_completed(
+    plates_ready: AutoPipetteService, command: str
+) -> None:
+    svc = plates_ready
+    call, expected = PLATE_COMMANDS[command]
+    call(svc)
+    assert _drawers(svc) == {}
+
+    _finished(svc, "someone_elses.gcode", "completed")
+    assert _drawers(svc) == {}
+
+    _finished(svc, _uploaded(svc), "completed")
+    assert _drawers(svc) == expected
+
+
+@pytest.mark.parametrize("ending", ["cancelled", "error", "klippy_shutdown"])
+@pytest.mark.parametrize("command", PLATE_COMMANDS)
+def test_a_failed_plate_move_leaves_the_drawer_model(
+    plates_ready: AutoPipetteService,
+    pushes: list[dict[str, Any]],
+    command: str,
+    ending: str,
+) -> None:
+    svc = plates_ready
+    PLATE_COMMANDS[command][0](svc)
+    filename = _uploaded(svc)
+
+    _finished(svc, filename, ending, "Plate move refused")
+
+    assert _drawers(svc) == {}
+    assert pushes[-1]["last_job"] == {
+        "filename": filename,
+        "state": ending,
+        "message": "Plate move refused",
+    }
+
+
+@pytest.mark.parametrize("command", PLATE_COMMANDS)
+def test_a_protocol_run_plate_move_models_the_drawer_at_once(
+    plates_ready: AutoPipetteService, command: str
+) -> None:
+    svc = plates_ready
+    call, expected = PLATE_COMMANDS[command]
+    if command == "plate_move --rel":
+        # In a batch, --rel offsets the drawer model, not live position.
+        svc._autopipette.location_manager.set_drawer_position("plate1", 10.0)
+    svc.gcode_manager.start_batch()
+    call(svc)
+    svc.gcode_manager.end_batch()
+
+    assert _drawers(svc) == expected

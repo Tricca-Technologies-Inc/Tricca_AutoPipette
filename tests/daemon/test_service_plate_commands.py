@@ -199,7 +199,6 @@ class TestRelativePlateMove:
             svc, monkeypatch, lambda: svc.plate_move(move("V", "-10", rel=True))
         )
         assert gcode == [*RAISE, "PLATE_MOVE PLATE=plate2 POS=110.0 SPEED=10.0\n"]
-        assert model(svc)["plate2"] == pytest.approx(110.0)
 
     def test_an_explicit_speed_wins(
         self,

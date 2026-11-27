@@ -1393,7 +1393,8 @@ class AutoPipetteService:
         (Z and that plate); everything is checked before any G-code is
         emitted, and a target outside travel is refused, never clamped.
         Raises the tip to ``z_safe`` first (:meth:`_raise_tip_for_plates`).
-        Updates the compile-time drawer model.
+        Updates the compile-time drawer model: at once in a batch, else
+        only once Moonraker reports the job completed (issue #241).
 
         Args:
             args: Plate (name or letter), target (stop or mm, or an offset
@@ -1423,8 +1424,12 @@ class AutoPipetteService:
         autopipette = self._autopipette
         self._raise_tip_for_plates()
         autopipette.plate_move(plate.name, position, speed)
-        self.output_gcode(autopipette.get_gcode())
-        autopipette.location_manager.set_drawer_position(plate.name, position)
+        self.output_gcode(
+            autopipette.get_gcode(),
+            on_complete=lambda: autopipette.location_manager.set_drawer_position(
+                plate.name, position
+            ),
+        )
         return CommandResult(
             ok=True, message=f"Moving {plate.name} to {position:g} mm."
         )
@@ -1433,7 +1438,8 @@ class AutoPipetteService:
         """Move every plate drawer in (``PLATES_IN``).
 
         Klipper's macro moves every plate, so every plate must be homed.
-        Raises the tip to ``z_safe`` first, like :meth:`plate_move`.
+        Raises the tip to ``z_safe`` first, and models every plate in, like
+        :meth:`plate_move`.
 
         Returns:
             Result describing the move.
@@ -1448,8 +1454,10 @@ class AutoPipetteService:
         self.require_plates_homed("plates_in", names)
         self._raise_tip_for_plates()
         self._autopipette.plates_in()
-        self.output_gcode(self._autopipette.get_gcode())
-        self._model_plates_in(names)
+        self.output_gcode(
+            self._autopipette.get_gcode(),
+            on_complete=lambda: self._model_plates_in(names),
+        )
         return CommandResult(ok=True, message="Moving every plate in.")
 
     def plates(self) -> CommandResult:
