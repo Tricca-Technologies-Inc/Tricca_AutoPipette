@@ -3,7 +3,6 @@
 # Same single tip throughout. PITC is methanol-based so post-air gap is
 # redrawn between splits to prevent dripping.
 
-reset_dip PITC1_p1000
 load_pipette TysonP1000.json
 home all
 

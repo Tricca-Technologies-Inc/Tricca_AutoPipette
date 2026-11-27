@@ -4331,6 +4331,14 @@ class AutoPipetteService:
                 # Seed the stage-2 plunger model once, at protocol start.
                 self._sync_plunger()
                 self._seed_drawer_model()
+                # Reset all singleton well dip trackers to dip_top.
+                # Every run assumes fresh stocks — the cylinder strategy's
+                # dip_curr must not carry over from a previous run.
+                # Tipboxes are excluded (they track real consumed tip state).
+                loc_mgr = self._autopipette.location_manager
+                for location in loc_mgr.locations.values():
+                    if isinstance(location, Well):
+                        location.dip_curr = location.dip_top
                 for line in commands:
                     check_canceled()
                     while True:
