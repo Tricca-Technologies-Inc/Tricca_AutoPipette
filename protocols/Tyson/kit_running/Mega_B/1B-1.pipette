@@ -6,6 +6,7 @@ home all
 # This protocol uses the Tyson100 liquid profile's air gaps explicitly:
 # pre-air 30 µL, post-air 5 µL. Each prewet cycle uses the transfer volume.
 
+pipette 50.0 --dest_row 0 --dest_col 0 Blank 96wellplate
 pipette 50.0 --dest_row 1 --dest_col 0 CALQC1 96wellplate 
 pipette 50.0 --dest_row 2 --dest_col 0 CALQC1 96wellplate 
 pipette 50.0 --dest_row 3 --dest_col 0 CALQC1 96wellplate 
