@@ -165,9 +165,17 @@
             "well_diameter": 8.2
         },
         {
+            "name": "Blank",
+            "type": "singleton",
+            "x": 294,
+            "y": 183,
+            "z": 0,
+            "dip_top": 73.2
+        },
+        {
             "name": "CALQC1",
             "type": "array",
-            "x": 294,
+            "x": 278.14,
             "y": 183,
             "z": 0,
             "dip_top": 73.2,
